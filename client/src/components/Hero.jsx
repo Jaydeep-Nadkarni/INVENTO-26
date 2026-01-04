@@ -9,11 +9,11 @@ import windowsPlayer from '../assets/UI/windows-player.jpg'
 
 const Hero = () => {
   return (
-    <div className="relative w-full h-screen mx-auto flex items-center justify-center overflow-hidden">
+    <div className="relative w-full h-screen mx-auto flex items-center justify-center overflow-hidden p-4">
       
       {/* Center Logo Section */}
       <div className="z-20 transform hover:scale-105 transition-transform duration-300">
-        <img src={inventoLogo} alt="Invento Logo" className="w-[400px] md:w-[500px] drop-shadow-2xl" />
+        <img src={inventoLogo} alt="Invento Logo" className="w-100 md:w-125 drop-shadow-2xl" />
       </div>
 
       {/* Top Left - Photo 1 (Hat/Spy image) */}
@@ -51,7 +51,7 @@ const Hero = () => {
       {/* Bottom Right - Retro Video Player */}
       <div className="absolute bottom-10 right-8 md:bottom-12 md:right-10 z-10 hidden md:block">
         <div className="transform hover:scale-105 transition-transform duration-300">
-          <img src={windowsPlayer} alt="Media Player" className="w-[280px] md:w-[320px] shadow-2xl border-2 border-gray-600 rounded-sm" />
+          <img src={windowsPlayer} alt="Media Player" className="w-70 md:w-[320px] shadow-2xl border-2 border-gray-600 rounded-sm" />
         </div>
       </div>
 
