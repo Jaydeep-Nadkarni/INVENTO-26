@@ -3,403 +3,418 @@ import { motion, AnimatePresence } from 'framer-motion'
 import paperTexture from '../../assets/UI/paper-texture.jpg'
 import pageTurnSound from '../../assets/audios/page-turn.mp3'
 import closeSound from '../../assets/audios/briefcase-open.mp3'
+import { useParams, useNavigate } from 'react-router-dom'
+import { clubsData } from './clubsData'
 
-const clubsData = [
-    {
-        id: 1,
-        name: 'Melodia',
-        tagline: 'Music & Performance Club',
-        event: 'Harmony Night 2026',
-        date: 'February 15, 2026',
-        time: '6:00 PM - 9:00 PM',
-        venue: 'Main Auditorium',
-        description: 'A musical evening featuring live performances, band battles, and acoustic sessions. Experience the symphony of talent as students showcase their musical prowess.',
-        color: '#dc2626',
-        events: [
-            { name: 'Solo Singing', type: 'solo', maxTeamSize: 1, description: 'Showcase your vocal talent in a solo performance.' },
-            { name: 'Band Battle', type: 'team', maxTeamSize: 4, description: 'Form a band and compete against other groups.' },
-            { name: 'Acoustic Jam', type: 'team', maxTeamSize: 4, description: 'Create unplugged magic with your team.' },
-            { name: 'Beat Boxing', type: 'solo', maxTeamSize: 1, description: 'Show off your vocal percussion skills.' },
-        ],
-    },
-    {
-        id: 2,
-        name: 'Community Development Club',
-        tagline: 'Social Impact Initiative',
-        event: 'Social Impact Summit',
-        date: 'February 18, 2026',
-        time: '10:00 AM - 4:00 PM',
-        venue: 'Conference Hall A',
-        description: 'Workshop on community service initiatives and sustainable development goals.',
-        color: '#16a34a',
-        events: [
-            { name: 'Social Entrepreneurship', type: 'team', maxTeamSize: 4, description: 'Pitch your innovative social business idea.' },
-            { name: 'Community Outreach', type: 'team', maxTeamSize: 4, description: 'Plan and present a community service project.' },
-            { name: 'NGO Case Study', type: 'solo', maxTeamSize: 1, description: 'Analyze successful NGO initiatives.' },
-        ],
-    },
-    {
-        id: 3,
-        name: 'Women Empowerment Club',
-        tagline: 'Leadership & Equality',
-        event: 'Empower Her 2026',
-        date: 'February 20, 2026',
-        time: '2:00 PM - 5:00 PM',
-        venue: 'Seminar Hall',
-        description: 'Panel discussion on women leadership and gender equality.',
-        color: '#9333ea',
-        events: [
-            { name: 'Leadership Talk', type: 'solo', maxTeamSize: 1, description: 'Deliver an inspiring speech on empowerment.' },
-            { name: 'Panel Discussion', type: 'team', maxTeamSize: 4, description: 'Participate in moderated panel discussion.' },
-            { name: 'Empowerment Workshop', type: 'team', maxTeamSize: 4, description: 'Conduct an interactive workshop.' },
-        ],
-    },
-    {
-        id: 4,
-        name: 'Dance Club',
-        tagline: 'Rhythm & Movement',
-        event: 'Rhythm Revolution',
-        date: 'February 22, 2026',
-        time: '5:00 PM - 8:00 PM',
-        venue: 'Open Air Theatre',
-        description: 'Inter-college dance competition featuring multiple styles.',
-        color: '#ea580c',
-        events: [
-            { name: 'Solo Dance', type: 'solo', maxTeamSize: 1, description: 'Express yourself through dance performance.' },
-            { name: 'Group Dance', type: 'team', maxTeamSize: 4, description: 'Choreograph and perform synchronized routine.' },
-            { name: 'Duet Performance', type: 'team', maxTeamSize: 4, description: 'Partner dance showcasing chemistry.' },
-            { name: 'Street Dance Battle', type: 'team', maxTeamSize: 4, description: 'Face-off in intense dance battle.' },
-        ],
-    },
-    {
-        id: 5,
-        name: 'HR Club',
-        tagline: 'Talent & Strategy',
-        event: 'Talent Acquisition Workshop',
-        date: 'February 25, 2026',
-        time: '11:00 AM - 3:00 PM',
-        venue: 'Business Lab',
-        description: 'Corporate recruitment strategies with industry experts.',
-        color: '#0891b2',
-        events: [
-            { name: 'HR Case Study', type: 'team', maxTeamSize: 4, description: 'Analyze and solve HR scenarios.' },
-            { name: 'Mock Interview', type: 'solo', maxTeamSize: 1, description: 'Face realistic interview simulation.' },
-            { name: 'Recruitment Drive', type: 'team', maxTeamSize: 4, description: 'Design recruitment strategy.' },
-        ],
-    },
-    {
-        id: 6,
-        name: 'Photography Club',
-        tagline: 'Lens & Vision',
-        event: 'Lens & Light Exhibition',
-        date: 'February 27, 2026',
-        time: '9:00 AM - 6:00 PM',
-        venue: 'Art Gallery',
-        description: 'Student photography showcase with various perspectives.',
-        color: '#ca8a04',
-        events: [
-            { name: 'Photography', type: 'solo', maxTeamSize: 1, description: 'Submit best photographs.' },
-            { name: 'Photo Story', type: 'team', maxTeamSize: 4, description: 'Create narrative through photos.' },
-            { name: 'Videography', type: 'team', maxTeamSize: 4, description: 'Produce short video.' },
-            { name: 'Short Film', type: 'team', maxTeamSize: 4, description: 'Create complete short film.' },
-        ],
-    },
-    {
-        id: 7,
-        name: 'Literary Club',
-        tagline: 'Words & Wisdom',
-        event: 'WordSmith Chronicles',
-        date: 'March 1, 2026',
-        time: '3:00 PM - 6:00 PM',
-        venue: 'Library Auditorium',
-        description: 'Poetry slam and creative writing competition.',
-        color: '#7c3aed',
-        events: [
-            { name: 'Poetry Slam', type: 'solo', maxTeamSize: 1, description: 'Perform original poetry.' },
-            { name: 'Creative Writing', type: 'solo', maxTeamSize: 1, description: 'Submit creative piece.' },
-            { name: 'Debate', type: 'team', maxTeamSize: 4, description: 'Engage in formal debate.' },
-            { name: 'Story Telling', type: 'solo', maxTeamSize: 1, description: 'Narrate captivating story.' },
-        ],
-    },
-    {
-        id: 8,
-        name: 'Tech Club',
-        tagline: 'Innovation & Code',
-        event: 'CodeBreaker Hackathon',
-        date: 'March 3-4, 2026',
-        time: '24 Hours Non-Stop',
-        venue: 'Computer Lab Complex',
-        description: '24-hour coding challenge with innovative solutions.',
-        color: '#0284c7',
-        events: [
-            { name: 'Hackathon', type: 'team', maxTeamSize: 4, description: 'Build prototype in 24 hours.' },
-            { name: 'Web Development', type: 'team', maxTeamSize: 4, description: 'Create functional website.' },
-            { name: 'App Development', type: 'team', maxTeamSize: 4, description: 'Develop application.' },
-            { name: 'Coding Challenge', type: 'solo', maxTeamSize: 1, description: 'Solve algorithmic problems.' },
-        ],
-    },
-]
+const TextureOverlay = ({ opacity = 0.4 }) => (
+    <div
+        className="absolute inset-0 z-20 pointer-events-none"
+        style={{
+            backgroundImage: `url(${paperTexture})`,
+            backgroundSize: 'cover',
+            opacity: opacity,
+            mixBlendMode: 'multiply'
+        }}
+    />
+)
 
 const EventsGrid = () => {
-    const [selectedClub, setSelectedClub] = useState(null)
+    const { clubSlug, eventSlug } = useParams()
+    const navigate = useNavigate()
 
     const playSound = (audioFile) => {
         const audio = new Audio(audioFile)
         audio.play().catch(e => console.log("Audio play failed:", e))
     }
 
-    const handleCardClick = (club) => {
+    const currentClub = clubsData.find(c => c.slug === clubSlug)
+    const currentEvent = currentClub?.events.find(e => e.id === eventSlug)
+
+    const handleClubClick = (slug) => {
         playSound(pageTurnSound)
-        setSelectedClub(club)
+        navigate(`/${slug}`)
     }
 
-    const handleCloseModal = () => {
+    const handleEventClick = (eSlug) => {
+        playSound(pageTurnSound)
+        navigate(`/${clubSlug}/${eSlug}`)
+    }
+
+    const handleBackToClubs = () => {
         playSound(closeSound)
-        setSelectedClub(null)
+        navigate('/events')
     }
 
-    const handleCloseCard = (e) => {
-        e.stopPropagation()
-        playSound(pageTurnSound)
-        setSelectedClub(null)
+    const handleBackToEvents = () => {
+        playSound(closeSound)
+        navigate(`/${clubSlug}`)
     }
 
-    return (
-        <div className="relative z-10 w-full px-4 md:px-8 py-12">
-            {/* Header */}
-            <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="text-center mb-12"
-            >
-                <h1
-                    className="text-4xl md:text-6xl font-black text-red-700 uppercase tracking-tighter mb-3"
-                    style={{
-                        fontFamily: "'Playfair Display', serif",
-                        textShadow: '2px 2px 0px #000, 4px 4px 0px #444, 0 0 20px rgba(220, 38, 38, 0.5)'
-                    }}
+    // Render Club Selection Grid
+    if (!clubSlug) {
+        return (
+            <div className="relative z-10 w-full px-4 md:px-8 pt-32 pb-20">
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="text-center mb-20"
                 >
-                    Classified Events
-                </h1>
-                <div className="inline-block bg-black/80 text-yellow-500 px-6 py-2 border-2 border-yellow-600/50 backdrop-blur-sm">
-                    <p className="text-xs md:text-sm font-mono tracking-[0.3em] uppercase">
-                        [ INVENTO 2026 - MISSION DOSSIERS ]
-                    </p>
+                    <div className="flex flex-col items-center">
+                        <span className="text-[10px] md:text-sm font-mono tracking-[0.4em] text-red-600/80 mb-4 uppercase">
+                            [ Global Directory ]
+                        </span>
+                        <h1 className="text-5xl md:text-8xl font-black text-white uppercase tracking-tighter mb-4"
+                            style={{ fontFamily: "'Playfair Display', serif", textShadow: '0 0 30px rgba(220, 38, 38, 0.4)' }}>
+                            The Dossiers
+                        </h1>
+                        <div className="h-1 w-32 bg-red-800/50 mb-8" />
+                    </div>
+                </motion.div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 max-w-7xl mx-auto">
+                    {clubsData.map((club, index) => (
+                        <EventGridCard
+                            key={club.id}
+                            club={club}
+                            index={index}
+                            onSelect={() => handleClubClick(club.slug)}
+                        />
+                    ))}
                 </div>
-            </motion.div>
-
-            {/* Events Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-                {clubsData.map((club, index) => (
-                    <EventGridCard
-                        key={club.id}
-                        club={club}
-                        index={index}
-                        onSelect={() => handleCardClick(club)}
-                    />
-                ))}
             </div>
+        )
+    }
 
-            {/* Club Details Modal */}
-            <AnimatePresence>
-                {selectedClub && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4 overflow-y-auto"
-                        onClick={handleCloseModal}
+    // Render Events Grid for a specific club
+    if (clubSlug && !eventSlug) {
+        return (
+            <div className="relative z-10 w-full px-4 md:px-8 pt-32 pb-20 min-h-screen">
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="max-w-7xl mx-auto"
+                >
+                    <button
+                        onClick={handleBackToClubs}
+                        className="mb-12 group flex items-center gap-4 text-white hover:text-red-500 transition-colors"
                     >
-                        <motion.div
-                            initial={{ scale: 0.8, rotateY: -90 }}
-                            animate={{ scale: 1, rotateY: 0 }}
-                            exit={{ scale: 0.8, rotateY: 90 }}
-                            transition={{ duration: 0.5, ease: "easeOut" }}
-                            className="relative w-full max-w-3xl p-8 md:p-12 my-8 max-h-[90vh] overflow-y-auto"
-                            style={{
-                                backgroundImage: `url(${paperTexture})`,
-                                backgroundSize: 'cover',
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <div className="absolute inset-0 bg-amber-50/95 mix-blend-multiply"></div>
+                        <span className="text-2xl transition-transform group-hover:-translate-x-2">←</span>
+                        <span className="font-mono text-xs uppercase tracking-widest">Back to Directory</span>
+                    </button>
 
-                            <div className="relative z-10">
-                                <button
-                                    onClick={handleCloseCard}
-                                    className="absolute -top-4 -right-4 w-12 h-12 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-colors flex items-center justify-center font-bold text-xl"
-                                >
-                                    ✕
-                                </button>
+                    <div className="mb-16">
+                        <p className="font-mono text-[10px] text-red-500 tracking-[0.4em] uppercase mb-2">
+                            Decrypted Archive // Sector_{currentClub?.slug.toUpperCase()}
+                        </p>
+                        <h2 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter font-serif">
+                            {currentClub?.name}
+                        </h2>
+                    </div>
 
-                                <div className="absolute -top-6 -left-6 transform -rotate-12">
-                                    <div className="border-4 border-red-600 px-4 py-2 bg-red-600/10 backdrop-blur-sm">
-                                        <p className="text-red-600 font-black text-xl tracking-widest uppercase">
-                                            Top Secret
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="border-b-4 border-black/20 pb-6 mb-6">
-                                    <h2
-                                        className="text-4xl md:text-5xl font-black uppercase tracking-tight mb-2"
-                                        style={{ color: selectedClub.color }}
-                                    >
-                                        {selectedClub.name}
-                                    </h2>
-                                    <p className="text-sm font-mono text-gray-600 tracking-wider uppercase">
-                                        {selectedClub.tagline}
-                                    </p>
-                                </div>
-
-                                <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {currentClub?.events.map((event, index) => (
+                            <motion.div
+                                key={event.id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: index * 0.05 }}
+                                onClick={() => handleEventClick(event.id)}
+                                className="group cursor-pointer relative aspect-square md:aspect-[4/3] rounded-sm overflow-hidden"
+                                style={{
+                                    backgroundColor: '#ebe8e3',
+                                    backgroundImage: `url(${paperTexture})`,
+                                    backgroundSize: 'cover',
+                                    boxShadow: '10px 10px 30px rgba(0,0,0,0.3)'
+                                }}
+                            >
+                                <div className="absolute inset-0 bg-amber-50/90 mix-blend-multiply" />
+                                <TextureOverlay opacity={0.3} />
+                                <div className="relative z-30 p-8 h-full flex flex-col justify-between">
                                     <div>
-                                        <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 font-serif">
-                                            {selectedClub.event}
+                                        <div className="flex justify-between items-start mb-4">
+                                            <span className="text-[8px] font-mono text-gray-400 tracking-[0.3em] uppercase">Protocol_{index + 1}</span>
+                                            <div className="px-2 py-0.5 border border-black/10 text-[8px] font-mono uppercase">{event.type}</div>
+                                        </div>
+                                        <h3 className="text-2xl md:text-3xl font-black text-gray-900 uppercase tracking-tighter font-serif leading-none group-hover:text-red-800 transition-colors">
+                                            {event.name}
                                         </h3>
                                     </div>
+                                    <div className="flex justify-between items-end border-t border-black/10 pt-4">
+                                        <p className="text-[10px] text-gray-500 font-serif italic line-clamp-2 pr-8">
+                                            {event.description}
+                                        </p>
+                                        <span className="text-xl group-hover:translate-x-2 transition-transform">→</span>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                </motion.div>
+            </div>
+        )
+    }
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="bg-black/5 p-4 border-l-4" style={{ borderColor: selectedClub.color }}>
-                                            <p className="text-xs font-mono text-gray-500 uppercase tracking-wider mb-1">Date</p>
-                                            <p className="font-bold text-gray-900">{selectedClub.date}</p>
-                                        </div>
+    // Render Event Details (Horizontal View)
+    if (eventSlug && currentEvent) {
+        return (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 md:p-8 pt-24 md:pt-32">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9, x: 100 }}
+                    animate={{ opacity: 1, scale: 1, x: 0 }}
+                    transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                    className="relative w-full max-w-7xl h-[85vh] md:aspect-[16/9] flex flex-col md:flex-row bg-[#fdfbf7] rounded-sm shadow-2xl overflow-hidden"
+                    style={{ backgroundImage: `url(${paperTexture})`, backgroundSize: 'cover' }}
+                >
+                    <TextureOverlay opacity={0.3} />
 
-                                        <div className="bg-black/5 p-4 border-l-4" style={{ borderColor: selectedClub.color }}>
-                                            <p className="text-xs font-mono text-gray-500 uppercase tracking-wider mb-1">Time</p>
-                                            <p className="font-bold text-gray-900">{selectedClub.time}</p>
-                                        </div>
+                    {/* Left Panel: Visual / Title */}
+                    <div className="relative z-30 w-full md:w-[35%] bg-[#1a1a1a] text-white p-8 md:p-10 flex flex-col justify-between overflow-hidden shrink-0">
+                        {/* Decorative Circle */}
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-red-600/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
 
-                                        <div className="bg-black/5 p-4 border-l-4 md:col-span-2" style={{ borderColor: selectedClub.color }}>
-                                            <p className="text-xs font-mono text-gray-500 uppercase tracking-wider mb-1">Venue</p>
-                                            <p className="font-bold text-gray-900">{selectedClub.venue}</p>
+                        <div className="relative z-10 flex flex-col h-full">
+                            <button
+                                onClick={handleBackToEvents}
+                                className="flex items-center gap-2 text-[10px] font-mono text-gray-400 uppercase tracking-widest hover:text-white transition-colors mb-8"
+                            >
+                                ← Back to dossier
+                            </button>
+
+                            <div className="mt-auto mb-auto">
+                                <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight leading-none font-serif mb-2 text-yellow-500">
+                                    {currentEvent.themeName || currentEvent.name}
+                                </h2>
+                                <h3 className="text-xl md:text-2xl font-serif italic text-gray-400 mb-6">
+                                    ( {currentEvent.realName || currentEvent.name} )
+                                </h3>
+
+                                <div className="space-y-4 font-mono text-sm text-gray-300">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-1 h-8 bg-red-600"></div>
+                                        <div>
+                                            <p className="text-[10px] uppercase tracking-widest text-gray-500">Registration Fee</p>
+                                            <p className="text-xl font-bold text-white">{currentEvent.fee || 'Free'}</p>
                                         </div>
                                     </div>
+                                </div>
+                            </div>
 
-                                    {/* Events List */}
-                                    <div className="bg-black/5 p-6 border-2 border-black/10">
-                                        <p className="text-xs font-mono text-gray-500 uppercase tracking-wider mb-4">Available Events</p>
-                                        <div className="space-y-3">
-                                            {selectedClub.events?.map((event, idx) => (
-                                                <div
-                                                    key={idx}
-                                                    className="border-l-4 pl-4 py-2"
-                                                    style={{ borderColor: selectedClub.color }}
-                                                >
-                                                    <div className="flex items-center gap-3 mb-1">
-                                                        <p className="font-bold text-gray-900">{event.name}</p>
-                                                        <span className="text-xs px-2 py-0.5 rounded-full bg-white/70 text-gray-600">
-                                                            {event.type === 'solo' ? '👤 Solo' : '👥 Team'}
-                                                        </span>
-                                                        <span className="text-xs text-gray-500">
-                                                            Max: {event.maxTeamSize}
-                                                        </span>
-                                                    </div>
-                                                    <p className="text-sm text-gray-600 leading-relaxed">{event.description}</p>
+                            {/* Big decorative letter */}
+                            <div className="absolute -bottom-10 -left-4 opacity-10 select-none pointer-events-none">
+                                <h4 className="text-[12rem] font-black tracking-tighter leading-none">
+                                    {(currentEvent.themeName || currentEvent.name).charAt(0)}
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right Panel: Data - Scrollable */}
+                    <div className="relative z-30 flex-1 flex flex-col h-full overflow-hidden bg-[#fdfbf7]">
+                        {/* Slots Badge */}
+                        <div className="absolute top-0 right-0 bg-yellow-500 text-black font-bold font-mono text-xs px-6 py-2 z-40 shadow-md">
+                            SLOTS AVAILABLE : {currentEvent.slotsAvailable || 'Unlimited'}
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-8 md:p-12 hide-scrollbar">
+                            <div className="max-w-4xl mx-auto space-y-10">
+
+                                {/* Description */}
+                                <section>
+                                    <p className="text-lg md:text-xl font-serif text-gray-800 leading-relaxed italic border-l-4 border-yellow-500 pl-6 py-2 bg-yellow-500/5 rounded-r-lg">
+                                        "{currentEvent.description}"
+                                    </p>
+                                </section>
+
+                                {/* Quick Stats Grid */}
+                                <section className="grid grid-cols-2 md:grid-cols-4 gap-6 py-6 border-y border-black/5">
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">Team Size</p>
+                                        <p className="font-bold text-gray-900 text-lg">{currentEvent.teamSize || 1}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">Rounds</p>
+                                        <p className="font-bold text-gray-900 text-lg">{currentEvent.rounds || 1}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">Date</p>
+                                        <p className="font-bold text-gray-900 text-lg">{currentEvent.date}</p>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">Venue</p>
+                                        <p className="font-bold text-gray-900 text-lg">{currentEvent.venue}</p>
+                                    </div>
+                                </section>
+
+                                {/* Rules */}
+                                {currentEvent.rules && (
+                                    <section>
+                                        <h3 className="font-bold text-xl uppercase tracking-tight mb-4 flex items-center gap-3">
+                                            <span className="w-2 h-2 bg-black rounded-full"></span> Rules & Regulations
+                                        </h3>
+                                        <ul className="space-y-3 ml-2">
+                                            {currentEvent.rules.map((rule, idx) => (
+                                                <li key={idx} className="flex items-start gap-3 text-sm md:text-base text-gray-700 font-medium">
+                                                    <span className="mt-1.5 w-1.5 h-1.5 bg-red-600 rounded-full shrink-0" />
+                                                    {rule}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </section>
+                                )}
+
+                                {/* Round Details */}
+                                {currentEvent.roundDetails && (
+                                    <section className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                                        <h3 className="font-bold text-xl uppercase tracking-tight mb-6">Round Details</h3>
+                                        <div className="grid gap-8">
+                                            {currentEvent.roundDetails.map((round, idx) => (
+                                                <div key={idx} className="space-y-2">
+                                                    <h4 className="font-bold text-red-700 text-lg border-b border-gray-100 pb-2">{round.title}</h4>
+                                                    <ul className="space-y-1">
+                                                        {round.details.map((detail, dIdx) => (
+                                                            <li key={dIdx} className="text-sm text-gray-600 pl-4 border-l-2 border-gray-300">
+                                                                {detail}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </section>
+                                )}
+
+                                {/* Contact & Register Action */}
+                                <section className="pt-8 flex flex-col md:flex-row items-end justify-between gap-8 border-t border-black/10">
+                                    <div className="w-full md:w-auto">
+                                        <h4 className="font-bold text-sm uppercase tracking-widest mb-3 text-gray-500">Event Heads</h4>
+                                        <div className="space-y-2">
+                                            {currentEvent.contacts && currentEvent.contacts.map((contact, idx) => (
+                                                <div key={idx} className="flex items-center gap-3 bg-white px-4 py-2 rounded border border-gray-200 shadow-sm">
+                                                    <span className="font-bold text-gray-900 text-sm">{contact.name}</span>
+                                                    <div className="h-4 w-px bg-gray-300"></div>
+                                                    <span className="font-mono text-red-600 text-sm">{contact.phone}</span>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
 
-                                    <div className="bg-black/5 p-6 border-2 border-dashed border-black/20">
-                                        <p className="text-xs font-mono text-gray-500 uppercase tracking-wider mb-2">Mission Brief</p>
-                                        <p className="text-gray-800 leading-relaxed font-serif">
-                                            {selectedClub.description}
-                                        </p>
-                                    </div>
-
-                                    <div className="flex justify-center pt-4">
-                                        <button
-                                            className="px-8 py-3 font-black uppercase tracking-wider text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-                                            style={{ backgroundColor: selectedClub.color }}
-                                        >
-                                            Register Now
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="mt-8 pt-6 border-t-2 border-black/10">
-                                    <p className="text-xs font-mono text-gray-400 text-center tracking-widest">
-                                        CLASSIFIED DOCUMENT #INV-2026-{selectedClub.id.toString().padStart(3, '0')}
-                                    </p>
-                                </div>
+                                    <button className="w-full md:w-auto px-10 py-4 bg-red-700 text-white font-black text-lg uppercase tracking-widest hover:bg-black transition-all duration-300 shadow-xl rounded-sm flex items-center justify-center gap-4 group">
+                                        <span>Register Now</span>
+                                        <span className="group-hover:translate-x-1 transition-transform">→</span>
+                                    </button>
+                                </section>
                             </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </div>
-    )
+                        </div>
+                    </div>
+
+                    {/* Close button */}
+                    <button
+                        onClick={handleBackToEvents}
+                        className="absolute top-4 right-4 md:top-6 md:right-8 w-8 h-8 md:w-10 md:h-10 bg-black/10 hover:bg-black text-black hover:text-white flex items-center justify-center transition-all z-50 rounded-full"
+                    >
+                        <span className="text-lg font-bold">✕</span>
+                    </button>
+                </motion.div>
+            </div>
+        )
+    }
+
+    return null
 }
 
 // Event Grid Card Component
 const EventGridCard = ({ club, index, onSelect }) => {
     return (
         <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1, duration: 0.4 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: index * 0.05, duration: 0.5 }}
+            className="group cursor-pointer perspective-1000"
             onClick={onSelect}
-            className="group cursor-pointer h-full"
         >
             <motion.div
-                whileHover={{ y: -8, boxShadow: `0 20px 40px ${club.color}40` }}
-                transition={{ duration: 0.3 }}
-                className="relative w-full h-full bg-amber-50/90 rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200 hover:border-gray-300"
+                whileHover={{
+                    y: -10,
+                    rotateX: 2,
+                    rotateY: -2,
+                    boxShadow: '20px 20px 60px rgba(0,0,0,0.5)',
+                }}
+                className="relative w-full aspect-[4/5] overflow-hidden rounded-sm transition-all duration-500"
+                style={{
+                    backgroundColor: '#ebe8e3',
+                    backgroundImage: `url(${paperTexture})`,
+                    backgroundSize: 'cover',
+                }}
             >
-                {/* Top Color Bar */}
-                <div
-                    className="w-full h-12 md:h-16"
-                    style={{ backgroundColor: club.color }}
-                />
+                <div className="absolute inset-0 bg-amber-50/80 mix-blend-multiply" />
+                <TextureOverlay opacity={0.4} />
 
-                {/* Card Content */}
-                <div className="p-5 md:p-6 space-y-3 h-[calc(100%-3rem)] md:h-[calc(100%-4rem)] flex flex-col">
+                {/* Card Top Binding/Tape */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-8 bg-gray-900/5 backdrop-blur-sm transform rotate-1 flex items-center justify-center z-30">
+                    <div className="w-full h-px bg-black/10" />
+                </div>
+
+                {/* Content Container */}
+                <div className="relative z-30 h-full p-8 flex flex-col">
+                    {/* Club Meta Info */}
+                    <div className="flex justify-between items-start mb-12">
+                        <div className="space-y-1">
+                            <span className="block text-[8px] font-mono text-gray-400 uppercase tracking-[0.3em]">
+                                Archive #0{club.id}
+                            </span>
+                            <span className="block text-[8px] font-mono text-red-800 font-bold uppercase tracking-widest">
+                                Classified
+                            </span>
+                        </div>
+                        <div className="w-8 h-8 rounded-full border border-black/10 flex items-center justify-center opacity-30">
+                            <div className="w-1 h-1 rounded-full bg-black" />
+                        </div>
+                    </div>
+
+                    {/* Main Image/Graphic Placeholder */}
+                    <div className="relative mb-8 flex-1 group-hover:scale-105 transition-transform duration-700 overflow-hidden">
+                        <div className="absolute inset-0 border-2 border-black/5 m-2" />
+                        <div className="w-full h-full bg-black/5 flex items-center justify-center grayscale opacity-60 group-hover:opacity-100 transition-opacity">
+                            <h3
+                                className="text-8xl md:text-9xl font-black text-black/5 select-none pointer-events-none"
+                                style={{ fontFamily: "'Playfair Display', serif" }}
+                            >
+                                {club.name.charAt(0)}
+                            </h3>
+                        </div>
+
+                        <div className="absolute bottom-4 -right-2 transform rotate-[-15deg] opacity-0 group-hover:opacity-100 transition-all duration-500 translate-x-10 group-hover:translate-x-0">
+                            <div className="px-3 py-1 border-2 border-red-700 text-red-700 text-[10px] font-black uppercase tracking-tighter">
+                                INVENTO 2026
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Club Name */}
-                    <div className="space-y-1">
+                    <div className="space-y-4">
+                        <div className="h-px w-full bg-black/20" />
                         <h3
-                            className="text-lg md:text-xl font-black uppercase tracking-tight leading-tight"
-                            style={{ color: club.color }}
+                            className="text-3xl md:text-4xl font-black text-gray-900 uppercase tracking-tighter leading-none"
+                            style={{ fontFamily: "'Playfair Display', serif" }}
                         >
                             {club.name}
                         </h3>
-                        <p className="text-xs font-mono text-gray-500 uppercase tracking-wider">
-                            {club.tagline}
-                        </p>
-                    </div>
-
-                    {/* Event Info */}
-                    <div className="space-y-2 flex-1">
-                        <p className="text-sm md:text-base font-bold text-gray-900">
-                            {club.event}
-                        </p>
-                        <p className="text-xs text-gray-600 font-mono">
-                            {club.date}
-                        </p>
-                    </div>
-
-                    {/* Footer with Arrow Button */}
-                    <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                        <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wider">
-                            ID: {club.id.toString().padStart(3, '0')}
-                        </span>
-                        <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.95 }}
-                            className="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center text-white font-bold transition-transform group-hover:scale-110"
-                            style={{ backgroundColor: club.color }}
-                        >
-                            →
-                        </motion.button>
+                        <div className="flex justify-between items-end">
+                            <p className="text-[10px] font-mono text-gray-500 uppercase tracking-wider max-w-[70%] line-clamp-1">
+                                {club.tagline}
+                            </p>
+                            <div className="w-6 h-6 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-bold">
+                                +
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                {/* Hover Overlay */}
-                <div
-                    className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity pointer-events-none"
-                    style={{ backgroundColor: club.color }}
-                />
+                <div className="absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-black/10 to-transparent pointer-events-none" />
+                <div className="absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />
+                <div className="absolute -right-1 top-24 w-1 h-16 bg-black/20 group-hover:bg-red-600 transition-colors duration-500" />
             </motion.div>
         </motion.div>
     )

@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { clubsData } from './Events/clubsData'
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion'
 import paperTexture from '../assets/UI/paper-texture.jpg'
 import laptopImg from '../assets/UI/laptop.png'
@@ -10,20 +11,21 @@ import radioAudio from '../assets/audios/radio.m4a'
 import laptopSound from '../assets/audios/laptopn-open.mp3'
 import pageTurnSound from '../assets/audios/page-turn.mp3'
 import { useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const BriefcaseInsider = ({ isOpen, onClose, user = null, onNavigateToEvents = null }) => {
+    const navigate = useNavigate()
+
     // Card Data
     const [cards, setCards] = useState([
-        { id: 1, name: 'HR and Literary', color: 'bg-red-700' },
-        { id: 2, name: 'Dance', color: 'bg-blue-600' },
-        { id: 3, name: 'Singing', color: 'bg-emerald-600' },
-        { id: 4, name: 'Fashion', color: 'bg-yellow-500' },
-        { id: 5, name: 'Media', color: 'bg-purple-600' },
-        { id: 6, name: 'Sports', color: 'bg-pink-600' },
-        { id: 7, name: 'CDC', color: 'bg-orange-600' },
-        { id: 8, name: 'WEC', color: 'bg-blue-600' },
-        { id: 9, name: 'Specials', color: 'bg-green-600' },
-        { id: 10, name: 'Title Events', color: 'bg-yellow-600' },
+        { id: 1, name: 'Melodia', color: 'bg-red-700' },
+        { id: 2, name: 'CDC', color: 'bg-green-600' },
+        { id: 3, name: 'WEC', color: 'bg-purple-600' },
+        { id: 4, name: 'Dance', color: 'bg-yellow-500' },
+        { id: 5, name: 'HR', color: 'bg-blue-600' },
+        { id: 6, name: 'Media', color: 'bg-pink-600' },
+        { id: 7, name: 'Literary', color: 'bg-orange-600' },
+        { id: 8, name: 'Specials', color: 'bg-blue-600' },
     ])
 
     const [selectedCardId, setSelectedCardId] = useState(null)
@@ -49,7 +51,7 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null, onNavigateToEvents = n
             }
             if (morseAudioRef.current) {
                 morseAudioRef.current.pause()
-                morseAudioRef.current = null
+                morseAudioRef.current.currentTime = 0
             }
         }
     }, [])
@@ -102,7 +104,13 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null, onNavigateToEvents = n
         const card = cards.find(c => c.id === id)
         if (selectedCardId === id) {
             // If already selected, navigate
-            window.location.href = `#club-${id}`
+            const club = clubsData.find(c => c.id === id)
+            if (club) {
+                navigate(`/${club.slug}`)
+            } else {
+                // Fallback if ID doesn't match standard clubs (e.g. if we add more specials later)
+                navigate('/events')
+            }
         } else {
             // Select/Pop out
             playEffect(pageTurnSound)
@@ -187,7 +195,7 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null, onNavigateToEvents = n
                             <div className="absolute left-0 top-0 bottom-0 w-[30%] p-8 z-30">
 
                                 {/* ID Card - Horizontal Agent ID */}
-                                <div className="absolute top-[12%] left-[18%] w-[260px] h-[160px] perspective-1000 z-40">
+                                <div className="absolute top-[12%] left-[18%] w-[260px] h-[160px] z-40" style={{ perspective: '1000px' }}>
                                     <motion.div
                                         layoutId="id-card"
                                         drag={!isIDExpanded}
@@ -251,7 +259,7 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null, onNavigateToEvents = n
                                                             className="px-2 py-1 bg-blue-900 text-white text-[7px] font-bold uppercase rounded-sm hover:bg-blue-800 transition-colors"
                                                             onClick={(e) => {
                                                                 e.stopPropagation()
-                                                                window.location.href = '/login'
+                                                                navigate('/login')
                                                             }}
                                                         >
                                                             Identify Agent
@@ -299,7 +307,7 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null, onNavigateToEvents = n
                                 </div>
 
                                 {/* Confidential Envelope - Bigger */}
-                                <div className="absolute bottom-[5%] left-[10%] w-80 h-52 z-30 perspective-1000">
+                                <div className="absolute bottom-[5%] left-[10%] w-80 h-52 z-30" style={{ perspective: '1000px' }}>
                                     <motion.div
                                         layoutId="confidential-envelope"
                                         drag={!isLetterExpanded}
@@ -358,7 +366,7 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null, onNavigateToEvents = n
 
                             {/* --- CENTER: Card Bundle --- */}
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
-                                <div className="pointer-events-auto relative w-56 h-80 perspective-1000">
+                                <div className="pointer-events-auto relative w-56 h-80" style={{ perspective: '1000px' }}>
                                     <div className="absolute -top-16 left-0 right-0 text-center">
                                         <span className="text-[#C8A951] text-xs font-mono tracking-widest uppercase opacity-70">Evidence Bundle</span>
                                     </div>
@@ -469,7 +477,14 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null, onNavigateToEvents = n
                                                 </h2>
                                                 <div className="mt-4">
                                                     <button
-                                                        onClick={() => window.location.href = `#club-${selectedCardId}`}
+                                                        onClick={() => {
+                                                            const club = clubsData.find(c => c.id === selectedCardId)
+                                                            if (club) {
+                                                                navigate(`/${club.slug}`)
+                                                            } else {
+                                                                navigate('/events')
+                                                            }
+                                                        }}
                                                         className="px-6 py-2 bg-gray-900 text-white font-mono text-xs uppercase tracking-widest hover:bg-red-700 transition-colors"
                                                     >
                                                         OPEN

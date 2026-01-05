@@ -32,7 +32,8 @@ const Navbar = ({ onEventsClick }) => {
               backgroundImage: `url(${textures[index % textures.length]})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              imageRendering: 'pixelated'
+              imageRendering: 'pixelated',
+              WebkitImageRendering: 'pixelated'
             }}
             className="px-5 py-2 text-gray-900 font-bold text-[10px] uppercase tracking-wider hover:brightness-110 active:border-t-black/60 active:border-l-black/60 active:border-b-white/50 active:border-r-white/50 active:translate-y-[1px] transition-all duration-75 relative overflow-hidden"
           >
