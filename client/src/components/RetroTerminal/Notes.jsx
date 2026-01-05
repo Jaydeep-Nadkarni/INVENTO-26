@@ -3,7 +3,7 @@ import React from 'react'
 const Notes = ({ title = "Notepad", content }) => {
     const defaultContent = (
         <>
-            <div className="text-red-600 font-bold text-center mb-4 text-lg">⚠️ TOP SECRET ⚠️</div>
+            <div className="text-red-600 font-bold text-center mb-4 text-lg">TOP SECRET</div>
             <div className="mb-4">CLASSIFICATION: EYES ONLY</div>
             <div className="mb-4">SUBJECT: INVENTO 2026 - SPYVERSE OPERATION</div>
             <div className="border-t border-b border-black py-2 my-4">

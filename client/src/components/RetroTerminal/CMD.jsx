@@ -1,85 +1,110 @@
-import React, { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import React, { useState, useEffect, useRef } from 'react'
 
-const CMD = ({ eventData }) => {
-    const [displayedText, setDisplayedText] = useState('')
-    const [currentLineIndex, setCurrentLineIndex] = useState(0)
-    const [isTyping, setIsTyping] = useState(false)
-
-    const defaultEventData = {
-        title: "INVENTO 2026 - SPYVERSE",
-        date: "March 15-17, 2026",
-        location: "KLE Institute of Technology",
-        classification: "TOP SECRET",
-        details: [
-            "SECURITY CLEARANCE: LEVEL 5 REQUIRED",
-            "MISSION BRIEFING:",
-            "- Technical Events: 15+ Challenges",
-            "- Cultural Programs: Exclusive Access",
-            "- Guest Speakers: Classified Agents",
-            "- Prize Pool: $50,000+",
-            "",
-            "REGISTRATION STATUS: OPEN",
-            "THREAT LEVEL: MAXIMUM ENGAGEMENT",
-            "",
-            "System ready..."
-        ]
-    }
-
-    const data = eventData || defaultEventData
-
-    const terminalLines = [
-        `C:\\INVENTO> ACCESSING CLASSIFIED FILES...`,
-        `C:\\INVENTO> DECRYPTING DATA...`,
-        ``,
-        `╔══════════════════════════════════════════════╗`,
-        `║  ${data.classification.padEnd(42)}║`,
-        `╚══════════════════════════════════════════════╝`,
-        ``,
-        `EVENT: ${data.title}`,
-        `DATE: ${data.date}`,
-        `LOCATION: ${data.location}`,
-        ``,
-        ...data.details
-    ]
+const CMD = () => {
+    const [history, setHistory] = useState([
+        "KLE Technological University(R) INVENTO 2026",
+        "(C)Copyright KLE Technological University 2026.",
+        "",
+        "C:\\> DECRYPTING SPYVERSE 2026...",
+        "ENTER THE COMMAND (ENTER HELP FOR MORE INFO)",
+        ""
+    ])
+    const [input, setInput] = useState('')
+    const scrollRef = useRef(null)
 
     useEffect(() => {
-        if (currentLineIndex < terminalLines.length) {
-            setIsTyping(true)
-            const currentLine = terminalLines[currentLineIndex]
-            let charIndex = 0
-
-            const typingInterval = setInterval(() => {
-                if (charIndex <= currentLine.length) {
-                    setDisplayedText(prev => {
-                        const lines = prev.split('\n')
-                        lines[currentLineIndex] = currentLine.substring(0, charIndex)
-                        return lines.join('\n')
-                    })
-                    charIndex++
-                } else {
-                    clearInterval(typingInterval)
-                    setIsTyping(false)
-                    setTimeout(() => {
-                        setCurrentLineIndex(prev => prev + 1)
-                        setDisplayedText(prev => prev + '\n')
-                    }, 100)
-                }
-            }, 20)
-
-            return () => clearInterval(typingInterval)
+        if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight
         }
-    }, [currentLineIndex, terminalLines])
+    }, [history])
+
+    const handleCommand = (e) => {
+        if (e.key === 'Enter') {
+            const cmd = input.trim().toLowerCase()
+            const newHistory = [...history, `C:\\> ${input}`]
+
+            if (cmd === 'help') {
+                newHistory.push(
+                    "Available commands:",
+                    " HELP     - Display this help message",
+                    " CLS      - Clear the screen",
+                    " DIR      - List directory files",
+                    " DECRYPT  - Attempt to decrypt mission files",
+                    " EXIT     - Close terminal",
+                    " SYSTEM   - Show system information",
+                    ""
+                )
+            } else if (cmd === 'cls') {
+                setHistory([])
+                setInput('')
+                return
+            } else if (cmd === 'dir') {
+                newHistory.push(
+                    " Volume in drive C has no label",
+                    " Volume Serial Number is 1234-5678",
+                    "",
+                    " Directory of C:\\",
+                    "",
+                    "INSTRUCTIONS TXT            42  01-05-26  4:20p",
+                    "LOGS         DIR                01-05-26  4:20p",
+                    "SCRIPTS      DIR                01-05-26  4:20p",
+                    "      1 File(s)             42 bytes",
+                    "      2 Dir(s)   1,234,567,890 bytes free",
+                    ""
+                )
+            } else if (cmd === 'decrypt') {
+                newHistory.push(
+                    "Searching for decryption keys...",
+                    "Checking local hashes...",
+                    "ACCESS GRANTED: INVENTO 2026 SPYVERSE ACTIVE.",
+                    "Mission parameters updated in File Explorer.",
+                    ""
+                )
+            } else if (cmd === 'system') {
+                newHistory.push(
+                    "OS: Windows 95 OSR2",
+                    "CPU: Pentium 133MHz",
+                    "RAM: 16MB EDO RAM",
+                    "Network: Active (Secure Line)",
+                    ""
+                )
+            } else if (cmd !== '') {
+                newHistory.push(`Bad command or file name`, "")
+            }
+
+            setHistory(newHistory)
+            setInput('')
+        }
+    }
 
     return (
-        <div className="win95-border-inset m-1">
-            <div className="relative bg-black p-4 min-h-[350px] max-h-[50vh] overflow-y-auto terminal-screen">
-                <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent via-green-500/5 to-transparent bg-[length:100%_4px] animate-scanline"></div>
-                <div className="absolute inset-0 pointer-events-none bg-green-500/5 blur-2xl"></div>
-                <pre className="relative z-10 font-mono text-xs md:text-sm text-green-400 leading-relaxed whitespace-pre-wrap break-words terminal-text">
-                    {displayedText}
-                    {isTyping && <span className="inline-block w-2 h-4 bg-green-400 animate-pulse ml-1">_</span>}
-                </pre>
+        <div className="win95-border-inset m-1 h-full bg-black">
+            <div
+                ref={scrollRef}
+                className="relative p-4 h-full overflow-y-auto terminal-screen font-mono text-xs md:text-sm text-green-400"
+                onClick={() => document.getElementById('cmd-input').focus()}
+            >
+                <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent via-green-500/5 to-transparent bg-[length:100%_4px] animate-scanline z-20"></div>
+
+                <div className="relative z-10 whitespace-pre-wrap break-words mb-4">
+                    {history.map((line, i) => (
+                        <div key={i}>{line}</div>
+                    ))}
+                    <div className="flex">
+                        <span>C:\&gt;&nbsp;</span>
+                        <input
+                            id="cmd-input"
+                            type="text"
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={handleCommand}
+                            className="bg-transparent border-none outline-none text-green-400 flex-1 p-0 m-0 font-mono"
+                            autoFocus
+                            spellCheck="false"
+                            autoComplete="off"
+                        />
+                    </div>
+                </div>
             </div>
         </div>
     )

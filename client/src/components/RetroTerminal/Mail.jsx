@@ -40,7 +40,7 @@ const Mail = () => {
                     </div>
                 ) : (
                     <div className="h-full flex items-center justify-center text-gray-400 text-[10px] flex-col gap-2">
-                        <span className="text-3xl">📧</span>
+                        <div className="text-3xl font-bold opacity-20">MAIL</div>
                         Select a message to read
                     </div>
                 )}

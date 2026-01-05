@@ -2,11 +2,7 @@ import React from 'react'
 
 const FileManager = ({ onOpenFile }) => {
     const files = [
-        { id: 'topsecret', name: 'TOP SECRET.doc', icon: '📄', type: 'document' },
-        { id: 'roster', name: 'agent_roster.txt', icon: '📝', type: 'document' },
-        { id: 'blueprint', name: 'venue_blueprint.dwg', icon: '🗺️', type: 'image' },
-        { id: 'schedule', name: 'event_schedule.xlsx', icon: '📊', type: 'spreadsheet' },
-        { id: 'security', name: 'security_protocols.pdf', icon: '🔒', type: 'document' },
+        { id: 'instructions', name: 'instructions.txt', icon: null, type: 'document' },
     ]
 
     return (
@@ -19,7 +15,9 @@ const FileManager = ({ onOpenFile }) => {
                             onClick={() => onOpenFile(file.id)}
                             className="flex flex-col items-center p-2 hover:bg-blue-800 hover:text-white cursor-pointer group"
                         >
-                            <span className="text-3xl mb-1 group-hover:scale-110 transition-transform">{file.icon}</span>
+                            <div className="w-10 h-12 bg-white win95-border-raised mb-1 flex items-center justify-center text-[8px] text-gray-400 font-bold overflow-hidden select-none">
+                                DOC
+                            </div>
                             <span className="text-[10px] text-center break-all">{file.name}</span>
                         </div>
                     ))}
