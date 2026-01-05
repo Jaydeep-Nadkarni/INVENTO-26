@@ -261,7 +261,7 @@ const EventsModal = ({ isOpen, onClose }) => {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="fixed inset-0 z-[105] flex items-center justify-center bg-black/95 backdrop-blur-md"
+                            className="fixed inset-0 z-[105] flex items-center justify-center bg-black/95 backdrop-blur-md p-4"
                             onClick={handleCloseFolder}
                         >
                             <motion.div
@@ -269,7 +269,7 @@ const EventsModal = ({ isOpen, onClose }) => {
                                 animate={{ scale: 1, rotateY: 0 }}
                                 exit={{ scale: 0.8, rotateY: 90 }}
                                 transition={{ duration: 0.5, ease: "easeOut" }}
-                                className="relative w-full max-w-3xl mx-4 p-8 md:p-12"
+                                className="relative w-full max-w-3xl p-8 md:p-12 max-h-[90vh] overflow-y-auto"
                                 style={{
                                     backgroundImage: `url(${paperTexture})`,
                                     backgroundSize: 'cover',
