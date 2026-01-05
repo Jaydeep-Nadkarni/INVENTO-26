@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import bgImage from '../assets/UI/Invento-bg.jpg'
 import Hero from '../components/Hero'
@@ -12,6 +12,8 @@ import closeSound from '../assets/audios/briefcase-open.mp3'
 const Home = () => {
   const [isBriefcaseOpen, setIsBriefcaseOpen] = useState(false)
   const [isEventsOpen, setIsEventsOpen] = useState(false)
+  const [showCallout, setShowCallout] = useState(false)
+  const hoverTimerRef = useRef(null)
 
   const playSound = (audioFile) => {
     const audio = new Audio(audioFile)
@@ -21,6 +23,7 @@ const Home = () => {
   const handleOpenBriefcase = () => {
     playSound(openSound)
     setIsBriefcaseOpen(true)
+    setShowCallout(false)
   }
 
   const handleCloseBriefcase = () => {
@@ -35,6 +38,28 @@ const Home = () => {
   const handleCloseEvents = () => {
     setIsEventsOpen(false)
   }
+
+  const handleMouseEnter = () => {
+    hoverTimerRef.current = setTimeout(() => {
+      setShowCallout(true)
+    }, 3000)
+  }
+
+  const handleMouseLeave = () => {
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current)
+    }
+    // We don't necessarily hide it immediately, 
+    // maybe keep it for a bit or let it finish animation
+  }
+
+  // Effect to hide callout after some time if it's shown
+  useEffect(() => {
+    if (showCallout) {
+      const timer = setTimeout(() => setShowCallout(false), 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [showCallout])
 
   return (
     <div className='w-full bg-[#0a0a0a] relative overflow-x-hidden selection:bg-red-700/30'>
@@ -82,8 +107,26 @@ const Home = () => {
           </motion.div>
 
           {/* Large Bag Viewport */}
-          <div className="w-full grow h-[500px] md:h-[600px] relative">
+          <div
+            className="w-full grow h-[500px] md:h-[600px] relative group"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          >
             <Briefcase onClick={handleOpenBriefcase} />
+
+            {/* Techie Callout */}
+            <AnimatePresence>
+              {showCallout && (
+                <TechieCallout />
+              )}
+            </AnimatePresence>
+
+            {/* Scroll Trigger for Callout - Active once per refresh */}
+            <motion.div
+              onViewportEnter={() => setShowCallout(true)}
+              viewport={{ once: true, amount: 0.5 }}
+              className="absolute inset-0 pointer-events-none"
+            />
           </div>
         </motion.div>
       </section>
@@ -106,6 +149,67 @@ const Home = () => {
         <div className="h-[20vh] relative z-10 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
       )}
     </div>
+  )
+}
+
+const TechieCallout = () => {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="absolute top-1/4 right-[10%] pointer-events-none z-30 hidden md:block"
+    >
+      <svg width="250" height="150" viewBox="0 0 250 150" fill="none">
+        {/* Animated Connected Line */}
+        <motion.path
+          d="M 10 140 L 80 80 L 240 80"
+          stroke="white"
+          strokeWidth="1.5"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 1.5, ease: "easeInOut" }}
+        />
+        {/* Dot at start */}
+        <motion.circle
+          cx="10" cy="140" r="3"
+          fill="white"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.2 }}
+        />
+      </svg>
+
+      {/* Callout Text */}
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 1.2, duration: 0.8 }}
+        className="absolute top-[45px] left-[85px] flex flex-col items-start"
+      >
+        <div className="bg-white/10 backdrop-blur-md border-l-4 border-white px-4 py-2">
+          <h4 className="text-white font-black text-2xl tracking-[0.2em] uppercase leading-none">
+            Briefcase
+          </h4>
+          <p className="text-white/70 font-mono text-[10px] uppercase tracking-[0.4em] mt-1">
+            Click to open
+          </p>
+        </div>
+
+        {/* Animated Accent Blocks */}
+        <div className="flex gap-1 mt-1 ml-1">
+          {[1, 2, 3].map(i => (
+            <motion.div
+              key={i}
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ delay: 1.5 + (i * 0.1) }}
+              className="w-4 h-1 bg-white/40 origin-left"
+            />
+          ))}
+        </div>
+      </motion.div>
+    </motion.div>
   )
 }
 
