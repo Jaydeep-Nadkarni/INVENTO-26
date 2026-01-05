@@ -5,9 +5,26 @@ import Hero from '../components/Hero'
 import Navbar from '../components/Navbar'
 import Briefcase from '../components/Briefcase'
 import BriefcaseInsider from '../components/BriefcaseInsider'
+import openSound from '../assets/audios/briefcase-open2.mp3'
+import closeSound from '../assets/audios/briefcase-open.mp3'
 
 const Home = () => {
   const [isBriefcaseOpen, setIsBriefcaseOpen] = useState(false)
+
+  const playSound = (audioFile) => {
+    const audio = new Audio(audioFile)
+    audio.play().catch(e => console.log("Audio play failed:", e))
+  }
+
+  const handleOpenBriefcase = () => {
+    playSound(openSound)
+    setIsBriefcaseOpen(true)
+  }
+
+  const handleCloseBriefcase = () => {
+    playSound(closeSound)
+    setIsBriefcaseOpen(false)
+  }
 
   return (
     <div className='w-full bg-[#0a0a0a] relative overflow-x-hidden selection:bg-red-700/30'>
@@ -56,7 +73,7 @@ const Home = () => {
 
           {/* Large Bag Viewport */}
           <div className="w-full grow h-[500px] md:h-[600px] relative">
-            <Briefcase onClick={() => setIsBriefcaseOpen(true)} />
+            <Briefcase onClick={handleOpenBriefcase} />
           </div>
         </motion.div>
       </section>
@@ -65,7 +82,7 @@ const Home = () => {
       {/* Insider View */}
       <BriefcaseInsider
         isOpen={isBriefcaseOpen}
-        onClose={() => setIsBriefcaseOpen(false)}
+        onClose={handleCloseBriefcase}
       />
 
       {/* Footer Space */}
