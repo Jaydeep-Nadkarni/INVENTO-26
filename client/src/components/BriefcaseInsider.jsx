@@ -385,7 +385,7 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                             </div>
 
                             {/* --- RIGHT SECTION: Laptop --- */}
-                            <div className="absolute right-[-5%] top-0 bottom-0 w-[50%] flex items-center justify-end z-40 pointer-events-none">
+                            <div className="absolute -right-[1%] top-0 bottom-0 w-[50%] flex items-center justify-end z-40 pointer-events-none">
                                 <motion.div
                                     initial={{ x: 50, opacity: 0 }}
                                     animate={{ x: 0, opacity: 1 }}
