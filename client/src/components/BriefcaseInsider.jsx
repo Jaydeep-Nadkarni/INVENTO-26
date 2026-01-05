@@ -11,7 +11,7 @@ import laptopSound from '../assets/audios/laptopn-open.mp3'
 import pageTurnSound from '../assets/audios/page-turn.mp3'
 import { useRef, useEffect } from 'react'
 
-const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
+const BriefcaseInsider = ({ isOpen, onClose, user = null, onNavigateToEvents = null }) => {
     // Card Data
     const [cards, setCards] = useState([
         { id: 1, name: 'HR and Literary', color: 'bg-red-700' },
@@ -142,7 +142,11 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
         e.stopPropagation()
         stopRadioIfPlaying()
         playEffect(laptopSound)
-        setIsTerminalOpen(true)
+        if (onNavigateToEvents) {
+            onNavigateToEvents()
+        } else {
+            setIsTerminalOpen(true)
+        }
         setStatusText("Accessing the laptop...")
     }
 
@@ -498,7 +502,7 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                                     <motion.div
                                         layoutId="id-card"
                                         initial={{ scale: 1, zIndex: 100 }}
-                                        animate={{ scale: 2.2, x: 0, y: 0, rotate: 0, zIndex: 1000 }}
+                                        animate={{ scale: 1.5, x: 0, y: 0, rotate: 0, zIndex: 1000 }}
                                         className="fixed inset-0 m-auto w-[260px] h-[160px] z-[1000]"
                                     >
                                         <div className="relative w-full h-full bg-[#f4f7f9] rounded shadow-2xl overflow-hidden flex flex-col border-t-[6px] border-blue-900 cursor-default">
