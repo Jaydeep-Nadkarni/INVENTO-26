@@ -3,6 +3,9 @@ import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-mo
 import paperTexture from '../assets/UI/paper-texture.jpg'
 import laptopImg from '../assets/UI/laptop.png'
 import policeRadioImg from '../assets/UI/police-radio.png'
+import RetroTerminal from './RetroTerminal/RetroTerminal'
+import radioAudio from '../assets/auidos/radio.m4a'
+import { useRef, useEffect } from 'react'
 
 const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
     // Card Data
@@ -20,8 +23,21 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
     ])
 
     const [selectedCardId, setSelectedCardId] = useState(null)
-    const [statusText, setStatusText] = useState('Swipe cards to shuffle; click to inspect evidence.')
+    const [statusText, setStatusText] = useState('Swipe cards to shuffle;')
     const [isTerminalOpen, setIsTerminalOpen] = useState(false)
+    const [isRadioPlaying, setIsRadioPlaying] = useState(false)
+    const audioRef = useRef(null)
+
+    useEffect(() => {
+        audioRef.current = new Audio(radioAudio)
+        audioRef.current.loop = true
+        return () => {
+            if (audioRef.current) {
+                audioRef.current.pause()
+                audioRef.current = null
+            }
+        }
+    }, [])
 
     const moveCardToBack = () => {
         setCards((prev) => {
@@ -40,25 +56,33 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
         } else {
             // Select/Pop out
             setSelectedCardId(id)
-            setStatusText(`Inspecting: ${card.name} File. Click "Access File" to reveal details.`)
+            setStatusText(`Inspecting: ${card.name} File. Click "Access File" to reveal details. Click outside the card to close.`)
         }
     }
 
     const handleCloseCard = (e) => {
         e.stopPropagation()
         setSelectedCardId(null)
-        setStatusText('Swipe cards to shuffle; click to inspect evidence.')
+        setStatusText('Swipe cards to shuffle;')
     }
 
     const handleRadioClick = (e) => {
         e.stopPropagation()
-        setStatusText("Intercepted: Frequency 148.5 - 'The drop is confirmed at midnight.'")
+        if (isRadioPlaying) {
+            audioRef.current.pause()
+            setIsRadioPlaying(false)
+            setStatusText("Radio Signal Lost...")
+        } else {
+            audioRef.current.play()
+            setIsRadioPlaying(true)
+            setStatusText("Intercepted: Frequency 148.5")
+        }
     }
 
     const handleLaptopClick = (e) => {
         e.stopPropagation()
         setIsTerminalOpen(true)
-        setStatusText("Accessing Secure Terminal... decrypting local files.")
+        setStatusText("Accessing the laptop...")
     }
 
     return (
@@ -98,67 +122,66 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                             <div className="absolute left-0 top-0 bottom-0 w-[30%] p-8 z-30">
 
                                 {/* ID Card - Horizontal Agent ID */}
-                                <div className="absolute top-[10%] left-[12%] w-80 h-52 perspective-1000 z-40">
+                                <div className="absolute top-[12%] left-[12%] w-[260px] h-[160px] perspective-1000 z-40">
                                     <motion.div
                                         drag
                                         dragConstraints={{ left: 0, right: 300, top: 0, bottom: 300 }}
                                         whileHover={{ scale: 1.02, rotate: 0 }}
-                                        className="relative w-full h-full bg-[#f4f7f9] rounded shadow-2xl overflow-hidden flex border-t-8 border-[#002f6c]"
+                                        className="relative w-full h-full bg-[#f4f7f9] rounded shadow-2xl overflow-hidden flex border-t-[6px] border-[#002f6c]"
                                         style={{ rotate: '-3deg', boxShadow: '5px 10px 30px rgba(0,0,0,0.5)' }}
                                     >
-                                        <TextureOverlay opacity={0.2} />
+                                        <TextureOverlay opacity={0.12} />
 
                                         {/* Left Column: Photo & Official Seal */}
-                                        <div className="w-[35%] h-full bg-white/60 border-r border-gray-300 flex flex-col items-center py-4">
-                                            <div className="w-20 h-24 bg-gray-200 border-2 border-[#d4af37] rounded-sm overflow-hidden flex items-center justify-center relative shadow-inner mb-2">
+                                        <div className="w-[32%] h-full bg-white/60 border-r border-gray-300 flex flex-col items-center py-3">
+                                            <div className="w-16 h-20 bg-gray-200 border-2 border-[#d4af37] rounded-sm overflow-hidden flex items-center justify-center relative shadow-inner mb-1.5">
                                                 {user ? (
-                                                    <img src={user.photo || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"} alt="User" className="w-full h-full object-cover grayscale contrast-125" />
+                                                    <img src={user.photo || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"} alt="User" className="w-full h-full object-cover grayscale contrast-125 hover:grayscale-0 transition-all duration-700" />
                                                 ) : (
-                                                    <div className="w-full h-full bg-gray-300 flex items-center justify-center text-gray-500 text-[10px] font-bold">MISSING</div>
+                                                    <div className="w-full h-full bg-gray-300 flex items-center justify-center text-gray-500 text-[8px] font-bold">MISSING</div>
                                                 )}
                                                 <div className="absolute inset-0 border border-black/10"></div>
                                             </div>
-                                            <div className="mt-4 opacity-40">
-                                                <div className="w-12 h-12 rounded-full border-2 border-red-900 flex items-center justify-center -rotate-12">
-                                                    <span className="text-[6px] font-black text-red-900 text-center leading-[6px]">DEPT OF<br />DEFENSE</span>
+                                            <div className="mt-1 opacity-60">
+                                                <div className="w-8 h-8 rounded-full border border-red-800 flex items-center justify-center -rotate-12">
+                                                    <span className="text-[4px] font-black text-red-800 text-center leading-[4px]">OFFICIAL<br />SEAL</span>
                                                 </div>
                                             </div>
                                         </div>
 
                                         {/* Right Column: Info & Barcodes */}
-                                        <div className="flex-1 h-full p-4 flex flex-col justify-between">
+                                        <div className="flex-1 h-full p-3.5 flex flex-col justify-between relative">
                                             <div>
-                                                <div className="flex flex-col">
-                                                    <span className="text-[10px] font-black text-[#002f6c] tracking-[0.2em] uppercase">Intelligence Agency</span>
-                                                    <span className="text-[8px] font-bold text-red-700 opacity-80 uppercase tracking-widest">Authorized Personnel</span>
+                                                <div className="flex justify-between items-start mb-1.5">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[8px] font-black text-[#002f6c] tracking-[0.1em] uppercase">Intelligence Agency</span>
+                                                        <span className="text-[7px] font-bold text-red-700 opacity-80 uppercase tracking-widest">Authorized Personnel</span>
+                                                    </div>
                                                 </div>
-                                                <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center text-[8px] font-black border border-gray-200">A1</div>
-                                                <h3 className="font-sans font-black text-gray-800 text-2xl uppercase tracking-tighter leading-tight drop-shadow-sm">
+                                                <h3 className="font-sans font-black text-gray-800 text-lg uppercase tracking-tighter leading-tight drop-shadow-sm">
                                                     {user?.name || "REDACTED"}
                                                 </h3>
-                                                <p className="text-[11px] text-gray-600 font-medium uppercase tracking-wider mt-1">
+                                                <p className="text-[9px] text-gray-600 font-medium uppercase tracking-wider mt-0.5">
                                                     {user?.college || "KLE TECH UNIVERSITY"}
                                                 </p>
                                             </div>
 
-                                            <div className="mt-auto space-y-2">
-                                                <div className="flex justify-between items-end border-t border-gray-200 pt-3">
+                                            <div className="mt-auto space-y-1.5">
+                                                <div className="flex justify-between items-end border-t border-gray-200 pt-2">
                                                     <div className="space-y-0.5">
-                                                        <div className="text-[7px] text-gray-400 font-mono uppercase">Level 4 Clearance [TS/SCI]</div>
-                                                        <div className="text-[7px] text-gray-500 font-mono font-bold uppercase">Exp: 12 JAN 2026</div>
+                                                        <div className="text-[6px] text-gray-400 font-mono uppercase">Level 4 Clearance</div>
+                                                        <div className="text-[6px] text-gray-500 font-mono font-bold uppercase">Exp: 12 JAN 2026</div>
                                                     </div>
                                                     {/* Fake Barcode */}
-                                                    <div className="flex gap-[1.5px] h-8 items-end opacity-80">
-                                                        {[3, 5, 2, 4, 3, 6, 2, 5, 3, 4].map((h, i) => (
-                                                            <div key={i} className={`bg-black w-0.5`} style={{ height: `${h * 4}px` }}></div>
+                                                    <div className="flex gap-[1px] h-6 items-end opacity-70">
+                                                        {[2, 4, 1, 3, 2, 5, 2, 4].map((h, i) => (
+                                                            <div key={i} className={`bg-black w-[1.5px]`} style={{ height: `${h * 3}px` }}></div>
                                                         ))}
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-
-                                        {/* Glossy Overlay */}
-                                        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent pointer-events-none"></div>
+                                        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none"></div>
                                     </motion.div>
                                 </div>
 
@@ -169,7 +192,7 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                                         dragConstraints={{ left: -100, right: 300, top: -200, bottom: 0 }}
                                         whileHover={{ scale: 1.02 }}
                                         className="relative w-full h-full bg-[#d6cfc2] shadow-2xl flex items-center justify-center"
-                                        style={{ rotate: '3deg', boxShadow: '5px 10px 25px rgba(0,0,0,0.4)' }}
+                                        style={{ rotate: '3deg', boxShadow: '5px 10px 25px (0,0,0,0.4)' }}
                                     >
                                         <TextureOverlay opacity={0.6} />
                                         <div className="absolute inset-0 border-[2px] border-[#c4b090] m-3"></div>
@@ -188,16 +211,29 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                             </div>
 
                             {/* --- CENTER LEFT: Police Radio --- */}
-                            <div className="absolute left-[27%] bottom-[18%] w-60 md:w-[200px] z-20 pointer-events-none">
-                                <motion.img
-                                    src={policeRadioImg}
-                                    alt="Police Radio"
-                                    className="w-full drop-shadow-2xl opacity-90 pointer-events-auto cursor-pointer"
-                                    style={{ rotate: '0deg' }}
+                            <div
+                                className="absolute left-[27%] bottom-[18%] w-60 md:w-[200px] z-20 pointer-events-none"
+                            >
+                                <motion.div
+                                    className="relative w-full h-full pointer-events-auto"
                                     drag
                                     dragConstraints={{ left: -100, right: 100, top: -100, bottom: 100 }}
                                     onClick={handleRadioClick}
-                                />
+                                >
+                                    <img
+                                        src={policeRadioImg}
+                                        alt="Police Radio"
+                                        className="w-full drop-shadow-2xl opacity-90 cursor-pointer"
+                                        style={{ rotate: '0deg' }}
+                                    />
+                                    {/* Radio Indicator LED */}
+                                    <div
+                                        className={`absolute top-[48%] right-[42%] w-1.5 h-1.5 rounded-full z-30 transition-all duration-300 ${isRadioPlaying
+                                                ? 'bg-red-500 shadow-[0_0_8px_#ef4444] animate-pulse'
+                                                : 'bg-red-900/50'
+                                            }`}
+                                    />
+                                </motion.div>
                             </div>
 
                             {/* --- CENTER: Card Bundle --- */}
@@ -272,6 +308,54 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                         </div>
 
 
+                        {/* --- OVERLAYS --- */}
+                        <AnimatePresence>
+                            {/* Expanded Card View */}
+                            {selectedCardId && (
+                                <>
+                                    <motion.div
+                                        layoutId={`card-${selectedCardId}`}
+                                        initial={{ scale: 1, zIndex: 100 }}
+                                        animate={{ scale: 1.5, x: 0, y: 0, rotate: 0, zIndex: 1000 }}
+                                        className="fixed inset-0 m-auto w-64 h-96 z-[1000]"
+                                    >
+                                        <div className="relative w-full h-full bg-[#ebe8e3] rounded-lg shadow-2xl flex flex-col p-4 cursor-default transform-gpu">
+                                            <TextureOverlay opacity={0.5} />
+                                            <div className="w-full aspect-square bg-[#0a0a0a] p-1 shadow-inner relative overflow-hidden flex items-center justify-center">
+                                                <div className={`w-full h-full ${cards.find(c => c.id === selectedCardId)?.color} opacity-80`}></div>
+                                            </div>
+                                            <div className="mt-6 text-center">
+                                                <h2 className="font-serif font-black text-4xl text-gray-800 tracking-tighter uppercase mix-blend-multiply leading-none">
+                                                    {cards.find(c => c.id === selectedCardId)?.name}
+                                                </h2>
+                                                <div className="mt-4">
+                                                    <button
+                                                        onClick={() => window.location.href = `#club-${selectedCardId}`}
+                                                        className="px-6 py-2 bg-gray-900 text-white font-mono text-xs uppercase tracking-widest hover:bg-red-700 transition-colors"
+                                                    >
+                                                        Access File
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 0.6 }}
+                                        exit={{ opacity: 0 }}
+                                        className="fixed inset-0 bg-black z-[900] backdrop-blur-sm"
+                                        onClick={() => handleCloseCard({ stopPropagation: () => { } })}
+                                    />
+                                </>
+                            )}
+
+                            {/* Terminal View */}
+                            <RetroTerminal
+                                isOpen={isTerminalOpen}
+                                onClose={() => setIsTerminalOpen(false)}
+                            />
+                        </AnimatePresence>
+
                         {/* Close Button */}
                         <button
                             onClick={onClose}
@@ -317,106 +401,7 @@ const Card = ({ data, index, total, isTop, isSelected, onSwipe, onClick, onClose
         }
     }
 
-    if (isSelected) {
-        return (
-            <>
-                <motion.div
-                    layoutId={`card-${data.id}`}
-                    initial={{ scale: 1, zIndex: 100 }}
-                    animate={{ scale: 1.5, x: 0, y: 0, rotate: 0, zIndex: 1000 }}
-                    className="fixed inset-0 m-auto w-64 h-96 z-[1000]"
-                >
-                    <div className="relative w-full h-full bg-[#ebe8e3] rounded-lg shadow-2xl flex flex-col p-4 cursor-default transform-gpu">
-                        <TextureOverlay opacity={0.5} />
-
-                        {/* Expanded Content */}
-                        <div className="w-full aspect-square bg-[#0a0a0a] p-1 shadow-inner relative overflow-hidden flex items-center justify-center">
-                            <div className={`w-full h-full ${data.color} opacity-80`}></div>
-                        </div>
-
-                        <div className="mt-6 text-center">
-                            <h2 className="font-serif font-black text-4xl text-gray-800 tracking-tighter uppercase mix-blend-multiply leading-none">
-                                {data.name}
-                            </h2>
-                            <div className="mt-4">
-                                <button
-                                    onClick={onClick}
-                                    className="px-6 py-2 bg-gray-900 text-white font-mono text-xs uppercase tracking-widest hover:bg-red-700 transition-colors"
-                                >
-                                    Access File
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* --- TERMINAL OVERLAY --- */}
-                        <AnimatePresence>
-                            {isTerminalOpen && (
-                                <motion.div
-                                    initial={{ opacity: 0, scale: 0.9, y: 50 }}
-                                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                                    exit={{ opacity: 0, scale: 0.9, y: 50 }}
-                                    className="absolute inset-[15%] z-[100] bg-[#0a0a0a] rounded-lg border border-[#333] shadow-2xl flex flex-col overflow-hidden"
-                                    onClick={(e) => e.stopPropagation()}
-                                >
-                                    {/* Terminal Header */}
-                                    <div className="h-8 bg-[#1a1a1a] border-b border-[#333] flex items-center justify-between px-4">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                                            <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                                            <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                                            <span className="text-[10px] text-gray-500 font-mono ml-4 tracking-widest">SECURE_TERMINAL_V4.0</span>
-                                        </div>
-                                        <button
-                                            onClick={() => setIsTerminalOpen(false)}
-                                            className="text-gray-500 hover:text-white transition-colors"
-                                        >
-                                            <span className="text-xl">×</span>
-                                        </button>
-                                    </div>
-
-                                    {/* Terminal Content */}
-                                    <div className="flex-1 p-6 font-mono text-xs md:text-sm text-green-500 overflow-y-auto">
-                                        <p className="mb-2">Connecting to Secure Matrix...</p>
-                                        <p className="mb-2 text-white font-bold">ACCESS GRANTED. WELCOME AGENT.</p>
-                                        <div className="mt-4 space-y-1">
-                                            <p className="text-gray-500">&gt; decrypting_intelligence_files...</p>
-                                            <p className="pl-4">| [##########] 100% SUCCESS</p>
-                                            <p className="text-gray-500">&gt; checking_network_encryption...</p>
-                                            <p className="pl-4 text-yellow-500 text-[10px]">| WARNING: Unknown intercept detected at 148.5 Mhz.</p>
-                                            <p className="text-gray-500">&gt; scanning_locations...</p>
-                                            <p className="pl-4 text-green-400">| HUBBALLI: [ACTIVE] - Sector 4</p>
-                                            <p className="pl-4 text-green-400">| DHARWAD: [ACTIVE] - Sector 7</p>
-                                            <p className="pl-4 text-red-500">| BELAGAVI: [CONNECTION LOST]</p>
-                                            <br />
-                                            <p className="text-gray-500">&gt; pulling_event_briefs...</p>
-                                            <p className="pl-4 text-white">| INVENTO 2026: PHASE 1 INITIATED.</p>
-                                            <p className="mt-4 animate-pulse">_</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="h-4 bg-[#050505] flex items-center px-4">
-                                        <div className="w-full text-[8px] text-green-900 font-mono flex justify-between">
-                                            <span>CPU: 14%</span>
-                                            <span>MEM: 2.4GB</span>
-                                            <span>IP: 192.168.1.1</span>
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-
-                    </div>
-                </motion.div>
-                {/* Backdrop for focus */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 0.5 }}
-                    className="fixed inset-0 bg-black -z-10"
-                    onClick={onClose}
-                ></motion.div>
-            </>
-        )
-    }
+    if (isSelected) return null // Handled by parent overlay now
 
     return (
         <motion.div
@@ -435,26 +420,16 @@ const Card = ({ data, index, total, isTop, isSelected, onSwipe, onClick, onClose
             onClick={() => isTop ? onClick() : null}
             className={`absolute top-0 left-0 w-56 h-80 bg-[#ebe8e3] rounded shadow-sm cursor-grab active:cursor-grabbing transform-gpu border border-gray-300`}
         >
-            {/* Realistic Shadow for stack depth */}
             <div className="absolute inset-0 rounded shadow-[1px_1px_4px_rgba(0,0,0,0.1)]"></div>
-
             <TextureOverlay opacity={0.5} />
-
-            {/* Card Content Layout */}
             <div className="relative w-full h-full p-3 flex flex-col items-center">
-                {/* Tape/Detail */}
                 <div className="w-24 h-6 bg-yellow-100/50 absolute -top-2 rotate-1 opacity-80 backdrop-blur-sm mix-blend-multiply shadow-sm"></div>
-
-                {/* Photo Area */}
                 <div className="w-full aspect-square mt-4 bg-white p-2 shadow-inner relative overflow-hidden group">
                     <div className={`w-full h-full ${data.color} relative`}>
                         <div className="absolute inset-0 bg-gradient-to-tr from-black/20 to-transparent"></div>
-                        {/* Glossy Overlay */}
                         <div className="absolute inset-0 bg-gradient-to-b from-white/30 to-transparent opacity-40"></div>
                     </div>
                 </div>
-
-                {/* Text Area */}
                 <div className="mt-6 text-center">
                     <h3 className="font-serif font-black text-3xl text-gray-800 tracking-tighter uppercase mix-blend-multiply leading-none transform rotate-1 opacity-90">
                         {data.name}
@@ -463,12 +438,9 @@ const Card = ({ data, index, total, isTop, isSelected, onSwipe, onClick, onClose
                         Evidence #{100 + data.id}
                     </p>
                 </div>
-
-                {/* Stamp/Mark */}
                 <div className="absolute bottom-6 right-6 text-red-700/60 border-4 border-red-700/60 px-2 py-1 text-[10px] font-black rotate-[-12deg] tracking-widest uppercase rounded-sm mix-blend-multiply">
                     Verified
                 </div>
-
                 {isTop && (
                     <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-20">
                         <span className="bg-black/80 text-white text-[10px] px-2 py-1 rounded backdrop-blur-md">Inspect</span>
@@ -478,5 +450,6 @@ const Card = ({ data, index, total, isTop, isSelected, onSwipe, onClick, onClose
         </motion.div>
     )
 }
+
 
 export default BriefcaseInsider
