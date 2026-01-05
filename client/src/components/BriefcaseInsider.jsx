@@ -20,6 +20,8 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
     ])
 
     const [selectedCardId, setSelectedCardId] = useState(null)
+    const [statusText, setStatusText] = useState('Swipe cards to shuffle; click to inspect evidence.')
+    const [isTerminalOpen, setIsTerminalOpen] = useState(false)
 
     const moveCardToBack = () => {
         setCards((prev) => {
@@ -31,18 +33,32 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
     }
 
     const handleCardClick = (id) => {
+        const card = cards.find(c => c.id === id)
         if (selectedCardId === id) {
             // If already selected, navigate
             window.location.href = `#club-${id}`
         } else {
             // Select/Pop out
             setSelectedCardId(id)
+            setStatusText(`Inspecting: ${card.name} File. Click "Access File" to reveal details.`)
         }
     }
 
     const handleCloseCard = (e) => {
         e.stopPropagation()
         setSelectedCardId(null)
+        setStatusText('Swipe cards to shuffle; click to inspect evidence.')
+    }
+
+    const handleRadioClick = (e) => {
+        e.stopPropagation()
+        setStatusText("Intercepted: Frequency 148.5 - 'The drop is confirmed at midnight.'")
+    }
+
+    const handleLaptopClick = (e) => {
+        e.stopPropagation()
+        setIsTerminalOpen(true)
+        setStatusText("Accessing Secure Terminal... decrypting local files.")
     }
 
     return (
@@ -81,60 +97,68 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                             {/* --- LEFT SECTION: Envelope & ID --- */}
                             <div className="absolute left-0 top-0 bottom-0 w-[30%] p-8 z-30">
 
-                                {/* ID Card */}
-                                <div className="absolute top-[12%] left-[18%] w-48 h-72 perspective-1000 z-40">
+                                {/* ID Card - Horizontal Agent ID */}
+                                <div className="absolute top-[10%] left-[12%] w-80 h-52 perspective-1000 z-40">
                                     <motion.div
                                         drag
                                         dragConstraints={{ left: 0, right: 300, top: 0, bottom: 300 }}
                                         whileHover={{ scale: 1.02, rotate: 0 }}
-                                        className="relative w-full h-full bg-gradient-to-b from-gray-50 to-gray-100 rounded shadow-xl overflow-hidden flex flex-col items-center"
-                                        style={{ rotate: '-5deg', boxShadow: '2px 4px 15px rgba(0,0,0,0.5)' }}
+                                        className="relative w-full h-full bg-[#f4f7f9] rounded shadow-2xl overflow-hidden flex border-t-8 border-[#002f6c]"
+                                        style={{ rotate: '-3deg', boxShadow: '5px 10px 30px rgba(0,0,0,0.5)' }}
                                     >
-                                        <TextureOverlay opacity={0.3} />
+                                        <TextureOverlay opacity={0.2} />
 
-                                        {/* Lanyard Hole */}
-                                        <div className="absolute top-2 w-16 h-1 bg-gray-200 rounded-full mx-auto"></div>
-
-                                        {/* Header */}
-                                        <div className="w-full h-20 bg-gradient-to-r from-[#002f6c] to-[#003d8f] relative flex items-end justify-center pb-1 overflow-hidden">
-                                            <div className="text-[9px] text-white/60 absolute top-1.5 right-2 font-mono tracking-wider">ID: #882-A</div>
-                                            <div className="text-white text-[10px] font-bold tracking-widest uppercase opacity-90">Authorized Personnel</div>
-                                        </div>
-
-                                        {/* Photo Circle */}
-                                        <div className="w-20 h-20 rounded bg-gray-200 border-2 border-white shadow-md -mt-10 relative z-10 overflow-hidden flex items-center justify-center">
-                                            {user ? (
-                                                <img src={user.photo || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"} alt="User" className="w-full h-full object-cover" />
-                                            ) : (
-                                                <div className="w-full h-full bg-gray-300 flex items-center justify-center text-gray-500 text-xs">NO PHOTO</div>
-                                            )}
-                                        </div>
-
-                                        {/* Details */}
-                                        <div className="mt-3 text-center px-3 w-full">
-                                            {user ? (
-                                                <>
-                                                    <h3 className="font-bold text-gray-800 text-lg font-sans uppercase tracking-wide">{user.name || "Agent Name"}</h3>
-                                                    <p className="text-[10px] text-blue-900 font-semibold uppercase tracking-wider mt-0.5">{user.college || "KLE Tech"}</p>
-                                                    <div className="mt-3 w-full py-1.5 bg-gray-50 border border-gray-300 flex items-center justify-center">
-                                                        <span className="font-mono text-[9px] text-gray-500 tracking-wider">AUTHORIZED ACCESS</span>
-                                                    </div>
-                                                    <div className="mt-2 text-center">
-                                                        <div className="text-[8px] text-gray-400 font-mono">VALID UNTIL: 12/2026</div>
-                                                    </div>
-                                                </>
-                                            ) : (
-                                                <div className="flex flex-col items-center gap-2">
-                                                    <h3 className="font-bold text-gray-400 text-base uppercase tracking-tight">Unknown Agent</h3>
-                                                    <button className="mt-2 px-3 py-1 bg-red-700 text-white text-[10px] font-bold uppercase tracking-wider rounded shadow hover:bg-red-800 transition-colors">
-                                                        Login Required
-                                                    </button>
+                                        {/* Left Column: Photo & Official Seal */}
+                                        <div className="w-[35%] h-full bg-white/60 border-r border-gray-300 flex flex-col items-center py-4">
+                                            <div className="w-20 h-24 bg-gray-200 border-2 border-[#d4af37] rounded-sm overflow-hidden flex items-center justify-center relative shadow-inner mb-2">
+                                                {user ? (
+                                                    <img src={user.photo || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"} alt="User" className="w-full h-full object-cover grayscale contrast-125" />
+                                                ) : (
+                                                    <div className="w-full h-full bg-gray-300 flex items-center justify-center text-gray-500 text-[10px] font-bold">MISSING</div>
+                                                )}
+                                                <div className="absolute inset-0 border border-black/10"></div>
+                                            </div>
+                                            <div className="mt-4 opacity-40">
+                                                <div className="w-12 h-12 rounded-full border-2 border-red-900 flex items-center justify-center -rotate-12">
+                                                    <span className="text-[6px] font-black text-red-900 text-center leading-[6px]">DEPT OF<br />DEFENSE</span>
                                                 </div>
-                                            )}
+                                            </div>
                                         </div>
 
-                                        {/* Bottom Stripe */}
-                                        <div className="absolute bottom-0 w-full h-3 bg-gradient-to-r from-yellow-500 to-yellow-600"></div>
+                                        {/* Right Column: Info & Barcodes */}
+                                        <div className="flex-1 h-full p-4 flex flex-col justify-between">
+                                            <div>
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] font-black text-[#002f6c] tracking-[0.2em] uppercase">Intelligence Agency</span>
+                                                    <span className="text-[8px] font-bold text-red-700 opacity-80 uppercase tracking-widest">Authorized Personnel</span>
+                                                </div>
+                                                <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center text-[8px] font-black border border-gray-200">A1</div>
+                                                <h3 className="font-sans font-black text-gray-800 text-2xl uppercase tracking-tighter leading-tight drop-shadow-sm">
+                                                    {user?.name || "REDACTED"}
+                                                </h3>
+                                                <p className="text-[11px] text-gray-600 font-medium uppercase tracking-wider mt-1">
+                                                    {user?.college || "KLE TECH UNIVERSITY"}
+                                                </p>
+                                            </div>
+
+                                            <div className="mt-auto space-y-2">
+                                                <div className="flex justify-between items-end border-t border-gray-200 pt-3">
+                                                    <div className="space-y-0.5">
+                                                        <div className="text-[7px] text-gray-400 font-mono uppercase">Level 4 Clearance [TS/SCI]</div>
+                                                        <div className="text-[7px] text-gray-500 font-mono font-bold uppercase">Exp: 12 JAN 2026</div>
+                                                    </div>
+                                                    {/* Fake Barcode */}
+                                                    <div className="flex gap-[1.5px] h-8 items-end opacity-80">
+                                                        {[3, 5, 2, 4, 3, 6, 2, 5, 3, 4].map((h, i) => (
+                                                            <div key={i} className={`bg-black w-0.5`} style={{ height: `${h * 4}px` }}></div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Glossy Overlay */}
+                                        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent pointer-events-none"></div>
                                     </motion.div>
                                 </div>
 
@@ -164,7 +188,7 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                             </div>
 
                             {/* --- CENTER LEFT: Police Radio --- */}
-                            <div className="absolute left-[15%] bottom-[20%] w-60 md:w-120 z-20 pointer-events-none">
+                            <div className="absolute left-[27%] bottom-[18%] w-60 md:w-[200px] z-20 pointer-events-none">
                                 <motion.img
                                     src={policeRadioImg}
                                     alt="Police Radio"
@@ -172,6 +196,7 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                                     style={{ rotate: '0deg' }}
                                     drag
                                     dragConstraints={{ left: -100, right: 100, top: -100, bottom: 100 }}
+                                    onClick={handleRadioClick}
                                 />
                             </div>
 
@@ -219,12 +244,33 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                                     <img
                                         src={laptopImg}
                                         alt="Secure Laptop"
-                                        className="h-full w-auto object-contain drop-shadow-2xl opacity-90 hover:opacity-100 transition-opacity"
+                                        className="h-full w-auto object-contain drop-shadow-2xl opacity-90 hover:opacity-100 transition-opacity cursor-pointer pointer-events-auto"
+                                        onClick={handleLaptopClick}
                                     />
                                 </motion.div>
                             </div>
 
                         </div>
+
+                        {/* --- STATUS FOOTER --- */}
+                        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[60] pointer-events-none w-full flex justify-center">
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    key={statusText}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                                    className="px-6 py-2 "
+                                >
+                                    <p className="text-white font-mono text-[10px] md:text-xs tracking-[0.3em] uppercase whitespace-nowrap">
+                                        <span className="opacity-50 mr-2">≫</span>
+                                        {statusText}
+                                    </p>
+                                </motion.div>
+                            </AnimatePresence>
+                        </div>
+
 
                         {/* Close Button */}
                         <button
@@ -277,7 +323,7 @@ const Card = ({ data, index, total, isTop, isSelected, onSwipe, onClick, onClose
                 <motion.div
                     layoutId={`card-${data.id}`}
                     initial={{ scale: 1, zIndex: 100 }}
-                    animate={{ scale: 1.5, x: -100, y: -50, rotate: 0, zIndex: 1000 }}
+                    animate={{ scale: 1.5, x: 0, y: 0, rotate: 0, zIndex: 1000 }}
                     className="fixed inset-0 m-auto w-64 h-96 z-[1000]"
                 >
                     <div className="relative w-full h-full bg-[#ebe8e3] rounded-lg shadow-2xl flex flex-col p-4 cursor-default transform-gpu">
@@ -301,6 +347,64 @@ const Card = ({ data, index, total, isTop, isSelected, onSwipe, onClick, onClose
                                 </button>
                             </div>
                         </div>
+
+                        {/* --- TERMINAL OVERLAY --- */}
+                        <AnimatePresence>
+                            {isTerminalOpen && (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.9, y: 50 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.9, y: 50 }}
+                                    className="absolute inset-[15%] z-[100] bg-[#0a0a0a] rounded-lg border border-[#333] shadow-2xl flex flex-col overflow-hidden"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    {/* Terminal Header */}
+                                    <div className="h-8 bg-[#1a1a1a] border-b border-[#333] flex items-center justify-between px-4">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                                            <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                                            <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                                            <span className="text-[10px] text-gray-500 font-mono ml-4 tracking-widest">SECURE_TERMINAL_V4.0</span>
+                                        </div>
+                                        <button
+                                            onClick={() => setIsTerminalOpen(false)}
+                                            className="text-gray-500 hover:text-white transition-colors"
+                                        >
+                                            <span className="text-xl">×</span>
+                                        </button>
+                                    </div>
+
+                                    {/* Terminal Content */}
+                                    <div className="flex-1 p-6 font-mono text-xs md:text-sm text-green-500 overflow-y-auto">
+                                        <p className="mb-2">Connecting to Secure Matrix...</p>
+                                        <p className="mb-2 text-white font-bold">ACCESS GRANTED. WELCOME AGENT.</p>
+                                        <div className="mt-4 space-y-1">
+                                            <p className="text-gray-500">&gt; decrypting_intelligence_files...</p>
+                                            <p className="pl-4">| [##########] 100% SUCCESS</p>
+                                            <p className="text-gray-500">&gt; checking_network_encryption...</p>
+                                            <p className="pl-4 text-yellow-500 text-[10px]">| WARNING: Unknown intercept detected at 148.5 Mhz.</p>
+                                            <p className="text-gray-500">&gt; scanning_locations...</p>
+                                            <p className="pl-4 text-green-400">| HUBBALLI: [ACTIVE] - Sector 4</p>
+                                            <p className="pl-4 text-green-400">| DHARWAD: [ACTIVE] - Sector 7</p>
+                                            <p className="pl-4 text-red-500">| BELAGAVI: [CONNECTION LOST]</p>
+                                            <br />
+                                            <p className="text-gray-500">&gt; pulling_event_briefs...</p>
+                                            <p className="pl-4 text-white">| INVENTO 2026: PHASE 1 INITIATED.</p>
+                                            <p className="mt-4 animate-pulse">_</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="h-4 bg-[#050505] flex items-center px-4">
+                                        <div className="w-full text-[8px] text-green-900 font-mono flex justify-between">
+                                            <span>CPU: 14%</span>
+                                            <span>MEM: 2.4GB</span>
+                                            <span>IP: 192.168.1.1</span>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
                     </div>
                 </motion.div>
                 {/* Backdrop for focus */}
