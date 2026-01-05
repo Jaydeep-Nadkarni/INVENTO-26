@@ -1,69 +1,78 @@
-import React, { useRef } from 'react'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import React, { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import bgImage from '../assets/UI/Invento-bg.jpg'
 import Hero from '../components/Hero'
 import Navbar from '../components/Navbar'
 import Briefcase from '../components/Briefcase'
+import BriefcaseInsider from '../components/BriefcaseInsider'
 
 const Home = () => {
-  const containerRef = useRef(null)
-
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end end"]
-  })
-
-  // Hero Section transitions: fades and scales up as you scroll away
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.25], [1, 0])
-  const heroScale = useTransform(scrollYProgress, [0, 0.25], [1, 1.1])
-  const heroY = useTransform(scrollYProgress, [0, 0.25], [0, -50])
-
-  // Briefcase Section entrance: slides up and reveals
-  // We keep it visible for a large portion of the page after entrance
-  const briefcaseOpacity = useTransform(scrollYProgress, [0.15, 0.35, 0.9, 1], [0, 1, 1, 0])
-  const briefcaseY = useTransform(scrollYProgress, [0.15, 0.45], [200, 0])
-  const briefcaseScale = useTransform(scrollYProgress, [0.15, 0.45], [0.6, 1])
+  const [isBriefcaseOpen, setIsBriefcaseOpen] = useState(false)
 
   return (
-    <div
-      ref={containerRef}
-      className='w-full bg-[#0a0a0a] relative'
-    >
-      {/* Fixed Background - Stays throughout the investigation */}
+    <div className='w-full bg-[#0a0a0a] relative overflow-x-hidden selection:bg-red-700/30'>
+      {/* Fixed Background with subtle blur */}
       <div
         className='fixed inset-0 bg-cover bg-center bg-no-repeat z-0'
         style={{ backgroundImage: `url(${bgImage})` }}
       >
-        <div className='absolute inset-0 bg-black/45 backdrop-blur-[1.5px]'></div>
+        <div className='absolute inset-0 bg-black/50 backdrop-blur-[1px]'></div>
       </div>
 
       <Navbar />
 
-      {/* Primary Landing (Hero) */}
-      <motion.section
-        style={{ opacity: heroOpacity, scale: heroScale, y: heroY }}
-        className="relative z-10 w-full h-screen flex items-center justify-center pointer-events-none"
-      >
-        <div className="pointer-events-auto w-full">
-          <Hero />
-        </div>
-      </motion.section>
-
-      {/* 3D Evidence Exposure - The Briefcase */}
-      <section className="relative z-10 w-full h-[150vh] flex flex-col items-start justify-start px-4">
-        <motion.div
-          style={{
-            opacity: briefcaseOpacity,
-            y: briefcaseY,
-            scale: briefcaseScale
-          }}
-          className="sticky top-0 w-full h-screen flex items-center justify-center pointer-events-none"
-        >
-          <div className="w-full pointer-events-auto relative">
-            <Briefcase />
-          </div>
-        </motion.div>
+      {/* Hero Section */}
+      <section className="relative z-10 w-full min-h-screen flex items-center justify-center">
+        <Hero />
       </section>
+
+      {/* Separation Spacing */}
+      <div className="h-[20vh] relative z-10"></div>
+
+      {/* Briefcase Section */}
+      {!isBriefcaseOpen && (
+        <section className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center py-20 px-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            viewport={{ once: true, margin: "-100px" }}
+            className="w-full max-w-[1000px] aspect-video flex flex-col items-center"
+          >
+            {/* Simple Text with Ease Out In */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, ease: "easeInOut", delay: 0.2 }}
+              className="text-center mb-10"
+            >
+              <h2 className="text-4xl md:text-6xl font-serif font-black text-red-700 uppercase tracking-tighter drop-shadow-lg"
+                style={{ textShadow: '2px 2px 0px #000' }}>
+                The Evidence
+              </h2>
+              <p className="font-mono text-yellow-500/70 text-xs md:text-sm mt-3 tracking-[0.3em]">
+                [ CLASSIFIED ASSET #4092-B ]
+              </p>
+            </motion.div>
+
+            {/* Large Bag Viewport */}
+            <div className="w-full grow h-[500px] md:h-[600px] relative">
+              <Briefcase onClick={() => setIsBriefcaseOpen(true)} />
+            </div>
+          </motion.div>
+        </section>
+      )}
+
+      {/* Insider View */}
+      <BriefcaseInsider
+        isOpen={isBriefcaseOpen}
+        onClose={() => setIsBriefcaseOpen(false)}
+      />
+
+      {/* Footer Space */}
+      {!isBriefcaseOpen && (
+        <div className="h-[20vh] relative z-10 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
+      )}
     </div>
   )
 }
