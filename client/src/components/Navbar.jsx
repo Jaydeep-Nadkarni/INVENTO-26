@@ -33,16 +33,20 @@ const Navbar = () => {
         ))}
       </div>
 
-      {/* Register Button - The "Power" Button */}
+      {/* Register Button - TOP SECRET STAMP */}
       <button
         style={{
-          backgroundImage: `url(${tex2})`,
+          backgroundImage: `url(${tex3})`,
           backgroundSize: 'cover',
-          backgroundPosition: 'center'
+          backgroundBlendMode: 'multiply',
+          backgroundColor: '#991b1b'
         }}
-        className="px-8 py-2 text-black font-black uppercase tracking-tighter hover:brightness-110 active:translate-y-[2px] transition-all relative overflow-hidden"
+        className="px-5 py-1.5 border-[3px] border-red-600 shadow-[0_0_15px_rgba(220,38,38,0.2),inset_0_0_10px_rgba(0,0,0,0.5)] transform active:scale-95 transition-all duration-300 flex flex-col items-center justify-center group"
       >
-        <span className="relative z-10">Register</span>
+        <span className="text-[8px] text-red-400/80 font-mono tracking-[0.3em] font-bold">TOP SECRET</span>
+        <span className="text-lg text-white font-black tracking-tighter uppercase italic leading-none drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
+          Register
+        </span>
       </button>
     </nav>
   )
