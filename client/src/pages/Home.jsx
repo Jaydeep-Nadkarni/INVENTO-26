@@ -5,11 +5,13 @@ import Hero from '../components/Hero'
 import Navbar from '../components/Navbar'
 import Briefcase from '../components/Briefcase'
 import BriefcaseInsider from '../components/BriefcaseInsider'
+import EventsModal from '../components/EventsModal'
 import openSound from '../assets/audios/briefcase-open2.mp3'
 import closeSound from '../assets/audios/briefcase-open.mp3'
 
 const Home = () => {
   const [isBriefcaseOpen, setIsBriefcaseOpen] = useState(false)
+  const [isEventsOpen, setIsEventsOpen] = useState(false)
   const [showCallout, setShowCallout] = useState(false)
   const hoverTimerRef = useRef(null)
 
@@ -27,6 +29,14 @@ const Home = () => {
   const handleCloseBriefcase = () => {
     playSound(closeSound)
     setIsBriefcaseOpen(false)
+  }
+
+  const handleOpenEvents = () => {
+    setIsEventsOpen(true)
+  }
+
+  const handleCloseEvents = () => {
+    setIsEventsOpen(false)
   }
 
   const handleMouseEnter = () => {
@@ -61,7 +71,7 @@ const Home = () => {
         <div className='absolute inset-0 bg-black/50 backdrop-blur-[1px]'></div>
       </div>
 
-      <Navbar />
+      <Navbar onEventsClick={handleOpenEvents} />
 
       {/* Hero Section */}
       <section className="relative z-10 w-full min-h-screen flex items-center justify-center">
@@ -126,6 +136,12 @@ const Home = () => {
       <BriefcaseInsider
         isOpen={isBriefcaseOpen}
         onClose={handleCloseBriefcase}
+      />
+
+      {/* Events Modal */}
+      <EventsModal
+        isOpen={isEventsOpen}
+        onClose={handleCloseEvents}
       />
 
       {/* Footer Space */}
