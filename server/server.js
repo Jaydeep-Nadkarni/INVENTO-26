@@ -1,6 +1,7 @@
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+import cors from "cors";
 import connectDB from "./src/config/db.js";
 import userRoutes from "./src/routes/userRoutes.js";
 
@@ -11,6 +12,7 @@ connectDB();
 const app = express();
 
 // ---------- Middleware ----------
+app.use(cors());
 app.use(express.json());
 
 // ---------- Routes ----------

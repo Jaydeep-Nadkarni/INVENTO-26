@@ -1,33 +1,33 @@
 import React from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import tex1 from '../assets/UI/button-texture-1.png'
 import tex2 from '../assets/UI/button-texture-1.png'
 import tex3 from '../assets/UI/button-texture-3.png'
 
 const Navbar = ({ onEventsClick }) => {
-  const navItems = ['Home', 'Events', 'Schedule', 'Contact']
+  const location = useLocation()
   const textures = [tex1, tex2, tex3]
-
-  const handleNavClick = (item, e) => {
-    if (item === 'Events' && onEventsClick) {
-      e.preventDefault()
-      onEventsClick()
-    }
-  }
+  
+  const navItems = [
+    { label: 'Home', path: '/' },
+    { label: 'Events', path: '/events' },
+    { label: 'Schedule', path: '/schedule' },
+    { label: 'Contact', path: '/contact' }
+  ]
 
   return (
     <nav className="fixed top-0 left-0 w-full z-50 px-6 py-4 flex items-center  justify-between">
       {/* Logo/Brand */}
-      <div className="text-yellow-500 font-serif font-bold text-xl tracking-tighter">
+      <Link to="/" className="text-yellow-500 font-serif font-bold text-xl tracking-tighter hover:opacity-80 transition-opacity">
         INVENTO <span className="text-xs align-top opacity-70">'26</span>
-      </div>
+      </Link>
 
       {/* Nav Links */}
       <div className="hidden md:flex items-center gap-4">
         {navItems.map((item, index) => (
-          <a
-            key={item}
-            href={`#${item.toLowerCase()}`}
-            onClick={(e) => handleNavClick(item, e)}
+          <Link
+            key={item.label}
+            to={item.path}
             style={{
               backgroundImage: `url(${textures[index % textures.length]})`,
               backgroundSize: 'cover',
@@ -36,8 +36,8 @@ const Navbar = ({ onEventsClick }) => {
             }}
             className="px-5 py-2 text-gray-900 font-bold text-[10px] uppercase tracking-wider hover:brightness-110 active:border-t-black/60 active:border-l-black/60 active:border-b-white/50 active:border-r-white/50 active:translate-y-[1px] transition-all duration-75 relative overflow-hidden"
           >
-            <span className="relative z-10">{item}</span>
-          </a>
+            <span className="relative z-10">{item.label}</span>
+          </Link>
         ))}
       </div>
 
