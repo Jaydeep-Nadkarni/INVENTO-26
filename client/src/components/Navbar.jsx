@@ -3,9 +3,16 @@ import tex1 from '../assets/UI/button-texture-1.png'
 import tex2 from '../assets/UI/button-texture-1.png'
 import tex3 from '../assets/UI/button-texture-3.png'
 
-const Navbar = () => {
+const Navbar = ({ onEventsClick }) => {
   const navItems = ['Home', 'Events', 'Schedule', 'Contact']
   const textures = [tex1, tex2, tex3]
+
+  const handleNavClick = (item, e) => {
+    if (item === 'Events' && onEventsClick) {
+      e.preventDefault()
+      onEventsClick()
+    }
+  }
 
   return (
     <nav className="fixed top-0 left-0 w-full z-50 px-6 py-4 flex items-center  justify-between">
@@ -20,6 +27,7 @@ const Navbar = () => {
           <a
             key={item}
             href={`#${item.toLowerCase()}`}
+            onClick={(e) => handleNavClick(item, e)}
             style={{
               backgroundImage: `url(${textures[index % textures.length]})`,
               backgroundSize: 'cover',
