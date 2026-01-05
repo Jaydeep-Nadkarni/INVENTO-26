@@ -4,7 +4,9 @@ import paperTexture from '../assets/UI/paper-texture.jpg'
 import laptopImg from '../assets/UI/laptop.png'
 import policeRadioImg from '../assets/UI/police-radio.png'
 import RetroTerminal from './RetroTerminal/RetroTerminal'
-import radioAudio from '../assets/auidos/radio.m4a'
+import radioAudio from '../assets/audios/radio.m4a'
+import laptopSound from '../assets/audios/laptopn-open.mp3'
+import pageTurnSound from '../assets/audios/page-turn.mp3'
 import { useRef, useEffect } from 'react'
 
 const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
@@ -23,6 +25,7 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
     ])
 
     const [selectedCardId, setSelectedCardId] = useState(null)
+    const [isIDExpanded, setIsIDExpanded] = useState(false)
     const [statusText, setStatusText] = useState('Swipe cards to shuffle;')
     const [isTerminalOpen, setIsTerminalOpen] = useState(false)
     const [isRadioPlaying, setIsRadioPlaying] = useState(false)
@@ -39,7 +42,27 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
         }
     }, [])
 
+    // Stop radio if briefcase is closed
+    useEffect(() => {
+        if (!isOpen && isRadioPlaying) {
+            stopRadioIfPlaying()
+        }
+    }, [isOpen])
+
+    const playEffect = (soundFile) => {
+        const audio = new Audio(soundFile)
+        audio.play().catch(e => console.log("Sound effect failed:", e))
+    }
+
+    const stopRadioIfPlaying = () => {
+        if (isRadioPlaying && audioRef.current) {
+            audioRef.current.pause()
+            setIsRadioPlaying(false)
+        }
+    }
+
     const moveCardToBack = () => {
+        playEffect(pageTurnSound)
         setCards((prev) => {
             const newCards = [...prev]
             const topCard = newCards.shift()
@@ -55,8 +78,9 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
             window.location.href = `#club-${id}`
         } else {
             // Select/Pop out
+            playEffect(pageTurnSound)
             setSelectedCardId(id)
-            setStatusText(`Inspecting: ${card.name} File. Click "Access File" to reveal details. Click outside the card to close.`)
+            setStatusText(`Inspecting: ${card.name} File. Click "OPEN" to reveal details. Click outside the card to close.`)
         }
     }
 
@@ -81,6 +105,8 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
 
     const handleLaptopClick = (e) => {
         e.stopPropagation()
+        stopRadioIfPlaying()
+        playEffect(laptopSound)
         setIsTerminalOpen(true)
         setStatusText("Accessing the laptop...")
     }
@@ -124,63 +150,93 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                                 {/* ID Card - Horizontal Agent ID */}
                                 <div className="absolute top-[12%] left-[12%] w-[260px] h-[160px] perspective-1000 z-40">
                                     <motion.div
-                                        drag
+                                        layoutId="id-card"
+                                        drag={!isIDExpanded}
                                         dragConstraints={{ left: 0, right: 300, top: 0, bottom: 300 }}
                                         whileHover={{ scale: 1.02, rotate: 0 }}
-                                        className="relative w-full h-full bg-[#f4f7f9] rounded shadow-2xl overflow-hidden flex border-t-[6px] border-[#002f6c]"
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            setIsIDExpanded(true)
+                                            setStatusText("Inspecting Agent Badge...")
+                                        }}
+                                        className="relative w-full h-full bg-[#f4f7f9] rounded shadow-2xl overflow-hidden flex flex-col border-t-[6px] border-blue-900 cursor-pointer"
                                         style={{ rotate: '-3deg', boxShadow: '5px 10px 30px rgba(0,0,0,0.5)' }}
                                     >
                                         <TextureOverlay opacity={0.12} />
 
-                                        {/* Left Column: Photo & Official Seal */}
-                                        <div className="w-[32%] h-full bg-white/60 border-r border-gray-300 flex flex-col items-center py-3">
-                                            <div className="w-16 h-20 bg-gray-200 border-2 border-[#d4af37] rounded-sm overflow-hidden flex items-center justify-center relative shadow-inner mb-1.5">
+                                        {/* INVENTO Header */}
+                                        <div className="w-full bg-blue-900 py-1 px-3 flex justify-between items-center">
+                                            <span className="text-[10px] font-black text-white tracking-widest uppercase">INVENTO 2026</span>
+                                            <div className="flex gap-1">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>
+                                                <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-1 overflow-hidden">
+                                            {/* Left Column: Photo & Official Seal */}
+                                            <div className="w-[32%] h-full bg-white/60 border-r border-gray-300 flex flex-col items-center py-2">
+                                                <div className="w-16 h-20 bg-gray-200 border-2 border-[#d4af37] rounded-sm overflow-hidden flex items-center justify-center relative shadow-inner mb-1.5">
+                                                    {user ? (
+                                                        <img src={user.photo || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"} alt="User" className="w-full h-full object-cover grayscale contrast-125 transition-all duration-700" />
+                                                    ) : (
+                                                        <div className="w-full h-full bg-gray-300 flex flex-col items-center justify-center text-gray-500 text-[6px] font-bold text-center px-1">
+                                                            <span className="text-lg opacity-30">👤</span>
+                                                            UNAUTHORIZED
+                                                        </div>
+                                                    )}
+                                                    <div className="absolute inset-0 border border-black/10"></div>
+                                                </div>
+                                                <div className="mt-0.5 opacity-60 scale-75">
+                                                    <div className="w-8 h-8 rounded-full border border-red-800 flex items-center justify-center -rotate-12">
+                                                        <span className="text-[4px] font-black text-red-800 text-center leading-[4px]">Verified</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Right Column: Info & Barcodes */}
+                                            <div className="flex-1 h-full p-2.5 flex flex-col justify-between relative bg-white/40">
                                                 {user ? (
-                                                    <img src={user.photo || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"} alt="User" className="w-full h-full object-cover grayscale contrast-125 hover:grayscale-0 transition-all duration-700" />
+                                                    <div>
+                                                        <h3 className="font-sans font-black text-gray-800 text-sm uppercase tracking-tight leading-tight mb-0.5">
+                                                            {user.name}
+                                                        </h3>
+                                                        <p className="text-[8px] text-gray-600 font-medium uppercase tracking-wider line-clamp-1">
+                                                            {user.institution || user.college || "KLE TECH UNIVERSITY"}
+                                                        </p>
+                                                    </div>
                                                 ) : (
-                                                    <div className="w-full h-full bg-gray-300 flex items-center justify-center text-gray-500 text-[8px] font-bold">MISSING</div>
+                                                    <div className="h-full flex flex-col justify-center items-center gap-1">
+                                                        <span className="text-[8px] font-black text-red-800 animate-pulse">LOGIN REQUIRED</span>
+                                                        <button
+                                                            className="px-2 py-1 bg-blue-900 text-white text-[7px] font-bold uppercase rounded-sm hover:bg-blue-800 transition-colors"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation()
+                                                                window.location.href = '/login'
+                                                            }}
+                                                        >
+                                                            Identify Agent
+                                                        </button>
+                                                    </div>
                                                 )}
-                                                <div className="absolute inset-0 border border-black/10"></div>
-                                            </div>
-                                            <div className="mt-1 opacity-60">
-                                                <div className="w-8 h-8 rounded-full border border-red-800 flex items-center justify-center -rotate-12">
-                                                    <span className="text-[4px] font-black text-red-800 text-center leading-[4px]">OFFICIAL<br />SEAL</span>
-                                                </div>
-                                            </div>
-                                        </div>
 
-                                        {/* Right Column: Info & Barcodes */}
-                                        <div className="flex-1 h-full p-3.5 flex flex-col justify-between relative">
-                                            <div>
-                                                <div className="flex justify-between items-start mb-1.5">
-                                                    <div className="flex flex-col">
-                                                        <span className="text-[8px] font-black text-[#002f6c] tracking-[0.1em] uppercase">Intelligence Agency</span>
-                                                        <span className="text-[7px] font-bold text-red-700 opacity-80 uppercase tracking-widest">Authorized Personnel</span>
-                                                    </div>
-                                                </div>
-                                                <h3 className="font-sans font-black text-gray-800 text-lg uppercase tracking-tighter leading-tight drop-shadow-sm">
-                                                    {user?.name || "REDACTED"}
-                                                </h3>
-                                                <p className="text-[9px] text-gray-600 font-medium uppercase tracking-wider mt-0.5">
-                                                    {user?.college || "KLE TECH UNIVERSITY"}
-                                                </p>
-                                            </div>
-
-                                            <div className="mt-auto space-y-1.5">
-                                                <div className="flex justify-between items-end border-t border-gray-200 pt-2">
+                                                <div className="mt-auto pt-1.5 border-t border-gray-200 flex justify-between items-end">
                                                     <div className="space-y-0.5">
-                                                        <div className="text-[6px] text-gray-400 font-mono uppercase">Level 4 Clearance</div>
-                                                        <div className="text-[6px] text-gray-500 font-mono font-bold uppercase">Exp: 12 JAN 2026</div>
+                                                        <div className="text-[5px] text-gray-400 font-mono uppercase tracking-tighter">Verified</div>
+                                                        <div className="text-[5px] text-gray-500 font-mono font-bold uppercase">Exp: 17 MAR 2026</div>
                                                     </div>
-                                                    {/* Fake Barcode */}
-                                                    <div className="flex gap-[1px] h-6 items-end opacity-70">
-                                                        {[2, 4, 1, 3, 2, 5, 2, 4].map((h, i) => (
-                                                            <div key={i} className={`bg-black w-[1.5px]`} style={{ height: `${h * 3}px` }}></div>
-                                                        ))}
-                                                    </div>
+
                                                 </div>
                                             </div>
                                         </div>
+
+                                        {/* Disclaimer Line */}
+                                        <div className="w-full bg-[#1a1a1a] py-0.5 px-2 text-center border-t border-[#333]">
+                                            <p className="text-[4.5px] text-gray-500 uppercase font-mono tracking-tighter">
+                                                This is not the official passes/ID card for INVENTO 2026. For simulation only.
+                                            </p>
+                                        </div>
+
                                         <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none"></div>
                                     </motion.div>
                                 </div>
@@ -200,11 +256,11 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                                         <div className="absolute top-0 right-0 border-t-[60px] border-r-[60px] border-t-[#ebe1d1] border-r-[#b8aa8e] shadow-sm transform rotate-90"></div>
 
                                         <div className="flex flex-col items-center gap-2 transform -rotate-2">
-                                            <span className="font-serif text-[#8f2727] font-bold text-3xl tracking-[0.2em] uppercase mix-blend-multiply opacity-90 border-2 border-[#8f2727] px-4 py-2 rounded-sm"
+                                            <span className="font-serif text-[#8f2727] font-bold text-2xl tracking-[0.2em] uppercase mix-blend-multiply opacity-90 border-2 border-[#8f2727] px-4 py-2 rounded-sm"
                                                 style={{ transform: 'rotate(-5deg)' }}>
-                                                TOP SECRET
+                                                CONFIDENTIAL
                                             </span>
-                                            <span className="font-mono text-[10px] text-gray-500 tracking-widest">DO NOT OPEN</span>
+                                            <span className="font-mono text-[10px] text-gray-500 tracking-widest">LETTER</span>
                                         </div>
                                     </motion.div>
                                 </div>
@@ -229,8 +285,8 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                                     {/* Radio Indicator LED */}
                                     <div
                                         className={`absolute top-[48%] right-[42%] w-1.5 h-1.5 rounded-full z-30 transition-all duration-300 ${isRadioPlaying
-                                                ? 'bg-red-500 shadow-[0_0_8px_#ef4444] animate-pulse'
-                                                : 'bg-red-900/50'
+                                            ? 'bg-red-500 shadow-[0_0_8px_#ef4444] animate-pulse'
+                                            : 'bg-red-900/50'
                                             }`}
                                     />
                                 </motion.div>
@@ -333,7 +389,7 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                                                         onClick={() => window.location.href = `#club-${selectedCardId}`}
                                                         className="px-6 py-2 bg-gray-900 text-white font-mono text-xs uppercase tracking-widest hover:bg-red-700 transition-colors"
                                                     >
-                                                        Access File
+                                                        OPEN
                                                     </button>
                                                 </div>
                                             </div>
@@ -350,18 +406,91 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                             )}
 
                             {/* Terminal View */}
-                            <RetroTerminal
-                                isOpen={isTerminalOpen}
-                                onClose={() => setIsTerminalOpen(false)}
-                            />
+                            {isTerminalOpen && (
+                                <RetroTerminal
+                                    isOpen={isTerminalOpen}
+                                    onClose={() => setIsTerminalOpen(false)}
+                                />
+                            )}
+
+                            {/* Enlarged ID Card View */}
+                            {isIDExpanded && (
+                                <>
+                                    <motion.div
+                                        layoutId="id-card"
+                                        initial={{ scale: 1, zIndex: 100 }}
+                                        animate={{ scale: 2.2, x: 0, y: 0, rotate: 0, zIndex: 1000 }}
+                                        className="fixed inset-0 m-auto w-[260px] h-[160px] z-[1000]"
+                                    >
+                                        <div className="relative w-full h-full bg-[#f4f7f9] rounded shadow-2xl overflow-hidden flex flex-col border-t-[6px] border-blue-900 cursor-default">
+                                            <TextureOverlay opacity={0.12} />
+                                            {/* INVENTO Header */}
+                                            <div className="w-full bg-blue-900 py-1 px-3 flex justify-between items-center">
+                                                <span className="text-[10px] font-black text-white tracking-widest uppercase">INVENTO 2026</span>
+                                            </div>
+
+                                            <div className="flex flex-1">
+                                                {/* Photo Section */}
+                                                <div className="w-[32%] h-full bg-white/60 border-r border-gray-300 flex flex-col items-center py-2">
+                                                    <div className="w-16 h-20 bg-gray-200 border-2 border-[#d4af37] rounded-sm overflow-hidden flex items-center justify-center relative shadow-inner">
+                                                        {user ? (
+                                                            <img src={user.photo || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"} alt="User" className="w-full h-full object-cover grayscale contrast-125" />
+                                                        ) : (
+                                                            <div className="text-gray-400 text-[6px] font-bold">UNKNOWN</div>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* Info Section */}
+                                                <div className="flex-1 h-full p-2.5 flex flex-col justify-between bg-white/40">
+                                                    {user ? (
+                                                        <div>
+                                                            <h3 className="font-sans font-black text-gray-800 text-sm uppercase tracking-tight leading-tight">
+                                                                {user.name}
+                                                            </h3>
+                                                            <p className="text-[8px] text-gray-600 font-medium uppercase tracking-wider">
+                                                                {user.institution || user.college || "KLE TECH UNIVERSITY"}
+                                                            </p>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="h-full flex flex-col justify-center items-center">
+                                                            <span className="text-[8px] font-black text-red-800">LOGIN REQUIRED</span>
+                                                        </div>
+                                                    )}
+                                                    <div className="mt-auto pt-1.5 border-t border-gray-200 flex justify-between items-end">
+                                                        <div className="space-y-0.5">
+                                                            <div className="text-[5px] text-gray-400 font-mono uppercase">Verified</div>
+                                                            <div className="text-[5px] text-gray-500 font-mono font-bold uppercase">Exp: 17 MAR 2026</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Disclaimer */}
+                                            <div className="w-full bg-[#1a1a1a] py-0.5 px-2 text-center border-t border-[#333]">
+                                                <p className="text-[4.5px] text-gray-500 uppercase font-mono tracking-tighter">
+                                                    This is not the official passes/ID card for INVENTO 2026. For simulation only.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 0.6 }}
+                                        exit={{ opacity: 0 }}
+                                        className="fixed inset-0 bg-black z-[900] backdrop-blur-sm"
+                                        onClick={() => setIsIDExpanded(false)}
+                                    />
+                                </>
+                            )}
                         </AnimatePresence>
 
                         {/* Close Button */}
                         <button
                             onClick={onClose}
-                            className="absolute top-6 right-6 z-[70] w-12 h-12 rounded-full bg-[#1a1a1a] border border-[#333] hover:bg-red-900/80 text-white/70 hover:text-white flex items-center justify-center transition-all shadow-lg group"
+                            className="absolute top-6 right-6 z-[70] px-6 py-2 text-white/70 hover:text-white flex items-center gap-3 transition-all shadow-lg group backdrop-blur-md"
                         >
-                            <span className="text-2xl group-hover:rotate-90 transition-transform duration-300">×</span>
+                            <span className="text-[10px] md:text-xs font-mono font-bold tracking-[0.2em] uppercase">Close The Briefcase &gt;&gt;</span>
                         </button>
 
                     </motion.div>

@@ -5,6 +5,8 @@ import FileManager from './FileManager'
 import Mail from './Mail'
 import Notes from './Notes'
 import Radio from './Radio'
+import Shutdown from './shutdown'
+import shutdownAudio from '../../assets/audios/shutdown.mp3'
 import wallpaperImg from '../../assets/UI/OS/wallpaper.png'
 import fileManagerIcon from '../../assets/UI/OS/file-manager.png'
 import terminalIcon from '../../assets/UI/OS/terminal.png'
@@ -18,7 +20,16 @@ const RetroTerminal = ({ isOpen, onClose }) => {
     const [activeApp, setActiveApp] = useState(null)
     const [minimizedApps, setMinimizedApps] = useState([])
     const [selectedDesktopIcon, setSelectedDesktopIcon] = useState(null)
+    const [bootStatus, setBootStatus] = useState('starting') // 'starting', 'running', 'shutting'
     const desktopRef = useRef(null)
+
+    // Play startup sound when OS finishes booting
+    useEffect(() => {
+        if (bootStatus === 'running') {
+            const audio = new Audio(shutdownAudio)
+            audio.play().catch(e => console.log("Startup sound failed:", e))
+        }
+    }, [bootStatus])
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -98,106 +109,119 @@ const RetroTerminal = ({ isOpen, onClose }) => {
                 className="relative w-[800px] h-[600px] bg-[#008080] win95-border-raised overflow-hidden shadow-2xl flex flex-col"
                 onClick={(e) => e.stopPropagation()}
                 style={{
-                    backgroundImage: `url(${wallpaperImg})`,
+                    backgroundImage: bootStatus === 'running' ? `url(${wallpaperImg})` : 'none',
                     backgroundSize: 'cover',
-                    backgroundPosition: 'center'
+                    backgroundPosition: 'center',
+                    backgroundColor: '#000'
                 }}
             >
-                {/* Desktop Body */}
-                <div
-                    ref={desktopRef}
-                    className="flex-1 relative p-4 grid grid-cols-1 auto-rows-max gap-4 w-min content-start h-full"
-                    onClick={handleDesktopClick}
-                >
-                    {desktopIcons.map(icon => (
+                {bootStatus === 'starting' && (
+                    <Shutdown mode="startup" onComplete={() => setBootStatus('running')} />
+                )}
+
+                {bootStatus === 'shutting' && (
+                    <Shutdown mode="shutdown" onComplete={onClose} />
+                )}
+
+                {bootStatus === 'running' && (
+                    <>
+                        {/* Desktop Body */}
                         <div
-                            key={icon.id}
-                            className={`flex flex-col items-center w-20 p-2 cursor-pointer ${selectedDesktopIcon === icon.id ? 'bg-blue-800/30 border border-dotted border-white' : ''}`}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedDesktopIcon(icon.id);
-                            }}
-                            onDoubleClick={() => {
-                                setSelectedDesktopIcon(null);
-                                launchApp(icon);
-                            }}
+                            ref={desktopRef}
+                            className="flex-1 relative p-4 grid grid-cols-1 auto-rows-max gap-4 w-min content-start h-full"
+                            onClick={handleDesktopClick}
                         >
-                            {icon.isImg ? (
-                                <img src={icon.icon} alt={icon.name} className="w-10 h-10 object-contain drop-shadow-md" />
-                            ) : (
-                                <span className="text-4xl drop-shadow-md">{icon.icon}</span>
-                            )}
-                            <span className="text-white text-[10px] text-center mt-1 drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)] font-sans">
-                                {icon.name}
-                            </span>
-                        </div>
-                    ))}
+                            {desktopIcons.map(icon => (
+                                <div
+                                    key={icon.id}
+                                    className={`flex flex-col items-center w-20 p-2 cursor-pointer ${selectedDesktopIcon === icon.id ? 'bg-blue-800/30 border border-dotted border-white' : ''}`}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedDesktopIcon(icon.id);
+                                    }}
+                                    onDoubleClick={() => {
+                                        setSelectedDesktopIcon(null);
+                                        launchApp(icon);
+                                    }}
+                                >
+                                    {icon.isImg ? (
+                                        <img src={icon.icon} alt={icon.name} className="w-10 h-10 object-contain drop-shadow-md" />
+                                    ) : (
+                                        <span className="text-4xl drop-shadow-md">{icon.icon}</span>
+                                    )}
+                                    <span className="text-white text-[10px] text-center mt-1 drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)] font-sans">
+                                        {icon.name}
+                                    </span>
+                                </div>
+                            ))}
 
-                    {/* Render Open Windows */}
-                    <AnimatePresence>
-                        {openApps.map((app) => (
-                            <Window
-                                key={app.id}
-                                app={app}
-                                isActive={activeApp === app.id}
-                                isMinimized={minimizedApps.includes(app.id)}
-                                onClose={() => closeApp(app.id)}
-                                onMinimize={() => toggleMinimize(app.id)}
-                                onFocus={() => {
-                                    setSelectedDesktopIcon(null);
-                                    setActiveApp(app.id);
-                                    setMinimizedApps(minimizedApps.filter(id => id !== app.id));
-                                }}
-                            >
-                                {renderAppContent(app)}
-                            </Window>
-                        ))}
-                    </AnimatePresence>
-                </div>
-
-                {/* Win95 Taskbar */}
-                <div className="h-10 bg-[#c0c0c0] win95-border-raised flex items-center justify-between px-1 z-50">
-                    <div className="flex items-center gap-1 h-full">
-                        <button className="win95-button flex items-center gap-1 px-2 h-[28px] active:win95-border-inset">
-                            <span className="font-bold text-xs">Start</span>
-                        </button>
-                        <button
-                            onClick={onClose}
-                            className="win95-button flex items-center gap-1 px-2 h-[28px] active:win95-border-inset bg-red-100"
-                        >
-                            <span className="text-xs font-bold text-red-700">Shut Down</span>
-                        </button>
-
-                        <div className="w-[1px] h-6 bg-gray-400 mx-1" />
-
-                        {/* Taskbar Apps */}
-                        <div className="flex items-center gap-1">
-                            {openApps.map(app => {
-                                const iconData = desktopIcons.find(i => i.id === app.type) || { icon: null, isImg: false };
-                                return (
-                                    <button
+                            {/* Render Open Windows */}
+                            <AnimatePresence>
+                                {openApps.map((app) => (
+                                    <Window
                                         key={app.id}
-                                        onClick={() => {
+                                        app={app}
+                                        isActive={activeApp === app.id}
+                                        isMinimized={minimizedApps.includes(app.id)}
+                                        onClose={() => closeApp(app.id)}
+                                        onMinimize={() => toggleMinimize(app.id)}
+                                        onFocus={() => {
                                             setSelectedDesktopIcon(null);
-                                            toggleMinimize(app.id);
+                                            setActiveApp(app.id);
+                                            setMinimizedApps(minimizedApps.filter(id => id !== app.id));
                                         }}
-                                        className={`win95-button px-2 h-[28px] max-w-[120px] truncate text-[10px] flex items-center gap-1 ${activeApp === app.id ? 'font-bold win95-border-inset bg-[#e0e0e0]' : ''}`}
                                     >
-                                        {iconData.isImg && (
-                                            <img src={iconData.icon} alt="" className="w-4 h-4 object-contain" />
-                                        )}
-                                        {app.title || app.name}
-                                    </button>
-                                );
-                            })}
+                                        {renderAppContent(app)}
+                                    </Window>
+                                ))}
+                            </AnimatePresence>
                         </div>
-                    </div>
 
-                    <div className="win95-border-inset px-2 h-[28px] flex items-center gap-3 bg-[#c0c0c0]">
-                        <span className="text-[10px] spy-accent-yellow">SECURE</span>
-                        <span className="text-[10px] font-mono">{currentTime}</span>
-                    </div>
-                </div>
+                        {/* Win95 Taskbar */}
+                        <div className="h-10 bg-[#c0c0c0] win95-border-raised flex items-center justify-between px-1 z-50">
+                            <div className="flex items-center gap-1 h-full">
+                                <button className="win95-button flex items-center gap-1 px-2 h-[28px] active:win95-border-inset">
+                                    <span className="font-bold text-xs">Start</span>
+                                </button>
+                                <button
+                                    onClick={() => setBootStatus('shutting')}
+                                    className="win95-button flex items-center gap-1 px-2 h-[28px] active:win95-border-inset bg-red-100"
+                                >
+                                    <span className="text-xs font-bold text-red-700">Shut Down</span>
+                                </button>
+
+                                <div className="w-[1px] h-6 bg-gray-400 mx-1" />
+
+                                {/* Taskbar Apps */}
+                                <div className="flex items-center gap-1">
+                                    {openApps.map(app => {
+                                        const iconData = desktopIcons.find(i => i.id === app.type) || { icon: null, isImg: false };
+                                        return (
+                                            <button
+                                                key={app.id}
+                                                onClick={() => {
+                                                    setSelectedDesktopIcon(null);
+                                                    toggleMinimize(app.id);
+                                                }}
+                                                className={`win95-button px-2 h-[28px] max-w-[120px] truncate text-[10px] flex items-center gap-1 ${activeApp === app.id ? 'font-bold win95-border-inset bg-[#e0e0e0]' : ''}`}
+                                            >
+                                                {iconData.isImg && (
+                                                    <img src={iconData.icon} alt="" className="w-4 h-4 object-contain" />
+                                                )}
+                                                {app.title || app.name}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            <div className="win95-border-inset px-2 h-[28px] flex items-center gap-3 bg-[#c0c0c0]">
+                                <span className="text-[10px] spy-accent-yellow">SECURE</span>
+                                <span className="text-[10px] font-mono">{currentTime}</span>
+                            </div>
+                        </div>
+                    </>
+                )}
             </motion.div>
         </div>
     )
