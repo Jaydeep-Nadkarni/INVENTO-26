@@ -3,7 +3,9 @@ import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-mo
 import paperTexture from '../assets/UI/paper-texture.jpg'
 import laptopImg from '../assets/UI/laptop.png'
 import policeRadioImg from '../assets/UI/police-radio.png'
+import morseImg from '../assets/UI/morse.png'
 import RetroTerminal from './RetroTerminal/RetroTerminal'
+import morseAudio from '../assets/audios/morse.wav'
 import radioAudio from '../assets/audios/radio.m4a'
 import laptopSound from '../assets/audios/laptopn-open.mp3'
 import pageTurnSound from '../assets/audios/page-turn.mp3'
@@ -26,21 +28,46 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
 
     const [selectedCardId, setSelectedCardId] = useState(null)
     const [isIDExpanded, setIsIDExpanded] = useState(false)
+    const [isLetterExpanded, setIsLetterExpanded] = useState(false)
     const [statusText, setStatusText] = useState('Swipe cards to shuffle;')
     const [isTerminalOpen, setIsTerminalOpen] = useState(false)
+    const [isMorseOpen, setIsMorseOpen] = useState(false)
     const [isRadioPlaying, setIsRadioPlaying] = useState(false)
     const audioRef = useRef(null)
+    const morseAudioRef = useRef(null)
 
     useEffect(() => {
         audioRef.current = new Audio(radioAudio)
         audioRef.current.loop = true
+
+        morseAudioRef.current = new Audio(morseAudio)
+
         return () => {
             if (audioRef.current) {
                 audioRef.current.pause()
                 audioRef.current = null
             }
+            if (morseAudioRef.current) {
+                morseAudioRef.current.pause()
+                morseAudioRef.current = null
+            }
         }
     }, [])
+
+    // Synchronize Morse Audio with Window State
+    useEffect(() => {
+        if (isMorseOpen) {
+            if (morseAudioRef.current) {
+                morseAudioRef.current.currentTime = 0
+                morseAudioRef.current.play().catch(e => console.log("Morse audio error:", e))
+            }
+        } else {
+            if (morseAudioRef.current) {
+                morseAudioRef.current.pause()
+                morseAudioRef.current.currentTime = 0
+            }
+        }
+    }, [isMorseOpen])
 
     // Stop radio if briefcase is closed
     useEffect(() => {
@@ -97,10 +124,18 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
             setIsRadioPlaying(false)
             setStatusText("Radio Signal Lost...")
         } else {
+            setIsMorseOpen(false) // Close morse if playing
             audioRef.current.play()
             setIsRadioPlaying(true)
             setStatusText("Intercepted: Frequency 148.5")
         }
+    }
+
+    const handleMorseClick = (e) => {
+        e.stopPropagation()
+        stopRadioIfPlaying()
+        setIsMorseOpen(true)
+        setStatusText("Incoming Transmission: Decrypting...")
     }
 
     const handleLaptopClick = (e) => {
@@ -148,7 +183,7 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                             <div className="absolute left-0 top-0 bottom-0 w-[30%] p-8 z-30">
 
                                 {/* ID Card - Horizontal Agent ID */}
-                                <div className="absolute top-[12%] left-[12%] w-[260px] h-[160px] perspective-1000 z-40">
+                                <div className="absolute top-[12%] left-[18%] w-[260px] h-[160px] perspective-1000 z-40">
                                     <motion.div
                                         layoutId="id-card"
                                         drag={!isIDExpanded}
@@ -160,7 +195,7 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                                             setStatusText("Inspecting Agent Badge...")
                                         }}
                                         className="relative w-full h-full bg-[#f4f7f9] rounded shadow-2xl overflow-hidden flex flex-col border-t-[6px] border-blue-900 cursor-pointer"
-                                        style={{ rotate: '-3deg', boxShadow: '5px 10px 30px rgba(0,0,0,0.5)' }}
+                                        style={{ boxShadow: '5px 10px 30px rgba(0,0,0,0.5)' }}
                                     >
                                         <TextureOverlay opacity={0.12} />
 
@@ -241,14 +276,39 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                                     </motion.div>
                                 </div>
 
-                                {/* Confidential Envelope - Bigger */}
-                                <div className="absolute bottom-[5%] left-[10%] w-80 h-52 z-30">
+                                {/* Morse Telegraph Device - Below ID Card */}
+                                <div className="absolute top-[42%] left-[0%] w-48 z-40">
                                     <motion.div
-                                        drag
+                                        whileHover={{ scale: 1.00 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={handleMorseClick}
+                                        className="relative cursor-pointer group"
+                                    >
+                                        <img
+                                            src={morseImg}
+                                            alt="Morse Telegraph"
+                                            className="w-full drop-shadow-2xl opacity-90 transition-opacity group-hover:opacity-100"
+                                        />
+                                        {/* Status light on the device */}
+                                        <div className="absolute top-[25%] right-[25%] w-1.5 h-1.5 rounded-full bg-yellow-500/40 animate-pulse pointer-events-none"></div>
+                                    </motion.div>
+                                </div>
+
+                                {/* Confidential Envelope - Bigger */}
+                                <div className="absolute bottom-[5%] left-[10%] w-80 h-52 z-30 perspective-1000">
+                                    <motion.div
+                                        layoutId="confidential-envelope"
+                                        drag={!isLetterExpanded}
                                         dragConstraints={{ left: -100, right: 300, top: -200, bottom: 0 }}
                                         whileHover={{ scale: 1.02 }}
-                                        className="relative w-full h-full bg-[#d6cfc2] shadow-2xl flex items-center justify-center"
-                                        style={{ rotate: '3deg', boxShadow: '5px 10px 25px (0,0,0,0.4)' }}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            playEffect(pageTurnSound)
+                                            setIsLetterExpanded(true)
+                                            setStatusText("Reading Classified Intel...")
+                                        }}
+                                        className="relative w-full h-full bg-[#d6cfc2] shadow-2xl flex items-center justify-center cursor-pointer overflow-hidden"
+                                        style={{ rotate: '-3deg', boxShadow: '5px 10px 25px rgba(0,0,0,0.4)' }}
                                     >
                                         <TextureOverlay opacity={0.6} />
                                         <div className="absolute inset-0 border-[2px] border-[#c4b090] m-3"></div>
@@ -342,6 +402,8 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                                 </motion.div>
                             </div>
 
+
+
                         </div>
 
                         {/* --- STATUS FOOTER --- */}
@@ -358,6 +420,23 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                                     <p className="text-white font-mono text-[10px] md:text-xs tracking-[0.3em] uppercase whitespace-nowrap">
                                         <span className="opacity-50 mr-2">≫</span>
                                         {statusText}
+                                    </p>
+                                </motion.div>
+                            </AnimatePresence>
+                        </div>
+
+                        <div className="absolute top-8 left-1/2 -translate-x-1/2 z-[60] pointer-events-none w-full flex justify-center">
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                                    className="px-6 py-2 "
+                                >
+                                    <p className="text-white font-mono text-[10px] md:text-xs tracking-[0.3em] uppercase whitespace-nowrap">
+                                        <span className="opacity-50 mr-2">≫</span>
+                                        Click on the items to explore
                                     </p>
                                 </motion.div>
                             </AnimatePresence>
@@ -482,6 +561,155 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                                         onClick={() => setIsIDExpanded(false)}
                                     />
                                 </>
+                            )}
+                            {/* Enlarged Confidential Letter View */}
+                            {isLetterExpanded && (
+                                <>
+                                    <motion.div
+                                        layoutId="confidential-envelope"
+                                        initial={{ scale: 1, zIndex: 100 }}
+                                        animate={{ scale: 1, x: 0, y: 0, rotate: 0, zIndex: 1000 }}
+                                        exit={{ scale: 0.8, opacity: 0 }}
+                                        className="fixed inset-0 m-auto w-[90%] max-w-[500px] h-[85vh] z-[1000]"
+                                    >
+                                        <div className="relative w-full h-full bg-[#f4f1ea] shadow-2xl flex flex-col p-8 md:p-12 overflow-hidden border border-[#d1ccbf]">
+                                            <TextureOverlay opacity={0.4} />
+
+                                            {/* Letter Header */}
+                                            <div className="flex justify-between items-start mb-8 relative z-10 border-b-2 border-[#8f2727]/30 pb-4">
+                                                <div>
+                                                    <h2 className="font-serif font-black text-3xl text-[#8f2727] tracking-tighter uppercase leading-none mb-1">
+                                                        Classified
+                                                    </h2>
+                                                    <p className="font-mono text-[10px] text-gray-500 tracking-widest uppercase">
+                                                        Directives #2026-INV
+                                                    </p>
+                                                </div>
+                                                <div className="text-right flex flex-col items-end">
+                                                    <p className="font-mono text-[8px] text-gray-400 uppercase">Priority: Alpha</p>
+                                                    <p className="font-mono text-[8px] text-gray-400 uppercase">Date: 17/03/2026</p>
+                                                    <div className="mt-2 px-2 py-0.5 border border-red-800 text-red-800 text-[8px] font-bold uppercase rotate-1">Eyes Only</div>
+                                                </div>
+                                            </div>
+
+                                            {/* Letter Content */}
+                                            <div className="flex-1 relative z-10 font-serif text-gray-800 space-y-6 overflow-y-auto hide-scrollbar">
+                                                <div className="space-y-1">
+                                                    <p className="font-bold text-sm">TO: FIELD AGENT [CLASSIFIED]</p>
+                                                    <p className="font-bold text-sm">SUBJECT: OPERATION INVENTO 2026</p>
+                                                </div>
+
+                                                <p className="text-base leading-relaxed italic border-l-4 border-[#8f2727]/20 pl-4 py-1 bg-black/5">
+                                                    "The shadows are lengthening, Agent. The SpyVerse is no longer a simulation—it is our reality. The assets recovered from the recent breach indicate a massive convergence at the KLE Technological University sector."
+                                                </p>
+
+                                                <div className="space-y-4 text-sm leading-relaxed">
+                                                    <p>
+                                                        Your mission is to infiltrate the <span className="bg-red-200 px-1 font-bold">INVENTO 2026</span> summit. Intelligence reports suggest that the greatest minds, artists, and strategists are gathering under the guise of an annual fest.
+                                                    </p>
+                                                    <p>
+                                                        Key targets have been identified across multiple divisions: Media, CDC, CDC Specials, and the Title Events. Each node contains a piece of the puzzle.
+                                                    </p>
+                                                    <p>
+                                                        Trust no one. The 'Evidence Bundle' you are carrying contains the decrypted profiles of all involved clubs. Swipe through them, analyze their frequencies, and identify the core signatures.
+                                                    </p>
+                                                </div>
+
+                                                <div className="pt-8 opacity-80 pb-4">
+                                                    <p className="text-xs font-bold uppercase mb-4">Authorized By:</p>
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-24 h-12 bg-black/10 rounded-sm overflow-hidden relative grayscale opacity-40">
+                                                            {/* Fake Signature Pattern */}
+                                                            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 40">
+                                                                <path d="M10 25 C 20 5, 40 35, 50 15 S 80 0, 90 20" stroke="black" fill="none" strokeWidth="1" />
+                                                            </svg>
+                                                        </div>
+                                                        <p className="font-serif italic text-sm">Director of Operations</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Texture Overlay for realistic paper */}
+                                            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/[0.02] to-black/[0.05] pointer-events-none"></div>
+                                        </div>
+                                    </motion.div>
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 0.6 }}
+                                        exit={{ opacity: 0 }}
+                                        className="fixed inset-0 bg-black z-[900] backdrop-blur-sm"
+                                        onClick={() => {
+                                            setIsLetterExpanded(false)
+                                            setStatusText('Click on the items to explore')
+                                        }}
+                                    />
+                                </>
+                            )}
+
+                            {/* Morse Transmission View - Minimal & Cool HUD */}
+                            {isMorseOpen && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                                    onClick={() => {
+                                        setIsMorseOpen(false)
+                                        setStatusText('Click on the items to explore')
+                                    }}
+                                >
+                                    <motion.div
+                                        initial={{ scale: 0.9, opacity: 0, y: 10 }}
+                                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                                        className="relative w-full max-w-sm bg-[#0a0a0a] border border-white/10 p-8 shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        {/* Subtle Reception Pulse */}
+                                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent"></div>
+
+                                        <div className="relative z-10 space-y-8">
+                                            {/* Header */}
+                                            <div className="flex justify-between items-start">
+                                                <div className="space-y-1">
+                                                    <span className="text-[10px] text-yellow-500 font-mono tracking-[0.3em] uppercase">Intercept active</span>
+                                                    <h3 className="text-white font-mono text-xs opacity-40 uppercase tracking-widest">Sig: 1000 Hz</h3>
+                                                </div>
+                                                <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
+                                            </div>
+
+                                            {/* Data Streams */}
+                                            <div className="space-y-6">
+                                                <div className="space-y-2">
+                                                    <span className="text-[9px] text-white/20 font-mono uppercase tracking-widest">Raw Signal</span>
+                                                    <p className="text-white/80 font-mono text-sm tracking-[0.4em] leading-relaxed break-all">
+                                                        .-- . .-.. -.-. --- -- . / - --- / .. -. ...- . -. - --- / ..--- ----- ..--- -....
+                                                    </p>
+                                                </div>
+
+                                                <div className="pt-4 border-t border-white/5 space-y-2">
+                                                    <span className="text-[9px] text-white/20 font-mono uppercase tracking-widest">Decoded Output</span>
+                                                    <p className="text-white font-mono text-xl tracking-tight uppercase">
+                                                        Welcome to <span className="text-yellow-500">INVENTO 2026</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            {/* Minimal Footer Action */}
+                                            <div className="pt-4 flex justify-between items-center">
+                                                <span className="text-[10px] text-white/20 font-mono italic">10 WPM</span>
+                                                <button
+                                                    onClick={() => {
+                                                        setIsMorseOpen(false)
+                                                        setStatusText('Click on the items to explore')
+                                                    }}
+                                                    className="text-[10px] text-white/60 hover:text-white font-mono uppercase tracking-widest underline underline-offset-4 transition-colors"
+                                                >
+                                                    Dismiss
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                </motion.div>
                             )}
                         </AnimatePresence>
 
