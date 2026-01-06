@@ -3,7 +3,6 @@ import { Link, useLocation } from 'react-router-dom'
 import tex1 from '../assets/UI/button-texture-1.png'
 import tex2 from '../assets/UI/button-texture-1.png'
 import tex3 from '../assets/UI/button-texture-3.png'
-import register from '../assets/UI/Register.png'
 
 const Navbar = ({ onEventsClick }) => {
   const location = useLocation()
