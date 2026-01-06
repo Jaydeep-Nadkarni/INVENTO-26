@@ -50,38 +50,92 @@ const EventsGrid = () => {
         navigate(`/${clubSlug}`)
     }
 
+    // Navigation Logic
+    const currentClubIndex = clubsData.findIndex(c => c.slug === clubSlug)
+    const currentEventIndex = currentClub?.events?.findIndex(e => e.id === eventSlug)
+
+    const goToNextClub = (e) => {
+        e?.stopPropagation()
+        playSound(pageTurnSound)
+        const nextIndex = (currentClubIndex + 1) % clubsData.length
+        navigate(`/${clubsData[nextIndex].slug}`)
+    }
+
+    const goToPrevClub = (e) => {
+        e?.stopPropagation()
+        playSound(pageTurnSound)
+        const prevIndex = (currentClubIndex - 1 + clubsData.length) % clubsData.length
+        navigate(`/${clubsData[prevIndex].slug}`)
+    }
+
+    const goToNextEvent = (e) => {
+        e?.stopPropagation()
+        playSound(pageTurnSound)
+        if (currentEventIndex < currentClub.events.length - 1) {
+            navigate(`/${clubSlug}/${currentClub.events[currentEventIndex + 1].id}`)
+        } else {
+            // Go to next club's first event
+            const nextIndex = (currentClubIndex + 1) % clubsData.length
+            const nextClub = clubsData[nextIndex]
+            if (nextClub.events.length > 0) {
+                navigate(`/${nextClub.slug}/${nextClub.events[0].id}`)
+            } else {
+                navigate(`/${nextClub.slug}`)
+            }
+        }
+    }
+
+    const goToPrevEvent = (e) => {
+        e?.stopPropagation()
+        playSound(pageTurnSound)
+        if (currentEventIndex > 0) {
+            navigate(`/${clubSlug}/${currentClub.events[currentEventIndex - 1].id}`)
+        } else {
+            // Go to prev club's last event
+            const prevIndex = (currentClubIndex - 1 + clubsData.length) % clubsData.length
+            const prevClub = clubsData[prevIndex]
+            if (prevClub.events.length > 0) {
+                navigate(`/${prevClub.slug}/${prevClub.events[prevClub.events.length - 1].id}`)
+            } else {
+                navigate(`/${prevClub.slug}`)
+            }
+        }
+    }
+
+
     // Render Club Selection Grid
     if (!clubSlug) {
         return (
-            <div className="relative z-10 w-full px-4 md:px-8 pt-32 pb-20">
+            <div className="min-h-screen bg-[#121212] pt-24 pb-12 px-4 md:px-8 relative overflow-hidden">
+                {/* Background Noise/Grit */}
+                <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")` }}></div>
+
                 <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    className="text-center mb-20"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="max-w-7xl mx-auto"
                 >
-                    <div className="flex flex-col items-center">
-                        <span className="text-[10px] md:text-sm font-mono tracking-[0.4em] text-red-600/80 mb-4 uppercase">
-                            [ Global Directory ]
-                        </span>
-                        <h1 className="text-5xl md:text-8xl font-black text-white uppercase tracking-tighter mb-4"
-                            style={{ fontFamily: "'Playfair Display', serif", textShadow: '0 0 30px rgba(220, 38, 38, 0.4)' }}>
-                            The Dossiers
-                        </h1>
-                        <div className="h-1 w-32 bg-red-800/50 mb-8" />
+                    <div className="mb-12 border-b border-dashed border-white/20 pb-4 flex justify-between items-end">
+                        <div>
+                            <h2 className="text-sm font-mono text-red-600 tracking-[0.3em] uppercase mb-2">Decrypted Directory</h2>
+                            <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter">Competitions</h1>
+                        </div>
+                        <div className="hidden md:block text-xs font-mono text-gray-500">
+                             // SELECT TARGET TO VIEW PROTOCOLS
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {clubsData.map((club, index) => (
+                            <EventGridCard
+                                key={club.id}
+                                club={club}
+                                index={index}
+                                onSelect={() => handleClubClick(club.slug)}
+                            />
+                        ))}
                     </div>
                 </motion.div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 max-w-7xl mx-auto">
-                    {clubsData.map((club, index) => (
-                        <EventGridCard
-                            key={club.id}
-                            club={club}
-                            index={index}
-                            onSelect={() => handleClubClick(club.slug)}
-                        />
-                    ))}
-                </div>
             </div>
         )
     }
@@ -89,68 +143,98 @@ const EventsGrid = () => {
     // Render Events Grid for a specific club
     if (clubSlug && !eventSlug) {
         return (
-            <div className="relative z-10 w-full px-4 md:px-8 pt-32 pb-20 min-h-screen">
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="max-w-7xl mx-auto"
-                >
-                    <button
-                        onClick={handleBackToClubs}
-                        className="mb-12 group flex items-center gap-4 text-white hover:text-red-500 transition-colors"
-                    >
-                        <span className="text-2xl transition-transform group-hover:-translate-x-2">←</span>
-                        <span className="font-mono text-xs uppercase tracking-widest">Back to Directory</span>
-                    </button>
+            <div className="min-h-screen bg-[#121212] pt-24 pb-12 px-4 md:px-12 relative">
+                {/* Texture */}
+                <TextureOverlay opacity={0.05} />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-red-900/10 via-transparent to-transparent pointer-events-none"></div>
 
-                    <div className="mb-16">
-                        <p className="font-mono text-[10px] text-red-500 tracking-[0.4em] uppercase mb-2">
-                            Decrypted Archive // Sector_{currentClub?.slug.toUpperCase()}
-                        </p>
-                        <h2 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter font-serif">
-                            {currentClub?.name}
-                        </h2>
+                {/* Club Navigation Arrows */}
+                <button onClick={goToPrevClub} className="fixed left-4 top-1/2 -translate-y-1/2 z-40 w-12 h-12 flex items-center justify-center rounded-full bg-white/5 hover:bg-red-600 text-white transition-all backdrop-blur-sm group">
+                    <span className="text-2xl group-hover:-translate-x-1 transition-transform">←</span>
+                </button>
+                <button onClick={goToNextClub} className="fixed right-4 top-1/2 -translate-y-1/2 z-40 w-12 h-12 flex items-center justify-center rounded-full bg-white/5 hover:bg-red-600 text-white transition-all backdrop-blur-sm group">
+                    <span className="text-2xl group-hover:translate-x-1 transition-transform">→</span>
+                </button>
+
+                <div className="max-w-7xl mx-auto relative z-10">
+                    {/* Header */}
+                    <div className="mb-16 relative">
+                        <button
+                            onClick={handleBackToClubs}
+                            className="flex items-center gap-3 text-xs font-mono text-gray-500 hover:text-white uppercase tracking-[0.2em] mb-6 transition-colors"
+                        >
+                            <span>←</span> Back to Directory
+                        </button>
+
+                        <div className="flex flex-col md:flex-row justify-between items-end border-b border-white/10 pb-6">
+                            <div>
+                                <h4 className="font-mono text-red-600 text-xs tracking-[0.4em] uppercase mb-2">Decrypted Archive // Sector_{currentClub?.slug.toUpperCase()}</h4>
+                                <h1 className="text-6xl md:text-8xl font-black text-white uppercase tracking-tighter leading-none font-serif">
+                                    {currentClub?.name}
+                                </h1>
+                            </div>
+                            <p className="text-gray-400 font-serif italic text-lg max-w-md text-right mt-4 md:mt-0">
+                                "{currentClub?.tagline}"
+                            </p>
+                        </div>
                     </div>
 
+                    {/* Events Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {currentClub?.events.map((event, index) => (
                             <motion.div
                                 key={event.id}
-                                initial={{ opacity: 0, y: 20 }}
+                                initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.05 }}
+                                transition={{ delay: index * 0.1 }}
                                 onClick={() => handleEventClick(event.id)}
-                                className="group cursor-pointer relative aspect-square md:aspect-[4/3] rounded-sm overflow-hidden"
-                                style={{
-                                    backgroundColor: '#ebe8e3',
-                                    backgroundImage: `url(${paperTexture})`,
-                                    backgroundSize: 'cover',
-                                    boxShadow: '10px 10px 30px rgba(0,0,0,0.3)'
-                                }}
+                                className="group relative h-[450px] bg-[#f0efe9] cursor-pointer overflow-hidden flex flex-col p-6 shadow-xl hover:shadow-2xl transition-all duration-500"
                             >
-                                <div className="absolute inset-0 bg-amber-50/90 mix-blend-multiply" />
-                                <TextureOverlay opacity={0.3} />
-                                <div className="relative z-30 p-8 h-full flex flex-col justify-between">
-                                    <div>
-                                        <div className="flex justify-between items-start mb-4">
-                                            <span className="text-[8px] font-mono text-gray-400 tracking-[0.3em] uppercase">Protocol_{index + 1}</span>
-                                            <div className="px-2 py-0.5 border border-black/10 text-[8px] font-mono uppercase">{event.type}</div>
-                                        </div>
-                                        <h3 className="text-2xl md:text-3xl font-black text-gray-900 uppercase tracking-tighter font-serif leading-none group-hover:text-red-800 transition-colors">
-                                            {event.name}
-                                        </h3>
-                                    </div>
-                                    <div className="flex justify-between items-end border-t border-black/10 pt-4">
-                                        <p className="text-[10px] text-gray-500 font-serif italic line-clamp-2 pr-8">
-                                            {event.description}
-                                        </p>
-                                        <span className="text-xl group-hover:translate-x-2 transition-transform">→</span>
+                                {/* Paper Texture */}
+                                <div className="absolute inset-0 opacity-40 pointer-events-none mix-blend-multiply" style={{ backgroundImage: `url(${paperTexture})` }}></div>
+
+                                {/* Top Tags */}
+                                <div className="relative z-10 flex justify-between items-start">
+                                    <span className="font-mono text-[10px] text-gray-500 uppercase tracking-widest border border-gray-300 px-2 py-1">
+                                        PROTOCOL_{index + 1}
+                                    </span>
+                                    <span className="font-mono text-[10px] bg-black text-white px-2 py-1 uppercase tracking-widest">
+                                        {event.teamSize > 1 ? 'TEAM' : 'SOLO'}
+                                    </span>
+                                </div>
+
+                                {/* Start of Empty Space */}
+                                <div className="flex-1 relative group-hover:bg-yellow-500/5 transition-colors duration-500">
+                                    {/* Optional: Add illustration placeholder here if available later */}
+                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-10 transition-opacity">
+                                        <span className="text-6xl font-black text-black">{(event.themeName || event.realName || '').charAt(0)}</span>
                                     </div>
                                 </div>
+
+                                {/* Bottom Info Section */}
+                                <div className="relative z-10 pt-6 border-t border-black/10">
+                                    <h3 className="text-2xl font-black uppercase text-black leading-none mb-2 font-serif group-hover:text-red-700 transition-colors">
+                                        {event.themeName || event.realName}
+                                    </h3>
+
+                                    <div className="flex justify-between items-end mt-4">
+                                        <div>
+                                            <p className="font-mono text-[10px] text-gray-500 uppercase tracking-widest mb-1">Fee</p>
+                                            <p className="font-bold text-lg text-black">{event.fee || 'Free'}</p>
+                                        </div>
+
+                                        <div className="w-10 h-10 border border-black/20 rounded-full flex items-center justify-center group-hover:bg-black group-hover:border-black transition-all">
+                                            <span className="text-black group-hover:text-white text-lg transition-colors">→</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Hover Border Reveal */}
+                                <div className="absolute inset-0 border-2 border-transparent group-hover:border-red-600/50 transition-colors pointer-events-none"></div>
                             </motion.div>
                         ))}
                     </div>
-                </motion.div>
+                </div>
             </div>
         )
     }
@@ -159,6 +243,15 @@ const EventsGrid = () => {
     if (eventSlug && currentEvent) {
         return (
             <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 md:p-8 pt-24 md:pt-32">
+
+                {/* Event Navigation Arrows */}
+                <button onClick={goToPrevEvent} className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-[110] w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-red-600 text-white transition-all backdrop-blur-sm group border border-white/20">
+                    <span className="text-2xl group-hover:-translate-x-1 transition-transform">←</span>
+                </button>
+                <button onClick={goToNextEvent} className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-[110] w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-red-600 text-white transition-all backdrop-blur-sm group border border-white/20">
+                    <span className="text-2xl group-hover:translate-x-1 transition-transform">→</span>
+                </button>
+
                 <motion.div
                     initial={{ opacity: 0, scale: 0.9, x: 100 }}
                     animate={{ opacity: 1, scale: 1, x: 0 }}

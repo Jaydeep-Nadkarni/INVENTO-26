@@ -150,11 +150,7 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null, onNavigateToEvents = n
         e.stopPropagation()
         stopRadioIfPlaying()
         playEffect(laptopSound)
-        if (onNavigateToEvents) {
-            onNavigateToEvents()
-        } else {
-            setIsTerminalOpen(true)
-        }
+        setIsTerminalOpen(true)
         setStatusText("Accessing the laptop...")
     }
 
