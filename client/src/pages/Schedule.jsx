@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar'
 import { scheduleData } from '../components/Events/scheduleData'
 import paperTexture from '../assets/UI/paper-texture.jpg'
 import bgImage from '../assets/UI/Invento-bg.jpg'
+import spy1 from '../assets/UI/spy1.png'
 
 const Schedule = () => {
   const [selectedDayId, setSelectedDayId] = useState(0)
@@ -62,7 +63,7 @@ const Schedule = () => {
                 <div className="relative z-10 flex flex-col items-center">
                   {/* Month/Label */}
                   <span className={`font-black tracking-tight uppercase font-serif ${isActive ? 'text-base md:text-xl text-gray-800 mb-1' : 'text-sm md:text-base text-gray-700'}`}>
-                    December
+                    March
                   </span>
 
                   {/* Day Number */}
@@ -91,6 +92,21 @@ const Schedule = () => {
         >
           <div className="absolute inset-0 bg-amber-50/30 mix-blend-multiply pointer-events-none" />
 
+          {/* Spy Background Illustration */}
+          <div className="absolute bottom-0 right-0 z-0 pointer-events-none opacity-40 mix-blend-multiply overflow-hidden">
+            <motion.img
+              src={spy1}
+              alt=""
+              className="h-[500px] w-auto object-contain translate-y-1/4 translate-x-1/4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1 }}
+              style={{
+                filter: 'sepia(0.5) contrast(0.8) brightness(0.9)',
+              }}
+            />
+          </div>
+
           {/* Header */}
           <div className="relative z-10 p-8 md:p-12 pb-6 border-b border-gray-900/10">
             <div className="flex justify-between items-start">
@@ -115,52 +131,54 @@ const Schedule = () => {
 
             <div className="space-y-6 pb-20">
               <AnimatePresence mode='wait'>
-                {currentEvents.map((event, idx) => (
+                {Object.entries(currentEvents.reduce((acc, event) => {
+                  if (!acc[event.time]) acc[event.time] = []
+                  acc[event.time].push(event)
+                  return acc
+                }, {})).map(([time, events], groupIdx) => (
                   <motion.div
-                    key={`${selectedDayId}-${event.id}`}
+                    key={`${selectedDayId}-${time}`}
                     initial={{ opacity: 0, x: 10 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                    className="group relative flex gap-6 md:gap-8 py-5 border-b border-dashed border-gray-400 last:border-0 hover:bg-black/5 transition-colors rounded-lg px-4 -mx-4"
+                    transition={{ delay: groupIdx * 0.05 }}
+                    className="relative flex gap-6 md:gap-8 py-6 border-b border-dashed border-gray-400 last:border-0"
                   >
-                    {/* Time */}
-                    <div className="w-20 pt-2 shrink-0 text-right">
-                      <span className="font-mono font-bold text-lg text-gray-900 block">{event.time}</span>
+                    {/* Time Column */}
+                    <div className="w-24 shrink-0 flex flex-col items-end relative pt-1">
+                      <span className="font-mono font-bold text-xl md:text-xl text-gray-900 block relative z-10 pl-2 leading-none">{time}</span>
                     </div>
 
-                    {/* Content */}
-                    <div className="flex-1">
-                      {/* Title with rounds in brackets */}
-                      <h3 className="text-xl md:text-2xl font-black text-black uppercase leading-tight font-serif group-hover:text-red-800 transition-colors mb-2">
-                        {event.themeName || event.realName} 
-                        {event.rounds > 1 && <span className="text-lg font-bold text-gray-800 font-sans ml-4"> (Round 1)</span>}
-                      </h3>
+                    {/* Events Container */}
+                    <div className="flex-1 space-y-6">
+                      {events.map((event, idx) => (
+                        <div key={event.id} className="group relative">
+                          {/* Title with rounds in brackets */}
+                          <h3 className="text-xl md:text-2xl font-black text-black uppercase leading-tight font-serif group-hover:text-red-800 transition-colors mb-1">
+                            {event.themeName || event.realName}
+                          </h3>
 
-                      {/* Real Name for club events */}
-                      {event.isClubEvent && event.realName !== (event.themeName || event.realName) && (
-                        <p className="text-gray-600 italic font-serif text-sm mb-3">
-                          {event.realName}
-                        </p>
-                      )}
+                          {/* Real Name for club events */}
+                          {event.isClubEvent && event.realName !== (event.themeName || event.realName) && (
+                            <p className="text-gray-600 italic font-serif text-sm mb-2">
+                              {event.realName}
+                            </p>
+                          )}
 
-                      {/* Location with icon */}
-                      <div className="flex items-center gap-2 text-sm font-mono text-red-700 font-medium">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M12 0C7.58 0 4 3.58 4 8C4 14.14 12 24 12 24C12 24 20 14.14 20 8C20 3.58 16.42 0 12 0ZM12 11C10.34 11 9 9.66 9 8C9 6.34 10.34 5 12 5C13.66 5 15 6.34 15 8C15 9.66 13.66 11 12 11Z" />
-                        </svg>
-                        <span className="uppercase tracking-wider">{event.venue}</span>
-                      </div>
+                          {/* Location with icon */}
+                          <div className="flex items-center gap-2 text-xs md:text-sm font-mono text-red-700 font-medium">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" className="opacity-80">
+                              <path d="M12 0C7.58 0 4 3.58 4 8C4 14.14 12 24 12 24C12 24 20 14.14 20 8C20 3.58 16.42 0 12 0ZM12 11C10.34 11 9 9.66 9 8C9 6.34 10.34 5 12 5C13.66 5 15 6.34 15 8C15 9.66 13.66 11 12 11Z" />
+                            </svg>
+                            <span className="uppercase tracking-wider">{event.venue}</span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </motion.div>
                 ))}
               </AnimatePresence>
 
-              {currentEvents.length < 5 && (
-                <div className="h-32 flex items-center justify-center opacity-20">
-                  <span className="font-serif italic text-2xl text-gray-400">Classified Area</span>
-                </div>
-              )}
             </div>
           </div>
         </motion.div>

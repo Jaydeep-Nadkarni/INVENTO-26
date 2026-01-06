@@ -41,7 +41,7 @@ export const scheduleData = [
                 id: 'trophy-reveal',
                 themeName: 'THE REVEAL',
                 realName: 'Trophy Unveiling',
-                time: '11:00 AM',
+                time: '1:00 PM',
                 venue: 'Central Plaza',
                 type: 'General',
                 description: 'Witness the glory.',
