@@ -4,7 +4,7 @@ import Counter from "./counterModel.js";
 const userSchema = new mongoose.Schema(
   {
     _id: {
-      type: String, // Custom Invento ID (inv000001, inv000002…)
+      type: String, // Custom Invento ID (inv00001, inv00002…)
     },
     name: {
       type: String,
@@ -18,6 +18,14 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
     },
     password: {
+      type: String,
+      required: true,
+    },
+    phone: {
+      type: String,
+      required: true,
+    },
+    clgName: {
       type: String,
       required: true,
     },
@@ -54,7 +62,7 @@ userSchema.pre("save", async function (next) {
       { new: true, upsert: true }
     );
 
-    const seqNum = counter.seq.toString().padStart(6, "0"); // → 000001
+    const seqNum = counter.seq.toString().padStart(5, "0"); // → 00001
     this._id = `inv${seqNum}`;
   }
   next();
