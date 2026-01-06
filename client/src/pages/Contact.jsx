@@ -192,7 +192,7 @@ const Contact = () => {
             `}</style>
 
           <h2 className="text-2xl font-black text-red-700 uppercase tracking-tighter mb-4 border-b-2 border-red-800/30 pb-2 hidden md:block">
-            Our Teams
+            
           </h2>
 
           <div className="flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
@@ -201,10 +201,10 @@ const Contact = () => {
                 key={team.id}
                 onClick={() => scrollToSection(team.id)}
                 className={`
-                    shrink-0 px-4 py-3 text-left border-l-4 transition-all duration-300 font-serif text-sm uppercase tracking-widest
+                    shrink-0 px-4 py-3 text-left border-l-4 transition-all duration-300 font-serif uppercase tracking-widest
                     ${activeTeam === team.id
-                    ? 'bg-red-900/20 border-red-600 text-white'
-                    : 'border-white/10 text-gray-400 hover:text-gray-200 hover:bg-white/5'}
+                    ? 'bg-red-900/20 border-red-600 text-white text-xl'
+                    : 'border-white/10 text-gray-400 hover:text-gray-200 hover:bg-white/5 text-sm'}
                   `}
               >
                 {team.name}
@@ -325,96 +325,6 @@ const Contact = () => {
                   </div>
                 </div>
               ))}
-
-
-              {/* FAQ SECTION */}
-              <div className="mt-24 pt-16 border-t-4 border-dashed border-black/20">
-                {/* FAQ Header */}
-                <div className="flex items-center gap-4 mb-12">
-                  <div className="h-px bg-black/20 flex-1"></div>
-                  <h2 className="text-3xl md:text-4xl font-black text-gray-800 uppercase tracking-tighter bg-red-900/10 px-6 py-2 rounded">
-                    Frequently Asked Questions
-                  </h2>
-                  <div className="h-px bg-black/20 flex-1"></div>
-                </div>
-
-                <p className="font-mono text-xs text-red-800 tracking-[0.3em] uppercase text-center mb-8">
-                  CLASSIFIED INFORMATION
-                </p>
-
-                {/* FAQ Accordion */}
-                <div className="max-w-4xl mx-auto space-y-4">
-                  {faqData.map((faq, idx) => {
-                    const isOpen = openQuestion === idx
-
-                    return (
-                      <div
-                        key={idx}
-                        className="bg-white/80 backdrop-blur-sm border-2 border-dashed border-gray-300 rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all duration-300"
-                      >
-                        {/* Question Button */}
-                        <button
-                          onClick={() => toggleQuestion(idx)}
-                          className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-black/5 transition-colors duration-200"
-                        >
-                          <div className="flex items-start gap-4 flex-1">
-                            <span className="text-red-700 font-mono text-sm font-bold mt-1 shrink-0">
-                              Q{idx + 1}
-                            </span>
-                            <h3 className="font-bold text-lg text-gray-900 leading-tight">
-                              {faq.question}
-                            </h3>
-                          </div>
-                          <motion.div
-                            animate={{ rotate: isOpen ? 180 : 0 }}
-                            transition={{ duration: 0.3 }}
-                            className="ml-4 shrink-0"
-                          >
-                            <svg
-                              className="w-6 h-6 text-red-700"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 9l-7 7-7-7"
-                              />
-                            </svg>
-                          </motion.div>
-                        </button>
-
-                        {/* Answer */}
-                        <AnimatePresence>
-                          {isOpen && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: 'auto', opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.3 }}
-                              className="overflow-hidden"
-                            >
-                              <div className="px-6 pb-4 pt-2 border-t border-dashed border-gray-200">
-                                <div className="flex gap-4">
-                                  <span className="text-red-700 font-mono text-sm font-bold shrink-0">
-                                    A:
-                                  </span>
-                                  <p className="text-gray-700 leading-relaxed">
-                                    {faq.answer}
-                                  </p>
-                                </div>
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-
             </div>
           </div>
         </div>
@@ -424,3 +334,4 @@ const Contact = () => {
 }
 
 export default Contact
+
