@@ -13,6 +13,8 @@ function App() {
         <Route path="/events" element={<Events />} />
         <Route path="/schedule" element={<Schedule />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/:clubSlug" element={<Events />} />
+        <Route path="/:clubSlug/:eventSlug" element={<Events />} />
       </Routes>
     </Router>
   )

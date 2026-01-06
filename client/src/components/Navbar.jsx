@@ -7,7 +7,7 @@ import tex3 from '../assets/UI/button-texture-3.png'
 const Navbar = ({ onEventsClick }) => {
   const location = useLocation()
   const textures = [tex1, tex2, tex3]
-  
+
   const navItems = [
     { label: 'Home', path: '/' },
     { label: 'Events', path: '/events' },
@@ -32,7 +32,8 @@ const Navbar = ({ onEventsClick }) => {
               backgroundImage: `url(${textures[index % textures.length]})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              imageRendering: 'pixelated'
+              imageRendering: 'pixelated',
+              WebkitImageRendering: 'pixelated'
             }}
             className="px-5 py-2 text-gray-900 font-bold text-[10px] uppercase tracking-wider hover:brightness-110 active:border-t-black/60 active:border-l-black/60 active:border-b-white/50 active:border-r-white/50 active:translate-y-[1px] transition-all duration-75 relative overflow-hidden"
           >
@@ -41,20 +42,25 @@ const Navbar = ({ onEventsClick }) => {
         ))}
       </div>
 
-      {/* Register Button - TOP SECRET STAMP */}
       <button
-        style={{
-          backgroundImage: `url(${tex3})`,
-          backgroundSize: 'cover',
-          backgroundBlendMode: 'multiply',
-          backgroundColor: '#991b1b'
-        }}
-        className="px-5 py-1.5 border-[3px] border-red-600 shadow-[0_0_15px_rgba(220,38,38,0.2),inset_0_0_10px_rgba(0,0,0,0.5)] transform active:scale-95 transition-all duration-300 flex flex-col items-center justify-center group"
+        className="group transform hover:scale-105 hover:active:scale-95 transition-all duration-300 focus:outline-none"
       >
-        <span className="text-[8px] text-red-400/80 font-mono tracking-[0.3em] font-bold">TOP SECRET</span>
-        <span className="text-lg text-white font-black tracking-tighter uppercase italic leading-none drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
-          Register
-        </span>
+        <div className="relative border-[6px] border-red-700 px-1 py-1
+          opacity-90 mix-blend-multiply bg-transparent
+          cursor-pointer
+        "
+          style={{
+            maskImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.5'/%3E%3C/svg%3E")`,
+            maskMode: 'alpha',
+            WebkitMaskImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 150' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")`,
+            WebkitMaskSize: 'contain'
+          }}>
+          <div className="border-[2px] border-red-700/90 px-3 py-1">
+            <span className="block text-red-700 font-black font-sans text-xl md:text-xl tracking-tighter uppercase leading-[0.85] select-none">
+              REGISTER NOW
+            </span>
+          </div>
+        </div>
       </button>
     </nav>
   )
