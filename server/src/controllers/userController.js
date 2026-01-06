@@ -18,7 +18,7 @@ const transporter = nodemailer.createTransport({
 });
 
 // 📧 Space-themed email template generator
-const spaceMail = (title, message, otp, name) => `
+const spaceMail = (title, message, otp, name, id) => `
   <div style="
     font-family: 'Courier New', monospace;
     background: radial-gradient(circle at top, #0b1a12, #000000);
@@ -66,7 +66,7 @@ const spaceMail = (title, message, otp, name) => `
         font-size: 18px;
         font-weight: normal;
       ">
-        Agent ${name},
+        Agent ${name}, with ID: ${id}
       </h2>
 
       <p style="
@@ -125,9 +125,9 @@ const spaceMail = (title, message, otp, name) => `
 // ================= REGISTER =================
 export const registerUser = async (req, res) => {
   try {
-    const { name, email,  password } = req.body;
+    const { name, email,  password, phone, clgName } = req.body;
 
-    if (!name || !email || !password ) {
+    if (!name || !email || !password || !phone || !clgName) {
       return res.status(400).json({ message: "All fields are required." });
     }
 
@@ -152,6 +152,8 @@ export const registerUser = async (req, res) => {
       name,
       email,
       password: hashedPassword,
+      phone,
+      clgName,
       otp,
       otpExpiresAt,
       isVerified: false,
@@ -168,7 +170,8 @@ export const registerUser = async (req, res) => {
         "INVENTO 2026",
         "Agent clearance initiated. Use the one-time access code below to verify your identity and activate your Invento account. This transmission is classified.",
         otp,
-        name
+        name,
+        newUser._id
       ),
     });
 
