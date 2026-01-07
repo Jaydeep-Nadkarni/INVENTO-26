@@ -1,21 +1,64 @@
 import React, { useState, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import bgImage from '../assets/UI/Invento-bg2.jpg'
 import paperTexture from '../assets/UI/paper-texture.jpg'
+import bgImage from '../assets/UI/Invento-bg.jpg'
 import Navbar from '../components/Navbar'
 
-const TextureOverlay = ({ opacity = 0.4 }) => (
-  <div
-    className="absolute inset-0 z-20 pointer-events-none"
-    style={{
-      backgroundImage: `url(${paperTexture})`,
-      backgroundSize: 'cover',
-      opacity: opacity,
-      mixBlendMode: 'multiply'
-    }}
-  />
-)
+// SVG Icons
+const Icons = {
+  User: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+    </svg>
+  ),
+  Phone: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+    </svg>
+  ),
+  Email: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+    </svg>
+  ),
+  IdCard: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+    </svg>
+  ),
+  School: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+    </svg>
+  ),
+  Lock: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+    </svg>
+  ),
+  Camera: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+  ),
+  Check: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+    </svg>
+  ),
+  Alert: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    </svg>
+  ),
+  Login: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+    </svg>
+  )
+}
 
 const Register = () => {
   const navigate = useNavigate()
@@ -61,19 +104,14 @@ const Register = () => {
   const handleImageUpload = (e) => {
     const file = e.target.files[0]
     if (file) {
-      // Check file size (max 2MB)
       if (file.size > 2 * 1024 * 1024) {
         setError('Image size should be less than 2MB')
         return
       }
-
-      // Check file type
       if (!file.type.startsWith('image/')) {
         setError('Please upload an image file')
         return
       }
-
-      // Convert to Base64
       const reader = new FileReader()
       reader.onloadend = () => {
         setPreviewImage(reader.result)
@@ -88,7 +126,6 @@ const Register = () => {
     e.preventDefault()
     setLoading(true)
 
-    // Validate all fields
     if (!formData.name || !formData.contact || !formData.email || !formData.college || !formData.usn || !formData.password || !formData.confirmPassword) {
       setError('Please fill in all fields')
       setLoading(false)
@@ -101,7 +138,6 @@ const Register = () => {
       return
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(formData.email)) {
       setError('Please enter a valid email')
@@ -116,38 +152,32 @@ const Register = () => {
       return
     }
 
-    // Validate USN format
     if (formData.usn.length < 9) {
       setError('Please enter a valid USN')
       setLoading(false)
       return
     }
 
-    // Validate password match
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match')
       setLoading(false)
       return
     }
 
-    // Validate password strength
     if (formData.password.length < 6) {
       setError('Password should be at least 6 characters')
       setLoading(false)
       return
     }
 
-    // Get existing users
     const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]')
 
-    // Check if email already exists
     if (registeredUsers.some(u => u.email === formData.email)) {
       setError('Email already registered')
       setLoading(false)
       return
     }
 
-    // Create new user object
     const newUser = {
       id: Date.now(),
       name: formData.name,
@@ -160,12 +190,10 @@ const Register = () => {
       registeredAt: new Date().toISOString()
     }
 
-    // Save to localStorage
     registeredUsers.push(newUser)
     localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers))
     localStorage.setItem('currentUser', JSON.stringify(newUser))
 
-    // Redirect to profile
     setTimeout(() => {
       navigate('/profile')
     }, 500)
@@ -181,43 +209,42 @@ const Register = () => {
         backgroundAttachment: 'fixed'
       }}
     >
-      <TextureOverlay opacity={0.5} />
       <Navbar />
-
-      <div className="absolute inset-0 z-0 opacity-30">
-        <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500 rounded-full mix-blend-screen filter blur-3xl"></div>
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-500 rounded-full mix-blend-screen filter blur-3xl"></div>
-      </div>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
+        transition={{ duration: 0.6 }}
         className="relative z-10 flex items-center justify-center min-h-screen py-20"
       >
-        <div className="w-full max-w-2xl px-6">
-          {/* Retro Style Container */}
+        <div className="w-full max-w-3xl px-6">
           <div className="relative">
-            {/* Outer border */}
-            <div className="border-8 border-yellow-500 p-1 bg-black/80 backdrop-blur">
-              {/* Inner border */}
-              <div className="border-4 border-yellow-400/50 p-8 bg-gray-900/90">
-                <h1 className="text-4xl font-serif font-bold text-yellow-500 mb-2 text-center tracking-tighter">
-                  REGISTER
+            <div
+              className="rounded-2xl p-12 shadow-2xl relative overflow-hidden border-4 border-gray-800"
+              style={{
+                backgroundColor: '#f5f1e8',
+                backgroundImage: `url(${paperTexture})`,
+                backgroundBlendMode: 'overlay'
+              }}
+            >
+              <div className="mb-10 pb-8 border-b-4 border-red-600">
+                <h1 className="text-5xl font-serif font-bold text-gray-900 mb-2 tracking-tight">
+                  AGENT REGISTRATION
                 </h1>
-                <p className="text-yellow-400/70 text-center text-sm mb-8 font-mono">
-                  JOIN INVENTO '26
+                <p className="text-red-600 text-sm font-mono uppercase tracking-widest">
+                  Join Invento '26
                 </p>
+              </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-8">
                   {/* Profile Photo Upload */}
-                  <div className="flex justify-center">
+                  <div className="flex flex-col items-center justify-center">
                     <motion.div
                       whileHover={{ scale: 1.05 }}
                       onClick={() => fileInputRef.current?.click()}
                       className="cursor-pointer"
                     >
-                      <div className="w-32 h-32 border-4 border-yellow-500 bg-gray-800 flex items-center justify-center overflow-hidden hover:border-yellow-300 transition-colors">
+                      <div className="w-40 h-40 border-4 border-gray-400 bg-white flex items-center justify-center overflow-hidden hover:border-red-600 transition-colors rounded-lg">
                         {previewImage ? (
                           <img
                             src={previewImage}
@@ -226,8 +253,8 @@ const Register = () => {
                           />
                         ) : (
                           <div className="text-center">
-                            <div className="text-yellow-400 text-2xl mb-2">📸</div>
-                            <p className="text-yellow-400/70 text-xs uppercase tracking-wider">
+                            <Icons.Camera />
+                            <p className="text-gray-600 text-xs uppercase tracking-wider font-serif">
                               Upload Photo
                             </p>
                           </div>
@@ -241,30 +268,32 @@ const Register = () => {
                       onChange={handleImageUpload}
                       className="hidden"
                     />
+                    <p className="mt-3 text-gray-600 text-sm text-center font-mono flex items-center">
+                      <Icons.User /> Face must be clearly visible
+                    </p>
                   </div>
-                  <p className="text-yellow-400/50 text-xs text-center font-mono">Face should be visible clearly</p>
 
                   {/* Two Column Layout */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Name */}
-                    <div>
-                      <label className="block text-yellow-400 font-bold mb-2 text-sm uppercase tracking-wider">
-                        Name
+                    <div className="space-y-3">
+                      <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
+                        <Icons.User /> Name
                       </label>
                       <input
                         type="text"
                         name="name"
                         value={formData.name}
                         onChange={handleInputChange}
-                        placeholder="Your Name"
-                        className="w-full px-4 py-2 bg-gray-800 border-2 border-yellow-500 text-yellow-200 placeholder-yellow-700/50 focus:outline-none focus:border-yellow-300 focus:ring-2 focus:ring-yellow-500/50 font-mono text-sm"
+                        placeholder="Your Full Name"
+                        className="w-full px-5 py-3 bg-white border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
                       />
                     </div>
 
                     {/* Contact Number */}
-                    <div>
-                      <label className="block text-yellow-400 font-bold mb-2 text-sm uppercase tracking-wider">
-                        Contact Number
+                    <div className="space-y-3">
+                      <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
+                        <Icons.Phone /> Contact
                       </label>
                       <input
                         type="tel"
@@ -272,29 +301,29 @@ const Register = () => {
                         value={formData.contact}
                         onChange={handleInputChange}
                         placeholder="10-digit number"
-                        className="w-full px-4 py-2 bg-gray-800 border-2 border-yellow-500 text-yellow-200 placeholder-yellow-700/50 focus:outline-none focus:border-yellow-300 focus:ring-2 focus:ring-yellow-500/50 font-mono text-sm"
+                        className="w-full px-5 py-3 bg-white border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
                       />
                     </div>
 
                     {/* Email */}
-                    <div>
-                      <label className="block text-yellow-400 font-bold mb-2 text-sm uppercase tracking-wider">
-                        Email
+                    <div className="space-y-3">
+                      <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
+                        <Icons.Email /> Email
                       </label>
                       <input
                         type="email"
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
-                        placeholder="your@email.com"
-                        className="w-full px-4 py-2 bg-gray-800 border-2 border-yellow-500 text-yellow-200 placeholder-yellow-700/50 focus:outline-none focus:border-yellow-300 focus:ring-2 focus:ring-yellow-500/50 font-mono text-sm"
+                        placeholder="agent@email.com"
+                        className="w-full px-5 py-3 bg-white border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
                       />
                     </div>
 
                     {/* USN */}
-                    <div>
-                      <label className="block text-yellow-400 font-bold mb-2 text-sm uppercase tracking-wider">
-                        USN
+                    <div className="space-y-3">
+                      <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
+                        <Icons.IdCard /> USN
                       </label>
                       <input
                         type="text"
@@ -302,21 +331,21 @@ const Register = () => {
                         value={formData.usn}
                         onChange={handleInputChange}
                         placeholder="e.g., RV21XX0001"
-                        className="w-full px-4 py-2 bg-gray-800 border-2 border-yellow-500 text-yellow-200 placeholder-yellow-700/50 focus:outline-none focus:border-yellow-300 focus:ring-2 focus:ring-yellow-500/50 font-mono text-sm"
+                        className="w-full px-5 py-3 bg-white border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
                       />
                     </div>
                   </div>
 
                   {/* College Dropdown */}
-                  <div>
-                    <label className="block text-yellow-400 font-bold mb-2 text-sm uppercase tracking-wider">
-                      College
+                  <div className="space-y-3">
+                    <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
+                      <Icons.School /> College
                     </label>
                     <select
                       name="college"
                       value={formData.college}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-2 bg-gray-800 border-2 border-yellow-500 text-yellow-200 focus:outline-none focus:border-yellow-300 focus:ring-2 focus:ring-yellow-500/50 font-mono text-sm cursor-pointer"
+                      className="w-full px-5 py-3 bg-white border-2 border-gray-400 text-gray-900 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm cursor-pointer"
                     >
                       <option value="">Select College</option>
                       {colleges.map((college, idx) => (
@@ -327,11 +356,11 @@ const Register = () => {
                     </select>
                   </div>
 
-                  {/* Password */}
+                  {/* Passwords */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-yellow-400 font-bold mb-2 text-sm uppercase tracking-wider">
-                        Password
+                    <div className="space-y-3">
+                      <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
+                        <Icons.Lock /> Password
                       </label>
                       <input
                         type="password"
@@ -339,14 +368,14 @@ const Register = () => {
                         value={formData.password}
                         onChange={handleInputChange}
                         placeholder="••••••••"
-                        className="w-full px-4 py-2 bg-gray-800 border-2 border-yellow-500 text-yellow-200 placeholder-yellow-700/50 focus:outline-none focus:border-yellow-300 focus:ring-2 focus:ring-yellow-500/50 font-mono text-sm"
+                        className="w-full px-5 py-3 bg-white border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
                       />
                     </div>
 
                     {/* Confirm Password */}
-                    <div>
-                      <label className="block text-yellow-400 font-bold mb-2 text-sm uppercase tracking-wider">
-                        Confirm Password
+                    <div className="space-y-3">
+                      <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
+                        <Icons.Lock /> Confirm Password
                       </label>
                       <input
                         type="password"
@@ -354,7 +383,7 @@ const Register = () => {
                         value={formData.confirmPassword}
                         onChange={handleInputChange}
                         placeholder="••••••••"
-                        className="w-full px-4 py-2 bg-gray-800 border-2 border-yellow-500 text-yellow-200 placeholder-yellow-700/50 focus:outline-none focus:border-yellow-300 focus:ring-2 focus:ring-yellow-500/50 font-mono text-sm"
+                        className="w-full px-5 py-3 bg-white border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
                       />
                     </div>
                   </div>
@@ -364,9 +393,9 @@ const Register = () => {
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="p-3 bg-red-900/50 border-2 border-red-500 text-red-200 text-sm font-mono rounded"
+                      className="p-4 bg-red-100 border-l-4 border-red-600 text-red-800 text-sm font-mono flex items-center"
                     >
-                      {error}
+                      <Icons.Alert /> {error}
                     </motion.div>
                   )}
 
@@ -376,37 +405,40 @@ const Register = () => {
                     whileTap={{ scale: 0.98 }}
                     type="submit"
                     disabled={loading}
-                    className="w-full px-6 py-3 mt-8 bg-gradient-to-r from-yellow-500 to-yellow-600 text-gray-900 font-bold uppercase tracking-wider text-sm hover:from-yellow-400 hover:to-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 border-2 border-yellow-700 shadow-lg hover:shadow-yellow-500/50"
+                    className="w-full px-6 py-4 mt-4 bg-red-600 text-white font-serif font-bold uppercase tracking-wider text-base hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 border-2 border-red-700 flex items-center justify-center"
                   >
-                    {loading ? 'REGISTERING...' : 'REGISTER'}
+                    {loading ? (
+                      '⏳ REGISTERING...'
+                    ) : (
+                      <>
+                        <Icons.Check /> REGISTER AGENT
+                      </>
+                    )}
                   </motion.button>
 
+                  {/* Divider */}
+                  <div className="flex items-center gap-4 my-6">
+                    <div className="flex-1 h-0.5 bg-gray-400"></div>
+                    <span className="text-gray-600 font-mono text-xs uppercase tracking-widest">or</span>
+                    <div className="flex-1 h-0.5 bg-gray-400"></div>
+                  </div>
+
                   {/* Login Link */}
-                  <div className="text-center border-t border-yellow-500/30 pt-6">
-                    <p className="text-yellow-400/70 text-sm mb-3">
-                      Already have an account?
+                  <div className="text-center">
+                    <p className="text-gray-700 text-sm font-serif mb-3">
+                      Already registered?
                     </p>
                     <Link
                       to="/login"
-                      className="inline-block px-6 py-2 bg-transparent border-2 border-yellow-500 text-yellow-400 font-bold uppercase tracking-wider text-xs hover:bg-yellow-500/10 hover:text-yellow-300 transition-all duration-200"
+                      className="w-full inline-flex items-center justify-center px-8 py-3 bg-white border-2 border-gray-800 text-gray-800 font-serif font-bold uppercase tracking-wider text-sm hover:bg-gray-100 hover:border-red-600 hover:text-red-600 transition-colors"
                     >
-                      LOGIN
+                      <Icons.Login /> LOGIN
                     </Link>
                   </div>
                 </form>
               </div>
             </div>
-
-            {/* Scanline effect */}
-            <div
-              className="absolute inset-0 pointer-events-none z-20"
-              style={{
-                backgroundImage: 'repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px)',
-                animation: 'scanline 8s linear infinite'
-              }}
-            />
           </div>
-        </div>
       </motion.div>
     </div>
   )

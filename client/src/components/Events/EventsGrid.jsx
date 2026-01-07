@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import paperTexture from '../../assets/UI/paper-texture.jpg'
-import spy3 from '../../assets/UI/spy3.png'
 import pageTurnSound from '../../assets/audios/page-turn.mp3'
 import closeSound from '../../assets/audios/briefcase-open.mp3'
 import { useParams, useNavigate } from 'react-router-dom'
