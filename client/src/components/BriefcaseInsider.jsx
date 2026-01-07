@@ -13,8 +13,29 @@ import pageTurnSound from '../assets/audios/page-turn.mp3'
 import { useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-const BriefcaseInsider = ({ isOpen, onClose, user = null, onNavigateToEvents = null }) => {
+const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
     const navigate = useNavigate()
+    const [user, setUser] = useState(null)
+
+    // Load user data whenever the briefcase is opened or component mounts
+    useEffect(() => {
+        const fetchUser = () => {
+            const storedUser = localStorage.getItem('currentUser')
+            if (storedUser) {
+                try {
+                    setUser(JSON.parse(storedUser))
+                } catch (e) {
+                    console.error("Error parsing user data:", e)
+                }
+            } else {
+                setUser(null)
+            }
+        }
+
+        if (isOpen) {
+            fetchUser()
+        }
+    }, [isOpen])
 
     // Card Data
     const [cards, setCards] = useState([
@@ -221,7 +242,7 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null, onNavigateToEvents = n
                                             <div className="w-[32%] h-full bg-white/60 border-r border-gray-300 flex flex-col items-center py-2">
                                                 <div className="w-16 h-20 bg-gray-200 border-2 border-[#d4af37] rounded-sm overflow-hidden flex items-center justify-center relative shadow-inner mb-1.5">
                                                     {user ? (
-                                                        <img src={user.photo || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"} alt="User" className="w-full h-full object-cover grayscale contrast-125 transition-all duration-700" />
+                                                        <img src={user.profilePhoto || user.photo || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"} alt="User" className="w-full h-full object-cover grayscale contrast-125 transition-all duration-700" />
                                                     ) : (
                                                         <div className="w-full h-full bg-gray-300 flex flex-col items-center justify-center text-gray-500 text-[6px] font-bold text-center px-1">
                                                             <span className="text-lg opacity-30">👤</span>
@@ -532,9 +553,9 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null, onNavigateToEvents = n
                                                 <div className="w-[32%] h-full bg-white/60 border-r border-gray-300 flex flex-col items-center py-2">
                                                     <div className="w-16 h-20 bg-gray-200 border-2 border-[#d4af37] rounded-sm overflow-hidden flex items-center justify-center relative shadow-inner">
                                                         {user ? (
-                                                            <img src={user.photo || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"} alt="User" className="w-full h-full object-cover grayscale contrast-125" />
+                                                            <img src={user.profilePhoto || user.photo || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"} alt="User" className="w-full h-full object-cover contrast-125" />
                                                         ) : (
-                                                            <div className="text-gray-400 text-[6px] font-bold">UNKNOWN</div>
+                                                            <div className="text-gray-400 text-[6px] font-bold uppercase">Unknown</div>
                                                         )}
                                                     </div>
                                                 </div>
@@ -542,23 +563,42 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null, onNavigateToEvents = n
                                                 {/* Info Section */}
                                                 <div className="flex-1 h-full p-2.5 flex flex-col justify-between bg-white/40">
                                                     {user ? (
-                                                        <div>
-                                                            <h3 className="font-sans font-black text-gray-800 text-sm uppercase tracking-tight leading-tight">
-                                                                {user.name}
-                                                            </h3>
-                                                            <p className="text-[8px] text-gray-600 font-medium uppercase tracking-wider">
-                                                                {user.institution || user.college || "KLE TECH UNIVERSITY"}
-                                                            </p>
+                                                        <div className="space-y-1">
+                                                            <div>
+                                                                <h3 className="font-sans font-black text-gray-800 text-sm uppercase tracking-tight leading-tight">
+                                                                    {user.name}
+                                                                </h3>
+                                                                <p className="text-[8px] text-gray-600 font-medium uppercase tracking-wider">
+                                                                    {user.institution || user.college || "KLE TECH UNIVERSITY"}
+                                                                </p>
+                                                            </div>
+                                                            <div className="bg-blue-100/50 p-1.5 border-l-2 border-blue-900 mt-2">
+                                                                <div className="text-[6px] text-blue-900 font-mono font-bold tracking-widest uppercase">Agent ID</div>
+                                                                <div className="text-[10px] text-gray-900 font-mono font-black tracking-[0.15em]">{user.participantID}</div>
+                                                            </div>
                                                         </div>
                                                     ) : (
-                                                        <div className="h-full flex flex-col justify-center items-center">
-                                                            <span className="text-[8px] font-black text-red-800">LOGIN REQUIRED</span>
+                                                        <div className="h-full flex flex-col justify-center items-center gap-2">
+                                                            <span className="text-[10px] font-black text-red-800 animate-pulse uppercase tracking-widest">Login Required</span>
+                                                            <button 
+                                                                onClick={() => navigate('/login')}
+                                                                className="text-[8px] bg-blue-900 text-white px-3 py-1 font-bold uppercase tracking-tighter hover:bg-black transition-colors"
+                                                            >
+                                                                Identify Agent
+                                                            </button>
                                                         </div>
                                                     )}
                                                     <div className="mt-auto pt-1.5 border-t border-gray-200 flex justify-between items-end">
                                                         <div className="space-y-0.5">
-                                                            <div className="text-[5px] text-gray-400 font-mono uppercase">Verified</div>
-                                                            <div className="text-[5px] text-gray-500 font-mono font-bold uppercase">Exp: 17 MAR 2026</div>
+                                                            <div className="text-[6px] text-gray-400 font-mono uppercase">Verified Operative</div>
+                                                            <div className="text-[6px] text-gray-500 font-mono font-bold uppercase">Exp: 17 MAR 2026</div>
+                                                        </div>
+                                                        <div className="flex flex-col items-end opacity-40">
+                                                            <div className="w-12 h-4 bg-black/80 flex gap-[1px] p-[1px]">
+                                                                {[...Array(15)].map((_, i) => (
+                                                                    <div key={i} className={`h-full bg-white ${Math.random() > 0.5 ? 'w-[1px]' : 'w-[2px]'}`} />
+                                                                ))}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>

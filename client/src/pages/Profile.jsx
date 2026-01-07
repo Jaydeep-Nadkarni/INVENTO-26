@@ -58,6 +58,7 @@ const Profile = () => {
   const navigate = useNavigate()
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [showLinksModal, setShowLinksModal] = useState(false)
 
   useEffect(() => {
     // Get current user from localStorage
@@ -134,20 +135,16 @@ const Profile = () => {
             >
               <div className="absolute inset-0 bg-amber-50/30 mix-blend-multiply pointer-events-none" />
 
-              {/* Top Secret Stamp */}
-              <div className="absolute top-10 right-10 border-4 border-red-700/40 text-red-700/40 px-4 py-1 font-black text-xl uppercase tracking-[0.2em] transform rotate-12 pointer-events-none hidden md:block">
-                top secret
-              </div>
 
               {/* LEFT SIDE: Identity & Photo */}
               <div className="relative z-10 flex flex-col items-center md:items-start md:w-1/3">
                 <div className="mb-8 w-full">
                   <h1 className="text-4xl md:text-6xl font-black text-gray-900 leading-none tracking-tighter uppercase mb-2">
-                    participant <span className="text-red-700">PROFILE</span>
+                    PARTICIPANT <span className="text-red-700">PROFILE</span>
                   </h1>
                   <div className="h-2 w-24 bg-red-800 mb-4 transition-all duration-500 group-hover:w-full"></div>
                   <p className="text-red-600 text-xs font-mono font-bold tracking-[0.3em] uppercase opacity-70">
-                    Dossier Code: {user.usn ? user.usn.substring(user.usn.length - 4) : '####'}
+                    participant ID: {user.usn ? user.usn.substring(user.usn.length - 4) : '####'}
                   </p>
                 </div>
 
@@ -157,7 +154,7 @@ const Profile = () => {
                       <img
                         src={user.profilePhoto}
                         alt="Profile"
-                        className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
+                        className="w-full h-full object-cover transition-all duration-700"
                       />
                     ) : (
                       <div className="text-gray-300 text-8xl grayscale opacity-50 font-black">?</div>
@@ -169,48 +166,41 @@ const Profile = () => {
                   {/* Stamp overlay */}
                   <div className="absolute -bottom-4 -right-4 w-32 h-32 border-4 border-red-600/30 rounded-full flex items-center justify-center -rotate-12 pointer-events-none opacity-40">
                     <div className="text-red-600 font-bold text-center text-xs leading-none">
-                      INVENTO '26<br/>CERTIFIED<br/>AGENT
+                      INVENTO '26<br/>CERTIFIED<br/>SPY
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* RIGHT SIDE: Dossier Details */}
-              <div className="relative z-10 flex-1 flex flex-col">
-                <div className="grid grid-cols-1 gap-10">
+              <div className="relative z-10 flex-1 flex flex-col md:pt-14">
+                <div className="grid grid-cols-1 gap-12">
                   {/* Name & Basic Info Section */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
                     <div className="space-y-1">
-                      <label className="text-[10px] font-mono font-bold text-red-700 uppercase tracking-[0.2em] opacity-80">Full Legal Name</label>
+                      <label className="text-[10px] font-mono font-bold text-red-700 uppercase tracking-[0.2em] opacity-80">Full Name</label>
                       <p className="text-4xl md:text-5xl font-black text-gray-900 leading-tight">{user.name}</p>
                       <div className="h-0.5 w-full bg-gray-300 mt-2 opacity-50"></div>
+                      <p className="text-lg font-mono font-bold text-gray-500 uppercase mt-2 tracking-widest">{user.college}</p>
                     </div>
                     <div className="space-y-1">
                       <label className="text-[10px] font-mono font-bold text-red-700 uppercase tracking-[0.2em] opacity-80">Status</label>
-                      <div className="flex items-center gap-3">
-                        <span className="w-3 h-3 md:w-4 md:h-4 bg-red-600 rounded-full animate-pulse shadow-[0_0_10px_rgba(220,38,38,0.5)]"></span>
-                        <p className="text-2xl md:text-3xl font-black text-red-700 uppercase tracking-tighter italic">Active Agent</p>
+                      <div className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse shadow-[0_0_8px_rgba(220,38,38,0.5)]"></span>
+                        <p className="text-sm font-mono font-bold text-red-700 uppercase tracking-widest italic">Active</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Contact & Affiliation Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                     <div className="space-y-1 border-l-4 border-gray-900 pl-4">
                       <label className="text-[10px] font-mono font-bold text-gray-500 uppercase tracking-widest opacity-70">Email Address</label>
-                      <p className="text-xl font-bold text-gray-800 font-serif italic break-all">{user.email}</p>
+                      <p className="text-xl font-bold text-gray-800 font-sans italic break-all">{user.email}</p>
                     </div>
                     <div className="space-y-1 border-l-4 border-gray-900 pl-4">
-                      <label className="text-[10px] font-mono font-bold text-gray-500 uppercase tracking-widest opacity-70">Phone Frequency</label>
-                      <p className="text-2xl font-black text-gray-800 tracking-widest font-serif leading-none">{user.contact}</p>
-                    </div>
-                    <div className="space-y-1 border-l-4 border-red-800 pl-4">
-                      <label className="text-[10px] font-mono font-bold text-red-800 uppercase tracking-widest opacity-70">Affiliated College</label>
-                      <p className="text-2xl font-black text-gray-900 italic -skew-x-3 inline-block font-serif">{user.college}</p>
-                    </div>
-                    <div className="space-y-1 border-l-4 border-red-800 pl-4">
-                      <label className="text-[10px] font-mono font-bold text-red-800 uppercase tracking-widest opacity-70">Agent USN</label>
-                      <p className="text-2xl font-black text-gray-900 tracking-widest font-serif">{user.usn}</p>
+                      <label className="text-[10px] font-mono font-bold text-gray-500 uppercase tracking-widest opacity-70">Phone</label>
+                      <p className="text-2xl font-black text-gray-800 tracking-widest font-mono leading-none">{user.contact}</p>
                     </div>
                   </div>
 
@@ -218,7 +208,7 @@ const Profile = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-gray-300">
                     {/* Events Participated */}
                     <div className="space-y-3">
-                      <label className="text-[10px] font-mono font-bold text-gray-900 uppercase tracking-widest bg-yellow-400 px-2 py-0.5">Participating Operations</label>
+                      <label className="text-[10px] font-mono font-bold text-gray-900 uppercase tracking-widest bg-yellow-400 px-2 py-0.5">Participating Events</label>
                       <ul className="space-y-1">
                         {user.registeredEvents && user.registeredEvents.length > 0 ? (
                           user.registeredEvents.map((event, i) => (
@@ -227,7 +217,7 @@ const Profile = () => {
                             </li>
                           ))
                         ) : (
-                          <li className="text-sm font-mono text-gray-500 italic uppercase">No operations registered yet</li>
+                          <li className="text-sm font-mono text-gray-500 italic uppercase">No events registered yet</li>
                         )}
                       </ul>
                     </div>
@@ -248,24 +238,29 @@ const Profile = () => {
 
                   {/* Social & Downloads */}
                   <div className="space-y-6 pt-6 border-t border-gray-300">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-mono font-bold text-green-700 uppercase tracking-widest">WhatsApp Operational Links</label>
-                        <div className="flex flex-wrap gap-2">
-                          <button className="text-[10px] font-mono font-bold bg-green-600 text-white px-3 py-1.5 rounded-sm hover:bg-green-700 transition-colors uppercase shadow-sm">
-                            Join Main HQ
-                          </button>
-                          {/* Map through event specific links if available */}
-                          <p className="text-[9px] font-mono text-gray-500 italic uppercase">(Links for your registered events will appear here)</p>
-                        </div>
-                      </div>
+                    <div className="flex flex-col md:flex-row md:items-center justify-end gap-6">
+                      <div className="flex flex-wrap gap-4">
+                        {/* WhatsApp Operational Links Button */}
+                        <button
+                          onClick={() => setShowLinksModal(true)}
+                          className="flex items-center gap-3 bg-white border-2 border-gray-800 px-4 py-2 hover:bg-gray-50 transition-all shadow-[4px_4px_0px_#111] group"
+                        >
+                          <div className="w-8 h-8 rounded-sm bg-green-600 flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-110">
+                            <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-4.821 7.454c-1.679 0-3.325-.45-4.766-1.302l-.342-.204-3.548.93 1.053-3.46-.224-.356C3.935 16.035 3.4 14.356 3.4 12.613 3.4 8.761 6.528 5.633 10.387 5.633c1.868 0 3.623.727 4.945 2.049 1.321 1.321 2.048 3.078 2.048 4.945 0 3.853-3.127 6.98-6.984 6.984m8.46-15.442c-2.261-2.258-5.267-3.5-8.47-3.5-6.6 0-11.97 5.37-11.97 11.97 0 2.11.55 4.167 1.59 6.01L2 22l4.89-1.28c1.77 1.04 3.8 1.59 5.8 1.59 6.6 0 11.99-5.38 11.99-11.98 0-3.2-.24-6.21-2.51-8.47z" />
+                            </svg>
+                          </div>
+                          <div className="text-left">
+                            <span className="block text-[8px] font-mono font-black text-gray-500 uppercase leading-none text-green-700">Links</span>
+                            <span className="block text-xs font-black text-gray-800 uppercase tracking-tight">WhatsApp Links</span>
+                          </div>
+                        </button>
 
-                      <div className="shrink-0">
                         <button className="flex items-center gap-3 bg-white border-2 border-gray-800 px-4 py-2 hover:bg-gray-50 transition-all shadow-[4px_4px_0px_#111]">
                           <div className="w-8 h-8 rounded-sm bg-red-700 flex items-center justify-center text-white font-bold text-xs uppercase">PDF</div>
                           <div className="text-left">
                             <span className="block text-[8px] font-mono font-black text-gray-500 uppercase leading-none">Download</span>
-                            <span className="block text-xs font-black text-gray-800 uppercase tracking-tight">March Schedule</span>
+                            <span className="block text-xs font-black text-gray-800 uppercase tracking-tight">Events Schedule</span>
                           </div>
                         </button>
                       </div>
@@ -277,7 +272,7 @@ const Profile = () => {
                     <div className="flex flex-col md:flex-row justify-between items-end gap-4">
                       <div className="bg-red-50 p-3 border-l-4 border-red-600 max-w-sm">
                         <p className="text-[10px] font-mono font-bold text-red-800 uppercase leading-relaxed">
-                          <span className="text-sm mr-1">⚠️</span> Note: Official passes and entry credentials will be dispatched to your registered email address 48 hours prior to mission commencement.
+                          <span className="text-sm mr-1"></span>Official passes and entry credentials will be dispatched to your registered email address within 48 hours
                         </p>
                       </div>
                       <div className="text-right">
@@ -322,6 +317,79 @@ const Profile = () => {
           </div>
         </div>
       </motion.div>
+
+      {/* WhatsApp Links Modal */}
+      {showLinksModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            onClick={() => setShowLinksModal(false)}
+            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+          />
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            className="relative w-full max-w-lg bg-[#f4f1ea] border-4 border-gray-900 shadow-[10px_10px_0px_#111] overflow-hidden"
+            style={{ backgroundImage: `url(${paperTexture})`, backgroundSize: 'cover' }}
+          >
+            <div className="p-1 px-4 border-b-4 border-gray-900 bg-gray-900 flex justify-between items-center">
+              <span className="text-white font-mono font-bold text-xs uppercase tracking-[0.2em]">operational_links.log</span>
+              <button
+                onClick={() => setShowLinksModal(false)}
+                className="text-white hover:text-red-500 font-bold transition-colors"
+              >
+                [✕]
+              </button>
+            </div>
+            
+            <div className="p-8">
+              <div className="mb-6">
+                <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tighter">Operational frequencies</h3>
+                <p className="text-[10px] font-mono font-bold text-red-700 uppercase tracking-widest mt-1">Status: encrypted / authorized agents only</p>
+              </div>
+
+              <div className="space-y-4">
+                {/* Main HQ */}
+                <div className="p-4 border-2 border-dashed border-gray-400 bg-white/50 group hover:border-green-600 transition-colors">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-sm font-black text-gray-900 uppercase tracking-tight">Main HQ - INVENTO '26</p>
+                      <p className="text-[9px] font-mono text-gray-500 uppercase">Primary communication channel</p>
+                    </div>
+                    <a
+                      href="https://whatsapp.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-green-600 text-white px-4 py-2 text-xs font-black uppercase tracking-wider hover:bg-green-700 shadow-[3px_3px_0px_#111] active:translate-y-px active:shadow-none transition-all"
+                    >
+                      Connect
+                    </a>
+                  </div>
+                </div>
+
+                {/* Dynamic Event Links placeholder */}
+                <div className="py-4 text-center">
+                  <p className="text-[10px] font-mono text-gray-400 italic uppercase">
+                    {user.registeredEvents && user.registeredEvents.length > 0 
+                      ? "Individual mission channel links will update as they become operational."
+                      : "Register for operations to unlock mission-specific channels."}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-gray-300">
+                <button
+                  onClick={() => setShowLinksModal(false)}
+                  className="w-full py-3 bg-gray-900 text-white font-bold uppercase text-xs tracking-widest hover:bg-red-800 transition-colors shadow-[4px_4px_0px_#444]"
+                >
+                  Close Secure Link
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 };

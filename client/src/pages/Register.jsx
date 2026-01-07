@@ -69,16 +69,9 @@ const Register = () => {
   const [loading, setLoading] = useState(false)
 
   const colleges = [
-    'RV College of Engineering',
-    'BMS College of Engineering',
-    'Dayananda Sagar College of Engineering',
-    'Siddaganga Institute of Technology',
-    'M. S. Ramaiah Institute of Technology',
-    'Jyoti Nivas College',
-    'Acharya Institute of Technology',
-    'Vidyavardhaka College of Engineering',
-    'Christ University',
-    'Kristu Jayanti College',
+    'KLE Dr. MS Sheshgiri College of Engineering and Technology',
+    'KLS Gogte Institute of Technology',
+    'Jain Engineering College',
     'Other'
   ]
 
@@ -215,51 +208,60 @@ const Register = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative z-10 flex items-center justify-center min-h-screen py-20"
+        className="relative z-10 flex items-center justify-center min-h-screen pt-24 pb-12 px-4"
       >
-        <div className="w-full max-w-3xl px-6">
+        <div className="w-full max-w-2xl">
+          {/* Document Style Card */}
           <div className="relative">
             <div
-              className="rounded-2xl p-12 shadow-2xl relative overflow-hidden border-4 border-gray-800"
+              className="p-8 md:p-12 shadow-[20px_20px_60px_rgba(0,0,0,0.5)] relative overflow-hidden border-2 border-gray-800 rounded-sm"
               style={{
                 backgroundColor: '#f5f1e8',
                 backgroundImage: `url(${paperTexture})`,
-                backgroundBlendMode: 'overlay'
+                backgroundSize: 'cover'
               }}
             >
-              <div className="mb-10 pb-8 border-b-4 border-red-600">
-                <h1 className="text-5xl font-serif font-bold text-gray-900 mb-2 tracking-tight">
-                  AGENT REGISTRATION
-                </h1>
-                <p className="text-red-600 text-sm font-mono uppercase tracking-widest">
-                  Join Invento '26
+              <div className="absolute inset-0 bg-amber-50/20 mix-blend-multiply pointer-events-none" />
+
+              {/* Header */}
+              <div className="mb-10 pb-6 border-b-2 border-red-700/30">
+                <div className="flex justify-between items-start mb-2">
+                  <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase leading-none">
+                    Register
+                  </h1>
+                  <span className="text-[10px] font-mono font-bold bg-gray-900 text-white px-2 py-0.5 whitespace-nowrap">FORM: INV-2026</span>
+                </div>
+                <p className="text-red-700 text-[10px] font-mono uppercase tracking-[0.2em] font-bold">
+                  New Agent Onboarding!
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-8">
+              <form onSubmit={handleSubmit} className="space-y-10">
                   {/* Profile Photo Upload */}
-                  <div className="flex flex-col items-center justify-center">
+                  <div className="flex flex-col items-center justify-center mb-6">
                     <motion.div
-                      whileHover={{ scale: 1.05 }}
+                      whileHover={{ scale: 1.02 }}
                       onClick={() => fileInputRef.current?.click()}
-                      className="cursor-pointer"
+                      className="cursor-pointer relative group"
                     >
-                      <div className="w-40 h-40 border-4 border-gray-400 bg-white flex items-center justify-center overflow-hidden hover:border-red-600 transition-colors rounded-lg">
+                      <div className="w-40 h-52 border-2 border-gray-400 bg-white flex items-center justify-center overflow-hidden hover:border-red-600 transition-colors shadow-[8px_8px_0px_rgba(0,0,0,0.1)]">
                         {previewImage ? (
                           <img
                             src={previewImage}
                             alt="Profile"
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover grayscale"
                           />
                         ) : (
-                          <div className="text-center">
+                          <div className="text-center p-4">
                             <Icons.Camera />
-                            <p className="text-gray-600 text-xs uppercase tracking-wider font-serif">
-                              Upload Photo
+                            <p className="text-gray-400 text-[9px] uppercase tracking-widest font-mono font-bold mt-2">
+                              Secure Photo Attach
                             </p>
                           </div>
                         )}
                       </div>
+                      {/* Photo Tape Effect */}
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-20 h-6 bg-gray-400/20 mix-blend-multiply border border-gray-400/10 rotate-1 shadow-sm opacity-50"></div>
                     </motion.div>
                     <input
                       ref={fileInputRef}
@@ -268,86 +270,86 @@ const Register = () => {
                       onChange={handleImageUpload}
                       className="hidden"
                     />
-                    <p className="mt-3 text-gray-600 text-sm text-center font-mono flex items-center">
-                      <Icons.User /> Face must be clearly visible
+                    <p className="mt-4 text-gray-500 text-[9px] uppercase font-mono tracking-widest font-black">
+                      <span className="text-red-600">⚠</span> Biometric scan required
                     </p>
                   </div>
 
                   {/* Two Column Layout */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
                     {/* Name */}
-                    <div className="space-y-3">
-                      <label className="text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
-                        <Icons.User /> Name
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-widest flex items-center gap-2">
+                        Full Name
                       </label>
                       <input
                         type="text"
                         name="name"
                         value={formData.name}
                         onChange={handleInputChange}
-                        placeholder="Your Full Name"
-                        className="w-full px-5 py-3 bg-white/60 backdrop-blur-[2px] border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
+                        placeholder="Jaydeep"
+                        className="w-full px-4 py-2 bg-white/50 border border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600/20 font-mono text-sm"
                       />
                     </div>
 
                     {/* Contact Number */}
-                    <div className="space-y-3">
-                      <label className="text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
-                        <Icons.Phone /> Contact
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-widest flex items-center gap-2">
+                        Contact Freq
                       </label>
                       <input
                         type="tel"
                         name="contact"
                         value={formData.contact}
                         onChange={handleInputChange}
-                        placeholder="10-digit number"
-                        className="w-full px-5 py-3 bg-white/60 backdrop-blur-[2px] border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
+                        placeholder="948200XXXX"
+                        className="w-full px-4 py-2 bg-white/50 border border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600/20 font-mono text-sm"
                       />
                     </div>
 
                     {/* Email */}
-                    <div className="space-y-3">
-                      <label className="text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
-                        <Icons.Email /> Email
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-widest flex items-center gap-2">
+                        Relay Email
                       </label>
                       <input
                         type="email"
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
-                        placeholder="agent@email.com"
-                        className="w-full px-5 py-3 bg-white/60 backdrop-blur-[2px] border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
+                        placeholder="agent@agency.com"
+                        className="w-full px-4 py-2 bg-white/50 border border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600/20 font-mono text-sm"
                       />
                     </div>
 
                     {/* USN */}
-                    <div className="space-y-3">
-                      <label className="text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
-                        <Icons.IdCard /> USN
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-widest flex items-center gap-2">
+                        Agent USN
                       </label>
                       <input
                         type="text"
                         name="usn"
                         value={formData.usn}
                         onChange={handleInputChange}
-                        placeholder="e.g., RV21XX0001"
-                        className="w-full px-5 py-3 bg-white/60 backdrop-blur-[2px] border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
+                        placeholder="02FE24BCSXXX"
+                        className="w-full px-4 py-2 bg-white/50 border border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600/20 font-mono text-sm"
                       />
                     </div>
                   </div>
 
                   {/* College Dropdown */}
-                  <div className="space-y-3">
-                    <label className="text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
-                      <Icons.School /> College
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-widest flex items-center gap-2">
+                      Affiliated Institution
                     </label>
                     <select
                       name="college"
                       value={formData.college}
                       onChange={handleInputChange}
-                      className="w-full px-5 py-3 bg-white/60 backdrop-blur-[2px] border-2 border-gray-400 text-gray-900 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm cursor-pointer"
+                      className="w-full px-4 py-2 bg-white/50 border border-gray-400 text-gray-900 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600/20 font-mono text-sm cursor-pointer"
                     >
-                      <option value="">Select College</option>
+                      <option value="">Select HQ</option>
                       {colleges.map((college, idx) => (
                         <option key={idx} value={college}>
                           {college}
@@ -357,10 +359,10 @@ const Register = () => {
                   </div>
 
                   {/* Passwords */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                      <label className="text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
-                        <Icons.Lock /> Password
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-widest flex items-center gap-2">
+                        Encryption Pass
                       </label>
                       <input
                         type="password"
@@ -368,14 +370,14 @@ const Register = () => {
                         value={formData.password}
                         onChange={handleInputChange}
                         placeholder="••••••••"
-                        className="w-full px-5 py-3 bg-white/60 backdrop-blur-[2px] border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
+                        className="w-full px-4 py-2 bg-white/50 border border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600/20 font-mono text-sm"
                       />
                     </div>
 
                     {/* Confirm Password */}
-                    <div className="space-y-3">
-                      <label className="text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
-                        <Icons.Lock /> Confirm Password
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-widest flex items-center gap-2">
+                        Confirm Pass
                       </label>
                       <input
                         type="password"
@@ -383,7 +385,7 @@ const Register = () => {
                         value={formData.confirmPassword}
                         onChange={handleInputChange}
                         placeholder="••••••••"
-                        className="w-full px-5 py-3 bg-white/60 backdrop-blur-[2px] border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
+                        className="w-full px-4 py-2 bg-white/50 border border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600/20 font-mono text-sm"
                       />
                     </div>
                   </div>
@@ -393,47 +395,33 @@ const Register = () => {
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="p-4 bg-red-100 border-l-4 border-red-600 text-red-800 text-sm font-mono flex items-center"
+                      className="p-3 bg-red-900 text-white text-[10px] font-mono uppercase tracking-wider border-l-4 border-red-500"
                     >
-                      <Icons.Alert /> {error}
+                      <span className="font-bold mr-2">PROTOCOL ERROR:</span> {error}
                     </motion.div>
                   )}
 
                   {/* Submit Button */}
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    type="submit"
-                    disabled={loading}
-                    className="w-full px-6 py-4 mt-4 bg-red-600 text-white font-serif font-bold uppercase tracking-wider text-base hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 border-2 border-red-700 flex items-center justify-center"
-                  >
-                    {loading ? (
-                      '⏳ REGISTERING...'
-                    ) : (
-                      <>
-                        <Icons.Check /> REGISTER AGENT
-                      </>
-                    )}
-                  </motion.button>
-
-                  {/* Divider */}
-                  <div className="flex items-center gap-4 my-6">
-                    <div className="flex-1 h-0.5 bg-gray-400"></div>
-                    <span className="text-gray-600 font-mono text-xs uppercase tracking-widest">or</span>
-                    <div className="flex-1 h-0.5 bg-gray-400"></div>
-                  </div>
-
-                  {/* Login Link */}
-                  <div className="text-center">
-                    <p className="text-gray-700 text-sm font-serif mb-3">
-                      Already registered?
-                    </p>
-                    <Link
-                      to="/login"
-                      className="w-full inline-flex items-center justify-center px-8 py-3 bg-white border-2 border-gray-800 text-gray-800 font-serif font-bold uppercase tracking-wider text-sm hover:bg-gray-100 hover:border-red-600 hover:text-red-600 transition-colors"
+                  <div className="pt-4 flex flex-col items-center gap-6">
+                    <motion.button
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
+                      type="submit"
+                      disabled={loading}
+                      className="w-full max-w-sm px-6 py-4 bg-gray-900 text-white font-black uppercase tracking-[0.2em] text-xs hover:bg-red-800 disabled:opacity-50 transition-all shadow-[6px_6px_0px_#444] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5"
                     >
-                      <Icons.Login /> LOGIN
-                    </Link>
+                      {loading ? '🔐 SECURING IDENTITY...' : 'ESTABLISH AGENT IDENTITY'}
+                    </motion.button>
+
+                    <div className="flex flex-col items-center gap-2">
+                      <p className="text-[9px] font-mono text-gray-500 uppercase tracking-widest">Already authorized?</p>
+                      <Link
+                        to="/login"
+                        className="text-xs text-gray-900 font-black uppercase tracking-widest border-b border-gray-900 pb-0.5 hover:text-red-700 hover:border-red-700 transition-all"
+                      >
+                        Access Terminal
+                      </Link>
+                    </div>
                   </div>
                 </form>
               </div>
