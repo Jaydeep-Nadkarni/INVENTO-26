@@ -1,11 +1,13 @@
-import React from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import tex1 from '../assets/UI/button-texture-1.png'
 import tex2 from '../assets/UI/button-texture-1.png'
 import tex3 from '../assets/UI/button-texture-3.png'
 
 const Navbar = ({ onEventsClick }) => {
   const location = useLocation()
+  const navigate = useNavigate()
+  const [currentUser, setCurrentUser] = useState(null)
   const textures = [tex1, tex2, tex3]
 
   const navItems = [
@@ -15,8 +17,28 @@ const Navbar = ({ onEventsClick }) => {
     { label: 'Contact', path: '/contact' }
   ]
 
+  useEffect(() => {
+    // Check if user is logged in
+    const user = localStorage.getItem('currentUser')
+    if (user) {
+      try {
+        setCurrentUser(JSON.parse(user))
+      } catch (error) {
+        console.error('Error parsing user:', error)
+      }
+    }
+  }, [location])
+
+  const handleRegisterClick = () => {
+    navigate('/register')
+  }
+
+  const handleProfileClick = () => {
+    navigate('/profile')
+  }
+
   return (
-    <nav className="fixed top-0 left-0 w-full z-50 px-6 py-4 flex items-center  justify-between">
+    <nav className="fixed top-0 left-0 w-full z-50 px-6 py-4 flex items-center justify-between">
       {/* Logo/Brand */}
       <Link to="/" className="text-yellow-500 font-serif font-bold text-xl tracking-tighter hover:opacity-80 transition-opacity">
         INVENTO <span className="text-xs align-top opacity-70">'26</span>
@@ -42,26 +64,48 @@ const Navbar = ({ onEventsClick }) => {
         ))}
       </div>
 
-      <button
-        className="group transform hover:scale-105 hover:active:scale-95 transition-all duration-300 focus:outline-none"
-      >
-        <div className="relative border-[6px] border-red-700 px-1 py-1
-          opacity-90 mix-blend-multiply bg-transparent
-          cursor-pointer
-        "
-          style={{
-            maskImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.5'/%3E%3C/svg%3E")`,
-            maskMode: 'alpha',
-            WebkitMaskImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 150' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")`,
-            WebkitMaskSize: 'contain'
-          }}>
-          <div className="border-[2px] border-red-700/90 px-3 py-1">
-            <span className="block text-red-700 font-black font-sans text-xl md:text-xl tracking-tighter uppercase leading-[0.85] select-none">
-              REGISTER NOW
-            </span>
-          </div>
-        </div>
-      </button>
+      {/* User Section */}
+      <div className="flex items-center gap-4">
+        {currentUser ? (
+          <button
+            onClick={handleProfileClick}
+            className="w-10 h-10 rounded-full border-2 border-yellow-500 overflow-hidden hover:border-yellow-300 hover:scale-110 transition-all duration-300 cursor-pointer flex items-center justify-center bg-gray-800"
+            title="View Profile"
+          >
+            {currentUser.profilePhoto ? (
+              <img
+                src={currentUser.profilePhoto}
+                alt="Profile"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-lg">👤</span>
+            )}
+          </button>
+        ) : (
+          <button
+            onClick={handleRegisterClick}
+            className="group transform hover:scale-105 hover:active:scale-95 transition-all duration-300 focus:outline-none"
+          >
+            <div className="relative border-[6px] border-red-700 px-1 py-1
+              opacity-90 mix-blend-multiply bg-transparent
+              cursor-pointer
+            "
+              style={{
+                maskImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.5'/%3E%3C/svg%3E")`,
+                maskMode: 'alpha',
+                WebkitMaskImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 150' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")`,
+                WebkitMaskSize: 'contain'
+              }}>
+              <div className="border-[2px] border-red-700/90 px-3 py-1">
+                <span className="block text-red-700 font-black font-sans text-xl md:text-xl tracking-tighter uppercase leading-[0.85] select-none">
+                  REGISTER NOW
+                </span>
+              </div>
+            </div>
+          </button>
+        )}
+      </div>
     </nav>
   )
 }

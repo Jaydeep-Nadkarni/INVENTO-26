@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import paperTexture from '../../assets/UI/paper-texture.jpg'
-import spy3 from '../../assets/UI/spy3.png'
 import pageTurnSound from '../../assets/audios/page-turn.mp3'
 import closeSound from '../../assets/audios/briefcase-open.mp3'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -111,17 +110,6 @@ const EventsGrid = () => {
                 {/* Background Noise/Grit */}
                 <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")` }}></div>
 
-                {/* Spy3 Watermark */}
-                <div
-                  className="fixed inset-0 opacity-[0.15] pointer-events-none"
-                  style={{
-                    backgroundImage: `url(${spy3})`,
-                    backgroundSize: 'contain',
-                    backgroundPosition: 'center',
-                    backgroundRepeat: 'no-repeat'
-                  }}
-                />
-
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -130,10 +118,10 @@ const EventsGrid = () => {
                     <div className="mb-12 border-b border-dashed border-white/20 pb-4 flex justify-between items-end">
                         <div>
                             <h2 className="text-sm font-mono text-red-600 tracking-[0.3em] uppercase mb-2">Decrypted Directory</h2>
-                            <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-tighter">Competitions</h1>
+                            <h1 className="text-4xl font-serif md:text-5xl font-black text-white uppercase tracking-tighter">Competitions</h1>
                         </div>
                         <div className="hidden md:block text-xs font-mono text-gray-500">
-                             // SELECT TARGET TO VIEW PROTOCOLS
+                             Events List
                         </div>
                     </div>
 
