@@ -203,7 +203,7 @@ const Login = () => {
                         value={formData.password}
                         onChange={handleInputChange}
                         placeholder="••••••••"
-                        className="w-full px-5 py-3 bg-white border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm pr-12"
+                        className="w-full px-5 py-3 bg-white/60 backdrop-blur-[2px] border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm pr-12"
                       />
                       <button
                         type="button"
@@ -317,7 +317,7 @@ const Login = () => {
                   value={resetEmail}
                   onChange={(e) => setResetEmail(e.target.value)}
                   placeholder="your@email.com"
-                  className="w-full px-5 py-3 bg-white border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
+                  className="w-full px-5 py-3 bg-white/60 backdrop-blur-[2px] border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
                 />
 
                 {resetMessage && (

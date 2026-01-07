@@ -6,6 +6,7 @@ import Mail from './Mail'
 import Notes from './Notes'
 import Radio from './Radio'
 import Browser from './Browser'
+import VideoPlayer from './VideoPlayer'
 import Shutdown from './shutdown'
 import shutdownAudio from '../../assets/audios/shutdown.mp3'
 import wallpaperImg from '../../assets/UI/OS/wallpaper.png'
@@ -90,9 +91,10 @@ const RetroTerminal = ({ isOpen, onClose }) => {
     const renderAppContent = (app) => {
         switch (app.type) {
             case 'cmd': return <CMD />
-            case 'filemanager': return <FileManager onOpenFile={(fileId) => launchApp({ id: fileId, title: fileId.toUpperCase(), type: 'notes' })} />
+            case 'filemanager': return <FileManager onOpenFile={(file) => launchApp({ id: file.id, title: file.name.toUpperCase(), type: file.type === 'video' ? 'video' : 'notes' })} />
             case 'mail': return <Mail />
             case 'notes': return <Notes title={app.title} />
+            case 'video': return <VideoPlayer title={app.title} />
             case 'radio': return <Radio />
             case 'browser': return <Browser />
             default: return null
