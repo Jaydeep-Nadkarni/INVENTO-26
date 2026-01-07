@@ -161,7 +161,7 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null, onNavigateToEvents = n
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center overflow-hidden"
+                    className="fixed inset-0 z-100 bg-black/90 backdrop-blur-md flex items-center justify-center overflow-hidden"
                     onClick={onClose}
                 >
                     {/* Briefcase Container */}
@@ -170,7 +170,7 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null, onNavigateToEvents = n
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.95, opacity: 0, y: 20 }}
                         transition={{ type: "spring", damping: 20, stiffness: 100 }}
-                        className="relative w-full max-w-[100vw] h-[100vh] bg-[#0F0F0F] rounded-xl shadow-2xl overflow-hidden border border-[#333]"
+                        className="relative w-full max-w-[100vw] h-screen bg-[#0F0F0F] rounded-xl shadow-2xl overflow-hidden border border-[#333]"
                         onClick={(e) => e.stopPropagation()}
                         style={{
                             boxShadow: 'inset 0 0 200px rgba(0,0,0,1), 0 50px 100px -20px rgba(0,0,0,0.7)'
@@ -191,7 +191,7 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null, onNavigateToEvents = n
                             <div className="absolute left-0 top-0 bottom-0 w-[30%] p-8 z-30">
 
                                 {/* ID Card - Horizontal Agent ID */}
-                                <div className="absolute top-[12%] left-[18%] w-[260px] h-[160px] z-40" style={{ perspective: '1000px' }}>
+                                <div className="absolute top-[12%] left-[18%] w-65 h-40 z-40" style={{ perspective: '1000px' }}>
                                     <motion.div
                                         layoutId="id-card"
                                         drag={!isIDExpanded}
@@ -240,13 +240,17 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null, onNavigateToEvents = n
                                             {/* Right Column: Info & Barcodes */}
                                             <div className="flex-1 h-full p-2.5 flex flex-col justify-between relative bg-white/40">
                                                 {user ? (
-                                                    <div>
-                                                        <h3 className="font-sans font-black text-gray-800 text-sm uppercase tracking-tight leading-tight mb-0.5">
+                                                    <div className="space-y-1">
+                                                        <h3 className="font-sans font-black text-gray-800 text-sm uppercase tracking-tight leading-none mb-0.5">
                                                             {user.name}
                                                         </h3>
-                                                        <p className="text-[8px] text-gray-600 font-medium uppercase tracking-wider line-clamp-1">
-                                                            {user.institution || user.college || "KLE TECH UNIVERSITY"}
+                                                        <p className="text-[7px] text-gray-600 font-bold uppercase tracking-wider line-clamp-1 mb-1">
+                                                            {user.college || "KLE TECH UNIVERSITY"}
                                                         </p>
+                                                        <div className="bg-blue-100/50 p-1 border-l-2 border-blue-900">
+                                                            <div className="text-[5px] text-blue-900 font-mono font-bold tracking-widest">AGENT USN</div>
+                                                            <div className="text-[8px] text-gray-900 font-mono font-black tracking-[0.15em]">{user.usn}</div>
+                                                        </div>
                                                     </div>
                                                 ) : (
                                                     <div className="h-full flex flex-col justify-center items-center gap-1">

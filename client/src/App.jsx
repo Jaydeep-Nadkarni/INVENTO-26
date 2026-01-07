@@ -4,7 +4,6 @@ import Home from './pages/Home.jsx'
 import Events from './pages/Events.jsx'
 import Schedule from './pages/Schedule.jsx'
 import Contact from './pages/Contact.jsx'
-import Sponsors from './pages/Sponsors.jsx'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
 import Profile from './pages/Profile.jsx'
@@ -28,7 +27,6 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/events" element={<Events />} />
         <Route path="/schedule" element={<Schedule />} />
-        <Route path="/sponsors" element={<Sponsors />} />
         <Route path="/contact" element={<Contact />} />
         
         {/* Protected Routes */}

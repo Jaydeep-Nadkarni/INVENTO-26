@@ -87,8 +87,8 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900" style={{ backgroundImage: `url(${bgImage})`, backgroundSize: 'cover' }}>
-         <div className="text-white text-xl font-mono bg-black/50 p-4 rounded">LOADING AGENT DATA...</div>
+      <div className="min-h-screen flex items-center justify-center bg-[#1a1a1a]" style={{ backgroundImage: `url(${bgImage})`, backgroundSize: 'cover' }}>
+         <div className="text-white text-xl font-mono bg-black/50 p-4 rounded border border-red-800">LOADING AGENT DATA...</div>
       </div>
     )
   }
@@ -99,151 +99,231 @@ const Profile = () => {
 
   return (
     <div
-      className="min-h-screen relative overflow-hidden bg-gray-900"
-      style={{
-        backgroundImage: `url(${bgImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed'
-      }}
+      className="min-h-screen relative overflow-hidden bg-[#1a1a1a] font-serif"
     >
+      {/* Background */}
+      <div
+        className="fixed inset-0 z-0 opacity-30"
+        style={{
+          backgroundImage: `url(${bgImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      />
+      <div className="absolute inset-0 bg-black/50 pointer-events-none"></div>
+      <div className="absolute inset-0 opacity-[0.05] pointer-events-none mix-blend-overlay" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")` }}></div>
+
       <Navbar />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative z-10 flex items-center justify-center min-h-screen py-20"
+        className="relative z-10 flex items-center justify-center min-h-screen pt-24 px-4 pb-12"
       >
-        <div className="w-full max-w-3xl px-6">
+        <div className="w-full max-w-7xl">
           {/* Document Style Card */}
           <div className="relative">
             <div
-              className="rounded-2xl p-12 shadow-2xl relative overflow-hidden border-4 border-gray-800"
+              className="rounded-2xl p-8 md:p-12 shadow-2xl relative overflow-hidden border-4 border-gray-800 flex flex-col md:flex-row gap-12"
               style={{
-                backgroundColor: '#f5f1e8',
+                backgroundColor: '#f4f1ea',
                 backgroundImage: `url(${paperTexture})`,
-                backgroundBlendMode: 'overlay'
+                backgroundSize: 'cover'
               }}
             >
-              {/* Header */}
-              <div className="mb-10 pb-8 border-b-4 border-red-600">
-                <h1 className="text-5xl font-serif font-bold text-gray-900 mb-2 tracking-tight">
-                  AGENT PROFILE
-                </h1>
-                <p className="text-red-600 text-sm font-mono uppercase tracking-widest">
-                  Classified Information
-                </p>
+              <div className="absolute inset-0 bg-amber-50/30 mix-blend-multiply pointer-events-none" />
+
+              {/* Top Secret Stamp */}
+              <div className="absolute top-10 right-10 border-4 border-red-700/40 text-red-700/40 px-4 py-1 font-black text-xl uppercase tracking-[0.2em] transform rotate-12 pointer-events-none hidden md:block">
+                top secret
               </div>
 
-                {/* Profile Content */}
-                <div className="space-y-8">
-                  {/* Profile Photo and Basic Info */}
-                  <div className="flex flex-col md:flex-row gap-8 items-start md:items-center border-b-4 border-red-600 pb-8">
-                    {/* Profile Photo */}
-                    <div className="shrink-0">
-                      <div className="w-48 h-48 border-4 border-gray-400 bg-white overflow-hidden flex items-center justify-center rounded-lg">
-                        {user.profilePhoto ? (
-                          <img
-                            src={user.profilePhoto}
-                            alt="Profile"
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="text-gray-600 text-6xl">👤</div>
-                        )}
-                      </div>
-                    </div>
+              {/* LEFT SIDE: Identity & Photo */}
+              <div className="relative z-10 flex flex-col items-center md:items-start md:w-1/3">
+                <div className="mb-8 w-full">
+                  <h1 className="text-4xl md:text-6xl font-black text-gray-900 leading-none tracking-tighter uppercase mb-2">
+                    participant <span className="text-red-700">PROFILE</span>
+                  </h1>
+                  <div className="h-2 w-24 bg-red-800 mb-4 transition-all duration-500 group-hover:w-full"></div>
+                  <p className="text-red-600 text-xs font-mono font-bold tracking-[0.3em] uppercase opacity-70">
+                    Dossier Code: {user.usn ? user.usn.substring(user.usn.length - 4) : '####'}
+                  </p>
+                </div>
 
-                    {/* Basic Information */}
-                    <div className="flex-1 space-y-4">
-                      <div>
-                        <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide mb-2">
-                          Name
-                        </label>
-                        <p className="text-gray-900 font-mono text-xl">{user.name}</p>
-                      </div>
-
-                      <div>
-                        <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide mb-2">
-                          Email
-                        </label>
-                        <p className="text-gray-900 font-mono">{user.email}</p>
-                      </div>
-
-                      <div>
-                        <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide mb-2">
-                          Contact
-                        </label>
-                        <p className="text-gray-900 font-mono">{user.contact}</p>
-                      </div>
-                    </div>
+                <div className="relative group">
+                  <div className="w-56 h-72 md:w-64 md:h-80 border-4 border-gray-800 bg-white overflow-hidden flex items-center justify-center shadow-[10px_10px_20px_rgba(0,0,0,0.3)] transform -rotate-1 group-hover:rotate-0 transition-transform duration-500">
+                    {user.profilePhoto ? (
+                      <img
+                        src={user.profilePhoto}
+                        alt="Profile"
+                        className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
+                      />
+                    ) : (
+                      <div className="text-gray-300 text-8xl grayscale opacity-50 font-black">?</div>
+                    )}
                   </div>
-
-                  {/* Additional Details Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="border-l-4 border-red-600 pl-4">
-                      <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide mb-2">
-                        College
-                      </label>
-                      <p className="text-gray-900 font-mono">{user.college}</p>
+                  {/* Photo paper clips or corners? Let's add a subtle tape effect */}
+                  <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-16 h-6 bg-gray-400/30 mix-blend-multiply border border-gray-400/20 rotate-1 shadow-sm"></div>
+                  
+                  {/* Stamp overlay */}
+                  <div className="absolute -bottom-4 -right-4 w-32 h-32 border-4 border-red-600/30 rounded-full flex items-center justify-center -rotate-12 pointer-events-none opacity-40">
+                    <div className="text-red-600 font-bold text-center text-xs leading-none">
+                      INVENTO '26<br/>CERTIFIED<br/>AGENT
                     </div>
-
-                    <div className="border-l-4 border-red-600 pl-4">
-                      <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide mb-2">
-                        USN
-                      </label>
-                      <p className="text-gray-900 font-mono text-lg tracking-widest">{user.usn}</p>
-                    </div>
-
-                    <div className="border-l-4 border-red-600 pl-4">
-                      <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide mb-2">
-                        Status
-                      </label>
-                      <p className="text-red-600 font-mono font-bold">REGISTERED ✓</p>
-                    </div>
-
-                    <div className="border-l-4 border-red-600 pl-4">
-                      <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide mb-2">
-                        Joined
-                      </label>
-                      <p className="text-gray-900 font-mono">
-                        {new Date(user.registeredAt).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric'
-                        })}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-4 justify-center pt-6 border-t-4 border-red-600">
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => navigate('/')}
-                      className="px-8 py-3 bg-red-600 text-white font-serif font-bold uppercase tracking-wider text-base hover:bg-red-700 transition-colors border-2 border-red-700"
-                    >
-                      🏠 GO HOME
-                    </motion.button>
-
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={handleLogout}
-                      className="px-8 py-3 bg-white border-2 border-gray-800 text-gray-800 font-serif font-bold uppercase tracking-wider text-base hover:bg-gray-100 hover:border-red-600 hover:text-red-600 transition-colors"
-                    >
-                      🚪 LOGOUT
-                    </motion.button>
                   </div>
                 </div>
               </div>
+
+              {/* RIGHT SIDE: Dossier Details */}
+              <div className="relative z-10 flex-1 flex flex-col">
+                <div className="grid grid-cols-1 gap-10">
+                  {/* Name & Basic Info Section */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-mono font-bold text-red-700 uppercase tracking-[0.2em] opacity-80">Full Legal Name</label>
+                      <p className="text-4xl md:text-5xl font-black text-gray-900 leading-tight">{user.name}</p>
+                      <div className="h-0.5 w-full bg-gray-300 mt-2 opacity-50"></div>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-mono font-bold text-red-700 uppercase tracking-[0.2em] opacity-80">Status</label>
+                      <div className="flex items-center gap-3">
+                        <span className="w-3 h-3 md:w-4 md:h-4 bg-red-600 rounded-full animate-pulse shadow-[0_0_10px_rgba(220,38,38,0.5)]"></span>
+                        <p className="text-2xl md:text-3xl font-black text-red-700 uppercase tracking-tighter italic">Active Agent</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Contact & Affiliation Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+                    <div className="space-y-1 border-l-4 border-gray-900 pl-4">
+                      <label className="text-[10px] font-mono font-bold text-gray-500 uppercase tracking-widest opacity-70">Email Address</label>
+                      <p className="text-xl font-bold text-gray-800 font-serif italic break-all">{user.email}</p>
+                    </div>
+                    <div className="space-y-1 border-l-4 border-gray-900 pl-4">
+                      <label className="text-[10px] font-mono font-bold text-gray-500 uppercase tracking-widest opacity-70">Phone Frequency</label>
+                      <p className="text-2xl font-black text-gray-800 tracking-widest font-serif leading-none">{user.contact}</p>
+                    </div>
+                    <div className="space-y-1 border-l-4 border-red-800 pl-4">
+                      <label className="text-[10px] font-mono font-bold text-red-800 uppercase tracking-widest opacity-70">Affiliated College</label>
+                      <p className="text-2xl font-black text-gray-900 italic -skew-x-3 inline-block font-serif">{user.college}</p>
+                    </div>
+                    <div className="space-y-1 border-l-4 border-red-800 pl-4">
+                      <label className="text-[10px] font-mono font-bold text-red-800 uppercase tracking-widest opacity-70">Agent USN</label>
+                      <p className="text-2xl font-black text-gray-900 tracking-widest font-serif">{user.usn}</p>
+                    </div>
+                  </div>
+
+                  {/* Operational Sections */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-gray-300">
+                    {/* Events Participated */}
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-mono font-bold text-gray-900 uppercase tracking-widest bg-yellow-400 px-2 py-0.5">Participating Operations</label>
+                      <ul className="space-y-1">
+                        {user.registeredEvents && user.registeredEvents.length > 0 ? (
+                          user.registeredEvents.map((event, i) => (
+                            <li key={i} className="text-sm font-mono font-bold text-gray-800 flex items-center gap-2 uppercase">
+                              <span className="text-red-600">»</span> {event}
+                            </li>
+                          ))
+                        ) : (
+                          <li className="text-sm font-mono text-gray-500 italic uppercase">No operations registered yet</li>
+                        )}
+                      </ul>
+                    </div>
+
+                    {/* Pending Dues */}
+                    {user.pendingDues > 0 && (
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-mono font-bold text-white uppercase tracking-widest bg-red-600 px-2 py-0.5 animate-pulse">Pending Resources</label>
+                        <div className="p-3 border-2 border-dashed border-red-600 bg-red-50">
+                          <p className="text-xl font-black text-red-700 font-mono tracking-tighter">
+                            AMT DUE: ₹{user.pendingDues}
+                          </p>
+                          <p className="text-[8px] font-mono text-red-800 uppercase mt-1">Settle immediately at command center</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Social & Downloads */}
+                  <div className="space-y-6 pt-6 border-t border-gray-300">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-mono font-bold text-green-700 uppercase tracking-widest">WhatsApp Operational Links</label>
+                        <div className="flex flex-wrap gap-2">
+                          <button className="text-[10px] font-mono font-bold bg-green-600 text-white px-3 py-1.5 rounded-sm hover:bg-green-700 transition-colors uppercase shadow-sm">
+                            Join Main HQ
+                          </button>
+                          {/* Map through event specific links if available */}
+                          <p className="text-[9px] font-mono text-gray-500 italic uppercase">(Links for your registered events will appear here)</p>
+                        </div>
+                      </div>
+
+                      <div className="shrink-0">
+                        <button className="flex items-center gap-3 bg-white border-2 border-gray-800 px-4 py-2 hover:bg-gray-50 transition-all shadow-[4px_4px_0px_#111]">
+                          <div className="w-8 h-8 rounded-sm bg-red-700 flex items-center justify-center text-white font-bold text-xs uppercase">PDF</div>
+                          <div className="text-left">
+                            <span className="block text-[8px] font-mono font-black text-gray-500 uppercase leading-none">Download</span>
+                            <span className="block text-xs font-black text-gray-800 uppercase tracking-tight">March Schedule</span>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Registration meta */}
+                  <div className="pt-8 mt-4 border-t-2 border-dashed border-gray-200">
+                    <div className="flex flex-col md:flex-row justify-between items-end gap-4">
+                      <div className="bg-red-50 p-3 border-l-4 border-red-600 max-w-sm">
+                        <p className="text-[10px] font-mono font-bold text-red-800 uppercase leading-relaxed">
+                          <span className="text-sm mr-1">⚠️</span> Note: Official passes and entry credentials will be dispatched to your registered email address 48 hours prior to mission commencement.
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[9px] font-mono text-gray-400 italic uppercase">
+                          Dossier created on: {user.registeredAt ? new Date(user.registeredAt).toLocaleString() : 'N/A'}
+                        </p>
+                        <p className="text-[9px] font-mono text-gray-400 font-bold uppercase tracking-widest mt-0.5">Security Clearance: Level 4+</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-wrap gap-4 mt-12 pb-4">
+                  <motion.button
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => navigate('/')}
+                    className="group relative px-8 py-3 bg-gray-900 text-white font-black uppercase tracking-widest text-xs shadow-[5px_5px_0px_#991b1b] hover:shadow-[8px_8px_0px_#991b1b] transition-all"
+                  >
+                    RETURN TO BASE
+                  </motion.button>
+
+                  <motion.button
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleLogout}
+                    className="px-8 py-3 border-2 md:border-4 border-red-800 text-red-800 font-black uppercase tracking-widest text-xs hover:bg-red-800 hover:text-white shadow-[5px_5px_0px_rgba(0,0,0,0.8)] transition-all"
+                  >
+                    LOG OUT
+                  </motion.button>
+                </div>
+              </div>
+
+              {/* Decorative side elements */}
+              <div className="absolute right-0 top-0 h-full w-2 flex flex-col gap-1 py-4 opacity-20 hidden md:flex">
+                {[...Array(20)].map((_, i) => (
+                  <div key={i} className="w-full h-1 bg-gray-400"></div>
+                ))}
+              </div>
             </div>
           </div>
+        </div>
       </motion.div>
     </div>
-  )
-}
+  );
+};
 
-export default Profile
+export default Profile;

@@ -277,7 +277,7 @@ const Register = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Name */}
                     <div className="space-y-3">
-                      <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
+                      <label className="text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
                         <Icons.User /> Name
                       </label>
                       <input
@@ -292,7 +292,7 @@ const Register = () => {
 
                     {/* Contact Number */}
                     <div className="space-y-3">
-                      <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
+                      <label className="text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
                         <Icons.Phone /> Contact
                       </label>
                       <input
@@ -307,7 +307,7 @@ const Register = () => {
 
                     {/* Email */}
                     <div className="space-y-3">
-                      <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
+                      <label className="text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
                         <Icons.Email /> Email
                       </label>
                       <input
@@ -322,7 +322,7 @@ const Register = () => {
 
                     {/* USN */}
                     <div className="space-y-3">
-                      <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
+                      <label className="text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
                         <Icons.IdCard /> USN
                       </label>
                       <input
@@ -338,7 +338,7 @@ const Register = () => {
 
                   {/* College Dropdown */}
                   <div className="space-y-3">
-                    <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
+                    <label className="text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
                       <Icons.School /> College
                     </label>
                     <select
@@ -359,7 +359,7 @@ const Register = () => {
                   {/* Passwords */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-3">
-                      <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
+                      <label className="text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
                         <Icons.Lock /> Password
                       </label>
                       <input
@@ -374,7 +374,7 @@ const Register = () => {
 
                     {/* Confirm Password */}
                     <div className="space-y-3">
-                      <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
+                      <label className="text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
                         <Icons.Lock /> Confirm Password
                       </label>
                       <input

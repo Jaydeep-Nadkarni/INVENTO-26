@@ -14,7 +14,6 @@ const Navbar = ({ onEventsClick }) => {
     { label: 'Home', path: '/' },
     { label: 'Events', path: '/events' },
     { label: 'Schedule', path: '/schedule' },
-    { label: 'Sponsors', path: '/sponsors' },
     { label: 'Contact', path: '/contact' }
   ]
 

@@ -178,7 +178,7 @@ const Login = () => {
               <form onSubmit={handleSubmit} className="space-y-8">
                 {/* Email Field */}
                   <div className="space-y-3">
-                    <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
+                    <label className="text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
                       <Icons.Email /> Email Address
                     </label>
                     <input
@@ -193,7 +193,7 @@ const Login = () => {
 
                   {/* Password Field */}
                   <div className="space-y-3">
-                    <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
+                    <label className="text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
                       <Icons.Lock /> Password
                     </label>
                     <div className="relative">
