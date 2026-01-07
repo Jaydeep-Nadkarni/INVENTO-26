@@ -14,6 +14,7 @@ const Navbar = ({ onEventsClick }) => {
     { label: 'Home', path: '/' },
     { label: 'Events', path: '/events' },
     { label: 'Schedule', path: '/schedule' },
+    { label: 'Sponsors', path: '/sponsors' },
     { label: 'Contact', path: '/contact' }
   ]
 
@@ -25,7 +26,10 @@ const Navbar = ({ onEventsClick }) => {
         setCurrentUser(JSON.parse(user))
       } catch (error) {
         console.error('Error parsing user:', error)
+        setCurrentUser(null)
       }
+    } else {
+      setCurrentUser(null)
     }
   }, [location])
 

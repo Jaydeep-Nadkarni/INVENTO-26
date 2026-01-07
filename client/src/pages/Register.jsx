@@ -286,7 +286,7 @@ const Register = () => {
                         value={formData.name}
                         onChange={handleInputChange}
                         placeholder="Your Full Name"
-                        className="w-full px-5 py-3 bg-white border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
+                        className="w-full px-5 py-3 bg-white/60 backdrop-blur-[2px] border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
                       />
                     </div>
 
@@ -301,7 +301,7 @@ const Register = () => {
                         value={formData.contact}
                         onChange={handleInputChange}
                         placeholder="10-digit number"
-                        className="w-full px-5 py-3 bg-white border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
+                        className="w-full px-5 py-3 bg-white/60 backdrop-blur-[2px] border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
                       />
                     </div>
 
@@ -316,7 +316,7 @@ const Register = () => {
                         value={formData.email}
                         onChange={handleInputChange}
                         placeholder="agent@email.com"
-                        className="w-full px-5 py-3 bg-white border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
+                        className="w-full px-5 py-3 bg-white/60 backdrop-blur-[2px] border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
                       />
                     </div>
 
@@ -331,7 +331,7 @@ const Register = () => {
                         value={formData.usn}
                         onChange={handleInputChange}
                         placeholder="e.g., RV21XX0001"
-                        className="w-full px-5 py-3 bg-white border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
+                        className="w-full px-5 py-3 bg-white/60 backdrop-blur-[2px] border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
                       />
                     </div>
                   </div>
@@ -345,7 +345,7 @@ const Register = () => {
                       name="college"
                       value={formData.college}
                       onChange={handleInputChange}
-                      className="w-full px-5 py-3 bg-white border-2 border-gray-400 text-gray-900 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm cursor-pointer"
+                      className="w-full px-5 py-3 bg-white/60 backdrop-blur-[2px] border-2 border-gray-400 text-gray-900 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm cursor-pointer"
                     >
                       <option value="">Select College</option>
                       {colleges.map((college, idx) => (
@@ -368,7 +368,7 @@ const Register = () => {
                         value={formData.password}
                         onChange={handleInputChange}
                         placeholder="••••••••"
-                        className="w-full px-5 py-3 bg-white border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
+                        className="w-full px-5 py-3 bg-white/60 backdrop-blur-[2px] border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
                       />
                     </div>
 
@@ -383,7 +383,7 @@ const Register = () => {
                         value={formData.confirmPassword}
                         onChange={handleInputChange}
                         placeholder="••••••••"
-                        className="w-full px-5 py-3 bg-white border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
+                        className="w-full px-5 py-3 bg-white/60 backdrop-blur-[2px] border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
                       />
                     </div>
                   </div>
