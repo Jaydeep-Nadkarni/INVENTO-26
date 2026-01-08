@@ -73,9 +73,10 @@ const Login = () => {
     setError('')
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
+    setError('')
 
     // Validate inputs
     if (!formData.email || !formData.password) {
@@ -84,10 +85,48 @@ const Login = () => {
       return
     }
 
-    // TODO: Connect to backend API. Locally hosted data removed.
-    // Login requires backend connection.
-    setError('Login requires backend connection. Please Register temporarily for demo.')
-    setLoading(false)
+    try {
+      // 1. Login to get token
+      const loginResponse = await fetch('http://localhost:5000/api/users/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      const loginData = await loginResponse.json()
+
+      if (!loginResponse.ok) {
+        throw new Error(loginData.message || 'Login failed')
+      }
+
+      const token = loginData.token
+      localStorage.setItem('token', token)
+
+      // 2. Fetch user profile using the token
+      const profileResponse = await fetch('http://localhost:5000/api/users/profile', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      const profileData = await profileResponse.json()
+
+      if (!profileResponse.ok) {
+        throw new Error(profileData.message || 'Failed to fetch profile')
+      }
+
+      // Store user data
+      localStorage.setItem('currentUser', JSON.stringify(profileData.user))
+
+      // Success - Redirect
+      navigate('/profile')
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleForgotPassword = (e) => {
@@ -116,8 +155,6 @@ const Login = () => {
         backgroundAttachment: 'fixed'
       }}
     >
-      <Navbar />
-
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}

@@ -61,28 +61,55 @@ const Profile = () => {
   const [showLinksModal, setShowLinksModal] = useState(false)
 
   useEffect(() => {
-    // Get current user from localStorage
-    const currentUser = localStorage.getItem('currentUser')
-    
-    if (!currentUser) {
-      // Redirect to login if no user is logged in
-      navigate('/login')
-      return
+    const fetchProfile = async () => {
+      const token = localStorage.getItem('token')
+      const storedUser = localStorage.getItem('currentUser')
+      
+      if (!token) {
+        if (storedUser) {
+          setUser(JSON.parse(storedUser))
+          setLoading(false)
+        } else {
+          navigate('/login')
+        }
+        return
+      }
+
+      try {
+        const response = await fetch('http://localhost:5000/api/users/profile', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+
+        const data = await response.json()
+
+        if (response.ok) {
+          setUser(data)
+          localStorage.setItem('currentUser', JSON.stringify(data))
+        } else if (storedUser) {
+          setUser(JSON.parse(storedUser))
+        } else {
+          navigate('/login')
+        }
+      } catch (err) {
+        console.error('Fetch profile error:', err)
+        if (storedUser) {
+          setUser(JSON.parse(storedUser))
+        } else {
+          navigate('/login')
+        }
+      } finally {
+        setLoading(false)
+      }
     }
 
-    try {
-      const userData = JSON.parse(currentUser)
-      setUser(userData)
-    } catch (error) {
-      console.error('Error parsing user data:', error)
-      navigate('/login')
-    }
-    
-    setLoading(false)
+    fetchProfile()
   }, [navigate])
 
   const handleLogout = () => {
     localStorage.removeItem('currentUser')
+    localStorage.removeItem('token')
     navigate('/login')
   }
 
@@ -144,7 +171,7 @@ const Profile = () => {
                   </h1>
                   <div className="h-2 w-24 bg-red-800 mb-4 transition-all duration-500 group-hover:w-full"></div>
                   <p className="text-red-600 text-lg font-mono font-bold tracking-[0.3em] uppercase opacity-70">
-                    participant ID: {user.usn ? user.usn.substring(user.usn.length - 4) : '####'}
+                    participant ID: {user._id ? user._id.substring(user._id.length - 4) : (user.id ? String(user.id).substring(String(user.id).length - 4) : '####')}
                   </p>
                 </div>
 
@@ -181,7 +208,7 @@ const Profile = () => {
                       <label className="text-[10px] font-mono font-bold text-red-700 uppercase tracking-[0.2em] opacity-80">Full Name</label>
                       <p className="text-4xl md:text-5xl font-black text-gray-900 leading-tight">{user.name}</p>
                       <div className="h-0.5 w-full bg-gray-300 mt-2 opacity-50"></div>
-                      <p className="text-lg font-mono font-bold text-gray-500 uppercase mt-2 tracking-widest">{user.college}</p>
+                      <p className="text-lg font-mono font-bold text-gray-500 uppercase mt-2 tracking-widest">{user.clgName || user.college}</p>
                     </div>
                     <div className="space-y-1">
                       <label className="text-[10px] font-mono font-bold text-red-700 uppercase tracking-[0.2em] opacity-80">Status</label>
@@ -200,7 +227,7 @@ const Profile = () => {
                     </div>
                     <div className="space-y-1 border-l-4 border-gray-900 pl-4">
                       <label className="text-[10px] font-mono font-bold text-gray-500 uppercase tracking-widest opacity-70">Phone</label>
-                      <p className="text-2xl font-black text-gray-800 tracking-widest font-mono leading-none">{user.contact}</p>
+                      <p className="text-2xl font-black text-gray-800 tracking-widest font-mono leading-none">{user.phone || user.contact}</p>
                     </div>
                   </div>
 
