@@ -62,3 +62,4 @@ temp/
 # Optional
 # =====================
 *.tgz
+service-account.json
