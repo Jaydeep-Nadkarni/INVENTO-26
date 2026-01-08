@@ -36,11 +36,13 @@ const NavigationManager = () => {
     const isInitialLoad = !sessionStorage.getItem('sessionStarted');
 
     if (isInitialLoad || isReload) {
-      sessionStorage.setItem('shouldPlayIntro', 'true');
       sessionStorage.setItem('sessionStarted', 'true');
       
-      if (location.pathname !== '/') {
-        navigate('/', { replace: true });
+      // Only trigger intro if we are specifically on the home page during refresh/initial load
+      if (location.pathname === '/') {
+        sessionStorage.setItem('shouldPlayIntro', 'true');
+      } else {
+        sessionStorage.removeItem('shouldPlayIntro');
       }
     }
   }, []); // Only run once on mount

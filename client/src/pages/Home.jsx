@@ -12,15 +12,6 @@ import introAudio from '../assets/UI/intro.mp3'
 import openSound from '../assets/audios/briefcase-open2.mp3'
 import closeSound from '../assets/audios/briefcase-open.mp3'
 
-// Detect if the page was refreshed using Navigation Timing API
-const isPageRefresh = () => {
-  const navEntries = performance.getEntriesByType('navigation');
-  if (navEntries.length > 0) {
-    return navEntries[0].type === 'reload';
-  }
-  return false;
-};
-
 // Module-level flag tracks if we've already run the intro since JS loaded
 let introHasPlayed = false;
 
@@ -38,19 +29,18 @@ const Home = () => {
     // 1. If we already played it in this memory session, never play again
     if (introHasPlayed) return false;
 
-    // 2. Determine trigger conditions
-    const isReload = isPageRefresh();
-    // Check if we have an active session in storage (survives reload)
-    const sessionActive = sessionStorage.getItem('session_active');
+    // 2. Check the flag set by NavigationManager in App.jsx
+    const shouldPlay = sessionStorage.getItem('shouldPlayIntro') === 'true';
     
-    // If session is active AND it's NOT a reload, it means we navigated here from another page
-    if (sessionActive && !isReload) {
-      return false;
+    if (shouldPlay) {
+      introHasPlayed = true;
+      // We keep the flag in sessionStorage for a moment, or clear it here
+      // Clearing it here is safe because introHasPlayed prevents re-runs in same JS session
+      sessionStorage.removeItem('shouldPlayIntro');
+      return true;
     }
 
-    // Otherwise (First visit ever, or Reload), play intro
-    introHasPlayed = true; 
-    return true;
+    return false;
   });
   
   const hoverTimerRef = useRef(null)

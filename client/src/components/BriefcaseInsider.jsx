@@ -266,11 +266,11 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                                                             {user.name}
                                                         </h3>
                                                         <p className="text-[7px] text-gray-600 font-bold uppercase tracking-wider line-clamp-1 mb-1">
-                                                            {user.college || "KLE TECH UNIVERSITY"}
+                                                            {user.clgName || user.college || "KLE TECH UNIVERSITY"}
                                                         </p>
                                                         <div className="bg-blue-100/50 p-1 border-l-2 border-blue-900">
-                                                            <div className="text-[5px] text-blue-900 font-mono font-bold tracking-widest">AGENT USN</div>
-                                                            <div className="text-[8px] text-gray-900 font-mono font-black tracking-[0.15em]">{user.usn}</div>
+                                                            <div className="text-[5px] text-blue-900 font-mono font-bold tracking-widest uppercase">Agent ID</div>
+                                                            <div className="text-[8px] text-gray-900 font-mono font-black tracking-[0.15em]">{user._id || user.id || "INV-####"}</div>
                                                         </div>
                                                     </div>
                                                 ) : (
@@ -569,12 +569,12 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                                                                     {user.name}
                                                                 </h3>
                                                                 <p className="text-[8px] text-gray-600 font-medium uppercase tracking-wider">
-                                                                    {user.institution || user.college || "KLE TECH UNIVERSITY"}
+                                                                    {user.clgName || user.college || "KLE TECH UNIVERSITY"}
                                                                 </p>
                                                             </div>
                                                             <div className="bg-blue-100/50 p-1.5 border-l-2 border-blue-900 mt-2">
                                                                 <div className="text-[6px] text-blue-900 font-mono font-bold tracking-widest uppercase">Agent ID</div>
-                                                                <div className="text-[10px] text-gray-900 font-mono font-black tracking-[0.15em]">{user.participantID}</div>
+                                                                <div className="text-[10px] text-gray-900 font-mono font-black tracking-[0.15em]">{user._id || user.id || "INV-####"}</div>
                                                             </div>
                                                         </div>
                                                     ) : (
