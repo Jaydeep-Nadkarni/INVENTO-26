@@ -5,11 +5,14 @@ import FileManager from './FileManager'
 import Mail from './Mail'
 import Notes from './Notes'
 import Radio from './Radio'
+import Browser from './Browser'
+import VideoPlayer from './VideoPlayer'
 import Shutdown from './shutdown'
 import shutdownAudio from '../../assets/audios/shutdown.mp3'
 import wallpaperImg from '../../assets/UI/OS/wallpaper.png'
 import fileManagerIcon from '../../assets/UI/OS/file-manager.png'
 import terminalIcon from '../../assets/UI/OS/terminal.png'
+import browserIcon from '../../assets/UI/OS/browser.png'
 import radioIcon from '../../assets/UI/OS/Radio.png'
 import mailIcon from '../../assets/UI/OS/mail.png'
 
@@ -41,6 +44,7 @@ const RetroTerminal = ({ isOpen, onClose }) => {
     const desktopIcons = [
         { id: 'filemanager', name: 'File Explorer', icon: fileManagerIcon, type: 'filemanager', isImg: true },
         { id: 'cmd', name: 'Terminal', icon: terminalIcon, type: 'cmd', isImg: true },
+        { id: 'browser', name: 'Internet Explorer', icon: browserIcon, type: 'browser', isImg: true },
         { id: 'mail', name: 'SpyMail', icon: mailIcon, type: 'mail', isImg: true },
         { id: 'radio', name: 'Intercept', icon: radioIcon, type: 'radio', isImg: true },
     ]
@@ -87,10 +91,12 @@ const RetroTerminal = ({ isOpen, onClose }) => {
     const renderAppContent = (app) => {
         switch (app.type) {
             case 'cmd': return <CMD />
-            case 'filemanager': return <FileManager onOpenFile={(fileId) => launchApp({ id: fileId, title: fileId.toUpperCase(), type: 'notes' })} />
+            case 'filemanager': return <FileManager onOpenFile={(file) => launchApp({ id: file.id, title: file.name.toUpperCase(), type: file.type === 'video' ? 'video' : 'notes' })} />
             case 'mail': return <Mail />
             case 'notes': return <Notes title={app.title} />
+            case 'video': return <VideoPlayer title={app.title} />
             case 'radio': return <Radio />
+            case 'browser': return <Browser />
             default: return null
         }
     }
@@ -165,6 +171,8 @@ const RetroTerminal = ({ isOpen, onClose }) => {
                                         isMinimized={minimizedApps.includes(app.id)}
                                         onClose={() => closeApp(app.id)}
                                         onMinimize={() => toggleMinimize(app.id)}
+                                        width={app.type === 'browser' ? '700px' : '500px'}
+                                        height={app.type === 'browser' ? '500px' : '400px'}
                                         onFocus={() => {
                                             setSelectedDesktopIcon(null);
                                             setActiveApp(app.id);
@@ -227,7 +235,7 @@ const RetroTerminal = ({ isOpen, onClose }) => {
     )
 }
 
-const Window = ({ app, children, isActive, isMinimized, onClose, onMinimize, onFocus }) => {
+const Window = ({ app, children, isActive, isMinimized, onClose, onMinimize, onFocus, width = "500px", height = "400px" }) => {
     const [openMenu, setOpenMenu] = useState(null);
     const menuRef = useRef(null);
 
@@ -257,7 +265,8 @@ const Window = ({ app, children, isActive, isMinimized, onClose, onMinimize, onF
             drag
             dragMomentum={false}
             onPointerDown={onFocus}
-            className={`absolute top-20 left-40 w-[500px] h-[400px] bg-[#c0c0c0] win95-border-raised flex flex-col shadow-xl overflow-visible`}
+            style={{ width, height }}
+            className={`absolute top-20 left-40 bg-[#c0c0c0] win95-border-raised flex flex-col shadow-xl overflow-visible`}
         >
             {/* Title Bar */}
             <div

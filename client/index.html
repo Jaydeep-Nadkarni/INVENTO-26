@@ -4,10 +4,30 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Preconnect to external fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
+    
+    
     <title>INVENTO 2026 | Spyverse</title>
+    
+    <style>
+      /* Prevent FOUC and layout shift */
+      html {
+        background-color: #0a0a0a;
+      }
+      
+      #root {
+        min-height: 100vh;
+      }
+      
+      /* Prevent scroll restoration on refresh */
+      html {
+        scroll-behavior: auto !important;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

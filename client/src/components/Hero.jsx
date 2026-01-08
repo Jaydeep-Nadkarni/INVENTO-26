@@ -43,14 +43,14 @@ const Hero = () => {
       </motion.div>
 
       {/* Pins and Photos - Static on Desktop, Hidden on Mobile */}
-      <div className="absolute top-20 left-4 md:top-24 md:left-8 z-10 hidden md:block">
+      <div className="absolute top-20 left-4 md:top-32 md:left-8 z-10 hidden md:block">
         <div className="relative w-32 md:w-36">
           <img src={pin} alt="pin" className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-8 z-20" />
           <img src={img1} alt="Spy 1" className="w-full shadow-xl" />
         </div>
       </div>
 
-      <div className="absolute top-20 left-36 md:top-24 md:left-48 z-10 hidden lg:block">
+      <div className="absolute top-20 left-36 md:top-18 md:left-48 z-10 hidden lg:block">
         <div className="relative w-32 md:w-36">
           <img src={pin} alt="pin" className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-8 z-20" />
           <img src={img2} alt="Spy 2" className="w-full shadow-xl" />
