@@ -125,7 +125,7 @@ const spaceMail = (title, message, otp, name, id) => `
 // ================= REGISTER =================
 export const registerUser = async (req, res) => {
   try {
-    const { name, email,  password, phone, clgName } = req.body;
+    const { name, email,  password, phone, clgName, profilePhoto } = req.body;
 
     if (!name || !email || !password || !phone || !clgName) {
       return res.status(400).json({ message: "All fields are required." });
@@ -154,6 +154,7 @@ export const registerUser = async (req, res) => {
       password: hashedPassword,
       phone,
       clgName,
+      profilePhoto,
       otp,
       otpExpiresAt,
       isVerified: false,

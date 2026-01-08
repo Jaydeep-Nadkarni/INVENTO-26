@@ -1,46 +1,96 @@
 import React, { useState } from 'react'
+import { clubsData } from './Events/clubsData'
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion'
 import paperTexture from '../assets/UI/paper-texture.jpg'
 import laptopImg from '../assets/UI/laptop.png'
 import policeRadioImg from '../assets/UI/police-radio.png'
+import morseImg from '../assets/UI/morse.png'
 import RetroTerminal from './RetroTerminal/RetroTerminal'
+import morseAudio from '../assets/audios/morse.wav'
 import radioAudio from '../assets/audios/radio.m4a'
 import laptopSound from '../assets/audios/laptopn-open.mp3'
 import pageTurnSound from '../assets/audios/page-turn.mp3'
 import { useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 
-const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
+const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
+    const navigate = useNavigate()
+    const [user, setUser] = useState(null)
+
+    // Load user data whenever the briefcase is opened or component mounts
+    useEffect(() => {
+        const fetchUser = () => {
+            const storedUser = localStorage.getItem('currentUser')
+            if (storedUser) {
+                try {
+                    setUser(JSON.parse(storedUser))
+                } catch (e) {
+                    console.error("Error parsing user data:", e)
+                }
+            } else {
+                setUser(null)
+            }
+        }
+
+        if (isOpen) {
+            fetchUser()
+        }
+    }, [isOpen])
+
     // Card Data
     const [cards, setCards] = useState([
-        { id: 1, name: 'HR and Literary', color: 'bg-red-700' },
-        { id: 2, name: 'Dance', color: 'bg-blue-600' },
-        { id: 3, name: 'Singing', color: 'bg-emerald-600' },
-        { id: 4, name: 'Fashion', color: 'bg-yellow-500' },
-        { id: 5, name: 'Media', color: 'bg-purple-600' },
-        { id: 6, name: 'Sports', color: 'bg-pink-600' },
-        { id: 7, name: 'CDC', color: 'bg-orange-600' },
-        { id: 8, name: 'WEC', color: 'bg-blue-600' },
-        { id: 9, name: 'Specials', color: 'bg-green-600' },
-        { id: 10, name: 'Title Events', color: 'bg-yellow-600' },
+        { id: 1, name: 'Melodia', color: 'bg-red-700' },
+        { id: 2, name: 'CDC', color: 'bg-green-600' },
+        { id: 3, name: 'WEC', color: 'bg-purple-600' },
+        { id: 4, name: 'Dance', color: 'bg-yellow-500' },
+        { id: 5, name: 'HR', color: 'bg-blue-600' },
+        { id: 6, name: 'Media', color: 'bg-pink-600' },
+        { id: 7, name: 'Literary', color: 'bg-orange-600' },
+        { id: 8, name: 'Specials', color: 'bg-blue-600' },
     ])
 
     const [selectedCardId, setSelectedCardId] = useState(null)
     const [isIDExpanded, setIsIDExpanded] = useState(false)
+    const [isLetterExpanded, setIsLetterExpanded] = useState(false)
     const [statusText, setStatusText] = useState('Swipe cards to shuffle;')
     const [isTerminalOpen, setIsTerminalOpen] = useState(false)
+    const [isMorseOpen, setIsMorseOpen] = useState(false)
     const [isRadioPlaying, setIsRadioPlaying] = useState(false)
     const audioRef = useRef(null)
+    const morseAudioRef = useRef(null)
 
     useEffect(() => {
         audioRef.current = new Audio(radioAudio)
         audioRef.current.loop = true
+
+        morseAudioRef.current = new Audio(morseAudio)
+
         return () => {
             if (audioRef.current) {
                 audioRef.current.pause()
                 audioRef.current = null
             }
+            if (morseAudioRef.current) {
+                morseAudioRef.current.pause()
+                morseAudioRef.current.currentTime = 0
+            }
         }
     }, [])
+
+    // Synchronize Morse Audio with Window State
+    useEffect(() => {
+        if (isMorseOpen) {
+            if (morseAudioRef.current) {
+                morseAudioRef.current.currentTime = 0
+                morseAudioRef.current.play().catch(e => console.log("Morse audio error:", e))
+            }
+        } else {
+            if (morseAudioRef.current) {
+                morseAudioRef.current.pause()
+                morseAudioRef.current.currentTime = 0
+            }
+        }
+    }, [isMorseOpen])
 
     // Stop radio if briefcase is closed
     useEffect(() => {
@@ -75,7 +125,13 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
         const card = cards.find(c => c.id === id)
         if (selectedCardId === id) {
             // If already selected, navigate
-            window.location.href = `#club-${id}`
+            const club = clubsData.find(c => c.id === id)
+            if (club) {
+                navigate(`/${club.slug}`)
+            } else {
+                // Fallback if ID doesn't match standard clubs (e.g. if we add more specials later)
+                navigate('/events')
+            }
         } else {
             // Select/Pop out
             playEffect(pageTurnSound)
@@ -97,10 +153,18 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
             setIsRadioPlaying(false)
             setStatusText("Radio Signal Lost...")
         } else {
+            setIsMorseOpen(false) // Close morse if playing
             audioRef.current.play()
             setIsRadioPlaying(true)
             setStatusText("Intercepted: Frequency 148.5")
         }
+    }
+
+    const handleMorseClick = (e) => {
+        e.stopPropagation()
+        stopRadioIfPlaying()
+        setIsMorseOpen(true)
+        setStatusText("Incoming Transmission: Decrypting...")
     }
 
     const handleLaptopClick = (e) => {
@@ -118,7 +182,7 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center overflow-hidden"
+                    className="fixed inset-0 z-100 bg-black/90 backdrop-blur-md flex items-center justify-center overflow-hidden"
                     onClick={onClose}
                 >
                     {/* Briefcase Container */}
@@ -127,7 +191,7 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.95, opacity: 0, y: 20 }}
                         transition={{ type: "spring", damping: 20, stiffness: 100 }}
-                        className="relative w-full max-w-[100vw] h-[100vh] bg-[#0F0F0F] rounded-xl shadow-2xl overflow-hidden border border-[#333]"
+                        className="relative w-full max-w-full h-screen bg-[#0F0F0F] rounded-xl shadow-2xl overflow-hidden border border-[#333]"
                         onClick={(e) => e.stopPropagation()}
                         style={{
                             boxShadow: 'inset 0 0 200px rgba(0,0,0,1), 0 50px 100px -20px rgba(0,0,0,0.7)'
@@ -148,7 +212,7 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                             <div className="absolute left-0 top-0 bottom-0 w-[30%] p-8 z-30">
 
                                 {/* ID Card - Horizontal Agent ID */}
-                                <div className="absolute top-[12%] left-[12%] w-[260px] h-[160px] perspective-1000 z-40">
+                                <div className="absolute top-[12%] left-[18%] w-65 h-40 z-40" style={{ perspective: '1000px' }}>
                                     <motion.div
                                         layoutId="id-card"
                                         drag={!isIDExpanded}
@@ -160,7 +224,7 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                                             setStatusText("Inspecting Agent Badge...")
                                         }}
                                         className="relative w-full h-full bg-[#f4f7f9] rounded shadow-2xl overflow-hidden flex flex-col border-t-[6px] border-blue-900 cursor-pointer"
-                                        style={{ rotate: '-3deg', boxShadow: '5px 10px 30px rgba(0,0,0,0.5)' }}
+                                        style={{ boxShadow: '5px 10px 30px rgba(0,0,0,0.5)' }}
                                     >
                                         <TextureOverlay opacity={0.12} />
 
@@ -178,7 +242,7 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                                             <div className="w-[32%] h-full bg-white/60 border-r border-gray-300 flex flex-col items-center py-2">
                                                 <div className="w-16 h-20 bg-gray-200 border-2 border-[#d4af37] rounded-sm overflow-hidden flex items-center justify-center relative shadow-inner mb-1.5">
                                                     {user ? (
-                                                        <img src={user.photo || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"} alt="User" className="w-full h-full object-cover grayscale contrast-125 transition-all duration-700" />
+                                                        <img src={user.profilePhoto || user.photo || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"} alt="User" className="w-full h-full object-cover grayscale contrast-125 transition-all duration-700" />
                                                     ) : (
                                                         <div className="w-full h-full bg-gray-300 flex flex-col items-center justify-center text-gray-500 text-[6px] font-bold text-center px-1">
                                                             <span className="text-lg opacity-30">👤</span>
@@ -197,13 +261,17 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                                             {/* Right Column: Info & Barcodes */}
                                             <div className="flex-1 h-full p-2.5 flex flex-col justify-between relative bg-white/40">
                                                 {user ? (
-                                                    <div>
-                                                        <h3 className="font-sans font-black text-gray-800 text-sm uppercase tracking-tight leading-tight mb-0.5">
+                                                    <div className="space-y-1">
+                                                        <h3 className="font-sans font-black text-gray-800 text-sm uppercase tracking-tight leading-none mb-0.5">
                                                             {user.name}
                                                         </h3>
-                                                        <p className="text-[8px] text-gray-600 font-medium uppercase tracking-wider line-clamp-1">
-                                                            {user.institution || user.college || "KLE TECH UNIVERSITY"}
+                                                        <p className="text-[7px] text-gray-600 font-bold uppercase tracking-wider line-clamp-1 mb-1">
+                                                            {user.clgName || user.college || "KLE TECH UNIVERSITY"}
                                                         </p>
+                                                        <div className="bg-blue-100/50 p-1 border-l-2 border-blue-900">
+                                                            <div className="text-[5px] text-blue-900 font-mono font-bold tracking-widest uppercase">Agent ID</div>
+                                                            <div className="text-[8px] text-gray-900 font-mono font-black tracking-[0.15em]">{user._id || user.id || "INV-####"}</div>
+                                                        </div>
                                                     </div>
                                                 ) : (
                                                     <div className="h-full flex flex-col justify-center items-center gap-1">
@@ -212,7 +280,7 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                                                             className="px-2 py-1 bg-blue-900 text-white text-[7px] font-bold uppercase rounded-sm hover:bg-blue-800 transition-colors"
                                                             onClick={(e) => {
                                                                 e.stopPropagation()
-                                                                window.location.href = '/login'
+                                                                navigate('/login')
                                                             }}
                                                         >
                                                             Identify Agent
@@ -241,14 +309,39 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                                     </motion.div>
                                 </div>
 
-                                {/* Confidential Envelope - Bigger */}
-                                <div className="absolute bottom-[5%] left-[10%] w-80 h-52 z-30">
+                                {/* Morse Telegraph Device - Below ID Card */}
+                                <div className="absolute top-[42%] left-[0%] w-48 z-40">
                                     <motion.div
-                                        drag
+                                        whileHover={{ scale: 1.00 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={handleMorseClick}
+                                        className="relative cursor-pointer group"
+                                    >
+                                        <img
+                                            src={morseImg}
+                                            alt="Morse Telegraph"
+                                            className="w-full drop-shadow-2xl opacity-90 transition-opacity group-hover:opacity-100"
+                                        />
+                                        {/* Status light on the device */}
+                                        <div className="absolute top-[25%] right-[25%] w-1.5 h-1.5 rounded-full bg-yellow-500/40 animate-pulse pointer-events-none"></div>
+                                    </motion.div>
+                                </div>
+
+                                {/* Confidential Envelope - Bigger */}
+                                <div className="absolute bottom-[5%] left-[10%] w-80 h-52 z-30" style={{ perspective: '1000px' }}>
+                                    <motion.div
+                                        layoutId="confidential-envelope"
+                                        drag={!isLetterExpanded}
                                         dragConstraints={{ left: -100, right: 300, top: -200, bottom: 0 }}
                                         whileHover={{ scale: 1.02 }}
-                                        className="relative w-full h-full bg-[#d6cfc2] shadow-2xl flex items-center justify-center"
-                                        style={{ rotate: '3deg', boxShadow: '5px 10px 25px (0,0,0,0.4)' }}
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            playEffect(pageTurnSound)
+                                            setIsLetterExpanded(true)
+                                            setStatusText("Reading Classified Intel...")
+                                        }}
+                                        className="relative w-full h-full bg-[#d6cfc2] shadow-2xl flex items-center justify-center cursor-pointer overflow-hidden"
+                                        style={{ rotate: '-3deg', boxShadow: '5px 10px 25px rgba(0,0,0,0.4)' }}
                                     >
                                         <TextureOverlay opacity={0.6} />
                                         <div className="absolute inset-0 border-[2px] border-[#c4b090] m-3"></div>
@@ -294,7 +387,7 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
 
                             {/* --- CENTER: Card Bundle --- */}
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
-                                <div className="pointer-events-auto relative w-56 h-80 perspective-1000">
+                                <div className="pointer-events-auto relative w-56 h-80" style={{ perspective: '1000px' }}>
                                     <div className="absolute -top-16 left-0 right-0 text-center">
                                         <span className="text-[#C8A951] text-xs font-mono tracking-widest uppercase opacity-70">Evidence Bundle</span>
                                     </div>
@@ -325,7 +418,7 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                             </div>
 
                             {/* --- RIGHT SECTION: Laptop --- */}
-                            <div className="absolute right-[-5%] top-0 bottom-0 w-[50%] flex items-center justify-end z-40 pointer-events-none">
+                            <div className="absolute -right-[1%] top-0 bottom-0 w-[50%] flex items-center justify-end z-40 pointer-events-none">
                                 <motion.div
                                     initial={{ x: 50, opacity: 0 }}
                                     animate={{ x: 0, opacity: 1 }}
@@ -341,6 +434,8 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                                     />
                                 </motion.div>
                             </div>
+
+
 
                         </div>
 
@@ -358,6 +453,23 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                                     <p className="text-white font-mono text-[10px] md:text-xs tracking-[0.3em] uppercase whitespace-nowrap">
                                         <span className="opacity-50 mr-2">≫</span>
                                         {statusText}
+                                    </p>
+                                </motion.div>
+                            </AnimatePresence>
+                        </div>
+
+                        <div className="absolute top-8 left-1/2 -translate-x-1/2 z-[60] pointer-events-none w-full flex justify-center">
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                                    className="px-6 py-2 "
+                                >
+                                    <p className="text-white font-mono text-[10px] md:text-xs tracking-[0.3em] uppercase whitespace-nowrap">
+                                        <span className="opacity-50 mr-2">≫</span>
+                                        Click on the items to explore
                                     </p>
                                 </motion.div>
                             </AnimatePresence>
@@ -386,7 +498,14 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                                                 </h2>
                                                 <div className="mt-4">
                                                     <button
-                                                        onClick={() => window.location.href = `#club-${selectedCardId}`}
+                                                        onClick={() => {
+                                                            const club = clubsData.find(c => c.id === selectedCardId)
+                                                            if (club) {
+                                                                navigate(`/${club.slug}`)
+                                                            } else {
+                                                                navigate('/events')
+                                                            }
+                                                        }}
                                                         className="px-6 py-2 bg-gray-900 text-white font-mono text-xs uppercase tracking-widest hover:bg-red-700 transition-colors"
                                                     >
                                                         OPEN
@@ -419,7 +538,7 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                                     <motion.div
                                         layoutId="id-card"
                                         initial={{ scale: 1, zIndex: 100 }}
-                                        animate={{ scale: 2.2, x: 0, y: 0, rotate: 0, zIndex: 1000 }}
+                                        animate={{ scale: 1.5, x: 0, y: 0, rotate: 0, zIndex: 1000 }}
                                         className="fixed inset-0 m-auto w-[260px] h-[160px] z-[1000]"
                                     >
                                         <div className="relative w-full h-full bg-[#f4f7f9] rounded shadow-2xl overflow-hidden flex flex-col border-t-[6px] border-blue-900 cursor-default">
@@ -434,9 +553,9 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                                                 <div className="w-[32%] h-full bg-white/60 border-r border-gray-300 flex flex-col items-center py-2">
                                                     <div className="w-16 h-20 bg-gray-200 border-2 border-[#d4af37] rounded-sm overflow-hidden flex items-center justify-center relative shadow-inner">
                                                         {user ? (
-                                                            <img src={user.photo || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"} alt="User" className="w-full h-full object-cover grayscale contrast-125" />
+                                                            <img src={user.profilePhoto || user.photo || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"} alt="User" className="w-full h-full object-cover contrast-125" />
                                                         ) : (
-                                                            <div className="text-gray-400 text-[6px] font-bold">UNKNOWN</div>
+                                                            <div className="text-gray-400 text-[6px] font-bold uppercase">Unknown</div>
                                                         )}
                                                     </div>
                                                 </div>
@@ -444,23 +563,42 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                                                 {/* Info Section */}
                                                 <div className="flex-1 h-full p-2.5 flex flex-col justify-between bg-white/40">
                                                     {user ? (
-                                                        <div>
-                                                            <h3 className="font-sans font-black text-gray-800 text-sm uppercase tracking-tight leading-tight">
-                                                                {user.name}
-                                                            </h3>
-                                                            <p className="text-[8px] text-gray-600 font-medium uppercase tracking-wider">
-                                                                {user.institution || user.college || "KLE TECH UNIVERSITY"}
-                                                            </p>
+                                                        <div className="space-y-1">
+                                                            <div>
+                                                                <h3 className="font-sans font-black text-gray-800 text-sm uppercase tracking-tight leading-tight">
+                                                                    {user.name}
+                                                                </h3>
+                                                                <p className="text-[8px] text-gray-600 font-medium uppercase tracking-wider">
+                                                                    {user.clgName || user.college || "KLE TECH UNIVERSITY"}
+                                                                </p>
+                                                            </div>
+                                                            <div className="bg-blue-100/50 p-1.5 border-l-2 border-blue-900 mt-2">
+                                                                <div className="text-[6px] text-blue-900 font-mono font-bold tracking-widest uppercase">Agent ID</div>
+                                                                <div className="text-[10px] text-gray-900 font-mono font-black tracking-[0.15em]">{user._id || user.id || "INV-####"}</div>
+                                                            </div>
                                                         </div>
                                                     ) : (
-                                                        <div className="h-full flex flex-col justify-center items-center">
-                                                            <span className="text-[8px] font-black text-red-800">LOGIN REQUIRED</span>
+                                                        <div className="h-full flex flex-col justify-center items-center gap-2">
+                                                            <span className="text-[10px] font-black text-red-800 animate-pulse uppercase tracking-widest">Login Required</span>
+                                                            <button 
+                                                                onClick={() => navigate('/login')}
+                                                                className="text-[8px] bg-blue-900 text-white px-3 py-1 font-bold uppercase tracking-tighter hover:bg-black transition-colors"
+                                                            >
+                                                                Identify Agent
+                                                            </button>
                                                         </div>
                                                     )}
                                                     <div className="mt-auto pt-1.5 border-t border-gray-200 flex justify-between items-end">
                                                         <div className="space-y-0.5">
-                                                            <div className="text-[5px] text-gray-400 font-mono uppercase">Verified</div>
-                                                            <div className="text-[5px] text-gray-500 font-mono font-bold uppercase">Exp: 17 MAR 2026</div>
+                                                            <div className="text-[6px] text-gray-400 font-mono uppercase">Verified Operative</div>
+                                                            <div className="text-[6px] text-gray-500 font-mono font-bold uppercase">Exp: 17 MAR 2026</div>
+                                                        </div>
+                                                        <div className="flex flex-col items-end opacity-40">
+                                                            <div className="w-12 h-4 bg-black/80 flex gap-[1px] p-[1px]">
+                                                                {[...Array(15)].map((_, i) => (
+                                                                    <div key={i} className={`h-full bg-white ${Math.random() > 0.5 ? 'w-[1px]' : 'w-[2px]'}`} />
+                                                                ))}
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -482,6 +620,155 @@ const BriefcaseInsider = ({ isOpen, onClose, user = null }) => {
                                         onClick={() => setIsIDExpanded(false)}
                                     />
                                 </>
+                            )}
+                            {/* Enlarged Confidential Letter View */}
+                            {isLetterExpanded && (
+                                <>
+                                    <motion.div
+                                        layoutId="confidential-envelope"
+                                        initial={{ scale: 1, zIndex: 100 }}
+                                        animate={{ scale: 1, x: 0, y: 0, rotate: 0, zIndex: 1000 }}
+                                        exit={{ scale: 0.8, opacity: 0 }}
+                                        className="fixed inset-0 m-auto w-[90%] max-w-[500px] h-[85vh] z-[1000]"
+                                    >
+                                        <div className="relative w-full h-full bg-[#f4f1ea] shadow-2xl flex flex-col p-8 md:p-12 overflow-hidden border border-[#d1ccbf]">
+                                            <TextureOverlay opacity={0.4} />
+
+                                            {/* Letter Header */}
+                                            <div className="flex justify-between items-start mb-8 relative z-10 border-b-2 border-[#8f2727]/30 pb-4">
+                                                <div>
+                                                    <h2 className="font-serif font-black text-3xl text-[#8f2727] tracking-tighter uppercase leading-none mb-1">
+                                                        Classified
+                                                    </h2>
+                                                    <p className="font-mono text-[10px] text-gray-500 tracking-widest uppercase">
+                                                        Directives #2026-INV
+                                                    </p>
+                                                </div>
+                                                <div className="text-right flex flex-col items-end">
+                                                    <p className="font-mono text-[8px] text-gray-400 uppercase">Priority: Alpha</p>
+                                                    <p className="font-mono text-[8px] text-gray-400 uppercase">Date: 17/03/2026</p>
+                                                    <div className="mt-2 px-2 py-0.5 border border-red-800 text-red-800 text-[8px] font-bold uppercase rotate-1">Eyes Only</div>
+                                                </div>
+                                            </div>
+
+                                            {/* Letter Content */}
+                                            <div className="flex-1 relative z-10 font-serif text-gray-800 space-y-6 overflow-y-auto hide-scrollbar">
+                                                <div className="space-y-1">
+                                                    <p className="font-bold text-sm">TO: FIELD AGENT [CLASSIFIED]</p>
+                                                    <p className="font-bold text-sm">SUBJECT: OPERATION INVENTO 2026</p>
+                                                </div>
+
+                                                <p className="text-base leading-relaxed italic border-l-4 border-[#8f2727]/20 pl-4 py-1 bg-black/5">
+                                                    "The shadows are lengthening, Agent. The SpyVerse is no longer a simulation—it is our reality. The assets recovered from the recent breach indicate a massive convergence at the KLE Technological University sector."
+                                                </p>
+
+                                                <div className="space-y-4 text-sm leading-relaxed">
+                                                    <p>
+                                                        Your mission is to infiltrate the <span className="bg-red-200 px-1 font-bold">INVENTO 2026</span> summit. Intelligence reports suggest that the greatest minds, artists, and strategists are gathering under the guise of an annual fest.
+                                                    </p>
+                                                    <p>
+                                                        Key targets have been identified across multiple divisions: Media, CDC, CDC Specials, and the Title Events. Each node contains a piece of the puzzle.
+                                                    </p>
+                                                    <p>
+                                                        Trust no one. The 'Evidence Bundle' you are carrying contains the decrypted profiles of all involved clubs. Swipe through them, analyze their frequencies, and identify the core signatures.
+                                                    </p>
+                                                </div>
+
+                                                <div className="pt-8 opacity-80 pb-4">
+                                                    <p className="text-xs font-bold uppercase mb-4">Authorized By:</p>
+                                                    <div className="flex items-center gap-4">
+                                                        <div className="w-24 h-12 bg-black/10 rounded-sm overflow-hidden relative grayscale opacity-40">
+                                                            {/* Fake Signature Pattern */}
+                                                            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 40">
+                                                                <path d="M10 25 C 20 5, 40 35, 50 15 S 80 0, 90 20" stroke="black" fill="none" strokeWidth="1" />
+                                                            </svg>
+                                                        </div>
+                                                        <p className="font-serif italic text-sm">Director of Operations</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Texture Overlay for realistic paper */}
+                                            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/[0.02] to-black/[0.05] pointer-events-none"></div>
+                                        </div>
+                                    </motion.div>
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 0.6 }}
+                                        exit={{ opacity: 0 }}
+                                        className="fixed inset-0 bg-black z-[900] backdrop-blur-sm"
+                                        onClick={() => {
+                                            setIsLetterExpanded(false)
+                                            setStatusText('Click on the items to explore')
+                                        }}
+                                    />
+                                </>
+                            )}
+
+                            {/* Morse Transmission View - Minimal & Cool HUD */}
+                            {isMorseOpen && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                                    onClick={() => {
+                                        setIsMorseOpen(false)
+                                        setStatusText('Click on the items to explore')
+                                    }}
+                                >
+                                    <motion.div
+                                        initial={{ scale: 0.9, opacity: 0, y: 10 }}
+                                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                                        className="relative w-full max-w-sm bg-[#0a0a0a] border border-white/10 p-8 shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        {/* Subtle Reception Pulse */}
+                                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent"></div>
+
+                                        <div className="relative z-10 space-y-8">
+                                            {/* Header */}
+                                            <div className="flex justify-between items-start">
+                                                <div className="space-y-1">
+                                                    <span className="text-[10px] text-yellow-500 font-mono tracking-[0.3em] uppercase">Intercept active</span>
+                                                    <h3 className="text-white font-mono text-xs opacity-40 uppercase tracking-widest">Sig: 1000 Hz</h3>
+                                                </div>
+                                                <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
+                                            </div>
+
+                                            {/* Data Streams */}
+                                            <div className="space-y-6">
+                                                <div className="space-y-2">
+                                                    <span className="text-[9px] text-white/20 font-mono uppercase tracking-widest">Raw Signal</span>
+                                                    <p className="text-white/80 font-mono text-sm tracking-[0.4em] leading-relaxed break-all">
+                                                        .-- . .-.. -.-. --- -- . / - --- / .. -. ...- . -. - --- / ..--- ----- ..--- -....
+                                                    </p>
+                                                </div>
+
+                                                <div className="pt-4 border-t border-white/5 space-y-2">
+                                                    <span className="text-[9px] text-white/20 font-mono uppercase tracking-widest">Decoded Output</span>
+                                                    <p className="text-white font-mono text-xl tracking-tight uppercase">
+                                                        Welcome to <span className="text-yellow-500">INVENTO 2026</span>
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            {/* Minimal Footer Action */}
+                                            <div className="pt-4 flex justify-between items-center">
+                                                <span className="text-[10px] text-white/20 font-mono italic">10 WPM</span>
+                                                <button
+                                                    onClick={() => {
+                                                        setIsMorseOpen(false)
+                                                        setStatusText('Click on the items to explore')
+                                                    }}
+                                                    className="text-[10px] text-white/60 hover:text-white font-mono uppercase tracking-widest underline underline-offset-4 transition-colors"
+                                                >
+                                                    Dismiss
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                </motion.div>
                             )}
                         </AnimatePresence>
 

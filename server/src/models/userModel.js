@@ -29,6 +29,17 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    profilePhoto: {
+      type: String, // Base64 encoded image string
+    },
+    registeredEvents: {
+      type: [String],
+      default: [],
+    },
+    pendingDues: {
+      type: Number,
+      default: 0,
+    },
 
     // 🔹 OTP for registration/verification
     otp: {
