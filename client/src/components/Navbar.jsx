@@ -82,7 +82,7 @@ const Navbar = ({ onEventsClick }) => {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <span className="text-lg">👤</span>
+              <span className="text-lg"></span>
             )}
           </button>
         ) : (

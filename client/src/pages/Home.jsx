@@ -23,6 +23,7 @@ const isPageRefresh = () => {
 };
 
 let isInitialVisit = true;
+let hasHandledIntro = false;
 
 const Home = () => {
   const navigate = useNavigate()
@@ -64,9 +65,11 @@ const Home = () => {
 
   // Main initialization effect
   useEffect(() => {
-    // Trigger intro if it's a page refresh OR the very first time the app is loading (new tab/new session)
-    if (isPageRefresh() || isInitialVisit) {
-      isInitialVisit = false; // Mark as visited so it doesn't replay on SPA navigation
+    // Trigger intro if it's a page refresh OR the very first time the app is loading
+    // AND we haven't handled the intro for this specific window session yet
+    if (!hasHandledIntro && (isPageRefresh() || isInitialVisit)) {
+      hasHandledIntro = true;
+      isInitialVisit = false;
       
       // Lock scroll immediately
       lockScroll();

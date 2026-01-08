@@ -191,7 +191,7 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                         animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.95, opacity: 0, y: 20 }}
                         transition={{ type: "spring", damping: 20, stiffness: 100 }}
-                        className="relative w-full max-w-[100vw] h-screen bg-[#0F0F0F] rounded-xl shadow-2xl overflow-hidden border border-[#333]"
+                        className="relative w-full max-w-full h-screen bg-[#0F0F0F] rounded-xl shadow-2xl overflow-hidden border border-[#333]"
                         onClick={(e) => e.stopPropagation()}
                         style={{
                             boxShadow: 'inset 0 0 200px rgba(0,0,0,1), 0 50px 100px -20px rgba(0,0,0,0.7)'

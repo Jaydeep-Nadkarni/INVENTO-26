@@ -20,21 +20,23 @@ const PublicRoute = ({ children }) => {
   return user ? <Navigate to="/profile" replace /> : children
 }
 
+// This flag persists across SPA navigations but resets on hard refresh
+let hasCheckedRefresh = false;
+
 const NavigationManager = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    // Only manage navigation on non-home routes
-    // Let Home.jsx handle its own refresh detection
-    if (location.pathname !== '/') {
-      // Clear intro flag when navigating away from home
-      // This ensures refresh detection works properly next time
+    if (!hasCheckedRefresh) {
       const navEntries = performance.getEntriesByType('navigation');
-      if (navEntries.length > 0 && navEntries[0].type === 'reload') {
+      const isReload = navEntries.length > 0 && navEntries[0].type === 'reload';
+      
+      if (isReload && location.pathname !== '/') {
         // If user refreshes on a sub-page, redirect to home
         navigate('/', { replace: true });
       }
+      hasCheckedRefresh = true;
     }
   }, [location.pathname, navigate]);
 
