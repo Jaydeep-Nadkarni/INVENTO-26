@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import connectDB from "./src/config/db.js";
 import userRoutes from "./src/routes/userRoutes.js";
+import eventRoutes from "./src/routes/eventRoutes.js";
 
 dotenv.config();
 
@@ -18,6 +19,7 @@ app.get("/", (req, res) => {
   res.send("Invento 2026 is running");
 });
 app.use("/api/users", userRoutes);
+app.use("/api/events", eventRoutes);
 
 // ---------- 404 Handler (must be before global error handler) ----------
 app.use((req, res, next) => {

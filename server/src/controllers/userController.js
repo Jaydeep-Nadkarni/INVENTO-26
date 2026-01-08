@@ -145,7 +145,7 @@ export const registerUser = async (req, res) => {
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-    const otpExpiresAt = Date.now() + 1 * 60 * 1000; // 5 mins
+    const otpExpiresAt = Date.now() + 5 * 60 * 1000; // 5 mins
 
     // Save user
     const newUser = new User({
@@ -157,13 +157,15 @@ export const registerUser = async (req, res) => {
       otp,
       otpExpiresAt,
       isVerified: false,
+      payment: false,
+      present: false,
     });
 
     await newUser.save();
 
     // 📧 Send Space-styled email
     await transporter.sendMail({
-      from: `<temp.sandesh372@gmail.com>`,
+      from: `"Invento 2026" <temp.sandesh372@gmail.com>`,
       to: email,
       subject: "🚀 Invento 2026 - Verify Your Account",
       html: spaceMail(
@@ -201,6 +203,8 @@ export const verifyOTP = async (req, res) => {
         name: user.name,
         email: user.email,
         isVerified: user.isVerified,
+        payment: user.payment,
+        present: user.present,
       },
     });
   } catch (error) {
@@ -247,7 +251,8 @@ export const resendVerifyOTP = async (req, res) => {
         "ACCOUNT VERIFICATION",
         "Verification retransmission approved. Use the one-time access code below to activate your Invento account.",
         otp,
-        user.name
+        user.name,
+        user._id
       ),
     });
 
@@ -294,6 +299,7 @@ export const loginUser = async (req, res) => {
     return res.status(200).json({
       message: "Login successful.",
       token,
+      payment: user.payment,
     });
   } catch (error) {
     console.error("Error in loginUser:", error.message);
@@ -381,5 +387,32 @@ export const getProfile = async (req, res) => {
   } catch (error) {
     console.error("Error in getProfile:", error.message);
     return res.status(500).json({ message: "Server error" });
+  }
+};
+
+// ================= UPDATE PAYMENT STATUS =================
+export const updatePaymentStatus = async (req, res) => {
+  try {
+    const { email, status } = req.body; // status = true or false
+
+    if (!email || typeof status !== "boolean") {
+      return res
+        .status(400)
+        .json({ message: "Email and valid status are required." });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found." });
+
+    user.payment = status;
+    await user.save();
+
+    res.json({
+      message: `Payment status updated to ${status ? "Paid" : "Unpaid"}.`,
+      payment: user.payment,
+    });
+  } catch (error) {
+    console.error("Error in updatePaymentStatus:", error.message);
+    res.status(500).json({ message: "Server error." });
   }
 };

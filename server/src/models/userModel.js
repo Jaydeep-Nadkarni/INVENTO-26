@@ -49,6 +49,18 @@ const userSchema = new mongoose.Schema(
     resetOTPExpires: { // ✅ updated name to match your controllers
       type: Date,
     },
+
+    // Payment flag
+    payment: {
+      type: Boolean,
+      default: false,
+    },
+
+    // Attendance flag
+    present: {
+      type: Boolean,
+      default: false,
+    }
   },
   { timestamps: true }
 );
