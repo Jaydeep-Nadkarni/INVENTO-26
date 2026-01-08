@@ -84,31 +84,10 @@ const Login = () => {
       return
     }
 
-    // Get registered users from localStorage
-    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]')
-    
-    // Check if user exists
-    const user = registeredUsers.find(u => u.email === formData.email)
-    
-    if (!user) {
-      setError('User not found. Please register first.')
-      setLoading(false)
-      return
-    }
-
-    if (user.password !== formData.password) {
-      setError('Invalid password')
-      setLoading(false)
-      return
-    }
-
-    // Store logged-in user
-    localStorage.setItem('currentUser', JSON.stringify(user))
-    
-    // Redirect to profile
-    setTimeout(() => {
-      navigate('/profile')
-    }, 500)
+    // TODO: Connect to backend API. Locally hosted data removed.
+    // Login requires backend connection.
+    setError('Login requires backend connection. Please Register temporarily for demo.')
+    setLoading(false)
   }
 
   const handleForgotPassword = (e) => {
@@ -119,16 +98,7 @@ const Login = () => {
       return
     }
 
-    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]')
-    const user = registeredUsers.find(u => u.email === resetEmail)
-
-    if (!user) {
-      setResetMessage('Email not found in our records')
-      return
-    }
-
-    // In a real app, you'd send an email. For demo, show the password
-    setResetMessage(`Password reset link sent to ${resetEmail}. (Demo: Your password is: ${user.password})`)
+    setResetMessage('Password reset logic requires backend connection.')
     setTimeout(() => {
       setShowForgotPassword(false)
       setResetEmail('')
@@ -149,200 +119,190 @@ const Login = () => {
       <Navbar />
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="relative z-10 flex items-center justify-center min-h-screen pt-20 pb-10"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="relative z-10 flex items-center justify-center min-h-screen p-6"
       >
-        <div className="w-full max-w-2xl px-6">
+        <div className="w-full max-w-md">
           {/* Document Style Card */}
           <div className="relative">
             <div
-              className="rounded-2xl p-12 shadow-2xl relative overflow-hidden border-4 border-gray-800"
+              className="p-8 md:p-10 shadow-[20px_20px_60px_rgba(0,0,0,0.5)] relative overflow-hidden border-2 border-gray-800 rounded-sm"
               style={{
                 backgroundColor: '#f5f1e8',
                 backgroundImage: `url(${paperTexture})`,
-                backgroundBlendMode: 'overlay'
+                backgroundSize: 'cover'
               }}
             >
+              <div className="absolute inset-0 bg-amber-50/20 mix-blend-multiply pointer-events-none" />
+
               {/* Header */}
-              <div className="mb-10 pb-8 border-b-4 border-red-600">
-                <h1 className="text-5xl font-serif font-bold text-gray-900 mb-2 tracking-tight">
-                  AGENT LOGIN
-                </h1>
-                <p className="text-red-600 text-sm font-mono uppercase tracking-widest">
+              <div className="mb-8 border-b-2 border-red-700/30 pb-6">
+                <div className="flex justify-between items-start mb-2">
+                  <h1 className="text-3xl font-black text-gray-900 tracking-tighter uppercase leading-none">
+                    Login
+                  </h1>
+                  <span className="text-[10px] font-mono font-bold bg-red-600 text-white px-2 py-0.5">SECURE</span>
+                </div>
+                <p className="text-gray-500 text-[10px] font-mono uppercase tracking-[0.2em] font-bold">
                   Authentication Required
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-8">
+              <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Email Field */}
-                  <div className="space-y-3">
-                    <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
-                      <Icons.Email /> Email Address
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      placeholder="agent@agency.com"
-                      className="w-full px-5 py-3 bg-white border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-mono font-black text-gray-700 uppercase tracking-widest flex items-center gap-2">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    placeholder="agent@gmail.com"
+                    className="w-full px-4 py-3 bg-white/50 border border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600/20 font-mono text-sm transition-all"
+                  />
+                </div>
 
-                  {/* Password Field */}
-                  <div className="space-y-3">
-                    <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide flex items-center">
-                      <Icons.Lock /> Password
+                {/* Password Field */}
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <label className="text-xs font-mono font-black text-gray-700 uppercase tracking-widest flex items-center gap-2">
+                      Password
                     </label>
-                    <div className="relative">
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        name="password"
-                        value={formData.password}
-                        onChange={handleInputChange}
-                        placeholder="••••••••"
-                        className="w-full px-5 py-3 bg-white/60 backdrop-blur-[2px] border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm pr-12"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 hover:opacity-70 transition-opacity"
-                      >
-                        {showPassword ? <Icons.EyeOff /> : <Icons.Eye />}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Forgot Password Link */}
-                  <div className="text-right">
                     <button
                       type="button"
                       onClick={() => setShowForgotPassword(true)}
-                      className="text-sm text-red-600 hover:text-red-700 font-mono uppercase tracking-wide hover:underline transition-colors"
+                      className="text-[10px] text-red-700 hover:underline font-mono uppercase font-bold"
                     >
                       Forgot Password?
                     </button>
                   </div>
-
-                  {/* Error Message */}
-                  {error && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="p-4 bg-red-100 border-l-4 border-red-600 text-red-800 text-sm font-mono flex items-center"
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      placeholder="••••••••"
+                      className="w-full px-4 py-3 bg-white/50 border border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600/20 font-mono text-sm pr-12 transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 opacity-50 hover:opacity-100 transition-opacity"
                     >
-                      <Icons.Alert /> {error}
-                    </motion.div>
-                  )}
-
-                  {/* Submit Button */}
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    type="submit"
-                    disabled={loading}
-                    className="w-full px-6 py-4 mt-4 bg-red-600 text-white font-serif font-bold uppercase tracking-wider text-base hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 border-2 border-red-700 flex items-center justify-center"
-                  >
-                    {loading ? (
-                      '⏳ AUTHENTICATING...'
-                    ) : (
-                      <>
-                        <Icons.Unlock /> LOGIN
-                      </>
-                    )}
-                  </motion.button>
-
-                  {/* Divider */}
-                  <div className="flex items-center gap-4 my-6">
-                    <div className="flex-1 h-0.5 bg-gray-400"></div>
-                    <span className="text-gray-600 font-mono text-xs uppercase tracking-widest">or</span>
-                    <div className="flex-1 h-0.5 bg-gray-400"></div>
+                      {showPassword ? <Icons.EyeOff /> : <Icons.Eye />}
+                    </button>
                   </div>
+                </div>
 
-                  {/* Register Link */}
-                  <div className="text-center">
-                    <p className="text-gray-700 text-sm font-serif mb-3">
-                      No account yet?
-                    </p>
-                    <Link
-                      to="/register"
-                      className="w-full inline-flex items-center justify-center px-8 py-3 bg-white border-2 border-gray-800 text-gray-800 font-serif font-bold uppercase tracking-wider text-sm hover:bg-gray-100 hover:border-red-600 hover:text-red-600 transition-colors"
-                    >
-                      <Icons.Edit /> REGISTER AGENT
-                    </Link>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-
-        {/* Forgot Password Modal */}
-        {showForgotPassword && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              className="bg-white p-10 max-w-md w-full relative rounded-xl border-4 border-gray-800 shadow-2xl"
-              style={{
-                backgroundImage: `url(${paperTexture})`,
-                backgroundColor: '#f5f1e8',
-                backgroundBlendMode: 'overlay'
-              }}
-            >
-              <button
-                onClick={() => {
-                  setShowForgotPassword(false)
-                  setResetEmail('')
-                  setResetMessage('')
-                }}
-                className="absolute top-4 right-4 text-gray-600 hover:text-gray-800 text-2xl font-bold"
-              >
-                ✕
-              </button>
-
-              <h2 className="text-3xl font-serif font-bold text-gray-900 mb-1 tracking-tight">
-                PASSWORD RESET
-              </h2>
-              <div className="h-1 bg-red-600 mb-6 w-16"></div>
-
-              <form onSubmit={handleForgotPassword} className="space-y-4">
-                <input
-                  type="email"
-                  value={resetEmail}
-                  onChange={(e) => setResetEmail(e.target.value)}
-                  placeholder="your@email.com"
-                  className="w-full px-5 py-3 bg-white/60 backdrop-blur-[2px] border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
-                />
-
-                {resetMessage && (
+                {/* Error Message */}
+                {error && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="p-3 bg-green-100 border-l-4 border-green-600 text-green-800 text-xs font-mono rounded flex items-center"
+                    className="p-3 bg-red-50 border border-red-200 text-red-800 text-[10px] font-mono font-bold uppercase tracking-tight flex items-center gap-2"
                   >
-                    <Icons.Check /> {resetMessage}
+                    <span className="text-lg">⚠️</span> {error}
                   </motion.div>
                 )}
 
+                {/* Submit Button */}
                 <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
                   type="submit"
-                  className="w-full px-4 py-3 bg-red-600 text-white font-serif font-bold uppercase tracking-wider text-sm hover:bg-red-700 transition-colors border-2 border-red-700"
+                  disabled={loading}
+                  className="w-full px-6 py-4 mt-2 bg-gray-900 text-white font-black uppercase tracking-widest text-xs hover:bg-red-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-[5px_5px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5"
                 >
-                  SEND RESET LINK
+                  {loading ? 'VERIFYING...' : 'Login'}
                 </motion.button>
+
+                {/* Register Link */}
+                <div className="text-center pt-4">
+                  <p className="text-gray-500 text-[10px] font-mono uppercase mb-4 tracking-widest">
+                    Not registered yet?
+                  </p>
+                  <Link
+                    to="/register"
+                    className="text-sm text-gray-900 font-black uppercase tracking-widest border-b-2 border-gray-900 pb-1 hover:text-red-700 hover:border-red-700 transition-all"
+                  >
+                    Register Now!
+                  </Link>
+                </div>
               </form>
-            </motion.div>
-          </motion.div>
-        )}
+            </div>
+          </div>
+        </div>
       </motion.div>
+
+      {/* Forgot Password Modal */}
+      {showForgotPassword && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white p-10 max-w-md w-full relative rounded-xl border-4 border-gray-800 shadow-2xl"
+            style={{
+              backgroundImage: `url(${paperTexture})`,
+              backgroundColor: '#f5f1e8',
+              backgroundBlendMode: 'overlay'
+            }}
+          >
+            <button
+              onClick={() => {
+                setShowForgotPassword(false)
+                setResetEmail('')
+                setResetMessage('')
+              }}
+              className="absolute top-4 right-4 text-gray-600 hover:text-gray-800 text-2xl font-bold"
+            >
+              ✕
+            </button>
+
+            <h2 className="text-3xl font-serif font-bold text-gray-900 mb-1 tracking-tight">
+              PASSWORD RESET
+            </h2>
+            <div className="h-1 bg-red-600 mb-6 w-16"></div>
+
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <input
+                type="email"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                placeholder="your@email.com"
+                className="w-full px-5 py-3 bg-white/60 backdrop-blur-[2px] border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
+              />
+
+              {resetMessage && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="p-3 bg-green-100 border-l-4 border-green-600 text-green-800 text-xs font-mono rounded flex items-center"
+                >
+                  <Icons.Check /> {resetMessage}
+                </motion.div>
+              )}
+
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="submit"
+                className="w-full px-4 py-3 bg-red-600 text-white font-serif font-bold uppercase tracking-wider text-sm hover:bg-red-700 transition-colors border-2 border-red-700"
+              >
+                SEND RESET LINK
+              </motion.button>
+            </form>
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   )
 }

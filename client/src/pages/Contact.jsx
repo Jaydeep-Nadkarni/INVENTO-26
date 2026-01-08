@@ -11,69 +11,69 @@ const teamsData = [
     id: 'registration',
     name: 'Registration',
     members: [
-      { name: 'Kuldeep Mallya', role: 'Head Agent', phone: '+91 88844 44382', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Kuldeep', socials: { instagram: '#', linkedin: '#', whatsapp: 'https://wa.me/918884444382' } },
-      { name: 'Devanshi Khandelwal', role: 'Field Operative', phone: '+91 79762 57768', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Devanshi', socials: { instagram: '#', linkedin: '#', whatsapp: 'https://wa.me/917976257768' } },
+      { name: 'Akhilesh Joshi', role: 'Registration Lead', phone: '+91 88844 44382', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Kuldeep', socials: { instagram: '#', linkedin: '#', whatsapp: 'https://wa.me/918884444382' } },
+      { name: 'Akhilesh Joshi', role: 'Registration Coordinator', phone: '+91 79762 57768', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Devanshi', socials: { instagram: '#', linkedin: '#', whatsapp: 'https://wa.me/917976257768' } },
     ]
   },
   {
     id: 'technical',
     name: 'Technical',
     members: [
-      { name: 'Rohan Sharma', role: 'Tech Lead', phone: '+91 98765 43210', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rohan', socials: { instagram: '#', linkedin: '#', whatsapp: '#' } },
-      { name: 'Priya Patel', role: 'Cyber Analyst', phone: '+91 87654 32109', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Priya', socials: { instagram: '#', linkedin: '#', whatsapp: '#' } },
-      { name: 'Amit Verma', role: 'Systems Architect', phone: '+91 76543 21098', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Amit', socials: { instagram: '#', linkedin: '#', whatsapp: '#' } },
+      { name: 'Akhilesh Joshi', role: 'Tech Lead', phone: '+91 98765 43210', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rohan', socials: { instagram: '#', linkedin: '#', whatsapp: '#' } },
+      { name: 'Akhilesh Joshi', role: 'Frontend Developer', phone: '+91 87654 32109', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Priya', socials: { instagram: '#', linkedin: '#', whatsapp: '#' } },
+      { name: 'Akhilesh Joshi', role: 'Backend Developer', phone: '+91 76543 21098', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Amit', socials: { instagram: '#', linkedin: '#', whatsapp: '#' } },
     ]
   },
   {
     id: 'hr_literary',
     name: 'HR & Literary',
     members: [
-      { name: 'Sneha Gupta', role: 'HR Director', phone: '+91 65432 10987', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sneha', socials: { instagram: '#', linkedin: '#', whatsapp: '#' } },
-      { name: 'Vikram Singh', role: 'Content Strategist', phone: '+91 54321 09876', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Vikram', socials: { instagram: '#', linkedin: '#', whatsapp: '#' } },
+      { name: 'Akhilesh Joshi', role: 'HR Director', phone: '+91 65432 10987', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sneha', socials: { instagram: '#', linkedin: '#', whatsapp: '#' } },
+      { name: 'Akhilesh Joshi', role: 'Content Strategist', phone: '+91 54321 09876', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Vikram', socials: { instagram: '#', linkedin: '#', whatsapp: '#' } },
     ]
   },
   {
     id: 'media',
     name: 'Media',
     members: [
-      { name: 'Anjali Desai', role: 'Press Officer', phone: '+91 43210 98765', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Anjali', socials: { instagram: '#', linkedin: '#', whatsapp: '#' } },
-      { name: 'Rahul Nair', role: 'Visual Comms', phone: '+91 32109 87654', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rahul', socials: { instagram: '#', linkedin: '#', whatsapp: '#' } },
+      { name: 'Akhilesh Joshi', role: 'Press Officer', phone: '+91 43210 98765', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Anjali', socials: { instagram: '#', linkedin: '#', whatsapp: '#' } },
+      { name: 'Akhilesh Joshi', role: 'Visual Comms', phone: '+91 32109 87654', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rahul', socials: { instagram: '#', linkedin: '#', whatsapp: '#' } },
     ]
   },
   {
     id: 'cultural',
     name: 'Cultural',
     members: [
-      { name: 'Deepak Kumar', role: 'Event Coordinator', phone: '+91 21098 76543', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Deepak', socials: { instagram: '#', linkedin: '#', whatsapp: '#' } },
-      { name: 'Meerya Reddy', role: 'Performance Director', phone: '+91 10987 65432', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Meera', socials: { instagram: '#', linkedin: '#', whatsapp: '#' } },
+      { name: 'Akhilesh Joshi', role: 'Event Coordinator', phone: '+91 21098 76543', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Deepak', socials: { instagram: '#', linkedin: '#', whatsapp: '#' } },
+      { name: 'Akhilesh Joshi', role: 'Performance Director', phone: '+91 10987 65432', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Meera', socials: { instagram: '#', linkedin: '#', whatsapp: '#' } },
     ]
   },
   {
     id: 'cdc',
     name: 'CDC',
     members: [
-      { name: 'Arjun Kapoor', role: 'Development Lead', phone: '+91 99887 76655', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Arjun', socials: { instagram: '#', linkedin: '#', whatsapp: '#' } },
+      { name: 'Akhilesh Joshi', role: 'Development Lead', phone: '+91 99887 76655', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Arjun', socials: { instagram: '#', linkedin: '#', whatsapp: '#' } },
     ]
   },
   {
     id: 'wec',
     name: 'WEC',
     members: [
-      { name: 'Kavya Singh', role: 'Empowerment Lead', phone: '+91 88776 65544', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Kavya', socials: { instagram: '#', linkedin: '#', whatsapp: '#' } },
+      { name: 'Akhilesh Joshi', role: 'Empowerment Lead', phone: '+91 88776 65544', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Kavya', socials: { instagram: '#', linkedin: '#', whatsapp: '#' } },
     ]
   },
   {
     id: 'fine_arts',
     name: 'Fine Arts',
     members: [
-      { name: 'Ishaan Malhotra', role: 'Art Director', phone: '+91 77665 54433', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ishaan', socials: { instagram: '#', linkedin: '#', whatsapp: '#' } },
+      { name: 'Akhilesh Joshi', role: 'Art Director', phone: '+91 77665 54433', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Ishaan', socials: { instagram: '#', linkedin: '#', whatsapp: '#' } },
     ]
   },
   {
     id: 'sports',
     name: 'Sports',
     members: [
-      { name: 'Virat Kohli', role: 'Athletics Captain', phone: '+91 66554 43322', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Virat', socials: { instagram: '#', linkedin: '#', whatsapp: '#' } },
+      { name: 'Akhilesh Joshi', role: 'Athletics Captain', phone: '+91 66554 43322', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Virat', socials: { instagram: '#', linkedin: '#', whatsapp: '#' } },
     ]
   },
 ]

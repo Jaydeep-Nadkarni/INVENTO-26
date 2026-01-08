@@ -4,7 +4,7 @@ const Mail = () => {
     const [selectedMail, setSelectedMail] = useState(null)
 
     const messages = [
-        { id: 1, from: 'Director', subject: 'Mission Update', date: '05 Jan', body: 'The infiltration of Sectors 4 and 7 is proceeding as planned. Report anyBelagavi connection anomalies immediately.' },
+        { id: 1, from: 'Jaydeep', subject: 'Mission Accomplished!', date: '30 Jan', body: 'Guys! Finally the site is live and running smoothly. Great job everyone!' },
         { id: 2, from: 'Agent X', subject: 'Re: Equipment', date: '04 Jan', body: 'The new briefcase encryption is solid. I tested it on the Hubballi sector yesterday.' },
         { id: 3, from: 'Intelligence', subject: 'ALERT: Intercept', date: '03 Jan', body: 'We have detected an unknown frequency at 148.5 Mhz. Caution is advised when using open channels.' },
     ]

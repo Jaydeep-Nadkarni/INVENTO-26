@@ -58,6 +58,7 @@ const Profile = () => {
   const navigate = useNavigate()
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [showLinksModal, setShowLinksModal] = useState(false)
 
   useEffect(() => {
     // Get current user from localStorage
@@ -87,8 +88,8 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900" style={{ backgroundImage: `url(${bgImage})`, backgroundSize: 'cover' }}>
-         <div className="text-white text-xl font-mono bg-black/50 p-4 rounded">LOADING AGENT DATA...</div>
+      <div className="min-h-screen flex items-center justify-center bg-[#1a1a1a]" style={{ backgroundImage: `url(${bgImage})`, backgroundSize: 'cover' }}>
+         <div className="text-white text-xl font-mono bg-black/50 p-4 rounded border border-red-800">LOADING AGENT DATA...</div>
       </div>
     )
   }
@@ -99,151 +100,298 @@ const Profile = () => {
 
   return (
     <div
-      className="min-h-screen relative overflow-hidden bg-gray-900"
-      style={{
-        backgroundImage: `url(${bgImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed'
-      }}
+      className="min-h-screen relative overflow-hidden bg-[#1a1a1a] font-serif"
     >
+      {/* Background */}
+      <div
+        className="fixed inset-0 z-0 opacity-30"
+        style={{
+          backgroundImage: `url(${bgImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      />
+      <div className="absolute inset-0 bg-black/50 pointer-events-none"></div>
+      <div className="absolute inset-0 opacity-[0.05] pointer-events-none mix-blend-overlay" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")` }}></div>
+
       <Navbar />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative z-10 flex items-center justify-center min-h-screen py-20"
+        className="relative z-10 flex items-center justify-center min-h-screen pt-24 px-4 pb-12"
       >
-        <div className="w-full max-w-3xl px-6">
+        <div className="w-full max-w-7xl">
           {/* Document Style Card */}
           <div className="relative">
             <div
-              className="rounded-2xl p-12 shadow-2xl relative overflow-hidden border-4 border-gray-800"
+              className="rounded-2xl p-8 md:p-12 shadow-2xl relative overflow-hidden border-4 border-gray-800 flex flex-col md:flex-row gap-12"
               style={{
-                backgroundColor: '#f5f1e8',
+                backgroundColor: '#f4f1ea',
                 backgroundImage: `url(${paperTexture})`,
-                backgroundBlendMode: 'overlay'
+                backgroundSize: 'cover'
               }}
             >
-              {/* Header */}
-              <div className="mb-10 pb-8 border-b-4 border-red-600">
-                <h1 className="text-5xl font-serif font-bold text-gray-900 mb-2 tracking-tight">
-                  AGENT PROFILE
-                </h1>
-                <p className="text-red-600 text-sm font-mono uppercase tracking-widest">
-                  Classified Information
-                </p>
-              </div>
+              <div className="absolute inset-0 bg-amber-50/30 mix-blend-multiply pointer-events-none" />
 
-                {/* Profile Content */}
-                <div className="space-y-8">
-                  {/* Profile Photo and Basic Info */}
-                  <div className="flex flex-col md:flex-row gap-8 items-start md:items-center border-b-4 border-red-600 pb-8">
-                    {/* Profile Photo */}
-                    <div className="shrink-0">
-                      <div className="w-48 h-48 border-4 border-gray-400 bg-white overflow-hidden flex items-center justify-center rounded-lg">
-                        {user.profilePhoto ? (
-                          <img
-                            src={user.profilePhoto}
-                            alt="Profile"
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="text-gray-600 text-6xl">👤</div>
-                        )}
-                      </div>
-                    </div>
 
-                    {/* Basic Information */}
-                    <div className="flex-1 space-y-4">
-                      <div>
-                        <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide mb-2">
-                          Name
-                        </label>
-                        <p className="text-gray-900 font-mono text-xl">{user.name}</p>
-                      </div>
+              {/* LEFT SIDE: Identity & Photo */}
+              <div className="relative z-10 flex flex-col items-center md:items-start md:w-1/3">
+                <div className="mb-8 w-full">
+                  <h1 className="text-4xl md:text-6xl font-black text-gray-900 leading-none tracking-tighter uppercase mb-2">
+                    AGENT <span className="text-red-700">PROFILE</span>
+                  </h1>
+                  <div className="h-2 w-24 bg-red-800 mb-4 transition-all duration-500 group-hover:w-full"></div>
+                  <p className="text-red-600 text-lg font-mono font-bold tracking-[0.3em] uppercase opacity-70">
+                    participant ID: {user.usn ? user.usn.substring(user.usn.length - 4) : '####'}
+                  </p>
+                </div>
 
-                      <div>
-                        <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide mb-2">
-                          Email
-                        </label>
-                        <p className="text-gray-900 font-mono">{user.email}</p>
-                      </div>
-
-                      <div>
-                        <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide mb-2">
-                          Contact
-                        </label>
-                        <p className="text-gray-900 font-mono">{user.contact}</p>
-                      </div>
-                    </div>
+                <div className="relative group">
+                  <div className="w-56 h-72 md:w-64 md:h-80 border-4 border-gray-800 bg-white overflow-hidden flex items-center justify-center shadow-[10px_10px_20px_rgba(0,0,0,0.3)] transform -rotate-1 group-hover:rotate-0 transition-transform duration-500">
+                    {user.profilePhoto ? (
+                      <img
+                        src={user.profilePhoto}
+                        alt="Profile"
+                        className="w-full h-full object-cover transition-all duration-700"
+                      />
+                    ) : (
+                      <div className="text-gray-300 text-8xl grayscale opacity-50 font-black">?</div>
+                    )}
                   </div>
-
-                  {/* Additional Details Grid */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="border-l-4 border-red-600 pl-4">
-                      <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide mb-2">
-                        College
-                      </label>
-                      <p className="text-gray-900 font-mono">{user.college}</p>
+                  {/* Photo paper clips or corners? Let's add a subtle tape effect */}
+                  <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-16 h-6 bg-gray-400/30 mix-blend-multiply border border-gray-400/20 rotate-1 shadow-sm"></div>
+                  
+                  {/* Stamp overlay */}
+                  <div className="absolute -bottom-4 -right-4 w-32 h-32 border-4 border-red-600/30 rounded-full flex items-center justify-center -rotate-12 pointer-events-none opacity-40">
+                    <div className="text-red-600 font-bold text-center text-xs leading-none">
+                      INVENTO '26<br/>CERTIFIED<br/>SPY
                     </div>
-
-                    <div className="border-l-4 border-red-600 pl-4">
-                      <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide mb-2">
-                        USN
-                      </label>
-                      <p className="text-gray-900 font-mono text-lg tracking-widest">{user.usn}</p>
-                    </div>
-
-                    <div className="border-l-4 border-red-600 pl-4">
-                      <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide mb-2">
-                        Status
-                      </label>
-                      <p className="text-red-600 font-mono font-bold">REGISTERED ✓</p>
-                    </div>
-
-                    <div className="border-l-4 border-red-600 pl-4">
-                      <label className="block text-gray-800 font-serif font-bold text-lg uppercase tracking-wide mb-2">
-                        Joined
-                      </label>
-                      <p className="text-gray-900 font-mono">
-                        {new Date(user.registeredAt).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric'
-                        })}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-4 justify-center pt-6 border-t-4 border-red-600">
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => navigate('/')}
-                      className="px-8 py-3 bg-red-600 text-white font-serif font-bold uppercase tracking-wider text-base hover:bg-red-700 transition-colors border-2 border-red-700"
-                    >
-                      🏠 GO HOME
-                    </motion.button>
-
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={handleLogout}
-                      className="px-8 py-3 bg-white border-2 border-gray-800 text-gray-800 font-serif font-bold uppercase tracking-wider text-base hover:bg-gray-100 hover:border-red-600 hover:text-red-600 transition-colors"
-                    >
-                      🚪 LOGOUT
-                    </motion.button>
                   </div>
                 </div>
               </div>
+
+              {/* RIGHT SIDE: Dossier Details */}
+              <div className="relative z-10 flex-1 flex flex-col md:pt-14">
+                <div className="grid grid-cols-1 gap-12">
+                  {/* Name & Basic Info Section */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-mono font-bold text-red-700 uppercase tracking-[0.2em] opacity-80">Full Name</label>
+                      <p className="text-4xl md:text-5xl font-black text-gray-900 leading-tight">{user.name}</p>
+                      <div className="h-0.5 w-full bg-gray-300 mt-2 opacity-50"></div>
+                      <p className="text-lg font-mono font-bold text-gray-500 uppercase mt-2 tracking-widest">{user.college}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-mono font-bold text-red-700 uppercase tracking-[0.2em] opacity-80">Status</label>
+                      <div className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse shadow-[0_0_8px_rgba(220,38,38,0.5)]"></span>
+                        <p className="text-sm font-mono font-bold text-red-700 uppercase tracking-widest italic">Active</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Contact & Affiliation Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div className="space-y-1 border-l-4 border-gray-900 pl-4">
+                      <label className="text-[10px] font-mono font-bold text-gray-500 uppercase tracking-widest opacity-70">Email Address</label>
+                      <p className="text-xl font-bold text-gray-800 font-sans italic break-all">{user.email}</p>
+                    </div>
+                    <div className="space-y-1 border-l-4 border-gray-900 pl-4">
+                      <label className="text-[10px] font-mono font-bold text-gray-500 uppercase tracking-widest opacity-70">Phone</label>
+                      <p className="text-2xl font-black text-gray-800 tracking-widest font-mono leading-none">{user.contact}</p>
+                    </div>
+                  </div>
+
+                  {/* Operational Sections */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6 border-t border-gray-300">
+                    {/* Events Participated */}
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-mono font-bold text-gray-900 uppercase tracking-widest bg-yellow-400 px-2 py-0.5">Participating Events</label>
+                      <ul className="space-y-1">
+                        {user.registeredEvents && user.registeredEvents.length > 0 ? (
+                          user.registeredEvents.map((event, i) => (
+                            <li key={i} className="text-sm font-mono font-bold text-gray-800 flex items-center gap-2 uppercase">
+                              <span className="text-red-600">»</span> {event}
+                            </li>
+                          ))
+                        ) : (
+                          <li className="text-sm font-mono text-gray-500 italic uppercase">No events registered yet</li>
+                        )}
+                      </ul>
+                    </div>
+
+                    {/* Pending Dues */}
+                    {user.pendingDues > 0 && (
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-mono font-bold text-white uppercase tracking-widest bg-red-600 px-2 py-0.5 animate-pulse">Pending Resources</label>
+                        <div className="p-3 border-2 border-dashed border-red-600 bg-red-50">
+                          <p className="text-xl font-black text-red-700 font-mono tracking-tighter">
+                            AMT DUE: ₹{user.pendingDues}
+                          </p>
+                          <p className="text-[8px] font-mono text-red-800 uppercase mt-1">Settle immediately at command center</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Social & Downloads */}
+                  <div className="space-y-6 pt-6 border-t border-gray-300">
+                    <div className="flex flex-col md:flex-row md:items-center justify-end gap-6">
+                      <div className="flex flex-wrap gap-4">
+                        {/* WhatsApp Operational Links Button */}
+                        <button
+                          onClick={() => setShowLinksModal(true)}
+                          className="flex items-center gap-3 bg-white border-2 border-gray-800 px-4 py-2 hover:bg-gray-50 transition-all shadow-[4px_4px_0px_#111] group"
+                        >
+                          <div className="w-8 h-8 rounded-sm bg-green-600 flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-110">
+                            <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-4.821 7.454c-1.679 0-3.325-.45-4.766-1.302l-.342-.204-3.548.93 1.053-3.46-.224-.356C3.935 16.035 3.4 14.356 3.4 12.613 3.4 8.761 6.528 5.633 10.387 5.633c1.868 0 3.623.727 4.945 2.049 1.321 1.321 2.048 3.078 2.048 4.945 0 3.853-3.127 6.98-6.984 6.984m8.46-15.442c-2.261-2.258-5.267-3.5-8.47-3.5-6.6 0-11.97 5.37-11.97 11.97 0 2.11.55 4.167 1.59 6.01L2 22l4.89-1.28c1.77 1.04 3.8 1.59 5.8 1.59 6.6 0 11.99-5.38 11.99-11.98 0-3.2-.24-6.21-2.51-8.47z" />
+                            </svg>
+                          </div>
+                          <div className="text-left">
+                            <span className="block text-[8px] font-mono font-black text-gray-500 uppercase leading-none text-green-700">Links</span>
+                            <span className="block text-xs font-black text-gray-800 uppercase tracking-tight">WhatsApp Links</span>
+                          </div>
+                        </button>
+
+                        <button className="flex items-center gap-3 bg-white border-2 border-gray-800 px-4 py-2 hover:bg-gray-50 transition-all shadow-[4px_4px_0px_#111]">
+                          <div className="w-8 h-8 rounded-sm bg-red-700 flex items-center justify-center text-white font-bold text-xs uppercase">PDF</div>
+                          <div className="text-left">
+                            <span className="block text-[8px] font-mono font-black text-gray-500 uppercase leading-none">Download</span>
+                            <span className="block text-xs font-black text-gray-800 uppercase tracking-tight">Events Schedule</span>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Registration meta */}
+                  <div className="pt-8 mt-4 border-t-2 border-dashed border-gray-200">
+                    <div className="flex flex-col md:flex-row justify-between items-end gap-4">
+                      <div className="bg-red-50 p-3 border-l-4 border-red-600 max-w-sm">
+                        <p className="text-[10px] font-mono font-bold text-red-800 uppercase leading-relaxed">
+                          <span className="text-sm mr-1"></span>Official passes and entry credentials will be dispatched to your registered email address within 48 hours
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[9px] font-mono text-gray-400 italic uppercase">
+                          Dossier created on: {user.registeredAt ? new Date(user.registeredAt).toLocaleString() : 'N/A'}
+                        </p>
+                        <p className="text-[9px] font-mono text-gray-400 font-bold uppercase tracking-widest mt-0.5">Security Clearance: Level 4+</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-wrap gap-4 mt-12 pb-4">
+                  <motion.button
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => navigate('/')}
+                    className="group relative px-8 py-3 bg-gray-900 text-white font-black uppercase tracking-widest text-xs shadow-[5px_5px_0px_#991b1b] hover:shadow-[8px_8px_0px_#991b1b] transition-all"
+                  >
+                    RETURN TO BASE
+                  </motion.button>
+
+                  <motion.button
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleLogout}
+                    className="px-8 py-3 border-2 md:border-4 border-red-800 text-red-800 font-black uppercase tracking-widest text-xs hover:bg-red-800 hover:text-white shadow-[5px_5px_0px_rgba(0,0,0,0.8)] transition-all"
+                  >
+                    LOG OUT
+                  </motion.button>
+                </div>
+              </div>
+
+              {/* Decorative side elements */}
+              <div className="absolute right-0 top-0 h-full w-2 flex flex-col gap-1 py-4 opacity-20 hidden md:flex">
+                {[...Array(20)].map((_, i) => (
+                  <div key={i} className="w-full h-1 bg-gray-400"></div>
+                ))}
+              </div>
             </div>
           </div>
+        </div>
       </motion.div>
-    </div>
-  )
-}
 
-export default Profile
+      {/* WhatsApp Links Modal */}
+      {showLinksModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            onClick={() => setShowLinksModal(false)}
+            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+          />
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            className="relative w-full max-w-lg bg-[#f4f1ea] border-4 border-gray-900 shadow-[10px_10px_0px_#111] overflow-hidden"
+            style={{ backgroundImage: `url(${paperTexture})`, backgroundSize: 'cover' }}
+          >
+            <div className="p-1 px-4 border-b-4 border-gray-900 bg-gray-900 flex justify-between items-center">
+              <span className="text-white font-mono font-bold text-xs uppercase tracking-[0.2em]">operational_links.log</span>
+              <button
+                onClick={() => setShowLinksModal(false)}
+                className="text-white hover:text-red-500 font-bold transition-colors"
+              >
+                [✕]
+              </button>
+            </div>
+            
+            <div className="p-8">
+              <div className="mb-6">
+                <h3 className="text-2xl font-black text-gray-900 uppercase tracking-tighter">Operational frequencies</h3>
+                <p className="text-[10px] font-mono font-bold text-red-700 uppercase tracking-widest mt-1">Status: encrypted / authorized agents only</p>
+              </div>
+
+              <div className="space-y-4">
+                {/* Main HQ */}
+                <div className="p-4 border-2 border-dashed border-gray-400 bg-white/50 group hover:border-green-600 transition-colors">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-sm font-black text-gray-900 uppercase tracking-tight">Main HQ - INVENTO '26</p>
+                      <p className="text-[9px] font-mono text-gray-500 uppercase">Primary communication channel</p>
+                    </div>
+                    <a
+                      href="https://whatsapp.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-green-600 text-white px-4 py-2 text-xs font-black uppercase tracking-wider hover:bg-green-700 shadow-[3px_3px_0px_#111] active:translate-y-px active:shadow-none transition-all"
+                    >
+                      Connect
+                    </a>
+                  </div>
+                </div>
+
+                {/* Dynamic Event Links placeholder */}
+                <div className="py-4 text-center">
+                  <p className="text-[10px] font-mono text-gray-400 italic uppercase">
+                    {user.registeredEvents && user.registeredEvents.length > 0 
+                      ? "Individual mission channel links will update as they become operational."
+                      : "Register for operations to unlock mission-specific channels."}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-gray-300">
+                <button
+                  onClick={() => setShowLinksModal(false)}
+                  className="w-full py-3 bg-gray-900 text-white font-bold uppercase text-xs tracking-widest hover:bg-red-800 transition-colors shadow-[4px_4px_0px_#444]"
+                >
+                  Close Secure Link
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Profile;

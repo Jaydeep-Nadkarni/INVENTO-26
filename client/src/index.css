@@ -1,5 +1,36 @@
 @import "tailwindcss";
 
+/* Global scroll management */
+html {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background-color: #0a0a0a;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #0a0a0a;
+  width: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* Comprehensive scroll lock */
+html.scroll-locked,
+body.scroll-locked {
+  overflow: hidden !important;
+  height: 100vh !important;
+}
+
+body.scroll-locked {
+  position: fixed !important;
+  width: 100% !important;
+}
+
 /* Retro Terminal Styles */
 .terminal-screen {
   text-shadow: 0 0 5px rgba(34, 197, 94, 0.5), 0 0 10px rgba(34, 197, 94, 0.3);
@@ -30,6 +61,16 @@
 
 .animate-scanline {
   animation: scanline 8s linear infinite;
+}
+
+.bg-scanline {
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(34, 197, 94, 0.05) 50%,
+    transparent 100%
+  );
+  background-size: 100% 4px;
 }
 
 /* Custom scrollbar for terminal */

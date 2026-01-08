@@ -1,10 +1,9 @@
-import React from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import React, { useEffect } from 'react'
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import Home from './pages/Home.jsx'
 import Events from './pages/Events.jsx'
 import Schedule from './pages/Schedule.jsx'
 import Contact from './pages/Contact.jsx'
-import Sponsors from './pages/Sponsors.jsx'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
 import Profile from './pages/Profile.jsx'
@@ -21,14 +20,42 @@ const PublicRoute = ({ children }) => {
   return user ? <Navigate to="/profile" replace /> : children
 }
 
+const NavigationManager = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Mark session as active on first app load (any route)
+    if (!sessionStorage.getItem('session_active')) {
+      sessionStorage.setItem('session_active', 'true');
+    }
+    
+    // Check navigation type once per hard load
+    const navEntries = performance.getEntriesByType('navigation');
+    const isReload = navEntries.length > 0 && navEntries[0].type === 'reload';
+    const isInitialLoad = !sessionStorage.getItem('sessionStarted');
+
+    if (isInitialLoad || isReload) {
+      sessionStorage.setItem('shouldPlayIntro', 'true');
+      sessionStorage.setItem('sessionStarted', 'true');
+      
+      if (location.pathname !== '/') {
+        navigate('/', { replace: true });
+      }
+    }
+  }, []); // Only run once on mount
+
+  return null;
+};
+
 function App() {
   return (
     <Router>
+      <NavigationManager />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/events" element={<Events />} />
         <Route path="/schedule" element={<Schedule />} />
-        <Route path="/sponsors" element={<Sponsors />} />
         <Route path="/contact" element={<Contact />} />
         
         {/* Protected Routes */}

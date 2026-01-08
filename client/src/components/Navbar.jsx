@@ -14,7 +14,6 @@ const Navbar = ({ onEventsClick }) => {
     { label: 'Home', path: '/' },
     { label: 'Events', path: '/events' },
     { label: 'Schedule', path: '/schedule' },
-    { label: 'Sponsors', path: '/sponsors' },
     { label: 'Contact', path: '/contact' }
   ]
 
@@ -72,6 +71,7 @@ const Navbar = ({ onEventsClick }) => {
       <div className="flex items-center gap-4">
         {currentUser ? (
           <button
+            type="button"
             onClick={handleProfileClick}
             className="w-10 h-10 rounded-full border-2 border-yellow-500 overflow-hidden hover:border-yellow-300 hover:scale-110 transition-all duration-300 cursor-pointer flex items-center justify-center bg-gray-800"
             title="View Profile"
@@ -83,7 +83,7 @@ const Navbar = ({ onEventsClick }) => {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <span className="text-lg">👤</span>
+              <span className="text-lg"></span>
             )}
           </button>
         ) : (

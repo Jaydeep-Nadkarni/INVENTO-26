@@ -193,16 +193,6 @@ const EventsGrid = () => {
                                 {/* Paper Texture */}
                                 <div className="absolute inset-0 opacity-40 pointer-events-none mix-blend-multiply" style={{ backgroundImage: `url(${paperTexture})` }}></div>
 
-                                {/* Top Tags */}
-                                <div className="relative z-10 flex justify-between items-start">
-                                    <span className="font-mono text-[10px] text-gray-500 uppercase tracking-widest border border-gray-300 px-2 py-1">
-                                        PROTOCOL_{index + 1}
-                                    </span>
-                                    <span className="font-mono text-[10px] bg-black text-white px-2 py-1 uppercase tracking-widest">
-                                        {event.teamSize > 1 ? 'TEAM' : 'SOLO'}
-                                    </span>
-                                </div>
-
                                 {/* Start of Empty Space */}
                                 <div className="flex-1 relative group-hover:bg-yellow-500/5 transition-colors duration-500">
                                     {/* Optional: Add illustration placeholder here if available later */}
@@ -242,13 +232,13 @@ const EventsGrid = () => {
     // Render Event Details (Horizontal View)
     if (eventSlug && currentEvent) {
         return (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 md:p-8 pt-24 md:pt-32">
+            <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/95 backdrop-blur-md p-4 md:p-8 pt-24 md:pt-32">
 
                 {/* Event Navigation Arrows */}
-                <button onClick={goToPrevEvent} className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-[110] w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-red-600 text-white transition-all backdrop-blur-sm group border border-white/20">
+                <button onClick={goToPrevEvent} className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-110 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-red-600 text-white transition-all backdrop-blur-sm group border border-white/20">
                     <span className="text-2xl group-hover:-translate-x-1 transition-transform">←</span>
                 </button>
-                <button onClick={goToNextEvent} className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-[110] w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-red-600 text-white transition-all backdrop-blur-sm group border border-white/20">
+                <button onClick={goToNextEvent} className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-110 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-red-600 text-white transition-all backdrop-blur-sm group border border-white/20">
                     <span className="text-2xl group-hover:translate-x-1 transition-transform">→</span>
                 </button>
 
@@ -256,7 +246,7 @@ const EventsGrid = () => {
                     initial={{ opacity: 0, scale: 0.9, x: 100 }}
                     animate={{ opacity: 1, scale: 1, x: 0 }}
                     transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                    className="relative w-full max-w-7xl h-[85vh] md:aspect-[16/9] flex flex-col md:flex-row bg-[#fdfbf7] rounded-sm shadow-2xl overflow-hidden"
+                    className="relative w-full max-w-7xl h-[85vh] md:aspect-video flex flex-col md:flex-row bg-[#fdfbf7] rounded-sm shadow-2xl overflow-hidden"
                     style={{ backgroundImage: `url(${paperTexture})`, backgroundSize: 'cover' }}
                 >
                     <TextureOverlay opacity={0.3} />
