@@ -20,25 +20,25 @@ const PublicRoute = ({ children }) => {
   return user ? <Navigate to="/profile" replace /> : children
 }
 
-// This flag persists across SPA navigations but resets on hard refresh
-let hasCheckedRefresh = false;
-
 const NavigationManager = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    if (!hasCheckedRefresh) {
-      const navEntries = performance.getEntriesByType('navigation');
-      const isReload = navEntries.length > 0 && navEntries[0].type === 'reload';
+    // Check navigation type once per hard load
+    const navEntries = performance.getEntriesByType('navigation');
+    const isReload = navEntries.length > 0 && navEntries[0].type === 'reload';
+    const isInitialLoad = !sessionStorage.getItem('sessionStarted');
+
+    if (isInitialLoad || isReload) {
+      sessionStorage.setItem('shouldPlayIntro', 'true');
+      sessionStorage.setItem('sessionStarted', 'true');
       
-      if (isReload && location.pathname !== '/') {
-        // If user refreshes on a sub-page, redirect to home
+      if (location.pathname !== '/') {
         navigate('/', { replace: true });
       }
-      hasCheckedRefresh = true;
     }
-  }, [location.pathname, navigate]);
+  }, []); // Only run once on mount
 
   return null;
 };

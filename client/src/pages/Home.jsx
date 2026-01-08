@@ -65,11 +65,11 @@ const Home = () => {
 
   // Main initialization effect
   useEffect(() => {
-    // Trigger intro if it's a page refresh OR the very first time the app is loading
-    // AND we haven't handled the intro for this specific window session yet
-    if (!hasHandledIntro && (isPageRefresh() || isInitialVisit)) {
-      hasHandledIntro = true;
-      isInitialVisit = false;
+    const shouldPlay = sessionStorage.getItem('shouldPlayIntro') === 'true';
+
+    if (shouldPlay) {
+      // Consume the flag so it doesn't play again on SPA navigation
+      sessionStorage.setItem('shouldPlayIntro', 'false');
       
       // Lock scroll immediately
       lockScroll();
