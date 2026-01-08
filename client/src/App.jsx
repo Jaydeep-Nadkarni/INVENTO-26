@@ -1,5 +1,5 @@
-import React from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import React, { useEffect } from 'react'
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import Home from './pages/Home.jsx'
 import Events from './pages/Events.jsx'
 import Schedule from './pages/Schedule.jsx'
@@ -20,9 +20,31 @@ const PublicRoute = ({ children }) => {
   return user ? <Navigate to="/profile" replace /> : children
 }
 
+// Global flag to track if this is the first mount of the application (refresh)
+let isInitialEntry = true;
+
+const NavigationManager = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    // If we've just reloaded and are not on the home page, force navigate back to home
+    // to ensure the user goes through the system authentication/intro sequence.
+    if (isInitialEntry) {
+      isInitialEntry = false;
+      if (location.pathname !== '/') {
+        navigate('/', { replace: true });
+      }
+    }
+  }, [navigate, location.pathname]);
+
+  return null;
+};
+
 function App() {
   return (
     <Router>
+      <NavigationManager />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/events" element={<Events />} />
