@@ -25,6 +25,11 @@ const NavigationManager = () => {
   const location = useLocation();
 
   useEffect(() => {
+    // Mark session as active on first app load (any route)
+    if (!sessionStorage.getItem('session_active')) {
+      sessionStorage.setItem('session_active', 'true');
+    }
+    
     // Check navigation type once per hard load
     const navEntries = performance.getEntriesByType('navigation');
     const isReload = navEntries.length > 0 && navEntries[0].type === 'reload';

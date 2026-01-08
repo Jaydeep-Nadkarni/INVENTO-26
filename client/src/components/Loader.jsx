@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
-const Loader = ({ onComplete }) => {
-    const [progress, setProgress] = useState(0);
+const Loader = ({ progress, onComplete }) => {
     const [status, setStatus] = useState('INITIALIZING SECURE CONNECTION...');
     const [glitchText, setGlitchText] = useState('');
 
@@ -30,24 +29,11 @@ const Loader = ({ onComplete }) => {
     }, []);
 
     useEffect(() => {
-        const duration = 2500; // 2.5 seconds total
-        const interval = 30; // update every 30ms
-        const increment = 100 / (duration / interval);
-
-        const timer = setInterval(() => {
-            setProgress((prev) => {
-                const next = prev + increment;
-                if (next >= 100) {
-                    clearInterval(timer);
-                    setTimeout(() => onComplete(), 500);
-                    return 100;
-                }
-                return next;
-            });
-        }, interval);
-
-        return () => clearInterval(timer);
-    }, [onComplete]);
+        if (progress >= 100) {
+            const timer = setTimeout(() => onComplete(), 500);
+            return () => clearTimeout(timer);
+        }
+    }, [progress, onComplete]);
 
     useEffect(() => {
         const statusIndex = Math.floor((progress / 100) * statuses.length);

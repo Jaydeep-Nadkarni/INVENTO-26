@@ -18,21 +18,40 @@ const isPageRefresh = () => {
   if (navEntries.length > 0) {
     return navEntries[0].type === 'reload';
   }
-  // Fallback for older browsers
-  return window.performance && window.performance.navigation && window.performance.navigation.type === 1;
+  return false;
 };
 
-let isInitialVisit = true;
-let hasHandledIntro = false;
+// Module-level flag tracks if we've already run the intro since JS loaded
+let introHasPlayed = false;
 
 const Home = () => {
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(false)
+  const [loadProgress, setLoadProgress] = useState(0)
   const [showIntro, setShowIntro] = useState(false)
   const [showBlackout, setShowBlackout] = useState(false)
   const [isBriefcaseOpen, setIsBriefcaseOpen] = useState(false)
   const [showCallout, setShowCallout] = useState(false)
   const [isMuted, setIsMuted] = useState(true)
+  
+  const [isIntroPath] = useState(() => {
+    // 1. If we already played it in this memory session, never play again
+    if (introHasPlayed) return false;
+
+    // 2. Determine trigger conditions
+    const isReload = isPageRefresh();
+    // Check if we have an active session in storage (survives reload)
+    const sessionActive = sessionStorage.getItem('session_active');
+    
+    // If session is active AND it's NOT a reload, it means we navigated here from another page
+    if (sessionActive && !isReload) {
+      return false;
+    }
+
+    // Otherwise (First visit ever, or Reload), play intro
+    introHasPlayed = true; 
+    return true;
+  });
   
   const hoverTimerRef = useRef(null)
   const videoRef = useRef(null)
@@ -44,72 +63,80 @@ const Home = () => {
     audio.play().catch(e => console.log("Audio play failed:", e))
   }
 
-  // Scroll lock utilities
+  // Define scroll lock functions before usage
   const lockScroll = () => {
-    scrollPositionRef.current = window.pageYOffset;
-    document.body.style.overflow = 'hidden';
+    scrollPositionRef.current = window.scrollY;
+    // Apply inline styles for immediate effect
     document.body.style.position = 'fixed';
     document.body.style.top = `-${scrollPositionRef.current}px`;
     document.body.style.width = '100%';
-    document.documentElement.style.overflow = 'hidden';
+    
+    // Toggle classes for CSS-based locking
+    document.documentElement.classList.add('scroll-locked');
+    document.body.classList.add('scroll-locked');
   };
 
   const unlockScroll = () => {
-    document.body.style.removeProperty('overflow');
     document.body.style.removeProperty('position');
     document.body.style.removeProperty('top');
     document.body.style.removeProperty('width');
-    document.documentElement.style.removeProperty('overflow');
+    
+    document.documentElement.classList.remove('scroll-locked');
+    document.body.classList.remove('scroll-locked');
+    
     window.scrollTo(0, scrollPositionRef.current);
   };
 
-  // Main initialization effect
+  // Real Asset Loading Tracker
   useEffect(() => {
-    const shouldPlay = sessionStorage.getItem('shouldPlayIntro') === 'true';
+    if (!isIntroPath) return;
 
-    if (shouldPlay) {
-      // Consume the flag so it doesn't play again on SPA navigation
-      sessionStorage.setItem('shouldPlayIntro', 'false');
-      
-      // Lock scroll immediately
-      lockScroll();
-      
-      // Start loading sequence
-      setIsLoading(true);
-      
-      // Preload critical assets
-      const img = new Image();
-      img.src = bgImage;
-      
-      // Preload video
-      if (videoRef.current) {
-        videoRef.current.load();
-      }
-    }
-    
-    return () => {
-      // Cleanup on unmount
-      if (isLoading || showIntro) {
-        unlockScroll();
-      }
+    setIsLoading(true);
+    lockScroll();
+
+    const assets = [
+      { type: 'image', src: bgImage },
+      { type: 'video', src: introVideo },
+      { type: 'audio', src: introAudio }
+    ];
+
+    let loadedCount = 0;
+    const totalAssets = assets.length;
+
+    const updateProgress = () => {
+      loadedCount++;
+      const newProgress = Math.round((loadedCount / totalAssets) * 100);
+      setLoadProgress(newProgress);
     };
-  }, [])
+
+    assets.forEach(asset => {
+      if (asset.type === 'image') {
+        const img = new Image();
+        img.src = asset.src;
+        img.onload = updateProgress;
+        img.onerror = updateProgress; // Don't block on error
+      } else if (asset.type === 'video') {
+        const video = document.createElement('video');
+        video.src = asset.src;
+        video.oncanplaythrough = updateProgress;
+        video.onerror = updateProgress;
+      } else if (asset.type === 'audio') {
+        const audio = new Audio();
+        audio.src = asset.src;
+        audio.oncanplaythrough = updateProgress;
+        audio.onerror = updateProgress;
+      }
+    });
+
+    return () => {
+      if (isLoading || showIntro) unlockScroll();
+    };
+  }, [isIntroPath]);
 
   const handleLoaderComplete = () => {
     setIsLoading(false)
     setShowIntro(true)
-    
-    // Attempt playback as soon as loader ends
-    if (audioRef.current) {
-      audioRef.current.volume = 1; // Default to full volume
-      setIsMuted(false);
-      audioRef.current.play().catch(e => {
-        console.log("Autoplay blocked, switching to muted mode");
-        audioRef.current.volume = 0;
-        setIsMuted(true);
-        audioRef.current.play(); // Play muted is always allowed
-      });
-    }
+    setIsMuted(true);
   }
 
   const handleVideoEnd = () => {
@@ -117,8 +144,10 @@ const Home = () => {
     setShowIntro(false)
     setShowBlackout(true)
     
-    // Fade out audio
-    fadeAudioOut()
+    // If we're using audio tag, fade it out
+    if (audioRef.current && !audioRef.current.muted) {
+       fadeAudioOut();
+    }
     
     // After blackout transition, unlock scroll
     setTimeout(() => {
@@ -135,18 +164,14 @@ const Home = () => {
   }
 
   const toggleMute = () => {
+    const isNowMuted = !isMuted;
+    setIsMuted(isNowMuted);
+    
     if (audioRef.current) {
-      if (isMuted) {
-        // Ensure audio is playing and audible
-        audioRef.current.muted = false;
-        audioRef.current.volume = 1;
-        setIsMuted(false);
-        // Sometimes play() is needed again to "resume" sound if it was physically blocked
-        audioRef.current.play().catch(e => console.log("Unmute play failed:", e));
-      } else {
-        audioRef.current.volume = 0;
-        audioRef.current.muted = true;
-        setIsMuted(true);
+      audioRef.current.muted = isNowMuted;
+      audioRef.current.volume = isNowMuted ? 0 : 1;
+      if (!isNowMuted) {
+        audioRef.current.play().catch(e => console.log("Audio sync failed:", e));
       }
     }
   }
@@ -237,7 +262,7 @@ const Home = () => {
       
       <AnimatePresence mode="wait">
         {isLoading && (
-          <Loader key="loader" onComplete={handleLoaderComplete} />
+          <Loader key="loader" progress={loadProgress} onComplete={handleLoaderComplete} />
         )}
 
         {showIntro && (
@@ -270,7 +295,7 @@ const Home = () => {
               }}
               className="absolute top-10 right-10 z-10000 text-white/70 hover:text-white font-mono text-sm tracking-widest uppercase border border-white/30 px-4 py-2 bg-black/50 backdrop-blur-sm transition-all flex items-center gap-2"
             >
-              {isMuted ? '🔇 Unmute' : '🔊 Mute'}
+              {isMuted ? 'Unmute' : 'Mute'}
             </button>
             
             <button 
@@ -306,7 +331,7 @@ const Home = () => {
         transition={{ 
           duration: 1.2, 
           ease: "easeOut",
-          delay: showBlackout ? 0.2 : 0 
+          delay: (isIntroPath && showBlackout) ? 0.3 : 0 
         }}
         className="w-full bg-[#0a0a0a] relative selection:bg-red-700/30"
       >
