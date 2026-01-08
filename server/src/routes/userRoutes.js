@@ -7,7 +7,6 @@ import {
   requestPasswordReset,
   resetPassword,
   getProfile,
-  updatePaymentStatus,
 } from "../controllers/userController.js";
 import { protect } from "../middlewares/authMiddleware.js";
 
