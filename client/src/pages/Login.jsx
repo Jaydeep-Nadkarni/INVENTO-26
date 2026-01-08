@@ -84,31 +84,10 @@ const Login = () => {
       return
     }
 
-    // Get registered users from localStorage
-    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]')
-    
-    // Check if user exists
-    const user = registeredUsers.find(u => u.email === formData.email)
-    
-    if (!user) {
-      setError('User not found. Please register first.')
-      setLoading(false)
-      return
-    }
-
-    if (user.password !== formData.password) {
-      setError('Invalid password')
-      setLoading(false)
-      return
-    }
-
-    // Store logged-in user
-    localStorage.setItem('currentUser', JSON.stringify(user))
-    
-    // Redirect to profile
-    setTimeout(() => {
-      navigate('/profile')
-    }, 500)
+    // TODO: Connect to backend API. Locally hosted data removed.
+    // Login requires backend connection.
+    setError('Login requires backend connection. Please Register temporarily for demo.')
+    setLoading(false)
   }
 
   const handleForgotPassword = (e) => {
@@ -119,16 +98,7 @@ const Login = () => {
       return
     }
 
-    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]')
-    const user = registeredUsers.find(u => u.email === resetEmail)
-
-    if (!user) {
-      setResetMessage('Email not found in our records')
-      return
-    }
-
-    // In a real app, you'd send an email. For demo, show the password
-    setResetMessage(`Password reset link sent to ${resetEmail}. (Demo: Your password is: ${user.password})`)
+    setResetMessage('Password reset logic requires backend connection.')
     setTimeout(() => {
       setShowForgotPassword(false)
       setResetEmail('')

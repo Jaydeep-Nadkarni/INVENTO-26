@@ -140,10 +140,10 @@ const Profile = () => {
               <div className="relative z-10 flex flex-col items-center md:items-start md:w-1/3">
                 <div className="mb-8 w-full">
                   <h1 className="text-4xl md:text-6xl font-black text-gray-900 leading-none tracking-tighter uppercase mb-2">
-                    PARTICIPANT <span className="text-red-700">PROFILE</span>
+                    AGENT <span className="text-red-700">PROFILE</span>
                   </h1>
                   <div className="h-2 w-24 bg-red-800 mb-4 transition-all duration-500 group-hover:w-full"></div>
-                  <p className="text-red-600 text-xs font-mono font-bold tracking-[0.3em] uppercase opacity-70">
+                  <p className="text-red-600 text-lg font-mono font-bold tracking-[0.3em] uppercase opacity-70">
                     participant ID: {user.usn ? user.usn.substring(user.usn.length - 4) : '####'}
                   </p>
                 </div>

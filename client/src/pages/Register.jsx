@@ -163,13 +163,14 @@ const Register = () => {
       return
     }
 
-    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]')
-
-    if (registeredUsers.some(u => u.email === formData.email)) {
-      setError('Email already registered')
-      setLoading(false)
-      return
-    }
+    // TODO: Connect to backend API. Locally hosted data removed.
+    // const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]')
+    
+    // if (registeredUsers.some(u => u.email === formData.email)) {
+    //   setError('Email already registered')
+    //   setLoading(false)
+    //   return
+    // }
 
     const newUser = {
       id: Date.now(),
@@ -183,8 +184,8 @@ const Register = () => {
       registeredAt: new Date().toISOString()
     }
 
-    registeredUsers.push(newUser)
-    localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers))
+    // registeredUsers.push(newUser)
+    // localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers))
     localStorage.setItem('currentUser', JSON.stringify(newUser))
 
     setTimeout(() => {
@@ -253,7 +254,7 @@ const Register = () => {
                           />
                         ) : (
                           <div className="text-center p-4">
-                            <Icons.Camera />
+                            <Icons.Camera className="mx-auto text-center" />
                             <p className="text-gray-400 text-[9px] uppercase tracking-widest font-mono font-bold mt-2">
                               Secure Photo Attach
                             </p>
@@ -271,7 +272,7 @@ const Register = () => {
                       className="hidden"
                     />
                     <p className="mt-4 text-gray-500 text-[9px] uppercase font-mono tracking-widest font-black">
-                      <span className="text-red-600">⚠</span> Biometric scan required
+                      <span className="text-red-600">⚠</span> Face should be visible
                     </p>
                   </div>
 
@@ -287,7 +288,7 @@ const Register = () => {
                         name="name"
                         value={formData.name}
                         onChange={handleInputChange}
-                        placeholder="Jaydeep"
+                        placeholder="Jaydeep Nadkarni"
                         className="w-full px-4 py-2 bg-white/50 border border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600/20 font-mono text-sm"
                       />
                     </div>
@@ -295,7 +296,7 @@ const Register = () => {
                     {/* Contact Number */}
                     <div className="space-y-2">
                       <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-widest flex items-center gap-2">
-                        Contact Freq
+                        Contact
                       </label>
                       <input
                         type="tel"
@@ -317,7 +318,7 @@ const Register = () => {
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
-                        placeholder="agent@agency.com"
+                        placeholder="agent@gmail.com"
                         className="w-full px-4 py-2 bg-white/50 border border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600/20 font-mono text-sm"
                       />
                     </div>
@@ -325,44 +326,59 @@ const Register = () => {
                     {/* USN */}
                     <div className="space-y-2">
                       <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-widest flex items-center gap-2">
-                        Agent USN
+                        USN
                       </label>
                       <input
                         type="text"
                         name="usn"
                         value={formData.usn}
                         onChange={handleInputChange}
-                        placeholder="02FE24BCSXXX"
+                        placeholder="Your USN/SRN"
                         className="w-full px-4 py-2 bg-white/50 border border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600/20 font-mono text-sm"
                       />
                     </div>
                   </div>
 
                   {/* College Dropdown */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-widest flex items-center gap-2">
-                      Affiliated Institution
-                    </label>
-                    <select
-                      name="college"
-                      value={formData.college}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 bg-white/50 border border-gray-400 text-gray-900 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600/20 font-mono text-sm cursor-pointer"
-                    >
-                      <option value="">Select HQ</option>
-                      {colleges.map((college, idx) => (
-                        <option key={idx} value={college}>
-                          {college}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                <div className="space-y-2">
+                <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-widest flex items-center gap-2">
+                    Affiliated Institution
+                </label>
+                
+                <select
+                    name="college"
+                    value={formData.college}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 bg-white/50 border border-gray-400 text-gray-900 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600/20 font-mono text-sm cursor-pointer"
+                >
+                    <option value="">Select Institution</option>
+                    {colleges.map((college, idx) => (
+                    <option key={idx} value={college}>
+                        {college}
+                    </option>
+                    ))}
+                    <option value="Other">Other</option>
+                </select>
+
+                {/* Only show and bind to otherCollege if "Other" is selected */}
+                {formData.college === 'Other' && (
+                    <input
+                    type="text"
+                    name="otherCollege" // Changed name
+                    value={formData.otherCollege || ''} // Uses a separate value
+                    onChange={handleInputChange}
+                    placeholder="Enter Institution Name"
+                    className="w-full mt-2 px-4 py-2 bg-white/50 border border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600/20 font-mono text-sm"
+                    autoFocus
+                    />
+                )}
+                </div>  
 
                   {/* Passwords */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
                     <div className="space-y-2">
                       <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-widest flex items-center gap-2">
-                        Encryption Pass
+                        Create a password
                       </label>
                       <input
                         type="password"
@@ -377,7 +393,7 @@ const Register = () => {
                     {/* Confirm Password */}
                     <div className="space-y-2">
                       <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-widest flex items-center gap-2">
-                        Confirm Pass
+                        Confirm Password
                       </label>
                       <input
                         type="password"
@@ -397,7 +413,7 @@ const Register = () => {
                       animate={{ opacity: 1 }}
                       className="p-3 bg-red-900 text-white text-[10px] font-mono uppercase tracking-wider border-l-4 border-red-500"
                     >
-                      <span className="font-bold mr-2">PROTOCOL ERROR:</span> {error}
+                      <span className="font-bold mr-2">ERROR:</span> {error}
                     </motion.div>
                   )}
 
@@ -410,7 +426,7 @@ const Register = () => {
                       disabled={loading}
                       className="w-full max-w-sm px-6 py-4 bg-gray-900 text-white font-black uppercase tracking-[0.2em] text-xs hover:bg-red-800 disabled:opacity-50 transition-all shadow-[6px_6px_0px_#444] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5"
                     >
-                      {loading ? '🔐 SECURING IDENTITY...' : 'ESTABLISH AGENT IDENTITY'}
+                      {loading ? 'SECURING IDENTITY...' : 'REGISTER'}
                     </motion.button>
 
                     <div className="flex flex-col items-center gap-2">
@@ -419,7 +435,7 @@ const Register = () => {
                         to="/login"
                         className="text-xs text-gray-900 font-black uppercase tracking-widest border-b border-gray-900 pb-0.5 hover:text-red-700 hover:border-red-700 transition-all"
                       >
-                        Access Terminal
+                        Login
                       </Link>
                     </div>
                   </div>
