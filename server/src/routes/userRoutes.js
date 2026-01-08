@@ -25,7 +25,4 @@ router.post("/reset-password", resetPassword);
 // 🔐 Profile
 router.get("/profile", protect, getProfile);
 
-//payment
-router.put("/update-payment", updatePaymentStatus);
-
 export default router;
