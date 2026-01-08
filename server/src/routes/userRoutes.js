@@ -7,7 +7,6 @@ import {
   requestPasswordReset,
   resetPassword,
   getProfile,
-  updatePaymentStatus,
 } from "../controllers/userController.js";
 import { protect } from "../middlewares/authMiddleware.js";
 
@@ -24,8 +23,5 @@ router.post("/reset-password", resetPassword);
 
 // 🔐 Profile
 router.get("/profile", protect, getProfile);
-
-//payment
-router.put("/update-payment", updatePaymentStatus);
 
 export default router;

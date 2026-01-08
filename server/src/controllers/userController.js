@@ -390,30 +390,3 @@ export const getProfile = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
-
-// ================= UPDATE PAYMENT STATUS =================
-export const updatePaymentStatus = async (req, res) => {
-  try {
-    const { email, status } = req.body; // status = true or false
-
-    if (!email || typeof status !== "boolean") {
-      return res
-        .status(400)
-        .json({ message: "Email and valid status are required." });
-    }
-
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: "User not found." });
-
-    user.payment = status;
-    await user.save();
-
-    res.json({
-      message: `Payment status updated to ${status ? "Paid" : "Unpaid"}.`,
-      payment: user.payment,
-    });
-  } catch (error) {
-    console.error("Error in updatePaymentStatus:", error.message);
-    res.status(500).json({ message: "Server error." });
-  }
-};
