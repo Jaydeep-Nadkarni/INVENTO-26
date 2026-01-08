@@ -12,76 +12,140 @@ import introAudio from '../assets/UI/intro.mp3'
 import openSound from '../assets/audios/briefcase-open2.mp3'
 import closeSound from '../assets/audios/briefcase-open.mp3'
 
-// Track session status globally using sessionStorage to persist across navigations
-const getSessionPlayed = () => sessionStorage.getItem('hasPlayedIntro') === 'true';
+// Detect if the page was refreshed using Navigation Timing API
+const isPageRefresh = () => {
+  const navEntries = performance.getEntriesByType('navigation');
+  if (navEntries.length > 0) {
+    return navEntries[0].type === 'reload';
+  }
+  // Fallback for older browsers
+  return window.performance && window.performance.navigation && window.performance.navigation.type === 1;
+};
+
+let isInitialVisit = true;
 
 const Home = () => {
   const navigate = useNavigate()
-  const [hasClicked, setHasClicked] = useState(getSessionPlayed())
   const [isLoading, setIsLoading] = useState(false)
   const [showIntro, setShowIntro] = useState(false)
+  const [showBlackout, setShowBlackout] = useState(false)
   const [isBriefcaseOpen, setIsBriefcaseOpen] = useState(false)
   const [showCallout, setShowCallout] = useState(false)
+  const [isMuted, setIsMuted] = useState(true)
   
   const hoverTimerRef = useRef(null)
   const videoRef = useRef(null)
   const audioRef = useRef(null)
-
-  // Reset session flag in sessionStorage on every fresh mount if desired
-  // but the user said "if session=1 load it", implying if it's session 1, load.
-  // We'll treat the current mount as "session 1" if hasn't clicked.
+  const scrollPositionRef = useRef(0)
 
   const playSound = (audioFile) => {
     const audio = new Audio(audioFile)
     audio.play().catch(e => console.log("Audio play failed:", e))
   }
 
-  useEffect(() => {
-    // Check if session=1 is in URL or sessionStorage
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('session') === '1' && !getSessionPlayed()) {
-      handleStartClick();
-    }
-    
-    // Preload critical assets for Home page
-    const img = new Image()
-    img.src = bgImage
-  }, [])
+  // Scroll lock utilities
+  const lockScroll = () => {
+    scrollPositionRef.current = window.pageYOffset;
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollPositionRef.current}px`;
+    document.body.style.width = '100%';
+    document.documentElement.style.overflow = 'hidden';
+  };
 
-  const handleStartClick = () => {
-    setHasClicked(true)
-    setIsLoading(true)
-    
-    // CRITICAL: Unlocking the audio context with a "warm-up" play.
-    // This captures the user gesture and ensures audio can play automatically 
-    // when the intro video starts without needing another click.
-    if (audioRef.current) {
-      audioRef.current.volume = 0;
-      audioRef.current.play()
-        .then(() => {
-          audioRef.current.pause();
-          audioRef.current.currentTime = 0;
-          audioRef.current.volume = 1;
-        })
-        .catch(e => console.log("Audio unlock failed on gesture:", e));
+  const unlockScroll = () => {
+    document.body.style.removeProperty('overflow');
+    document.body.style.removeProperty('position');
+    document.body.style.removeProperty('top');
+    document.body.style.removeProperty('width');
+    document.documentElement.style.removeProperty('overflow');
+    window.scrollTo(0, scrollPositionRef.current);
+  };
+
+  // Main initialization effect
+  useEffect(() => {
+    // Trigger intro if it's a page refresh OR the very first time the app is loading (new tab/new session)
+    if (isPageRefresh() || isInitialVisit) {
+      isInitialVisit = false; // Mark as visited so it doesn't replay on SPA navigation
+      
+      // Lock scroll immediately
+      lockScroll();
+      
+      // Start loading sequence
+      setIsLoading(true);
+      
+      // Preload critical assets
+      const img = new Image();
+      img.src = bgImage;
+      
+      // Preload video
+      if (videoRef.current) {
+        videoRef.current.load();
+      }
     }
-  }
+    
+    return () => {
+      // Cleanup on unmount
+      if (isLoading || showIntro) {
+        unlockScroll();
+      }
+    };
+  }, [])
 
   const handleLoaderComplete = () => {
     setIsLoading(false)
     setShowIntro(true)
+    
+    // Attempt playback as soon as loader ends
+    if (audioRef.current) {
+      audioRef.current.volume = 1; // Default to full volume
+      setIsMuted(false);
+      audioRef.current.play().catch(e => {
+        console.log("Autoplay blocked, switching to muted mode");
+        audioRef.current.volume = 0;
+        setIsMuted(true);
+        audioRef.current.play(); // Play muted is always allowed
+      });
+    }
   }
 
   const handleVideoEnd = () => {
-    sessionStorage.setItem('hasPlayedIntro', 'true');
+    sessionStorage.setItem('introPlayed', 'true');
     setShowIntro(false)
+    setShowBlackout(true)
+    
+    // Fade out audio
     fadeAudioOut()
+    
+    // After blackout transition, unlock scroll
+    setTimeout(() => {
+      setShowBlackout(false)
+      unlockScroll()
+    }, 1000)
   }
 
   const skipIntro = () => {
-    sessionStorage.setItem('hasPlayedIntro', 'true');
-    setShowIntro(false)
-    fadeAudioOut()
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
+    handleVideoEnd();
+  }
+
+  const toggleMute = () => {
+    if (audioRef.current) {
+      if (isMuted) {
+        // Ensure audio is playing and audible
+        audioRef.current.muted = false;
+        audioRef.current.volume = 1;
+        setIsMuted(false);
+        // Sometimes play() is needed again to "resume" sound if it was physically blocked
+        audioRef.current.play().catch(e => console.log("Unmute play failed:", e));
+      } else {
+        audioRef.current.volume = 0;
+        audioRef.current.muted = true;
+        setIsMuted(true);
+      }
+    }
   }
 
   const fadeAudioOut = () => {
@@ -107,9 +171,8 @@ const Home = () => {
     if (showIntro && videoRef.current && audioRef.current) {
       const playIntro = async () => {
         try {
-          audioRef.current.volume = 1; // Ensure volume is up
-          await audioRef.current.play();
           await videoRef.current.play();
+          // audio is handled in handleLoaderComplete now
         } catch (error) {
           console.error("Playback failed:", error);
         }
@@ -170,43 +233,6 @@ const Home = () => {
       <audio ref={audioRef} src={introAudio} preload="auto" />
       
       <AnimatePresence mode="wait">
-        {!hasClicked && (
-          <motion.div 
-            key="trigger"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-500 bg-[#f5f5f5] flex flex-col items-center justify-center font-mono overflow-hidden"
-          >
-            <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
-              style={{ backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)', backgroundSize: '40px 40px' }}>
-            </div>
-            
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col items-center space-y-8 z-10"
-            >
-              <div className="text-red-700 text-sm tracking-[0.5em] font-bold uppercase animate-pulse">
-                [ System Authentication Required ]
-              </div>
-              
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleStartClick}
-                className="bg-red-700 text-white px-12 py-4 text-sm tracking-[0.3em] font-black uppercase hover:bg-black transition-colors duration-300 shadow-2xl relative group"
-              >
-                <span className="relative z-10">Initialize Session</span>
-                <div className="absolute inset-0 bg-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></div>
-              </motion.button>
-
-              <div className="text-gray-400 text-[10px] tracking-widest mt-4">
-                Click to Authorize Classified Access
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-
         {isLoading && (
           <Loader key="loader" onComplete={handleLoaderComplete} />
         )}
@@ -217,35 +243,70 @@ const Home = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-400 bg-black cursor-pointer"
-            onClick={() => {
-              videoRef.current?.play();
-              audioRef.current?.play();
-            }}
+            transition={{ duration: 0.5 }}
+            className="fixed inset-0 z-9999 bg-black cursor-pointer"
+            onClick={() => isMuted && toggleMute()}
           >
             <video
               ref={videoRef}
               autoPlay
               muted
               onEnded={handleVideoEnd}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover pointer-events-none"
               playsInline
               preload="auto"
             >
               <source src={introVideo} type="video/mp4" />
             </video>
             
+            {/* Unmute button */}
             <button 
-              onClick={skipIntro}
-              className="absolute bottom-10 right-10 z-410 text-white/50 hover:text-white font-mono text-xs tracking-widest uppercase border border-white/20 px-4 py-2 bg-black/50 backdrop-blur-sm transition-all"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleMute();
+              }}
+              className="absolute top-10 right-10 z-10000 text-white/70 hover:text-white font-mono text-sm tracking-widest uppercase border border-white/30 px-4 py-2 bg-black/50 backdrop-blur-sm transition-all flex items-center gap-2"
+            >
+              {isMuted ? '🔇 Unmute' : '🔊 Mute'}
+            </button>
+            
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                skipIntro();
+              }}
+              className="absolute bottom-10 right-10 z-10000 text-white/50 hover:text-white font-mono text-xs tracking-widest uppercase border border-white/20 px-4 py-2 bg-black/50 backdrop-blur-sm transition-all"
             >
               Skip Intro [ESC]
             </button>
           </motion.div>
         )}
+        
+        {showBlackout && (
+          <motion.div
+            key="blackout"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1 }}
+            className="fixed inset-0 z-9998 bg-black pointer-events-none"
+          />
+        )}
       </AnimatePresence>
 
-      <div className={`w-full bg-[#0a0a0a] relative overflow-x-hidden selection:bg-red-700/30 transition-opacity duration-1000 ${!hasClicked || isLoading || showIntro ? 'opacity-0' : 'opacity-100'}`}>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ 
+          opacity: isLoading || showIntro || showBlackout ? 0 : 1,
+          y: isLoading || showIntro || showBlackout ? 20 : 0
+        }}
+        transition={{ 
+          duration: 1.2, 
+          ease: "easeOut",
+          delay: showBlackout ? 0.2 : 0 
+        }}
+        className="w-full bg-[#0a0a0a] relative selection:bg-red-700/30"
+      >
         {/* Fixed Background with subtle blur */}
       <div
         className='fixed inset-0 bg-cover bg-center bg-no-repeat z-0'
@@ -326,7 +387,7 @@ const Home = () => {
       {!isBriefcaseOpen && (
         <div className="h-[20vh] relative z-10 bg-linear-to-t from-black via-black/20 to-transparent"></div>
       )}
-    </div>
+    </motion.div>
     </>
   )
 }

@@ -20,23 +20,23 @@ const PublicRoute = ({ children }) => {
   return user ? <Navigate to="/profile" replace /> : children
 }
 
-// Global flag to track if this is the first mount of the application (refresh)
-let isInitialEntry = true;
-
 const NavigationManager = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    // If we've just reloaded and are not on the home page, force navigate back to home
-    // to ensure the user goes through the system authentication/intro sequence.
-    if (isInitialEntry) {
-      isInitialEntry = false;
-      if (location.pathname !== '/') {
+    // Only manage navigation on non-home routes
+    // Let Home.jsx handle its own refresh detection
+    if (location.pathname !== '/') {
+      // Clear intro flag when navigating away from home
+      // This ensures refresh detection works properly next time
+      const navEntries = performance.getEntriesByType('navigation');
+      if (navEntries.length > 0 && navEntries[0].type === 'reload') {
+        // If user refreshes on a sub-page, redirect to home
         navigate('/', { replace: true });
       }
     }
-  }, [navigate, location.pathname]);
+  }, [location.pathname, navigate]);
 
   return null;
 };
