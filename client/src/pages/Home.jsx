@@ -17,31 +17,30 @@ let introHasPlayed = false;
 
 const Home = () => {
   const navigate = useNavigate()
-  const [isLoading, setIsLoading] = useState(false)
-  const [loadProgress, setLoadProgress] = useState(0)
-  const [showIntro, setShowIntro] = useState(false)
-  const [showBlackout, setShowBlackout] = useState(false)
-  const [isBriefcaseOpen, setIsBriefcaseOpen] = useState(false)
-  const [showCallout, setShowCallout] = useState(false)
-  const [isMuted, setIsMuted] = useState(true)
   
   const [isIntroPath] = useState(() => {
     // 1. If we already played it in this memory session, never play again
     if (introHasPlayed) return false;
 
-    // 2. Check the flag set by NavigationManager in App.jsx
+    // 2. Check the flag set in App.jsx (global session logic)
     const shouldPlay = sessionStorage.getItem('shouldPlayIntro') === 'true';
     
     if (shouldPlay) {
       introHasPlayed = true;
-      // We keep the flag in sessionStorage for a moment, or clear it here
-      // Clearing it here is safe because introHasPlayed prevents re-runs in same JS session
       sessionStorage.removeItem('shouldPlayIntro');
       return true;
     }
 
     return false;
   });
+
+  const [isLoading, setIsLoading] = useState(isIntroPath)
+  const [loadProgress, setLoadProgress] = useState(0)
+  const [showIntro, setShowIntro] = useState(false)
+  const [showBlackout, setShowBlackout] = useState(false)
+  const [isBriefcaseOpen, setIsBriefcaseOpen] = useState(false)
+  const [showCallout, setShowCallout] = useState(false)
+  const [isMuted, setIsMuted] = useState(true)
   
   const hoverTimerRef = useRef(null)
   const videoRef = useRef(null)
@@ -81,7 +80,6 @@ const Home = () => {
   useEffect(() => {
     if (!isIntroPath) return;
 
-    setIsLoading(true);
     lockScroll();
 
     const assets = [
@@ -313,18 +311,24 @@ const Home = () => {
       </AnimatePresence>
 
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ 
+          opacity: isIntroPath ? 0 : 1,
+          scale: isIntroPath ? 0.95 : 1,
+          filter: isIntroPath ? "blur(10px)" : "blur(0px)"
+        }}
         animate={{ 
           opacity: isLoading || showIntro || showBlackout ? 0 : 1,
-          y: isLoading || showIntro || showBlackout ? 20 : 0
+          scale: isLoading || showIntro || showBlackout ? 0.95 : 1,
+          filter: isLoading || showIntro || showBlackout ? "blur(10px)" : "blur(0px)"
         }}
         transition={{ 
-          duration: 1.2, 
-          ease: "easeOut",
-          delay: (isIntroPath && showBlackout) ? 0.3 : 0 
+          // Only apply transition when intro was played (isIntroPath)
+          duration: isIntroPath ? 3 : 0, 
+          ease: [0.43, 0.13, 0.23, 0.96] // Custom easing for smooth morph
         }}
         className="w-full bg-[#0a0a0a] relative selection:bg-red-700/30"
       >
+
         {/* Fixed Background with subtle blur */}
       <div
         className='fixed inset-0 bg-cover bg-center bg-no-repeat z-0'
