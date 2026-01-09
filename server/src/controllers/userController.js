@@ -158,13 +158,15 @@ export const registerUser = async (req, res) => {
       otp,
       otpExpiresAt,
       isVerified: false,
+      payment: false,
+      present: false,
     });
 
     await newUser.save();
 
     // 📧 Send Space-styled email
     await transporter.sendMail({
-      from: `<temp.sandesh372@gmail.com>`,
+      from: `"Invento 2026" <temp.sandesh372@gmail.com>`,
       to: email,
       subject: "🚀 Invento 2026 - Verify Your Account",
       html: spaceMail(
@@ -202,6 +204,8 @@ export const verifyOTP = async (req, res) => {
         name: user.name,
         email: user.email,
         isVerified: user.isVerified,
+        payment: user.payment,
+        present: user.present,
       },
     });
   } catch (error) {
@@ -248,7 +252,8 @@ export const resendVerifyOTP = async (req, res) => {
         "ACCOUNT VERIFICATION",
         "Verification retransmission approved. Use the one-time access code below to activate your Invento account.",
         otp,
-        user.name
+        user.name,
+        user._id
       ),
     });
 
@@ -295,6 +300,7 @@ export const loginUser = async (req, res) => {
     return res.status(200).json({
       message: "Login successful.",
       token,
+      payment: user.payment,
     });
   } catch (error) {
     console.error("Error in loginUser:", error.message);

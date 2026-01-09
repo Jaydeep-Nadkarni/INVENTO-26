@@ -1,0 +1,62 @@
+[
+  {
+    "_id": "evt001",
+    "name": "Mr. & Miss Invento",
+    "type": "solo",
+    "club": ["HR & Literary"],
+    "price": 150,
+    "minTeamSize": 1,
+    "maxTeamSize": 1,
+    "eventCode": "MRMISSINV001",
+    "participants": [],
+    "teams": []
+  },
+  {
+    "_id": "evt002",
+    "name": "Mockpress",
+    "type": "solo",
+    "club": ["HR & Literary"],
+    "price": 100,
+    "minTeamSize": 1,
+    "maxTeamSize": 1,
+    "eventCode": "MOCK002",
+    "participants": [],
+    "teams": []
+  },
+  {
+    "_id": "evt003",
+    "name": "Secrets On trial",
+    "type": "solo",
+    "club": ["HR & Literary"],
+    "price": 120,
+    "minTeamSize": 1,
+    "maxTeamSize": 1,
+    "eventCode": "SECRETS003",
+    "participants": [],
+    "teams": []
+  },
+  {
+    "_id": "evt004",
+    "name": "Decode The Unknown (Quiz)",
+    "type": "team",
+    "club": ["HR & Literary"],
+    "price": 200,
+    "minTeamSize": 2,
+    "maxTeamSize": 2,
+    "eventCode": "DECODE004",
+    "participants": [],
+    "teams": []
+  },
+  {
+    "_id": "evt005",
+    "name": "The Tenent Protocol (Debate)",
+    "type": "team",
+    "club": ["HR & Literary"],
+    "price": 250,
+    "minTeamSize": 2,
+    "maxTeamSize": 2,
+    "eventCode": "DEBATE005",
+    "participants": [],
+    "teams": []
+  }
+]
