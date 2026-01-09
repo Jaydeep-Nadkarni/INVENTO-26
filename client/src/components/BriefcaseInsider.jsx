@@ -16,6 +16,21 @@ import { useNavigate } from 'react-router-dom'
 const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
     const navigate = useNavigate()
     const [user, setUser] = useState(null)
+    const [isMobile, setIsMobile] = useState(false)
+
+    // Detect mobile
+    useEffect(() => {
+        const isMobileDevice = () => {
+            if (typeof window === 'undefined') return false
+            return window.matchMedia('(max-width: 767px)').matches
+        }
+        setIsMobile(isMobileDevice())
+        
+        const mediaQuery = window.matchMedia('(max-width: 767px)')
+        const handleChange = (e) => setIsMobile(e.matches)
+        mediaQuery.addListener(handleChange)
+        return () => mediaQuery.removeListener(handleChange)
+    }, [])
 
     // Load user data whenever the briefcase is opened or component mounts
     useEffect(() => {
@@ -178,25 +193,151 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
     return (
         <AnimatePresence>
             {isOpen && (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-100 bg-black/90 backdrop-blur-md flex items-center justify-center overflow-hidden"
-                    onClick={onClose}
-                >
-                    {/* Briefcase Container */}
-                    <motion.div
-                        initial={{ scale: 0.95, opacity: 0, y: 20 }}
-                        animate={{ scale: 1, opacity: 1, y: 0 }}
-                        exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                        transition={{ type: "spring", damping: 20, stiffness: 100 }}
-                        className="relative w-full max-w-full h-screen bg-[#0F0F0F] rounded-xl shadow-2xl overflow-hidden border border-[#333]"
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                            boxShadow: 'inset 0 0 200px rgba(0,0,0,1), 0 50px 100px -20px rgba(0,0,0,0.7)'
-                        }}
-                    >
+                <>
+                    {/* MOBILE VIEW: Cards only */}
+                    {isMobile && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-100 bg-black flex items-center justify-center overflow-hidden"
+                            onClick={onClose}
+                        >
+                            {/* Mobile Cards Container */}
+                            <motion.div
+                                initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                                transition={{ type: "spring", damping: 20, stiffness: 100 }}
+                                className="relative w-full h-screen bg-black flex items-center justify-center overflow-hidden"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                {/* Mobile: Show only cards in center */}
+                                <div className="absolute inset-0 flex items-center justify-center" style={{ perspective: '1000px' }}>
+                                    <div className="relative w-56 h-80" style={{ perspective: '1000px' }}>
+                                        {/* Cards Stack */}
+                                        {cards.slice().reverse().map((card, index) => {
+                                            const isTop = index === cards.length - 1
+                                            const isSelected = selectedCardId === card.id
+
+                                            return (
+                                                <Card
+                                                    key={card.id}
+                                                    data={card}
+                                                    index={index}
+                                                    total={cards.length}
+                                                    isTop={isTop}
+                                                    isSelected={isSelected}
+                                                    onSwipe={moveCardToBack}
+                                                    onClick={() => handleCardClick(card.id)}
+                                                    onClose={handleCloseCard}
+                                                />
+                                            )
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Mobile close button */}
+                                <motion.button
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="absolute top-6 right-6 z-1001 text-white text-2xl font-bold hover:text-red-500 transition-colors"
+                                    onClick={onClose}
+                                >
+                                    ✕
+                                </motion.button>
+
+                                {/* Mobile status text */}
+                                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-60 pointer-events-none w-full flex justify-center px-4">
+                                    <AnimatePresence mode="wait">
+                                        <motion.div
+                                            key={statusText}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                                            className="px-4 py-2 text-center"
+                                        >
+                                            <p className="text-white font-mono text-xs tracking-[0.3em] uppercase whitespace-normal">
+                                                <span className="opacity-50 mr-2">≫</span>
+                                                {statusText}
+                                            </p>
+                                        </motion.div>
+                                    </AnimatePresence>
+                                </div>
+
+                                {/* Mobile expanded card overlay */}
+                                <AnimatePresence>
+                                    {selectedCardId && (
+                                        <>
+                                            <motion.div
+                                                layoutId={`card-${selectedCardId}`}
+                                                initial={{ scale: 1, zIndex: 100 }}
+                                                animate={{ scale: 1.5, x: 0, y: 0, rotate: 0, zIndex: 1000 }}
+                                                className="fixed inset-0 m-auto w-58 h-84 z-1000 bg-transparent"
+                                            >
+                                                <div className="relative w-full h-full bg-[#ebe8e3] rounded-lg shadow-2xl flex flex-col p-4 cursor-default transform-gpu">
+                                                    <TextureOverlay opacity={0.5} />
+                                                    <div className="w-full aspect-square bg-[#0a0a0a] p-1 shadow-inner relative overflow-hidden flex items-center justify-center">
+                                                        <div className={`w-full h-full ${cards.find(c => c.id === selectedCardId)?.color} opacity-80`}></div>
+                                                    </div>
+                                                    <div className="mt-6 text-center flex-1 flex flex-col items-center justify-center">
+                                                        <h2 className="font-serif font-black text-4xl text-gray-800 tracking-tighter uppercase mix-blend-multiply leading-none">
+                                                            {cards.find(c => c.id === selectedCardId)?.name}
+                                                        </h2>
+                                                        <div className="mt-6">
+                                                            <button
+                                                                onClick={() => {
+                                                                    const club = clubsData.find(c => c.id === selectedCardId)
+                                                                    if (club) {
+                                                                        navigate(`/${club.slug}`)
+                                                                    } else {
+                                                                        navigate('/events')
+                                                                    }
+                                                                }}
+                                                                className="px-6 py-2 text-sm bg-red-700 text-white font-bold rounded hover:bg-red-800 transition-colors"
+                                                            >
+                                                                OPEN FILE
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                            <motion.div
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                                className="fixed inset-0 z-999 bg-black/40"
+                                                onClick={handleCloseCard}
+                                            />
+                                        </>
+                                    )}
+                                </AnimatePresence>
+                            </motion.div>
+                        </motion.div>
+                    )}
+
+                    {/* DESKTOP VIEW: Full briefcase */}
+                    {!isMobile && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-100 bg-black/90 backdrop-blur-md flex items-center justify-center overflow-hidden"
+                            onClick={onClose}
+                        >
+                            {/* Briefcase Container */}
+                            <motion.div
+                                initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                                transition={{ type: "spring", damping: 20, stiffness: 100 }}
+                                className="relative w-full max-w-full h-screen bg-[#0F0F0F] rounded-xl shadow-2xl overflow-hidden border border-[#333]"
+                                onClick={(e) => e.stopPropagation()}
+                                style={{
+                                    boxShadow: 'inset 0 0 200px rgba(0,0,0,1), 0 50px 100px -20px rgba(0,0,0,0.7)'
+                                }}
+                            >
                         {/* Briefcase Rim/Walls */}
                         <div className="absolute inset-x-0 top-0 h-4 bg-[#1a1a1a] border-b border-[#333] z-50"></div>
                         <div className="absolute inset-x-0 bottom-0 h-4 bg-[#1a1a1a] border-t border-[#333] z-50"></div>
@@ -253,7 +394,7 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                                                 </div>
                                                 <div className="mt-0.5 opacity-60 scale-75">
                                                     <div className="w-8 h-8 rounded-full border border-red-800 flex items-center justify-center -rotate-12">
-                                                        <span className="text-[4px] font-black text-red-800 text-center leading-[4px]">Verified</span>
+                                                        <span className="text-[4px] font-black text-red-800 text-center leading-1">Verified</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -305,7 +446,7 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                                             </p>
                                         </div>
 
-                                        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none"></div>
+                                        <div className="absolute inset-0 bg-linear-to-tr from-transparent via-white/5 to-transparent pointer-events-none"></div>
                                     </motion.div>
                                 </div>
 
@@ -344,9 +485,9 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                                         style={{ rotate: '-3deg', boxShadow: '5px 10px 25px rgba(0,0,0,0.4)' }}
                                     >
                                         <TextureOverlay opacity={0.6} />
-                                        <div className="absolute inset-0 border-[2px] border-[#c4b090] m-3"></div>
+                                        <div className="absolute inset-0 border-2 border-[#c4b090] m-3"></div>
                                         {/* Envelope Flap visual */}
-                                        <div className="absolute top-0 right-0 border-t-[60px] border-r-[60px] border-t-[#ebe1d1] border-r-[#b8aa8e] shadow-sm transform rotate-90"></div>
+                                        <div className="absolute top-0 right-0 border-t-60 border-r-60 border-t-[#ebe1d1] border-r-[#b8aa8e] shadow-sm transform rotate-90"></div>
 
                                         <div className="flex flex-col items-center gap-2 transform -rotate-2">
                                             <span className="font-serif text-[#8f2727] font-bold text-2xl tracking-[0.2em] uppercase mix-blend-multiply opacity-90 border-2 border-[#8f2727] px-4 py-2 rounded-sm"
@@ -361,7 +502,7 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
 
                             {/* --- CENTER LEFT: Police Radio --- */}
                             <div
-                                className="absolute left-[27%] bottom-[18%] w-60 md:w-[200px] z-20 pointer-events-none"
+                                className="absolute left-[27%] bottom-[18%] w-60 md:w-50 z-20 pointer-events-none"
                             >
                                 <motion.div
                                     className="relative w-full h-full pointer-events-auto"
@@ -440,7 +581,7 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                         </div>
 
                         {/* --- STATUS FOOTER --- */}
-                        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[60] pointer-events-none w-full flex justify-center">
+                        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-60 pointer-events-none w-full flex justify-center">
                             <AnimatePresence mode="wait">
                                 <motion.div
                                     key={statusText}
@@ -458,7 +599,7 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                             </AnimatePresence>
                         </div>
 
-                        <div className="absolute top-8 left-1/2 -translate-x-1/2 z-[60] pointer-events-none w-full flex justify-center">
+                        <div className="absolute top-8 left-1/2 -translate-x-1/2 z-60 pointer-events-none w-full flex justify-center">
                             <AnimatePresence mode="wait">
                                 <motion.div
                                     initial={{ opacity: 0, y: 10 }}
@@ -485,18 +626,18 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                                         layoutId={`card-${selectedCardId}`}
                                         initial={{ scale: 1, zIndex: 100 }}
                                         animate={{ scale: 1.5, x: 0, y: 0, rotate: 0, zIndex: 1000 }}
-                                        className="fixed inset-0 m-auto w-64 h-96 z-[1000]"
+                                        className="fixed inset-0 m-auto w-48 h-68 md:w-64 md:h-96 z-1000 bg-transparent"
                                     >
-                                        <div className="relative w-full h-full bg-[#ebe8e3] rounded-lg shadow-2xl flex flex-col p-4 cursor-default transform-gpu">
+                                        <div className="relative w-full h-full bg-[#ebe8e3] rounded-lg shadow-2xl flex flex-col p-3 md:p-4 cursor-default transform-gpu">
                                             <TextureOverlay opacity={0.5} />
                                             <div className="w-full aspect-square bg-[#0a0a0a] p-1 shadow-inner relative overflow-hidden flex items-center justify-center">
                                                 <div className={`w-full h-full ${cards.find(c => c.id === selectedCardId)?.color} opacity-80`}></div>
                                             </div>
-                                            <div className="mt-6 text-center">
-                                                <h2 className="font-serif font-black text-4xl text-gray-800 tracking-tighter uppercase mix-blend-multiply leading-none">
+                                            <div className="mt-4 md:mt-6 text-center">
+                                                <h2 className="font-serif font-black text-2xl md:text-4xl text-gray-800 tracking-tighter uppercase mix-blend-multiply leading-none">
                                                     {cards.find(c => c.id === selectedCardId)?.name}
                                                 </h2>
-                                                <div className="mt-4">
+                                                <div className="mt-3 md:mt-4">
                                                     <button
                                                         onClick={() => {
                                                             const club = clubsData.find(c => c.id === selectedCardId)
@@ -506,7 +647,7 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                                                                 navigate('/events')
                                                             }
                                                         }}
-                                                        className="px-6 py-2 bg-gray-900 text-white font-mono text-xs uppercase tracking-widest hover:bg-red-700 transition-colors"
+                                                        className="px-4 md:px-6 py-2 bg-gray-900 text-white font-mono text-xs uppercase tracking-widest hover:bg-red-700 transition-colors"
                                                     >
                                                         OPEN
                                                     </button>
@@ -518,7 +659,7 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 0.6 }}
                                         exit={{ opacity: 0 }}
-                                        className="fixed inset-0 bg-black z-[900] backdrop-blur-sm"
+                                        className="fixed inset-0 bg-black z-900 backdrop-blur-sm"
                                         onClick={() => handleCloseCard({ stopPropagation: () => { } })}
                                     />
                                 </>
@@ -539,7 +680,7 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                                         layoutId="id-card"
                                         initial={{ scale: 1, zIndex: 100 }}
                                         animate={{ scale: 1.5, x: 0, y: 0, rotate: 0, zIndex: 1000 }}
-                                        className="fixed inset-0 m-auto w-[260px] h-[160px] z-[1000]"
+                                        className="fixed inset-0 m-auto w-65 h-40 z-1000"
                                     >
                                         <div className="relative w-full h-full bg-[#f4f7f9] rounded shadow-2xl overflow-hidden flex flex-col border-t-[6px] border-blue-900 cursor-default">
                                             <TextureOverlay opacity={0.12} />
@@ -594,9 +735,9 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                                                             <div className="text-[6px] text-gray-500 font-mono font-bold uppercase">Exp: 17 MAR 2026</div>
                                                         </div>
                                                         <div className="flex flex-col items-end opacity-40">
-                                                            <div className="w-12 h-4 bg-black/80 flex gap-[1px] p-[1px]">
+                                                            <div className="w-12 h-4 bg-black/80 flex gap-px p-px">
                                                                 {[...Array(15)].map((_, i) => (
-                                                                    <div key={i} className={`h-full bg-white ${Math.random() > 0.5 ? 'w-[1px]' : 'w-[2px]'}`} />
+                                                                    <div key={i} className={`h-full bg-white ${Math.random() > 0.5 ? 'w-px' : 'w-0.5'}`} />
                                                                 ))}
                                                             </div>
                                                         </div>
@@ -616,7 +757,7 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 0.6 }}
                                         exit={{ opacity: 0 }}
-                                        className="fixed inset-0 bg-black z-[900] backdrop-blur-sm"
+                                        className="fixed inset-0 bg-black z-900 backdrop-blur-sm"
                                         onClick={() => setIsIDExpanded(false)}
                                     />
                                 </>
@@ -629,7 +770,7 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                                         initial={{ scale: 1, zIndex: 100 }}
                                         animate={{ scale: 1, x: 0, y: 0, rotate: 0, zIndex: 1000 }}
                                         exit={{ scale: 0.8, opacity: 0 }}
-                                        className="fixed inset-0 m-auto w-[90%] max-w-[500px] h-[85vh] z-[1000]"
+                                        className="fixed inset-0 m-auto w-[90%] max-w-125 h-[85vh] z-1000"
                                     >
                                         <div className="relative w-full h-full bg-[#f4f1ea] shadow-2xl flex flex-col p-8 md:p-12 overflow-hidden border border-[#d1ccbf]">
                                             <TextureOverlay opacity={0.4} />
@@ -689,14 +830,14 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                                             </div>
 
                                             {/* Texture Overlay for realistic paper */}
-                                            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/[0.02] to-black/[0.05] pointer-events-none"></div>
+                                            <div className="absolute inset-0 bg-linear-to-b from-transparent via-black/2 to-black/5 pointer-events-none"></div>
                                         </div>
                                     </motion.div>
                                     <motion.div
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 0.6 }}
                                         exit={{ opacity: 0 }}
-                                        className="fixed inset-0 bg-black z-[900] backdrop-blur-sm"
+                                        className="fixed inset-0 bg-black z-900 backdrop-blur-sm"
                                         onClick={() => {
                                             setIsLetterExpanded(false)
                                             setStatusText('Click on the items to explore')
@@ -711,7 +852,7 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
-                                    className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                                    className="fixed inset-0 z-1000 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
                                     onClick={() => {
                                         setIsMorseOpen(false)
                                         setStatusText('Click on the items to explore')
@@ -724,7 +865,7 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                                         onClick={(e) => e.stopPropagation()}
                                     >
                                         {/* Subtle Reception Pulse */}
-                                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent"></div>
+                                        <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-yellow-500/50 to-transparent"></div>
 
                                         <div className="relative z-10 space-y-8">
                                             {/* Header */}
@@ -775,13 +916,15 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                         {/* Close Button */}
                         <button
                             onClick={onClose}
-                            className="absolute top-6 right-6 z-[70] px-6 py-2 text-white/70 hover:text-white flex items-center gap-3 transition-all shadow-lg group backdrop-blur-md"
+                            className="absolute top-6 right-6 z-70 px-6 py-2 text-white/70 hover:text-white flex items-center gap-3 transition-all shadow-lg group backdrop-blur-md"
                         >
                             <span className="text-[10px] md:text-xs font-mono font-bold tracking-[0.2em] uppercase">Close The Briefcase &gt;&gt;</span>
                         </button>
 
                     </motion.div>
                 </motion.div>
+                    )}
+                </>
             )}
         </AnimatePresence>
     )
@@ -842,8 +985,8 @@ const Card = ({ data, index, total, isTop, isSelected, onSwipe, onClick, onClose
                 <div className="w-24 h-6 bg-yellow-100/50 absolute -top-2 rotate-1 opacity-80 backdrop-blur-sm mix-blend-multiply shadow-sm"></div>
                 <div className="w-full aspect-square mt-4 bg-white p-2 shadow-inner relative overflow-hidden group">
                     <div className={`w-full h-full ${data.color} relative`}>
-                        <div className="absolute inset-0 bg-gradient-to-tr from-black/20 to-transparent"></div>
-                        <div className="absolute inset-0 bg-gradient-to-b from-white/30 to-transparent opacity-40"></div>
+                        <div className="absolute inset-0 bg-linear-to-tr from-black/20 to-transparent"></div>
+                        <div className="absolute inset-0 bg-linear-to-b from-white/30 to-transparent opacity-40"></div>
                     </div>
                 </div>
                 <div className="mt-6 text-center">
@@ -854,7 +997,7 @@ const Card = ({ data, index, total, isTop, isSelected, onSwipe, onClick, onClose
                         Evidence #{100 + data.id}
                     </p>
                 </div>
-                <div className="absolute bottom-6 right-6 text-red-700/60 border-4 border-red-700/60 px-2 py-1 text-[10px] font-black rotate-[-12deg] tracking-widest uppercase rounded-sm mix-blend-multiply">
+                <div className="absolute bottom-6 right-6 text-red-700/60 border-4 border-red-700/60 px-2 py-1 text-[10px] font-black -rotate-12 tracking-widest uppercase rounded-sm mix-blend-multiply">
                     Verified
                 </div>
                 {isTop && (
