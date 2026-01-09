@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 const MasterStats = () => {
-    const { participants, events, teams } = useData();
+    const { data: { participants, events, teams } } = useData();
     const [selectedTeamId, setSelectedTeamId] = useState('all');
     const [selectedEventId, setSelectedEventId] = useState('all');
 

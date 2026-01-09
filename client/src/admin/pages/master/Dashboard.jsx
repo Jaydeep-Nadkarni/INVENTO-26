@@ -4,7 +4,7 @@ import { useData } from '../../context/DataContext';
 import { Shield, Users, Calendar, Wallet, Activity, Database, TrendingUp, BarChart3 } from 'lucide-react';
 
 const MasterDashboard = () => {
-    const { masterStats, events, teams } = useData();
+    const { data: { masterStats, events, teams } } = useData();
 
     // Calculate occupancy by club
     const clubOccupancy = useMemo(() => {

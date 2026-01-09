@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import Sidebar from '../../components/sidebar';
-import { masterActivityLogs } from '../../data/masterData';
+import { useData } from '../../context/DataContext';
 import { History, Filter, Search, Terminal, ChevronDown } from 'lucide-react';
 
 const MasterActivity = () => {
+    const { data: { masterActivityLogs } } = useData();
     const [filterTeam, setFilterTeam] = useState('All');
     
     const teams = ['All', ...new Set(masterActivityLogs.map(log => log.team))];
