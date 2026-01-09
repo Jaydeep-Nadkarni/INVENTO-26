@@ -11,11 +11,26 @@ import closeSound from '../assets/audios/briefcase-open.mp3'
 const BriefcasePage = () => {
     const navigate = useNavigate()
     const [isBriefcaseOpen, setIsBriefcaseOpen] = useState(false)
+    const [isMobile, setIsMobile] = useState(false)
 
     const playSound = (audioFile) => {
         const audio = new Audio(audioFile)
         audio.play().catch(e => console.log("Audio play failed:", e))
     }
+
+    // Detect mobile
+    useEffect(() => {
+        const isMobileDevice = () => {
+            if (typeof window === 'undefined') return false
+            return window.matchMedia('(max-width: 767px)').matches
+        }
+        setIsMobile(isMobileDevice())
+        
+        const mediaQuery = window.matchMedia('(max-width: 767px)')
+        const handleChange = (e) => setIsMobile(e.matches)
+        mediaQuery.addListener(handleChange)
+        return () => mediaQuery.removeListener(handleChange)
+    }, [])
 
     // Auto-open on mount
     useEffect(() => {
@@ -39,13 +54,15 @@ const BriefcasePage = () => {
 
     return (
         <div className="h-screen w-full bg-[#0a0a0a] relative overflow-hidden">
-            {/* Fixed Background */}
-            <div
-                className='fixed inset-0 bg-cover bg-center bg-no-repeat z-0'
-                style={{ backgroundImage: `url(${bgImage})` }}
-            >
-                <div className='absolute inset-0 bg-black/80 backdrop-blur-[4px]'></div>
-            </div>
+            {/* Fixed Background - Hidden on mobile when open */}
+            {!(isMobile && isBriefcaseOpen) && (
+                <div
+                    className='fixed inset-0 bg-cover bg-center bg-no-repeat z-0'
+                    style={{ backgroundImage: `url(${bgImage})` }}
+                >
+                    <div className='absolute inset-0 bg-black/80 backdrop-blur-[4px]'></div>
+                </div>
+            )}
 
             <BriefcaseInsider
                 isOpen={isBriefcaseOpen}
