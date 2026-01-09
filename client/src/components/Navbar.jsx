@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { shouldSkipAnimations } from '../utils/performanceOptimization'
 import tex1 from '../assets/UI/button-texture-1.png'
 import tex2 from '../assets/UI/button-texture-1.png'
 import tex3 from '../assets/UI/button-texture-3.png'
@@ -86,19 +87,22 @@ const Navbar = ({ onEventsClick, isMobile }) => {
         aria-label="Toggle menu"
       >
         <motion.span 
-          animate={mobileMenuOpen ? { rotate: 45, y: 8 } : { rotate: 0, y: 0 }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
+          animate={shouldSkipAnimations() ? {} : (mobileMenuOpen ? { rotate: 45, y: 8 } : { rotate: 0, y: 0 })}
+          transition={shouldSkipAnimations() ? {} : { duration: 0.3, ease: "easeInOut" }}
           className="block w-6 h-0.5 bg-current origin-center"
+          style={shouldSkipAnimations() ? { transform: mobileMenuOpen ? 'rotate(45deg) translateY(8px)' : 'none' } : {}}
         />
         <motion.span 
-          animate={mobileMenuOpen ? { opacity: 0, scale: 0 } : { opacity: 1, scale: 1 }}
-          transition={{ duration: 0.2, ease: "easeInOut" }}
+          animate={shouldSkipAnimations() ? {} : (mobileMenuOpen ? { opacity: 0, scale: 0 } : { opacity: 1, scale: 1 })}
+          transition={shouldSkipAnimations() ? {} : { duration: 0.2, ease: "easeInOut" }}
           className="block w-6 h-0.5 bg-current"
+          style={shouldSkipAnimations() ? { opacity: mobileMenuOpen ? 0 : 1 } : {}}
         />
         <motion.span 
-          animate={mobileMenuOpen ? { rotate: -45, y: -8 } : { rotate: 0, y: 0 }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
+          animate={shouldSkipAnimations() ? {} : (mobileMenuOpen ? { rotate: -45, y: -8 } : { rotate: 0, y: 0 })}
+          transition={shouldSkipAnimations() ? {} : { duration: 0.3, ease: "easeInOut" }}
           className="block w-6 h-0.5 bg-current origin-center"
+          style={shouldSkipAnimations() ? { transform: mobileMenuOpen ? 'rotate(-45deg) translateY(-8px)' : 'none' } : {}}
         />
       </button>
     )}
@@ -151,10 +155,10 @@ const Navbar = ({ onEventsClick, isMobile }) => {
       <AnimatePresence>
         {isMobile && mobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -300 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -300 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            initial={shouldSkipAnimations() ? {} : { opacity: 0, y: -300 }}
+            animate={shouldSkipAnimations() ? { opacity: 1 } : { opacity: 1, y: 0 }}
+            exit={shouldSkipAnimations() ? {} : { opacity: 0, y: -300 }}
+            transition={shouldSkipAnimations() ? {} : { type: 'spring', stiffness: 300, damping: 30 }}
             className="fixed top-16 left-0 h-screen w-full bg-gradient-to-b from-black via-black to-black/80 backdrop-blur-md z-40"
           >
             <div className="flex flex-col p-6 gap-4">
@@ -163,7 +167,7 @@ const Navbar = ({ onEventsClick, isMobile }) => {
                 <motion.button
                   key={item.label}
                   onClick={() => handleNavClick(item.path)}
-                  whileHover={{ x: 8, color: '#fbbf24' }}
+                  whileHover={shouldSkipAnimations() ? {} : { x: 8, color: '#fbbf24' }}
                   className="text-left text-white font-bold text-sm uppercase tracking-wider hover:text-yellow-500 transition-colors pb-2 border-b border-gray-700"
                 >
                   {item.label}
@@ -190,9 +194,9 @@ const Navbar = ({ onEventsClick, isMobile }) => {
       <AnimatePresence>
         {isMobile && mobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial={shouldSkipAnimations() ? {} : { opacity: 0 }}
+            animate={shouldSkipAnimations() ? { opacity: 1 } : { opacity: 1 }}
+            exit={shouldSkipAnimations() ? {} : { opacity: 0 }}
             onClick={() => setMobileMenuOpen(false)}
             className="fixed inset-0 bg-black/50 z-20 top-16"
           />
