@@ -5,47 +5,43 @@ import bgImage from '../assets/UI/Invento-bg.jpg'
 import Hero from '../components/Hero'
 import Navbar from '../components/Navbar'
 import Briefcase from '../components/Briefcase'
-import BriefcaseInsider from '../components/BriefcaseInsider'
 import Loader from '../components/Loader'
 import introVideo from '../assets/UI/intro.mp4'
 import introAudio from '../assets/UI/intro.mp3'
-import openSound from '../assets/audios/briefcase-open2.mp3'
-import closeSound from '../assets/audios/briefcase-open.mp3'
 
 // Module-level flag tracks if we've already run the intro since JS loaded
 let introHasPlayed = false;
 
 const Home = () => {
-  const navigate = useNavigate()
-  
-  const [isIntroPath] = useState(() => {
-    // 1. If we already played it in this memory session, never play again
-    if (introHasPlayed) return false;
+    const navigate = useNavigate()
 
-    // 2. Check the flag set in App.jsx (global session logic)
-    const shouldPlay = sessionStorage.getItem('shouldPlayIntro') === 'true';
-    
-    if (shouldPlay) {
-      introHasPlayed = true;
-      sessionStorage.removeItem('shouldPlayIntro');
-      return true;
-    }
+    const [isIntroPath] = useState(() => {
+        // 1. If we already played it in this memory session, never play again
+        if (introHasPlayed) return false;
 
-    return false;
-  });
+        // 2. Check the flag set in App.jsx (global session logic)
+        const shouldPlay = sessionStorage.getItem('shouldPlayIntro') === 'true';
 
-  const [isLoading, setIsLoading] = useState(isIntroPath)
-  const [loadProgress, setLoadProgress] = useState(0)
-  const [showIntro, setShowIntro] = useState(false)
-  const [showBlackout, setShowBlackout] = useState(false)
-  const [isBriefcaseOpen, setIsBriefcaseOpen] = useState(false)
-  const [showCallout, setShowCallout] = useState(false)
-  const [isMuted, setIsMuted] = useState(true)
-  
-  const hoverTimerRef = useRef(null)
-  const videoRef = useRef(null)
-  const audioRef = useRef(null)
-  const scrollPositionRef = useRef(0)
+        if (shouldPlay) {
+            introHasPlayed = true;
+            sessionStorage.removeItem('shouldPlayIntro');
+            return true;
+        }
+
+        return false;
+    });
+
+    const [isLoading, setIsLoading] = useState(isIntroPath)
+    const [loadProgress, setLoadProgress] = useState(0)
+    const [showIntro, setShowIntro] = useState(false)
+    const [showBlackout, setShowBlackout] = useState(false)
+    const [showCallout, setShowCallout] = useState(false)
+    const [isMuted, setIsMuted] = useState(true)
+
+    const hoverTimerRef = useRef(null)
+    const scrollPositionRef = useRef(0)
+    const videoRef = useRef(null)
+    const audioRef = useRef(null)
 
   const playSound = (audioFile) => {
     const audio = new Audio(audioFile)
@@ -207,46 +203,37 @@ const Home = () => {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [showIntro])
 
-  const handleOpenBriefcase = () => {
-    playSound(openSound)
-    setIsBriefcaseOpen(true)
-    setShowCallout(false)
-  }
-
-  const handleCloseBriefcase = () => {
-    playSound(closeSound)
-    setIsBriefcaseOpen(false)
-  }
-
-  const handleNavigateToEvents = () => {
-    navigate('/events')
-  }
-
-  const handleMouseEnter = () => {
-    hoverTimerRef.current = setTimeout(() => {
-      setShowCallout(true)
-    }, 3000)
-  }
-
-  const handleMouseLeave = () => {
-    if (hoverTimerRef.current) {
-      clearTimeout(hoverTimerRef.current)
+    const handleNavigateToEvents = () => {
+        navigate('/events')
     }
-    // We don't necessarily hide it immediately, 
-    // maybe keep it for a bit or let it finish animation
-  }
 
-  // Effect to hide callout after some time if it's shown
-  useEffect(() => {
-    if (showCallout) {
-      const timer = setTimeout(() => setShowCallout(false), 5000)
-      return () => clearTimeout(timer)
+    const handleOpenBriefcase = () => {
+        navigate('/briefcase')
     }
-  }, [showCallout])
 
-  return (
-    <>
-      <audio ref={audioRef} src={introAudio} preload="auto" />
+    const handleMouseEnter = () => {
+        hoverTimerRef.current = setTimeout(() => {
+            setShowCallout(true)
+        }, 3000)
+    }
+
+    const handleMouseLeave = () => {
+        if (hoverTimerRef.current) {
+            clearTimeout(hoverTimerRef.current)
+        }
+    }
+
+    // Effect to hide callout after some time if it's shown
+    useEffect(() => {
+        if (showCallout) {
+            const timer = setTimeout(() => setShowCallout(false), 5000)
+            return () => clearTimeout(timer)
+        }
+    }, [showCallout])
+
+    return (
+        <>
+            <audio ref={audioRef} src={introAudio} preload="auto" />
       
       <AnimatePresence mode="wait">
         {isLoading && (
@@ -323,7 +310,7 @@ const Home = () => {
         }}
         transition={{ 
           // Only apply transition when intro was played (isIntroPath)
-          duration: isIntroPath ? 3 : 0, 
+          duration: isIntroPath ? 2 : 0, 
           ease: [0.43, 0.13, 0.23, 0.96] // Custom easing for smooth morph
         }}
         className="w-full bg-[#0a0a0a] relative selection:bg-red-700/30"
@@ -344,11 +331,8 @@ const Home = () => {
         <Hero />
       </section>
 
-      {/* Separation Spacing */}
-      <div className="h-[20vh] relative z-10"></div>
-
       {/* Briefcase Section */}
-      <section className={`relative z-10 w-full min-h-screen flex flex-col items-center justify-center py-20 px-4 transition-all duration-700 ${isBriefcaseOpen ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'}`}>
+      <section className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center py-20 px-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           whileInView={{ opacity: 1, scale: 1 }}
@@ -397,82 +381,72 @@ const Home = () => {
         </motion.div>
       </section>
 
-
-      {/* Insider View */}
-      <BriefcaseInsider
-        isOpen={isBriefcaseOpen}
-        onClose={handleCloseBriefcase}
-        onNavigateToEvents={handleNavigateToEvents}
-      />
-
       {/* Footer Space */}
-      {!isBriefcaseOpen && (
-        <div className="h-[20vh] relative z-10 bg-linear-to-t from-black via-black/20 to-transparent"></div>
-      )}
+      <div className="h-[20vh] relative z-10 bg-linear-to-t from-black via-black/20 to-transparent"></div>
     </motion.div>
     </>
   )
 }
 
 const TechieCallout = () => {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="absolute top-1/4 right-[10%] pointer-events-none z-30 hidden md:block"
-    >
-      <svg width="250" height="150" viewBox="0 0 250 150" fill="none">
-        {/* Animated Connected Line */}
-        <motion.path
-          d="M 10 140 L 80 80 L 240 80"
-          stroke="white"
-          strokeWidth="1.5"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: 1 }}
-          transition={{ duration: 1.5, ease: "easeInOut" }}
-        />
-        {/* Dot at start */}
-        <motion.circle
-          cx="10" cy="140" r="3"
-          fill="white"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.2 }}
-        />
-      </svg>
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute top-1/4 right-[10%] pointer-events-none z-30 hidden md:block"
+        >
+            <svg width="250" height="150" viewBox="0 0 250 150" fill="none">
+                {/* Animated Connected Line */}
+                <motion.path
+                    d="M 10 140 L 80 80 L 240 80"
+                    stroke="white"
+                    strokeWidth="1.5"
+                    initial={{ pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 1.5, ease: "easeInOut" }}
+                />
+                {/* Dot at start */}
+                <motion.circle
+                    cx="10" cy="140" r="3"
+                    fill="white"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.2 }}
+                />
+            </svg>
 
-      {/* Callout Text */}
-      <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: 1.2, duration: 0.8 }}
-        className="absolute top-11.25 left-21.25 flex flex-col items-start"
-      >
-        <div className="bg-white/10 backdrop-blur-md border-l-4 border-white px-4 py-2">
-          <h4 className="text-white font-black text-2xl tracking-[0.2em] uppercase leading-none">
-            Briefcase
-          </h4>
-          <p className="text-white/70 font-mono text-[10px] uppercase tracking-[0.4em] mt-1">
-            Click to open
-          </p>
-        </div>
-
-        {/* Animated Accent Blocks */}
-        <div className="flex gap-1 mt-1 ml-1">
-          {[1, 2, 3].map(i => (
+            {/* Callout Text */}
             <motion.div
-              key={i}
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{ delay: 1.5 + (i * 0.1) }}
-              className="w-4 h-1 bg-white/40 origin-left"
-            />
-          ))}
-        </div>
-      </motion.div>
-    </motion.div>
-  )
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 1.2, duration: 0.8 }}
+                className="absolute top-11.25 left-21.25 flex flex-col items-start"
+            >
+                <div className="bg-white/10 backdrop-blur-md border-l-4 border-white px-4 py-2">
+                    <h4 className="text-white font-black text-2xl tracking-[0.2em] uppercase leading-none">
+                        Briefcase
+                    </h4>
+                    <p className="text-white/70 font-mono text-[10px] uppercase tracking-[0.4em] mt-1">
+                        Click to open
+                    </p>
+                </div>
+
+                {/* Animated Accent Blocks */}
+                <div className="flex gap-1 mt-1 ml-1">
+                    {[1, 2, 3].map(i => (
+                        <motion.div
+                            key={i}
+                            initial={{ scaleX: 0 }}
+                            animate={{ scaleX: 1 }}
+                            transition={{ delay: 1.5 + (i * 0.1) }}
+                            className="w-4 h-1 bg-white/40 origin-left"
+                        />
+                    ))}
+                </div>
+            </motion.div>
+        </motion.div>
+    )
 }
 
 export default Home

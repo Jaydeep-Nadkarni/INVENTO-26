@@ -7,6 +7,23 @@ import Contact from './pages/Contact.jsx'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
 import Profile from './pages/Profile.jsx'
+import BriefcasePage from './pages/Briefcase.jsx'
+import { AdminAuthProvider, useAdminAuth } from './admin/context/AuthContext'
+import { DataProvider } from './admin/context/DataContext'
+
+// Administrative Page Imports (Placeholders)
+import AdminLogin from './admin/pages/admin/login'
+import MasterLogin from './admin/pages/master/login'
+import AdminDashboard from './admin/pages/admin/admin-dashboard'
+import AdminParticipants from './admin/pages/admin/Participants'
+import AdminStats from './admin/pages/admin/Stats'
+import MasterDashboard from './admin/pages/master/Dashboard'
+import MasterAdmins from './admin/pages/master/Admins'
+import MasterEvents from './admin/pages/master/Events'
+import MasterParticipants from './admin/pages/master/Participants'
+import MasterStats from './admin/pages/master/Stats'
+import MasterTeams from './admin/pages/master/Teams'
+import MasterActivity from './admin/pages/master/Activity'
 
 // Session initialization logic - runs immediately on module load
 // This ensures that the flags are set before any components render (avoiding race conditions)
@@ -33,6 +50,20 @@ const PublicRoute = ({ children }) => {
   return user ? <Navigate to="/profile" replace /> : children
 }
 
+// Admin Route Guard
+const AdminRoute = ({ children }) => {
+  const { adminUser, loading } = useAdminAuth();
+  if (loading) return null;
+  return adminUser && adminUser.role === 'admin' ? children : <Navigate to="/admin/login" replace />;
+}
+
+// Master Route Guard
+const MasterRoute = ({ children }) => {
+  const { adminUser, loading } = useAdminAuth();
+  if (loading) return null;
+  return adminUser && adminUser.role === 'master' ? children : <Navigate to="/admin/login" replace />;
+}
+
 const NavigationManager = () => {
   return null;
 };
@@ -40,45 +71,88 @@ const NavigationManager = () => {
 function App() {
   return (
     <Router>
-      <NavigationManager />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/events" element={<Events />} />
-        <Route path="/schedule" element={<Schedule />} />
-        <Route path="/contact" element={<Contact />} />
-        
-        {/* Protected Routes */}
-        <Route 
-          path="/profile" 
-          element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          } 
-        />
+      <DataProvider>
+        <AdminAuthProvider>
+          <NavigationManager />
+          <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/briefcase" element={<BriefcasePage />} />
+          <Route path="/events" element={<Events />} />
+          <Route path="/schedule" element={<Schedule />} />
+          <Route path="/contact" element={<Contact />} />
+          
+          {/* Admin and Master Auth */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/master/login" element={<MasterLogin />} />
 
-        {/* Auth Routes */}
-        <Route 
-          path="/login" 
-          element={
-            <PublicRoute>
-              <Login />
-            </PublicRoute>
-          } 
-        />
-        <Route 
-          path="/register" 
-          element={
-            <PublicRoute>
-              <Register />
-            </PublicRoute>
-          } 
-        />
+          {/* Admin Routes */}
+          <Route 
+            path="/admin/*" 
+            element={
+              <AdminRoute>
+                <Routes>
+                  <Route path="/" element={<AdminDashboard />} />
+                  <Route path="/dashboard" element={<AdminDashboard />} />
+                  <Route path="/participants" element={<AdminParticipants />} />
+                  <Route path="/stats" element={<AdminStats />} />
+                </Routes>
+              </AdminRoute>
+            } 
+          />
 
-        <Route path="/:clubSlug" element={<Events />} />
-        <Route path="/:clubSlug/:eventSlug" element={<Events />} />
-      </Routes>
-    </Router>
+          {/* Master Routes */}
+          <Route 
+            path="/master/*" 
+            element={
+              <MasterRoute>
+                <Routes>
+                  <Route path="/" element={<MasterDashboard />} />
+                  <Route path="/dashboard" element={<MasterDashboard />} />
+                  <Route path="/admins" element={<MasterAdmins />} />
+                  <Route path="/events" element={<MasterEvents />} />
+                  <Route path="/participants" element={<MasterParticipants />} />
+                  <Route path="/stats" element={<MasterStats />} />
+                  <Route path="/teams" element={<MasterTeams />} />
+                  <Route path="/activity" element={<MasterActivity />} />
+                </Routes>
+              </MasterRoute>
+            } 
+          />
+          
+          {/* Protected Routes */}
+          <Route 
+            path="/profile" 
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* Auth Routes */}
+          <Route 
+            path="/login" 
+            element={
+              <PublicRoute>
+                <Login />
+              </PublicRoute>
+            } 
+          />
+          <Route 
+            path="/register" 
+            element={
+              <PublicRoute>
+                <Register />
+              </PublicRoute>
+            } 
+          />
+
+          <Route path="/:clubSlug" element={<Events />} />
+          <Route path="/:clubSlug/:eventSlug" element={<Events />} />
+        </Routes>
+      </AdminAuthProvider>
+    </DataProvider>
+  </Router>
   )
 }
 
