@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import bgImage from '../assets/UI/Invento-bg.jpg'
-import mobileBgImage from '../assets/UI/Invento-bg-mobile.png'
 import Hero from '../components/Hero'
+import MobileBg from '../assets/UI/Invento-bg-mobile.png'
 import Navbar from '../components/Navbar'
 import Briefcase from '../components/Briefcase'
 import Loader from '../components/Loader'
@@ -330,7 +330,7 @@ const Home = () => {
       {isMobile ? (
         <div className='fixed inset-0 z-0 bg-cover bg-center bg-no-repeat'
          style={{ 
-           backgroundImage: `url(${mobileBgImage})`,
+           backgroundImage: `url(${MobileBg})`,
            backgroundAttachment: 'fixed'
          }} />
       ) : (
