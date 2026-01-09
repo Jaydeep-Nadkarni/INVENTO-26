@@ -7,6 +7,7 @@ import Contact from './pages/Contact.jsx'
 import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
 import Profile from './pages/Profile.jsx'
+import BriefcasePage from './pages/Briefcase.jsx'
 
 // Session initialization logic - runs immediately on module load
 // This ensures that the flags are set before any components render (avoiding race conditions)
@@ -43,6 +44,7 @@ function App() {
       <NavigationManager />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/briefcase" element={<BriefcasePage />} />
         <Route path="/events" element={<Events />} />
         <Route path="/schedule" element={<Schedule />} />
         <Route path="/contact" element={<Contact />} />
