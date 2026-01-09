@@ -5,7 +5,110 @@ import img2 from '../assets/UI/img2.png'
 import pin from '../assets/UI/pin.png'
 import news from '../assets/UI/news.png'
 import year2026 from '../assets/UI/2026.png'
+import handprint from '../assets/UI/handprint.png'
 import windowsPlayer from '../assets/UI/windows-player.jpg'
+
+// Countdown Timer Component
+const CountdownTimer = () => {
+  const [timeLeft, setTimeLeft] = React.useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0
+  })
+
+  React.useEffect(() => {
+    const calculateCountdown = () => {
+      // Target: February 26, 2026 at 12:00 AM (midnight)
+      const targetDate = new Date(2026, 1, 26, 0, 0, 0).getTime() // Month is 0-indexed
+      const now = new Date().getTime()
+      const difference = targetDate - now
+
+      if (difference > 0) {
+        setTimeLeft({
+          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+          minutes: Math.floor((difference / 1000 / 60) % 60),
+          seconds: Math.floor((difference / 1000) % 60)
+        })
+      }
+    }
+
+    calculateCountdown()
+    const timer = setInterval(calculateCountdown, 1000)
+
+    return () => clearInterval(timer)
+  }, [])
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+      className="mt-8 relative"
+    >
+      {/* Elegant Dark Background with Gradient */}
+      <div className="relative bg-transparent rounded-lg px-6 sm:px-8 md:px-12 py-2 sm:py-8 md:py-2 mx-4 overflow-hidden ">
+        {/* Decorative light effects */}
+        <div className="absolute top-0 left-1/4 w-40 h-40 bg-amber-400 opacity-5 blur-3xl rounded-full -z-10"></div>
+        <div className="absolute bottom-0 right-1/4 w-40 h-40 bg-orange-400 opacity-5 blur-3xl rounded-full -z-10"></div>
+        
+        {/* Main Content */}
+        <div className="relative flex flex-col items-center gap-4">
+          
+          {/* Timer Display */}
+          <div className="flex gap-1 sm:gap-2 md:gap-3 justify-center items-center">
+            {/* Days */}
+            <div className="flex flex-col items-center">
+              <span className="text-4xl sm:text-6xl md:text-7xl bg-gradient-to-b from-amber-300 via-yellow-300 to-amber-400 bg-clip-text text-transparent drop-shadow-lg" 
+                style={{fontFamily: '"DM Serif Text", serif', fontVariantNumeric: 'tabular-nums', textShadow: '0 0 20px rgba(251, 191, 36, 0.5), 0 0 40px rgba(217, 119, 6, 0.3)'}}>
+                {String(timeLeft.days).padStart(2, '0')}
+              </span>
+              <span className="mt-2 font-serif text-xs sm:text-sm text-amber-300/80 uppercase tracking-widest font-semibold">
+                Days
+              </span>
+            </div>
+            
+            {/* Colon */}
+            <div className="pb-4 md:pb-6">
+              <span className="font-serif text-4xl sm:text-4xl md:text-6xl text-amber-400/60 font-light">:</span>
+            </div>
+            
+            {/* Hours */}
+            <div className="flex flex-col items-center">
+              <span style={{fontFamily: '"DM Serif Text", serif', fontVariantNumeric: 'tabular-nums', textShadow: '0 0 20px rgba(251, 191, 36, 0.5), 0 0 40px rgba(217, 119, 6, 0.3)'}}
+                className="text-4xl sm:text-6xl md:text-7xl bg-gradient-to-b from-amber-300 via-yellow-300 to-amber-400 bg-clip-text text-transparent drop-shadow-lg">
+                {String(timeLeft.hours).padStart(2, '0')}
+              </span>
+              <span className="mt-2 font-serif text-xs sm:text-sm text-amber-300/80 uppercase tracking-widest font-semibold">
+                Hours
+              </span>
+            </div>
+            
+            {/* Colon */}
+            <div className="pb-4 md:pb-6">
+              <span className="font-serif text-4xl sm:text-4xl md:text-6xl text-amber-400/60 font-light">:</span>
+            </div>
+            
+            {/* Minutes */}
+            <div className="flex flex-col items-center">
+              <span style={{fontFamily: '"DM Serif Text", serif', fontVariantNumeric: 'tabular-nums', textShadow: '0 0 20px rgba(251, 191, 36, 0.5), 0 0 40px rgba(217, 119, 6, 0.3)'}}
+                className="text-4xl sm:text-6xl md:text-7xl bg-gradient-to-b from-amber-300 via-yellow-300 to-amber-400 bg-clip-text text-transparent drop-shadow-lg">
+                {String(timeLeft.minutes).padStart(2, '0')}
+              </span>
+              <span className="mt-2 font-serif text-xs sm:text-sm text-amber-300/80 uppercase tracking-widest font-semibold">
+                Minutes
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Glow effect shadow */}
+      <div className="absolute -bottom-2 left-4 right-4 h-3 bg-gradient-to-r from-transparent via-amber-500 to-transparent opacity-30 blur-lg rounded-full"></div>
+    </motion.div>
+  )
+}
 
 const Hero = () => {
   return (
@@ -40,6 +143,8 @@ const Hero = () => {
         <p className="mt-4 text-white italic font-serif text-sm md:text-base max-w-xs text-center">
           "Smiles in the Spotlight, Secrets in the Shadow"
         </p>
+        
+        <CountdownTimer />
       </motion.div>
 
       {/* Pins and Photos - Static on Desktop, Hidden on Mobile */}
@@ -58,9 +163,17 @@ const Hero = () => {
       </div>
 
       <div className="absolute top-20 right-4 md:top-24 md:right-8 z-10 hidden md:block">
-        <div className="relative transform rotate-3">
-          <img src={pin} alt="pin" className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-6 z-20" />
-          <img src={year2026} alt="2026" className="w-28 md:w-32 shadow-xl" />
+        <div className="relative transform flex items-start gap-2">
+          {/* Handprint on the left */}
+          <div className="relative rotate-0">
+            <img src={pin} alt="pin" className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-6 z-20" />
+            <img src={handprint} alt="handprint" className="w-16 md:w-36 opacity-70 transform" />
+          </div>
+          {/* 2026 card with pin */}
+          <div className="relative top-20 -rotate-6 ml-6">
+            <img src={pin} alt="pin" className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-6 z-20" />
+            <img src={year2026} alt="2026" className="w-28 md:w-32 shadow-xl" />
+          </div>
         </div>
       </div>
 

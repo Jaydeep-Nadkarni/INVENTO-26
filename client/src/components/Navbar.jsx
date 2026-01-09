@@ -81,28 +81,25 @@ const Navbar = ({ onEventsClick, isMobile }) => {
       <div className="flex items-center gap-4 mt-0">
         {/* Mobile Hamburger Menu Button */}
         {isMobile && (
-  <button
+      <button
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         className="md:hidden flex flex-col gap-1.5 text-white hover:text-yellow-500 transition-colors"
         aria-label="Toggle menu"
       >
         <motion.span 
-          animate={shouldSkipAnimations() ? {} : (mobileMenuOpen ? { rotate: 45, y: 8 } : { rotate: 0, y: 0 })}
-          transition={shouldSkipAnimations() ? {} : { duration: 0.3, ease: "easeInOut" }}
+          animate={mobileMenuOpen ? { rotate: 45, y: 8 } : { rotate: 0, y: 0 }}
+          transition={shouldSkipAnimations() ? { duration: 0 } : { duration: 0.3, ease: "easeInOut" }}
           className="block w-6 h-0.5 bg-current origin-center"
-          style={shouldSkipAnimations() ? { transform: mobileMenuOpen ? 'rotate(45deg) translateY(8px)' : 'none' } : {}}
         />
         <motion.span 
-          animate={shouldSkipAnimations() ? {} : (mobileMenuOpen ? { opacity: 0, scale: 0 } : { opacity: 1, scale: 1 })}
-          transition={shouldSkipAnimations() ? {} : { duration: 0.2, ease: "easeInOut" }}
+          animate={mobileMenuOpen ? { opacity: 0, scale: 0 } : { opacity: 1, scale: 1 }}
+          transition={shouldSkipAnimations() ? { duration: 0 } : { duration: 0.2, ease: "easeInOut" }}
           className="block w-6 h-0.5 bg-current"
-          style={shouldSkipAnimations() ? { opacity: mobileMenuOpen ? 0 : 1 } : {}}
         />
         <motion.span 
-          animate={shouldSkipAnimations() ? {} : (mobileMenuOpen ? { rotate: -45, y: -8 } : { rotate: 0, y: 0 })}
-          transition={shouldSkipAnimations() ? {} : { duration: 0.3, ease: "easeInOut" }}
+          animate={mobileMenuOpen ? { rotate: -45, y: -8 } : { rotate: 0, y: 0 }}
+          transition={shouldSkipAnimations() ? { duration: 0 } : { duration: 0.3, ease: "easeInOut" }}
           className="block w-6 h-0.5 bg-current origin-center"
-          style={shouldSkipAnimations() ? { transform: mobileMenuOpen ? 'rotate(-45deg) translateY(-8px)' : 'none' } : {}}
         />
       </button>
     )}
