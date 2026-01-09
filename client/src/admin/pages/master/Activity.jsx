@@ -75,5 +75,3 @@ const MasterActivity = () => {
 };
 
 export default MasterActivity;
-
-export default MasterActivity;

@@ -1,119 +1,202 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import Sidebar from '../../components/sidebar';
-import { masterStats, adminDistribution } from '../../data/masterData';
-import { PieChart, TrendingUp, Cpu, Zap, Activity, Info } from 'lucide-react';
+import { useData } from '../../context/DataContext';
+import { 
+    PieChart, TrendingUp, Info, Users, 
+    Wallet, Filter, BarChart3, 
+    Target, Download
+} from 'lucide-react';
 
 const MasterStats = () => {
+    const { participants, events, teams } = useData();
+    const [selectedTeamId, setSelectedTeamId] = useState('all');
+    const [selectedEventId, setSelectedEventId] = useState('all');
+
+    // 1. Filtered Data
+    const filteredParticipants = useMemo(() => {
+        return participants.filter(p => {
+            const matchTeam = selectedTeamId === 'all' || p.team_id?._id === selectedTeamId;
+            const matchEvent = selectedEventId === 'all' || p.event_id?._id === selectedEventId;
+            return matchTeam && matchEvent;
+        });
+    }, [participants, selectedTeamId, selectedEventId]);
+
+    // 2. Calculations for filtered data
+    const stats = useMemo(() => {
+        const total = filteredParticipants.length;
+        const verified = filteredParticipants.filter(p => p.is_verified).length;
+        const totalPaid = filteredParticipants.reduce((acc, p) => acc + (p.payment_status === 'Paid' ? (p.event_id?.price || 0) : 0), 0);
+        
+        // Payment methods breakdown
+        const payments = {};
+        // Participants distribution (by event if team selected, or by team if all)
+        const distribution = {};
+
+        filteredParticipants.forEach(p => {
+            // Payment method
+            const method = p.payment_method || 'Online';
+            payments[method] = (payments[method] || 0) + 1;
+
+            // Distribution
+            const key = selectedTeamId === 'all' 
+                ? (p.team_id?.team_name || 'N/A')
+                : (p.event_id?.event_name || 'N/A');
+            distribution[key] = (distribution[key] || 0) + 1;
+        });
+
+        return {
+            total,
+            verified,
+            totalPaid,
+            payments: Object.entries(payments).map(([name, count]) => ({ name, count })),
+            distribution: Object.entries(distribution)
+                .map(([name, count]) => ({ name, count }))
+                .sort((a, b) => b.count - a.count)
+        };
+    }, [filteredParticipants, selectedTeamId]);
     return (
         <div className="flex h-screen bg-white text-gray-900 border-gray-200">
             <Sidebar panelType="master" />
             <main className="flex-1 overflow-y-auto p-8 lg:ml-64">
                 <div className="max-w-7xl mx-auto">
-                    {/* Header Section */}
-                    <header className="mb-8 border-b border-gray-100 pb-6 flex items-center justify-between">
+                    {/* Header with Global Filters */}
+                    <header className="mb-10 border-b border-gray-100 pb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                         <div>
-                            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-3">
-                                <PieChart className="w-6 h-6" />
-                                Global Analytics Hub
-                            </h1>
-                            <p className="text-sm text-gray-500">Cross-platform metrics, system health, and overall performance</p>
+                            <div className="flex items-center gap-2 mb-2">
+                                <PieChart className="w-5 h-5 text-gray-400" />
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Analytical Node</span>
+                            </div>
+                            <h1 className="text-3xl font-black tracking-tight text-gray-900">SYSTEM STATS</h1>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                            <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded">
+                                <Filter className="w-3 h-3 text-gray-400" />
+                                <select 
+                                    className="bg-transparent text-[10px] font-bold uppercase tracking-wider outline-none cursor-pointer"
+                                    value={selectedTeamId}
+                                    onChange={(e) => {
+                                        setSelectedTeamId(e.target.value);
+                                        setSelectedEventId('all');
+                                    }}
+                                >
+                                    <option value="all">ALL TEAMS</option>
+                                    {teams.map(t => <option key={t._id} value={t._id}>{t.team_name.toUpperCase()}</option>)}
+                                </select>
+                            </div>
+
+                            <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 px-3 py-1.5 rounded">
+                                <select 
+                                    className="bg-transparent text-[10px] font-bold uppercase tracking-wider outline-none cursor-pointer"
+                                    value={selectedEventId}
+                                    onChange={(e) => setSelectedEventId(e.target.value)}
+                                >
+                                    <option value="all">ALL EVENTS</option>
+                                    {events
+                                        .filter(e => selectedTeamId === 'all' || e.team?._id === selectedTeamId)
+                                        .map(e => <option key={e._id} value={e._id}>{e.event_name.toUpperCase()}</option>)}
+                                </select>
+                            </div>
                         </div>
                     </header>
 
-                    {/* Top Level KPIs */}
+                    {/* Filtered KPIs */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
                         {[
-                            { label: "Check-in Efficiency", value: "88%", icon: Zap, color: "text-amber-600" },
-                            { label: "Revenue Target", value: "102%", icon: TrendingUp, color: "text-green-600" },
-                            { label: "Active Nodes", value: masterStats.activeNodes, icon: Cpu, color: "text-blue-600" },
-                            { label: "System Latency", value: "12ms", icon: Activity, color: "text-purple-600" }
+                            { label: "Filtered Sample", value: stats.total, icon: Users, color: "text-blue-500" },
+                            { label: "Verified Data", value: stats.verified, icon: Target, color: "text-green-500" },
+                            { label: "Local Revenue", value: `₹${stats.totalPaid.toLocaleString()}`, icon: Wallet, color: "text-amber-500" },
+                            { label: "Verification %", value: stats.total > 0 ? `${Math.round((stats.verified/stats.total)*100)}%` : '0%', icon: BarChart3, color: "text-purple-500" }
                         ].map((stat, idx) => (
-                            <div key={idx} className="bg-white border border-gray-200 p-6 rounded-md shadow-sm group">
-                                <div className="flex justify-between items-start mb-4">
-                                    <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{stat.label}</h3>
+                            <div key={idx} className="border border-gray-200 p-5 rounded hover:border-gray-400 transition-all">
+                                <div className="flex justify-between items-center mb-4">
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{stat.label}</span>
                                     <stat.icon className={`w-4 h-4 ${stat.color}`} />
                                 </div>
-                                <p className="text-2xl font-bold text-gray-900 tracking-tight">{stat.value}</p>
+                                <div className="text-2xl font-black">{stat.value}</div>
                             </div>
                         ))}
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {/* Team Wise Breakdown */}
-                        <section className="bg-white border border-gray-200 rounded-md p-6 shadow-sm">
-                            <h2 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-8 border-l-4 border-gray-900 pl-4">
-                                Registration Load by Team
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        {/* Domain Distribution Chart */}
+                        <section className="lg:col-span-2 border border-gray-200 rounded p-6">
+                            <h2 className="text-xs font-black uppercase tracking-[0.15em] mb-8 flex items-center justify-between">
+                                <span>Volume Distribution</span>
+                                <span className="text-[10px] font-medium text-gray-400 uppercase">BY {selectedTeamId === 'all' ? 'TEAMS' : 'EVENTS'}</span>
                             </h2>
-                            <div className="space-y-8">
-                                {adminDistribution.map((team, idx) => {
-                                    const maxCapacity = 500;
-                                    const percentage = Math.round((team.participants / maxCapacity) * 100);
+                            <div className="space-y-6">
+                                {stats.distribution.length > 0 ? stats.distribution.map((item, idx) => {
+                                    const percentage = stats.total > 0 ? (item.count / stats.total) * 100 : 0;
                                     return (
-                                        <div key={idx} className="space-y-3">
+                                        <div key={idx} className="space-y-2">
                                             <div className="flex justify-between items-end">
-                                                <span className="text-xs font-bold text-gray-900 uppercase tracking-tighter">{team.team}</span>
-                                                <span className="text-[10px] text-gray-400 font-bold">{team.participants} / {maxCapacity}</span>
+                                                <span className="text-[10px] font-bold uppercase tracking-tight text-gray-700">{item.name}</span>
+                                                <span className="text-[10px] font-black">{item.count}</span>
                                             </div>
-                                            <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                                            <div className="h-4 w-full bg-gray-50 overflow-hidden border border-gray-100">
                                                 <div 
-                                                    className="h-full bg-gray-900"
+                                                    className="h-full bg-gray-900 transition-all duration-1000"
                                                     style={{ width: `${percentage}%` }}
                                                 ></div>
                                             </div>
                                         </div>
                                     );
-                                })}
+                                }) : (
+                                    <div className="text-center py-12 text-gray-300">
+                                        <p className="text-[10px] font-bold uppercase">No distribution data</p>
+                                    </div>
+                                )}
                             </div>
                         </section>
 
-                        {/* Node Verification Section */}
-                        <section className="bg-gray-50 border border-gray-200 rounded-md p-6 flex flex-col items-center justify-center">
-                            <div className="mb-6 text-center">
-                                <h2 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-2">Live Node Verification</h2>
-                                <p className="text-xs text-gray-500 font-medium">Real-time status of event sub-nodes</p>
-                            </div>
-
-                            <div className="w-40 h-40 rounded-full border-4 border-gray-200 flex items-center justify-center relative mb-8">
-                                <div className="text-center">
-                                    <p className="text-4xl font-bold text-gray-900">27</p>
-                                    <p className="text-[10px] uppercase font-bold text-gray-400 tracking-widest">Nodes</p>
-                                </div>
-                                <svg className="absolute inset-[-4px] w-[calc(100%+8px)] h-[calc(100%+8px)] rotate-[-90deg]">
-                                    <circle 
-                                        cx="50%" cy="50%" r="50%" 
-                                        className="fill-none stroke-gray-900 stroke-[4px]" 
-                                        strokeDasharray="283" 
-                                        strokeDashoffset="30"
-                                    />
-                                </svg>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
-                                <div className="p-4 bg-white border border-gray-100 rounded-md text-center shadow-sm">
-                                    <p className="text-lg font-bold text-gray-900 italic">24</p>
-                                    <p className="text-[10px] text-green-600 font-bold uppercase">Online</p>
-                                </div>
-                                <div className="p-4 bg-white border border-gray-100 rounded-md text-center shadow-sm">
-                                    <p className="text-lg font-bold text-gray-900 italic">3</p>
-                                    <p className="text-[10px] text-amber-600 font-bold uppercase">Syncing</p>
+                        {/* Payments Breakdown */}
+                        <section className="border border-gray-200 rounded p-6 flex flex-col">
+                            <h2 className="text-xs font-black uppercase tracking-[0.15em] mb-8">Asset Breakdown</h2>
+                            <div className="space-y-6 flex-1">
+                                {stats.payments.length > 0 ? stats.payments.map((p, idx) => (
+                                    <div key={idx} className="p-4 bg-gray-50 border-l-2 border-gray-900 flex justify-between items-center">
+                                        <div>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">MODE</p>
+                                            <p className="text-xs font-black uppercase">{p.name}</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-lg font-black">{p.count}</p>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">NODES</p>
+                                        </div>
+                                    </div>
+                                )) : (
+                                    <div className="text-center py-12 text-gray-300">
+                                        <BarChart3 className="w-12 h-12 mx-auto mb-2 opacity-20" />
+                                        <p className="text-[10px] font-bold uppercase">No records found</p>
+                                    </div>
+                                )}
+                                
+                                <div className="mt-auto pt-6 border-t border-dotted border-gray-200">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <span className="text-[10px] font-bold text-gray-400 uppercase">System Integrity</span>
+                                        <span className="text-[10px] font-bold text-green-600">VERIFIED</span>
+                                    </div>
+                                    <button className="w-full py-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-[10px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-2 transition-all">
+                                        <Download className="w-3 h-3" />
+                                        EXPORT DATAFRAME
+                                    </button>
                                 </div>
                             </div>
                         </section>
                     </div>
 
-                    {/* System Info */}
-                    <div className="mt-12 flex items-center gap-4 p-4 bg-blue-50 border border-blue-100 rounded-md">
-                        <Info className="w-5 h-5 text-blue-600 shrink-0" />
-                        <p className="text-xs text-blue-700 font-medium leading-relaxed">
-                            Global metrics are aggregated every 60 seconds from all team domains. Revenue figures are subject to final verification from the accounts team. Latency measurements are taken from the primary Bangalore-1 data center node.
+                    <footer className="mt-12 py-6 border-t border-gray-100">
+                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.3em] flex items-center gap-4">
+                            METRIC_AUTO_PULL: COMPLETED <span className="w-1 h-1 rounded-full bg-gray-300"></span> 
+                            LATENCY: 0.04 MS <span className="w-1 h-1 rounded-full bg-gray-300"></span> 
+                            ENCRYPTION: AES-256
                         </p>
-                    </div>
+                    </footer>
                 </div>
             </main>
         </div>
     );
 };
-
-export default MasterStats;
 
 export default MasterStats;

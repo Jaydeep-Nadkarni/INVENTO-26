@@ -121,5 +121,3 @@ const MasterLogin = () => {
 };
 
 export default MasterLogin;
-
-export default MasterLogin;

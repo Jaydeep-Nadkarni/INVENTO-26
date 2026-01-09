@@ -4,21 +4,35 @@ import { useData } from '../../context/DataContext';
 import { Search, Filter, Download, ExternalLink, ChevronDown } from 'lucide-react';
 
 const MasterParticipants = () => {
-    const { participants } = useData();
+    const { data: { participants, teams, events }, updateParticipant } = useData();
     const [searchTerm, setSearchTerm] = useState('');
     const [teamFilter, setTeamFilter] = useState('All');
-    const [statusFilter, setStatusFilter] = useState('All');
+    const [eventFilter, setEventFilter] = useState('All');
 
-    const teams = ['All', ...new Set(participants.map(p => p.team))];
-    const statuses = ['All', 'Verified', 'Registered'];
+    const filteredParticipants = useMemo(() => {
+        return participants.filter(p => {
+            const matchesSearch = 
+                p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                p.id?.toLowerCase().includes(searchTerm.toLowerCase());
+                
+            const matchesTeam = teamFilter === 'All' || p.team === teamFilter;
+            const matchesEvent = eventFilter === 'All' || p.event === eventFilter;
+            
+            return matchesSearch && matchesTeam && matchesEvent;
+        });
+    }, [participants, searchTerm, teamFilter, eventFilter]);
 
-    const filteredParticipants = participants.filter(p => {
-        const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                             p.id.toString().includes(searchTerm);
-        const matchesTeam = teamFilter === 'All' || p.team === teamFilter;
-        const matchesStatus = statusFilter === 'All' || p.status === statusFilter;
-        return matchesSearch && matchesTeam && matchesStatus;
-    });
+    const toggleVerification = (id, current) => {
+        updateParticipant(id, { verified: !current });
+    };
+
+    const togglePresence = (id, current) => {
+        updateParticipant(id, { present: !current });
+    };
+
+    const togglePayment = (id, current) => {
+        updateParticipant(id, { payment_status: current === 'paid' ? 'pending' : 'paid' });
+    };
 
     return (
         <div className="flex h-screen bg-white text-gray-900 border-gray-200">
@@ -29,109 +43,121 @@ const MasterParticipants = () => {
                     <header className="mb-8 border-b border-gray-100 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
                             <h1 className="text-2xl font-bold tracking-tight">Global Registry</h1>
-                            <p className="text-sm text-gray-500">Cross-team participant database and registration tracking</p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <button className="flex items-center gap-2 px-3 py-2 border border-gray-200 text-sm font-semibold rounded hover:bg-gray-50 text-gray-700 transition-colors">
-                                <Download className="w-4 h-4" />
-                                Download Full Report
-                            </button>
+                            <p className="text-sm text-gray-500">Master database of all event participants</p>
                         </div>
                     </header>
 
                     {/* Filters Strip */}
                     <div className="mb-8 flex flex-wrap gap-4 items-center">
-                        <div className="relative flex-1 min-w-[300px]">
+                        <div className="relative flex-1 min-w-[250px]">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input 
                                 type="text" 
                                 placeholder="Search by name or ID..."
-                                className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded text-sm focus:outline-none focus:ring-1 focus:ring-gray-900"
+                                className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded text-sm focus:outline-none focus:ring-1 focus:ring-gray-900 font-medium"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
                         
-                        <div className="flex gap-4">
-                            <div className="relative">
-                                <select 
-                                    value={teamFilter}
-                                    onChange={(e) => setTeamFilter(e.target.value)}
-                                    className="appearance-none bg-white border border-gray-200 px-4 py-2.5 pr-10 text-xs font-bold uppercase tracking-widest rounded focus:outline-none focus:ring-1 focus:ring-gray-900 cursor-pointer"
-                                >
-                                    {teams.map(team => <option key={team} value={team}>{team === 'All' ? 'ALL TEAMS' : team}</option>)}
-                                </select>
-                                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" />
-                            </div>
+                        <div className="flex gap-3">
+                            <select 
+                                value={teamFilter}
+                                onChange={(e) => {
+                                    setTeamFilter(e.target.value);
+                                    setEventFilter('All');
+                                }}
+                                className="bg-white border border-gray-200 px-4 py-2 text-[10px] font-bold uppercase tracking-widest rounded cursor-pointer"
+                            >
+                                <option value="All">ALL TEAMS</option>
+                                {teams.map(t => <option key={t.id} value={t.name}>{t.name.toUpperCase()}</option>)}
+                            </select>
 
-                            <div className="relative">
-                                <select 
-                                    value={statusFilter}
-                                    onChange={(e) => setStatusFilter(e.target.value)}
-                                    className="appearance-none bg-white border border-gray-200 px-4 py-2.5 pr-10 text-xs font-bold uppercase tracking-widest rounded focus:outline-none focus:ring-1 focus:ring-gray-900 cursor-pointer"
-                                >
-                                    {statuses.map(status => <option key={status} value={status}>{status === 'All' ? 'ALL STATUS' : status}</option>)}
-                                </select>
-                                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400 pointer-events-none" />
-                            </div>
+                            <select 
+                                value={eventFilter}
+                                onChange={(e) => setEventFilter(e.target.value)}
+                                className="bg-white border border-gray-200 px-4 py-2 text-[10px] font-bold uppercase tracking-widest rounded cursor-pointer"
+                            >
+                                <option value="All">ALL EVENTS</option>
+                                {events
+                                    .filter(e => teamFilter === 'All' || e.team === teamFilter)
+                                    .map(e => <option key={e.id} value={e.name}>{e.name.toUpperCase()}</option>)}
+                            </select>
                         </div>
                     </div>
 
                     {/* Data Table */}
                     <div className="bg-white border border-gray-200 rounded-md overflow-hidden shadow-sm">
-                        <table className="w-full text-left text-sm border-collapse">
-                            <thead className="bg-gray-50 border-b border-gray-200">
-                                <tr>
-                                    <th className="px-6 py-4 font-bold text-gray-500 uppercase tracking-widest text-[10px]">UID</th>
-                                    <th className="px-6 py-4 font-bold text-gray-500 uppercase tracking-widest text-[10px]">Name</th>
-                                    <th className="px-6 py-4 font-bold text-gray-500 uppercase tracking-widest text-[10px]">Assigned Team</th>
-                                    <th className="px-6 py-4 font-bold text-gray-500 uppercase tracking-widest text-[10px]">Event</th>
-                                    <th className="px-6 py-4 font-bold text-gray-500 uppercase tracking-widest text-[10px] text-center">Status</th>
-                                    <th className="px-6 py-4 font-bold text-gray-500 uppercase tracking-widest text-[10px] text-right">Details</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {filteredParticipants.map((p) => (
-                                    <tr key={p.id} className="hover:bg-gray-50 transition-colors group">
-                                        <td className="px-6 py-4 font-bold text-gray-300 group-hover:text-gray-900 transition-colors">#{p.id}</td>
-                                        <td className="px-6 py-4 font-bold text-gray-900">{p.name}</td>
-                                        <td className="px-6 py-4">
-                                            <span className="text-[10px] font-bold px-2 py-1 bg-gray-100 text-gray-600 rounded uppercase tracking-tight">
-                                                {p.team}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-gray-500 italic">{p.event}</td>
-                                        <td className="px-6 py-4 text-center">
-                                            <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${
-                                                p.status === 'Verified' 
-                                                ? 'bg-green-50 text-green-700' 
-                                                : 'bg-amber-50 text-amber-700'
-                                            }`}>
-                                                {p.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <button className="p-1.5 text-gray-400 hover:text-gray-900 transition-colors">
-                                                <ExternalLink className="w-4 h-4" />
-                                            </button>
-                                        </td>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm border-collapse">
+                                <thead className="bg-gray-50 border-b border-gray-200">
+                                    <tr>
+                                        <th className="px-4 py-4 font-bold text-gray-400 uppercase tracking-widest text-[9px]">ID</th>
+                                        <th className="px-4 py-4 font-bold text-gray-400 uppercase tracking-widest text-[9px]">Name</th>
+                                        <th className="px-4 py-4 font-bold text-gray-400 uppercase tracking-widest text-[9px]">Team</th>
+                                        <th className="px-4 py-4 font-bold text-gray-400 uppercase tracking-widest text-[9px]">Event</th>
+                                        <th className="px-4 py-4 font-bold text-gray-400 uppercase tracking-widest text-[9px] text-center">Status</th>
+                                        <th className="px-4 py-4 font-bold text-gray-400 uppercase tracking-widest text-[9px] text-center">Verified</th>
+                                        <th className="px-4 py-4 font-bold text-gray-400 uppercase tracking-widest text-[9px] text-center">Present</th>
+                                        <th className="px-4 py-4 font-bold text-gray-400 uppercase tracking-widest text-[9px] text-right">Payment</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                        {filteredParticipants.length === 0 && (
-                            <div className="p-16 text-center">
-                                <Search className="w-12 h-12 text-gray-100 mx-auto mb-4" />
-                                <p className="text-sm text-gray-400 font-medium">No results found in global database</p>
-                            </div>
-                        )}
+                                </thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {filteredParticipants.map((p) => (
+                                        <tr key={p.id} className="hover:bg-gray-50 transition-colors group">
+                                            <td className="px-4 py-4 font-mono text-[10px] font-bold text-gray-400">{p.id}</td>
+                                            <td className="px-4 py-4 font-bold text-gray-900">{p.name}</td>
+                                            <td className="px-4 py-4">
+                                                <span className="text-[9px] font-black px-1.5 py-0.5 border border-gray-200 text-gray-500 rounded uppercase">
+                                                    {p.team}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-4 text-[10px] font-medium text-gray-500">{p.event}</td>
+                                            <td className="px-4 py-4 text-center">
+                                                <span className={`text-[9px] font-bold ${p.verified ? 'text-green-500' : 'text-amber-500'}`}>
+                                                    {p.verified ? 'ACTIVE' : 'LOCKED'}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-4 text-center">
+                                                <button 
+                                                    onClick={() => toggleVerification(p.id, p.verified)}
+                                                    className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
+                                                        p.verified ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                                    }`}
+                                                >
+                                                    {p.verified ? 'YES' : 'NO'}
+                                                </button>
+                                            </td>
+                                            <td className="px-4 py-4 text-center">
+                                                <button 
+                                                    onClick={() => togglePresence(p.id, p.present)}
+                                                    className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
+                                                        p.present ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-400'
+                                                    }`}
+                                                >
+                                                    {p.present ? 'IN' : 'OUT'}
+                                                </button>
+                                            </td>
+                                            <td className="px-4 py-4 text-right">
+                                                <button 
+                                                    onClick={() => togglePayment(p.id, p.payment_status)}
+                                                    className={`text-[9px] font-black uppercase ${
+                                                        p.payment_status === 'paid' ? 'text-green-600' : 'text-amber-600'
+                                                    }`}
+                                                >
+                                                    {p.payment_status === 'paid' ? '✓ PAID' : '⚠ PENDING'}
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </main>
         </div>
     );
 };
-
-export default MasterParticipants;
 
 export default MasterParticipants;
