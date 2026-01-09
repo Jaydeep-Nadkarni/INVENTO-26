@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import bgImage from '../assets/UI/Invento-bg.jpg'
+import mobileBgImage from '../assets/UI/Invento-bg-mobile.png'
 import Hero from '../components/Hero'
 import Navbar from '../components/Navbar'
 import Briefcase from '../components/Briefcase'
@@ -323,16 +324,20 @@ const Home = () => {
         className="w-full bg-[#0a0a0a] relative selection:bg-red-700/30"
       >
 
-        {/* Mobile: Lightweight flat gradient background */}
+        {/* Mobile: Full background image fixed */}
       {isMobile ? (
-        <div className='fixed inset-0 z-0 bg-gradient-to-b from-gray-900 via-black to-gray-950' />
+        <div className='fixed inset-0 z-0 bg-cover bg-center bg-no-repeat'
+         style={{ 
+           backgroundImage: `url(${mobileBgImage})`,
+           backgroundAttachment: 'fixed'
+         }} />
       ) : (
-        // Desktop: Full background image with subtle blur
+        // Desktop: Full background image with lighter overlay
         <div
           className='fixed inset-0 bg-cover bg-center bg-no-repeat z-0'
           style={{ backgroundImage: `url(${bgImage})` }}
         >
-          <div className='absolute inset-0 bg-black/50 backdrop-blur-[1px]'></div>
+          <div className='absolute inset-0 bg-black/30 backdrop-blur-[1px]'></div>
         </div>
       )}
 
