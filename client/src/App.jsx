@@ -8,6 +8,19 @@ import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
 import Profile from './pages/Profile.jsx'
 
+// Session initialization logic - runs immediately on module load
+// This ensures that the flags are set before any components render (avoiding race conditions)
+if (typeof window !== 'undefined') {
+  const hasSessionStarted = sessionStorage.getItem('sessionStarted');
+  if (!hasSessionStarted) {
+    // Check if we are landing on the home page
+    if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
+      sessionStorage.setItem('shouldPlayIntro', 'true');
+    }
+    sessionStorage.setItem('sessionStarted', 'true');
+  }
+}
+
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const user = localStorage.getItem('currentUser')
@@ -21,32 +34,6 @@ const PublicRoute = ({ children }) => {
 }
 
 const NavigationManager = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  useEffect(() => {
-    // Mark session as active on first app load (any route)
-    if (!sessionStorage.getItem('session_active')) {
-      sessionStorage.setItem('session_active', 'true');
-    }
-    
-    // Check navigation type once per hard load
-    const navEntries = performance.getEntriesByType('navigation');
-    const isReload = navEntries.length > 0 && navEntries[0].type === 'reload';
-    const isInitialLoad = !sessionStorage.getItem('sessionStarted');
-
-    if (isInitialLoad || isReload) {
-      sessionStorage.setItem('sessionStarted', 'true');
-      
-      // Only trigger intro if we are specifically on the home page during refresh/initial load
-      if (location.pathname === '/') {
-        sessionStorage.setItem('shouldPlayIntro', 'true');
-      } else {
-        sessionStorage.removeItem('shouldPlayIntro');
-      }
-    }
-  }, []); // Only run once on mount
-
   return null;
 };
 
