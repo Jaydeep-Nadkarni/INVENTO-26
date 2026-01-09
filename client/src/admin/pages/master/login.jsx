@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../../context/AuthContext';
-import bgImage from '../../../assets/UI/Invento-bg.jpg';
+import { ShieldCheck, LogIn, Lock, Fingerprint } from 'lucide-react';
 
 const MasterLogin = () => {
     const [email, setEmail] = useState('');
@@ -16,7 +16,6 @@ const MasterLogin = () => {
         setError('');
         setIsLoading(true);
 
-        // Simulate high-security verification delay
         await new Promise(resolve => setTimeout(resolve, 1200));
         
         const result = login(email, password);
@@ -34,110 +33,93 @@ const MasterLogin = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center relative overflow-hidden font-mono text-white">
-            {/* Background Texture */}
-            <div 
-                className="fixed inset-0 bg-cover bg-center brightness-[0.1] contrast-150 grayscale pointer-events-none"
-                style={{ backgroundImage: `url(${bgImage})` }}
-            ></div>
-            <div className="absolute inset-0 bg-gradient-to-b from-red-950/20 to-black/80 backdrop-blur-md"></div>
-
-            <div className="relative z-10 w-full max-w-lg p-1 px-1 bg-gradient-to-r from-red-900/50 via-red-700/50 to-red-900/50 rounded-sm">
-                <div className="bg-[#050505] p-10 shadow-[0_0_100px_rgba(0,0,0,1)]">
-                    <div className="text-center mb-10">
-                        <div className="inline-block p-4 border border-red-700/30 mb-6 bg-red-700/5">
-                            <i className="fas fa-microchip text-4xl text-red-700"></i>
+        <div className="min-h-screen bg-white flex items-center justify-center p-6 text-gray-900 border-t-4 border-gray-900">
+            <div className="w-full max-w-lg">
+                <div className="bg-white border border-gray-200 rounded-lg shadow-2xl overflow-hidden">
+                    <div className="p-10 border-b border-gray-100 bg-gray-50/50 text-center">
+                        <div className="w-20 h-20 bg-white border border-gray-200 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm group">
+                            <ShieldCheck className="w-10 h-10 text-gray-900 transition-transform group-hover:scale-110" />
                         </div>
-                        <h1 className="text-red-700 font-serif font-black text-5xl tracking-tighter uppercase mb-2 flex items-center justify-center gap-4">
-                            <span className="h-px w-8 bg-red-700/30"></span>
-                            MASTER
-                            <span className="h-px w-8 bg-red-700/30"></span>
-                        </h1>
-                        <p className="text-gray-500 text-[10px] uppercase tracking-[0.6em] font-black italic">
-                            [ System Authority Level 0 ]
-                        </p>
+                        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Central Intelligence</h1>
+                        <p className="text-sm font-semibold text-gray-500 uppercase tracking-[0.2em] mt-2 mb-1">Master Control Terminal</p>
+                        <div className="h-0.5 w-12 bg-gray-900 mx-auto mt-4 rounded-full" />
                     </div>
 
-                    {error && (
-                        <div className="mb-8 p-4 bg-red-950/30 border border-red-700/50 text-red-500 text-[10px] uppercase tracking-widest text-center animate-pulse font-black">
-                            <i className="fas fa-exclamation-triangle mr-2"></i>
-                            CRITICAL ERROR: {error}
-                        </div>
-                    )}
+                    <div className="p-10">
+                        {error && (
+                            <div className="mb-8 p-4 bg-gray-50 border-l-4 border-gray-900 rounded-r-md flex items-center gap-4 text-gray-900 text-xs font-bold uppercase tracking-wider">
+                                <span className="p-1 bg-white rounded border border-gray-200">!</span>
+                                Authority Denial: {error}
+                            </div>
+                        )}
 
-                    <form onSubmit={handleSubmit} className="space-y-8">
-                        <div className="space-y-3">
-                            <label className="block text-gray-600 text-[9px] uppercase tracking-[0.4em] font-black">
-                                MASTER IDENTITY (UID)
-                            </label>
-                            <div className="relative">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-red-900/50 text-xs">$</span>
+                        <form onSubmit={handleSubmit} className="space-y-8">
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2 px-1">
+                                    <Fingerprint className="w-3.5 h-3.5" />
+                                    Master Identity (UID)
+                                </label>
                                 <input
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
-                                    className="w-full bg-[#0d0d0d] border border-white/5 pl-10 pr-4 py-4 text-white focus:outline-none focus:border-red-700/50 transition-all text-sm tracking-widest"
+                                    className="w-full bg-white border border-gray-200 rounded-md px-4 py-4 text-gray-900 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-gray-900 transition-all placeholder:text-gray-200"
                                     placeholder="master@invento.com"
                                 />
                             </div>
-                        </div>
 
-                        <div className="space-y-3">
-                            <label className="block text-gray-600 text-[9px] uppercase tracking-[0.4em] font-black">
-                                ENCRYPTION KEY (RSA)
-                            </label>
-                            <div className="relative">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-red-900/50 text-xs">#</span>
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2 px-1">
+                                    <Lock className="w-3.5 h-3.5" />
+                                    Global Encryption Key
+                                </label>
                                 <input
                                     type="password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
-                                    className="w-full bg-[#0d0d0d] border border-white/5 pl-10 pr-4 py-4 text-white focus:outline-none focus:border-red-700/50 transition-all text-sm tracking-widest"
+                                    className="w-full bg-white border border-gray-200 rounded-md px-4 py-4 text-gray-900 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-gray-900 transition-all placeholder:text-gray-200 font-mono"
                                     placeholder="••••••••••••"
                                 />
                             </div>
-                        </div>
 
-                        <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="w-full py-5 bg-gradient-to-r from-red-800 to-red-600 text-white font-black uppercase tracking-[0.5em] text-[10px] hover:brightness-125 transition-all shadow-[0_0_30px_rgba(185,28,28,0.2)] active:scale-[0.98] outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {isLoading ? (
-                                <span className="flex items-center justify-center gap-3">
-                                    <span className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
-                                    Verifying Biometrics...
-                                </span>
-                            ) : (
-                                'Authorize Access'
-                            )}
-                        </button>
-                        
-                        <div className="flex justify-between items-center px-2">
-                             <div className="flex gap-2">
-                                 {[1, 2, 3].map(i => <div key={i} className="w-1 h-1 bg-red-900/30"></div>)}
-                             </div>
-                             <span className="text-[8px] text-gray-700 uppercase tracking-widest">Invento Central Command</span>
-                             <div className="flex gap-2">
-                                 {[1, 2, 3].map(i => <div key={i} className="w-1 h-1 bg-red-900/30"></div>)}
-                             </div>
-                        </div>
-                    </form>
+                            <button
+                                type="submit"
+                                disabled={isLoading}
+                                className="w-full py-5 bg-gray-900 text-white font-bold uppercase tracking-[0.2em] text-[11px] rounded transition-all hover:bg-gray-800 shadow-xl active:scale-[0.99] disabled:opacity-50"
+                            >
+                                {isLoading ? (
+                                    <span className="flex items-center justify-center gap-3">
+                                        <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                                        Decrypting Identity...
+                                    </span>
+                                ) : (
+                                    'Initialize Master Session'
+                                )}
+                            </button>
+                        </form>
+                    </div>
+
+                    <div className="px-10 py-6 bg-gray-50 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
+                         <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-4">
+                             <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                             Network Status: Encrypted
+                         </div>
+                         <div className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">
+                             v1.0.4-LTS-Core
+                         </div>
+                    </div>
                 </div>
             </div>
             
-            <div className="absolute top-10 left-10 pointer-events-none opacity-20 hidden lg:block">
-                <div className="text-[10px] space-y-2">
-                    <p className="text-red-700 font-bold tracking-widest">CORE STATUS: STABLE</p>
-                    <p className="text-gray-500">MEMORY_USAGE: 32%</p>
-                    <p className="text-gray-500">NODES_CONNECTED: 08/08</p>
-                    <p className="text-gray-500">ACTIVE_ENCRYPTION: AES-XTS-256</p>
-                </div>
+            <div className="fixed bottom-8 left-8 text-gray-100 text-7xl font-bold select-none pointer-events-none -rotate-12 opacity-5">
+                MASTER ACCESS
             </div>
         </div>
     );
 };
+
+export default MasterLogin;
 
 export default MasterLogin;

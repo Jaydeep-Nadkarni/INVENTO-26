@@ -20,17 +20,27 @@ export const AdminAuthProvider = ({ children }) => {
     }, []);
 
     const login = (email, password) => {
-        // Dummy credentials validation
-        if (email === 'admin@invento.com' && password === 'admin123') {
-            const user = { email, role: 'admin' };
+        const creds = {
+            'dance@invento.com': 'dance123',
+            'media@invento.com': 'media123',
+            'registration@invento.com': 'reg123',
+            'hr@invento.com': 'hr123',
+            'music@invento.com': 'music123',
+            'coding@invento.com': 'coding123',
+            'gaming@invento.com': 'gaming123',
+            'art@invento.com': 'art123',
+            'master@invento.com': 'master123'
+        };
+
+        if (creds[email] && creds[email] === password) {
+            const role = email.includes('master') ? 'master' : 'admin';
+            const teamName = email.split('@')[0];
+            const team = teamName.charAt(0).toUpperCase() + teamName.slice(1);
+            
+            const user = { email, role, team };
             localStorage.setItem('adminUser', JSON.stringify(user));
             setAdminUser(user);
-            return { success: true, role: 'admin' };
-        } else if (email === 'master@invento.com' && password === 'master123') {
-            const user = { email, role: 'master' };
-            localStorage.setItem('adminUser', JSON.stringify(user));
-            setAdminUser(user);
-            return { success: true, role: 'master' };
+            return { success: true, role, team };
         }
         return { success: false, message: 'Invalid credentials' };
     };

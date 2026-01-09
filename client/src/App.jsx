@@ -9,6 +9,7 @@ import Register from './pages/Register.jsx'
 import Profile from './pages/Profile.jsx'
 import BriefcasePage from './pages/Briefcase.jsx'
 import { AdminAuthProvider, useAdminAuth } from './admin/context/AuthContext'
+import { DataProvider } from './admin/context/DataContext'
 
 // Administrative Page Imports (Placeholders)
 import AdminLogin from './admin/pages/admin/login'
@@ -21,6 +22,7 @@ import MasterAdmins from './admin/pages/master/Admins'
 import MasterEvents from './admin/pages/master/Events'
 import MasterParticipants from './admin/pages/master/Participants'
 import MasterStats from './admin/pages/master/Stats'
+import MasterTeams from './admin/pages/master/Teams'
 import MasterActivity from './admin/pages/master/Activity'
 
 // Session initialization logic - runs immediately on module load
@@ -52,7 +54,7 @@ const PublicRoute = ({ children }) => {
 const AdminRoute = ({ children }) => {
   const { adminUser, loading } = useAdminAuth();
   if (loading) return null;
-  return adminUser && (adminUser.role === 'admin' || adminUser.role === 'master') ? children : <Navigate to="/admin/login" replace />;
+  return adminUser && adminUser.role === 'admin' ? children : <Navigate to="/admin/login" replace />;
 }
 
 // Master Route Guard
@@ -69,9 +71,10 @@ const NavigationManager = () => {
 function App() {
   return (
     <Router>
-      <AdminAuthProvider>
-        <NavigationManager />
-        <Routes>
+      <DataProvider>
+        <AdminAuthProvider>
+          <NavigationManager />
+          <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/briefcase" element={<BriefcasePage />} />
           <Route path="/events" element={<Events />} />
@@ -109,6 +112,7 @@ function App() {
                   <Route path="/events" element={<MasterEvents />} />
                   <Route path="/participants" element={<MasterParticipants />} />
                   <Route path="/stats" element={<MasterStats />} />
+                  <Route path="/teams" element={<MasterTeams />} />
                   <Route path="/activity" element={<MasterActivity />} />
                 </Routes>
               </MasterRoute>
@@ -147,7 +151,8 @@ function App() {
           <Route path="/:clubSlug/:eventSlug" element={<Events />} />
         </Routes>
       </AdminAuthProvider>
-    </Router>
+    </DataProvider>
+  </Router>
   )
 }
 

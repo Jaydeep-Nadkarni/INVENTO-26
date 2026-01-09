@@ -1,75 +1,69 @@
 import React from 'react';
 import Sidebar from '../../components/sidebar';
 import { adminStats, eventAttendanceStats } from '../../data/adminData';
+import { BarChart3, TrendingUp, Users, Clock, AlertTriangle } from 'lucide-react';
 
 const AdminStats = () => {
     return (
-        <div className="flex h-screen bg-[#0a0a0a] text-gray-400 font-mono overflow-hidden">
+        <div className="flex h-screen bg-white text-gray-900 border-gray-200">
             <Sidebar />
-            <main className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-12 lg:ml-64">
+            <main className="flex-1 overflow-y-auto p-8 lg:ml-64">
                 <div className="max-w-6xl mx-auto">
-                    <header className="mb-12 border-b border-white/5 pb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-                        <div>
-                            <p className="text-[10px] uppercase tracking-[0.5em] text-red-700 font-bold mb-2">Metrics</p>
-                            <h1 className="text-3xl font-serif text-white uppercase tracking-tighter italic">
-                                Event <span className="text-red-700 not-italic">Analytics</span>
-                            </h1>
-                        </div>
+                    {/* Header Section */}
+                    <header className="mb-8 border-b border-gray-100 pb-6">
+                        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-3">
+                            <BarChart3 className="w-6 h-6" />
+                            Engagement Analytics
+                        </h1>
+                        <p className="text-sm text-gray-500">Real-time attendance tracking and event performance metrics</p>
                     </header>
 
-                    {/* Overall Summary */}
+                    {/* Overall Summary Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-                        <div className="bg-[#0d0d0d] border border-white/5 p-6 border-l-2 border-l-red-700">
-                            <h3 className="text-[10px] uppercase tracking-[0.2em] text-gray-600 mb-2">Registration Goal</h3>
-                            <p className="text-3xl font-serif text-white italic">74%</p>
-                        </div>
-                        <div className="bg-[#0d0d0d] border border-white/5 p-6 border-l-2 border-l-red-900">
-                            <h3 className="text-[10px] uppercase tracking-[0.2em] text-gray-600 mb-2">Verification Rate</h3>
-                            <p className="text-3xl font-serif text-white italic">92%</p>
-                        </div>
-                        <div className="bg-[#0d0d0d] border border-white/5 p-6 border-l-2 border-l-red-700">
-                            <h3 className="text-[10px] uppercase tracking-[0.2em] text-gray-600 mb-2">Avg Attendance</h3>
-                            <p className="text-3xl font-serif text-white italic">68%</p>
-                        </div>
-                        <div className="bg-[#0d0d0d] border border-white/5 p-6 border-l-2 border-l-red-900">
-                            <h3 className="text-[10px] uppercase tracking-[0.2em] text-gray-600 mb-2">System Load</h3>
-                            <p className="text-3xl font-serif text-white italic">Nominal</p>
-                        </div>
+                        {[
+                            { label: "Registration Goal", value: "74%", icon: TrendingUp },
+                            { label: "Verification Rate", value: "92%", icon: Users },
+                            { label: "Avg Attendance", value: "68%", icon: Clock },
+                            { label: "System Load", value: "Optimal", icon: BarChart3 }
+                        ].map((item, i) => (
+                            <div key={i} className="bg-white border border-gray-200 p-6 rounded-md shadow-sm">
+                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">{item.label}</p>
+                                <div className="flex items-end justify-between">
+                                    <p className="text-2xl font-bold text-gray-900">{item.value}</p>
+                                    <item.icon className="w-4 h-4 text-gray-300" />
+                                </div>
+                            </div>
+                        ))}
                     </div>
 
                     {/* Breakdown per Event */}
-                    <div className="grid grid-cols-1 gap-8">
+                    <div className="space-y-8">
                         <section>
-                            <h2 className="text-xs uppercase tracking-[0.5em] font-bold text-white mb-8 flex items-center">
-                                <span className="w-2 h-2 bg-red-700 mr-3 animate-pulse"></span>
+                            <h2 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-6 flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 bg-gray-900 rounded-full" />
                                 Attendance Breakdown
                             </h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {eventAttendanceStats.map((stat, index) => {
                                     const percentage = Math.round((stat.present / stat.total) * 100);
                                     return (
-                                        <div key={index} className="bg-[#111] border border-white/5 p-8 relative overflow-hidden group">
-                                            <div className="relative z-10 flex justify-between items-center mb-6">
+                                        <div key={index} className="bg-white border border-gray-200 p-6 rounded-md group hover:shadow-md transition-all">
+                                            <div className="flex justify-between items-start mb-6">
                                                 <div>
-                                                    <h3 className="text-lg font-serif text-white uppercase italic tracking-wider">{stat.event}</h3>
-                                                    <p className="text-[10px] text-gray-600 uppercase tracking-[0.2em] mt-1">
+                                                    <h3 className="text-sm font-bold text-gray-900">{stat.event}</h3>
+                                                    <p className="text-xs text-gray-500 mt-1 font-medium">
                                                         {stat.present} Present / {stat.total} Total
                                                     </p>
                                                 </div>
-                                                <div className="text-2xl font-black text-red-700 font-serif">{percentage}%</div>
+                                                <div className="text-lg font-bold text-gray-900">{percentage}%</div>
                                             </div>
                                             
                                             {/* Progress Bar Container */}
-                                            <div className="h-1.5 w-full bg-white/5 overflow-hidden rounded-full">
+                                            <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
                                                 <div 
-                                                    className="h-full bg-gradient-to-r from-red-900 to-red-600 transition-all duration-1000 group-hover:brightness-125"
+                                                    className="h-full bg-gray-900 transition-all duration-1000"
                                                     style={{ width: `${percentage}%` }}
                                                 ></div>
-                                            </div>
-
-                                            {/* Background Decoration */}
-                                            <div className="absolute top-0 right-0 p-2 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity">
-                                                <div className="text-6xl font-black">{index + 1}</div>
                                             </div>
                                         </div>
                                     );
@@ -77,13 +71,16 @@ const AdminStats = () => {
                             </div>
                         </section>
 
-                        <section className="bg-red-900/5 border border-red-900/10 p-8">
+                        {/* Informational Alert */}
+                        <section className="bg-gray-50 border border-gray-200 p-6 rounded-md">
                              <div className="flex items-start gap-4">
-                                 <div className="w-10 h-10 border border-red-700/30 flex items-center justify-center text-red-700 font-bold shrink-0">!</div>
+                                 <div className="p-2 bg-white border border-gray-200 rounded-full shadow-sm">
+                                    <AlertTriangle className="w-4 h-4 text-amber-600" />
+                                 </div>
                                  <div>
-                                     <h3 className="text-[10px] uppercase tracking-[0.3em] font-bold text-white mb-2">Automatic Sync Warning</h3>
-                                     <p className="text-[9px] text-gray-600 leading-relaxed max-w-2xl">
-                                         Telemetry data is synchronized every 15 minutes. Manual overrides performed at the sub-nodes (Stage 1, Stage 2) may take time to propagate to the central registry. Ensure all handheld scanners are connected to the INVENTO internal mesh network.
+                                     <h3 className="text-xs font-bold text-gray-900 uppercase tracking-widest mb-1">Data Synchronization Info</h3>
+                                     <p className="text-xs text-gray-500 leading-relaxed font-medium">
+                                         Attendance metrics are updated every 15 minutes. Manual check-ins at specific event gates may experience slight propagation delays. For mission-critical real-time tracking, please refer to the live log stream in the Dashboard.
                                      </p>
                                  </div>
                              </div>
@@ -94,5 +91,7 @@ const AdminStats = () => {
         </div>
     );
 };
+
+export default AdminStats;
 
 export default AdminStats;

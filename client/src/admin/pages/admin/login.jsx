@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '../../context/AuthContext';
-import bgImage from '../../../assets/UI/Invento-bg.jpg';
+import { ShieldAlert, LogIn, Lock, Mail } from 'lucide-react';
 
 const AdminLogin = () => {
     const [email, setEmail] = useState('');
@@ -16,7 +16,6 @@ const AdminLogin = () => {
         setError('');
         setIsLoading(true);
         
-        // Simulate network delay
         await new Promise(resolve => setTimeout(resolve, 800));
         
         const result = login(email, password);
@@ -33,87 +32,87 @@ const AdminLogin = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center relative overflow-hidden font-mono">
-            {/* Background Texture */}
-            <div 
-                className="fixed inset-0 bg-cover bg-center brightness-[0.2] grayscale contrast-125 pointer-events-none"
-                style={{ backgroundImage: `url(${bgImage})` }}
-            ></div>
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-
-            <div className="relative z-10 w-full max-w-md p-8 bg-[#0d0d0d]/90 border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)]">
-                <div className="text-center mb-8">
-                    <h1 className="text-red-700 font-serif font-black text-4xl tracking-tighter uppercase mb-2" style={{ textShadow: '2px 2px 0px #000' }}>
-                        INVENTO <span className="text-sm align-top text-red-600">'26</span>
-                    </h1>
-                    <p className="text-gray-500 text-[10px] uppercase tracking-[0.4em]">
-                        [ Restricted Personnel Only ]
-                    </p>
-                </div>
-
-                {error && (
-                    <div className="mb-6 p-3 bg-red-900/20 border border-red-900/50 text-red-500 text-xs uppercase tracking-wider text-center animate-pulse">
-                        ACCESS DENIED: {error}
-                    </div>
-                )}
-
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div>
-                        <label className="block text-gray-500 text-[10px] uppercase tracking-[0.2em] mb-2 px-1">
-                            Credential ID (Email)
-                        </label>
-                        <input
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                            className="w-full bg-[#1a1a1a] border border-white/10 px-4 py-3 text-white focus:outline-none focus:border-red-700 transition-colors"
-                            placeholder="agent@invento.com"
-                        />
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6 text-gray-900">
+            <div className="w-full max-w-md">
+                <div className="bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden">
+                    <div className="p-8 border-b border-gray-100 bg-gray-50/50 text-center">
+                        <div className="w-16 h-16 bg-white border border-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
+                            <LogIn className="w-8 h-8 text-gray-900" />
+                        </div>
+                        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Admin Portal</h1>
+                        <p className="text-sm text-gray-500 font-medium mt-1">Personnel Authentication Required</p>
                     </div>
 
-                    <div>
-                        <label className="block text-gray-500 text-[10px] uppercase tracking-[0.2em] mb-2 px-1">
-                            Auth Key (Password)
-                        </label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                            className="w-full bg-[#1a1a1a] border border-white/10 px-4 py-3 text-white focus:outline-none focus:border-red-700 transition-colors"
-                            placeholder="••••••••"
-                        />
-                    </div>
-
-                    <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full py-4 bg-red-700 text-white font-black uppercase tracking-[0.3em] text-xs hover:bg-red-800 transition-all shadow-[4px_4px_0px_#000] active:shadow-none active:translate-x-1 active:translate-y-1 mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {isLoading ? (
-                            <span className="flex items-center justify-center gap-2">
-                                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                                Authenticating...
-                            </span>
-                        ) : (
-                            'Initiate Session'
+                    <div className="p-8">
+                        {error && (
+                            <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-md flex items-center gap-3 text-red-700 text-sm font-bold">
+                                <ShieldAlert className="w-4 h-4 shrink-0" />
+                                {error}
+                            </div>
                         )}
-                    </button>
-                    
-                    <div className="mt-8 pt-6 border-t border-white/5 flex justify-center gap-4">
-                         <div className="w-1.5 h-1.5 rounded-full bg-red-700 animate-pulse"></div>
-                         <div className="w-1.5 h-1.5 rounded-full bg-red-700/40"></div>
-                         <div className="w-1.5 h-1.5 rounded-full bg-red-700/20"></div>
+
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2 px-1">
+                                    <Mail className="w-3 h-3" />
+                                    Email Address
+                                </label>
+                                <input
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                    className="w-full bg-white border border-gray-200 rounded-md px-4 py-3 text-gray-900 text-sm focus:outline-none focus:ring-1 focus:ring-gray-900 transition-all placeholder:text-gray-300"
+                                    placeholder="your-team@invento.com"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-2 px-1">
+                                    <Lock className="w-3 h-3" />
+                                    Password Key
+                                </label>
+                                <input
+                                    type="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                    className="w-full bg-white border border-gray-200 rounded-md px-4 py-3 text-gray-900 text-sm focus:outline-none focus:ring-1 focus:ring-gray-900 transition-all placeholder:text-gray-300"
+                                    placeholder="••••••••"
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={isLoading}
+                                className="w-full py-4 bg-gray-900 text-white font-bold uppercase tracking-widest text-xs rounded-md hover:bg-gray-800 transition-all shadow-md active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
+                            >
+                                {isLoading ? (
+                                    <span className="flex items-center justify-center gap-2">
+                                        <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                                        Authenticating...
+                                    </span>
+                                ) : (
+                                    'Secure Login'
+                                )}
+                            </button>
+                        </form>
                     </div>
-                </form>
-            </div>
-            
-            <div className="absolute bottom-4 right-4 text-white/5 text-[8px] uppercase tracking-widest pointer-events-none">
-                ENCRYPTION: AES-256 | STATUS: SECURE
+
+                    <div className="px-8 py-5 bg-gray-50/50 border-t border-gray-100 flex justify-between items-center">
+                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Invento '26 Core</span>
+                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Authorized Access Only</span>
+                    </div>
+                </div>
+                
+                <p className="text-center mt-8 text-[11px] text-gray-400 font-medium uppercase tracking-[0.2em] px-8 leading-relaxed">
+                    By logging in, you agree to the internal security protocols of the Invento technical committee. All sessions are logged and monitored.
+                </p>
             </div>
         </div>
     );
 };
+
+export default AdminLogin;
 
 export default AdminLogin;

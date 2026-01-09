@@ -1,55 +1,81 @@
 import React from 'react';
 import Sidebar from '../../components/sidebar';
 import { eventsList } from '../../data/masterData';
+import { Calendar, MapPin, Users, ArrowUpRight, Search } from 'lucide-react';
 
 const MasterEvents = () => {
     return (
-        <div className="flex h-screen bg-[#0a0a0a] text-gray-400 font-mono overflow-hidden">
+        <div className="flex h-screen bg-white text-gray-900 border-gray-200">
             <Sidebar panelType="master" />
-            <main className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-12 lg:ml-64">
+            <main className="flex-1 overflow-y-auto p-8 lg:ml-64">
                 <div className="max-w-7xl mx-auto">
-                    <header className="mb-12 border-b border-red-900/20 pb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+                    {/* Header Section */}
+                    <header className="mb-8 border-b border-gray-100 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
-                            <p className="text-[10px] uppercase tracking-[0.5em] text-red-700 font-bold mb-2">Scheduling</p>
-                            <h1 className="text-3xl font-serif text-white uppercase tracking-tighter italic">
-                                Global <span className="text-red-700 not-italic">Event Directory</span>
-                            </h1>
+                            <h1 className="text-2xl font-bold tracking-tight">Global Event Directory</h1>
+                            <p className="text-sm text-gray-500">Overview of all departmental events, team assignments, and capacity stats</p>
+                        </div>
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <input 
+                                type="text" 
+                                placeholder="Search events..."
+                                className="pl-10 pr-4 py-2 bg-white border border-gray-200 rounded text-sm focus:outline-none focus:ring-1 focus:ring-gray-900"
+                            />
                         </div>
                     </header>
                     
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                         {eventsList.map((event) => (
-                            <div key={event.id} className="bg-[#111] border border-white/5 p-6 hover:border-red-800/50 transition-all group relative overflow-hidden">
-                                <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                                    <i className="fas fa-calendar-alt text-4xl"></i>
-                                </div>
+                            <div key={event.id} className="bg-white border border-gray-200 p-6 rounded-md group hover:shadow-md transition-all flex flex-col h-full">
                                 <div className="flex justify-between items-start mb-6">
-                                    <div>
-                                        <p className="text-red-700 text-[9px] font-black uppercase tracking-widest mb-1">{event.id}</p>
-                                        <h3 className="text-xl font-serif text-white uppercase italic tracking-tighter">{event.name}</h3>
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-bold uppercase tracking-tight">
+                                                {event.id}
+                                            </span>
+                                            <span className={`text-[10px] font-bold uppercase ${
+                                                event.status === 'Live' ? 'text-green-600' : 
+                                                event.status === 'Upcoming' ? 'text-amber-600' : 'text-gray-400'
+                                            }`}>
+                                                • {event.status}
+                                            </span>
+                                        </div>
+                                        <h3 className="text-lg font-bold text-gray-900 group-hover:text-gray-700 transition-colors">
+                                            {event.name}
+                                        </h3>
                                     </div>
-                                    <span className={`px-2 py-0.5 text-[8px] font-black uppercase ${
-                                        event.status === 'Live' ? 'text-green-500 animate-pulse' : 
-                                        event.status === 'Upcoming' ? 'text-yellow-600' : 'text-gray-700'
-                                    }`}>
-                                        {event.status}
-                                    </span>
+                                    <button className="text-gray-300 group-hover:text-gray-900 transition-colors">
+                                        <ArrowUpRight className="w-5 h-5" />
+                                    </button>
                                 </div>
                                 
-                                <div className="space-y-4">
-                                    <div className="flex justify-between items-center bg-[#0d0d0d] p-3 border border-white/5">
-                                        <span className="text-[9px] uppercase tracking-widest text-gray-600">Sector</span>
-                                        <span className="text-xs text-gray-300 font-black uppercase">{event.team}</span>
+                                <div className="mt-auto space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="flex items-center gap-2">
+                                            <div className="p-1.5 bg-gray-50 rounded">
+                                                <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Team</p>
+                                                <p className="text-xs font-bold text-gray-700 uppercase">{event.team}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <div className="p-1.5 bg-gray-50 rounded">
+                                                <Users className="w-3.5 h-3.5 text-gray-400" />
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Capacity</p>
+                                                <p className="text-xs font-bold text-gray-700">{event.participants} Fixed</p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="flex justify-between items-center bg-[#0d0d0d] p-3 border border-white/5">
-                                        <span className="text-[9px] uppercase tracking-widest text-gray-600">Capacity</span>
-                                        <span className="text-xs text-white font-serif">{event.participants} Units</span>
-                                    </div>
+                                    
+                                    <button className="w-full mt-4 py-2.5 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-[10px] font-bold text-gray-900 uppercase tracking-[0.2em] transition-all rounded">
+                                        Manager Event Node
+                                    </button>
                                 </div>
-                                
-                                <button className="w-full mt-6 py-2 border border-red-900/20 text-[9px] uppercase tracking-[0.4em] font-black text-gray-600 hover:text-red-700 hover:border-red-700/50 transition-all">
-                                    Access Node
-                                </button>
                             </div>
                         ))}
                     </div>
@@ -58,5 +84,7 @@ const MasterEvents = () => {
         </div>
     );
 };
+
+export default MasterEvents;
 
 export default MasterEvents;
