@@ -9,6 +9,7 @@ import Register from './pages/Register.jsx'
 import Profile from './pages/Profile.jsx'
 import BriefcasePage from './pages/Briefcase.jsx'
 import { useAdminAuth } from './admin/context/AuthContext'
+import { monitorLongTasks, isMobileDevice } from './utils/performanceOptimization'
 
 // Administrative Page Imports (Placeholders)
 import AdminLogin from './admin/pages/admin/login'
@@ -68,6 +69,19 @@ const NavigationManager = () => {
 };
 
 function App() {
+  // Initialize performance monitoring
+  useEffect(() => {
+    // Monitor long tasks (tasks > 50ms)
+    if (!isMobileDevice()) {
+      monitorLongTasks();
+    }
+    
+    // Log Core Web Vitals on mobile
+    if (isMobileDevice()) {
+      console.log('📱 Mobile optimization enabled: Animations disabled, lazy loading active');
+    }
+  }, [])
+
   return (
     <Router>
       <NavigationManager />

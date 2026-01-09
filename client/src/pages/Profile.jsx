@@ -5,6 +5,12 @@ import paperTexture from '../assets/UI/paper-texture.jpg'
 import bgImage from '../assets/UI/Invento-bg.jpg'
 import Navbar from '../components/Navbar'
 
+// Mobile detection utility
+const isMobileDevice = () => {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(max-width: 767px)').matches;
+};
+
 // SVG Icons
 const Icons = {
   User: () => (
@@ -58,6 +64,15 @@ const Profile = () => {
   const navigate = useNavigate()
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [isMobile, setIsMobile] = useState(isMobileDevice())
+
+  // Listen for mobile/desktop switches
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 767px)');
+    const handleChange = (e) => setIsMobile(e.matches);
+    mediaQuery.addListener(handleChange);
+    return () => mediaQuery.removeListener(handleChange);
+  }, []);
   const [showLinksModal, setShowLinksModal] = useState(false)
 
   useEffect(() => {
@@ -130,19 +145,24 @@ const Profile = () => {
     <div
       className="min-h-screen relative overflow-hidden bg-[#1a1a1a] font-serif"
     >
-      {/* Background */}
-      <div
-        className="fixed inset-0 z-0 opacity-30"
-        style={{
-          backgroundImage: `url(${bgImage})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      />
+      {/* Mobile: Lightweight flat gradient background */}
+      {isMobile ? (
+        <div className="fixed inset-0 z-0 bg-gradient-to-b from-gray-900 via-black to-gray-950" />
+      ) : (
+        // Desktop: Full background with opacity
+        <div
+          className="fixed inset-0 z-0 opacity-30"
+          style={{
+            backgroundImage: `url(${bgImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        />
+      )}
       <div className="absolute inset-0 bg-black/50 pointer-events-none"></div>
       <div className="absolute inset-0 opacity-[0.05] pointer-events-none mix-blend-overlay" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")` }}></div>
 
-      <Navbar />
+      <Navbar isMobile={isMobile} />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}

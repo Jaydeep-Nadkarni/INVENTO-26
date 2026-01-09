@@ -1,5 +1,33 @@
 @import "tailwindcss";
 
+/* Mobile performance: Disable all animations on mobile devices */
+@media (max-width: 768px) {
+  * {
+    animation: none !important;
+    transition: none !important;
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+  
+  /* Disable backdrop-blur on mobile for performance */
+  .backdrop-blur-md,
+  .backdrop-blur-sm,
+  [class*="backdrop-blur"] {
+    backdrop-filter: none !important;
+  }
+}
+
+/* Reduce motion for all users with prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* Global scroll management */
 html {
   margin: 0;
