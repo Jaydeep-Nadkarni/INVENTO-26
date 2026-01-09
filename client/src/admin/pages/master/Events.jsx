@@ -42,7 +42,7 @@ const MasterEvents = () => {
 
                     {/* Team Tabs */}
                     <div className="mb-8 flex flex-wrap gap-2 border-b border-gray-800 pb-4">
-                        {['All', ...teams.filter(t => t.name !== 'Registration').map(t => t.name)].map(team => (
+                        {['All', ...teams.filter(t => t.name?.toLowerCase() !== 'registration').map(t => t.name)].map(team => (
                             <button
                                 key={team}
                                 onClick={() => setActiveTeam(team)}

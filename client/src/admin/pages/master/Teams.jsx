@@ -11,7 +11,7 @@ const MasterTeams = () => {
     const filteredTeams = teams.filter(t => 
         (t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         t.id.toLowerCase().includes(searchTerm.toLowerCase())) &&
-        t.name !== 'Registration'
+        t.name?.toLowerCase() !== 'registration'
     );
 
     const handleEventChange = (teamId, eventName) => {

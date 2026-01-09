@@ -71,7 +71,7 @@ const MasterParticipants = () => {
                             >
                                 <option value="All">ALL TEAMS</option>
                                 {teams
-                                    .filter(t => t.name !== 'Registration')
+                                    .filter(t => t.name?.toLowerCase() !== 'registration')
                                     .map(t => <option key={t.id} value={t.name}>{t.name.toUpperCase()}</option>)}
                             </select>
 

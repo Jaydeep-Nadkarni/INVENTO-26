@@ -42,7 +42,7 @@ const MasterStats = () => {
                 ? (p.team || 'N/A')
                 : (p.event || 'N/A');
             
-            if (key !== 'Registration') {
+            if (key?.toLowerCase() !== 'registration') {
                 distribution[key] = (distribution[key] || 0) + 1;
             }
         });
@@ -85,7 +85,7 @@ const MasterStats = () => {
                                 >
                                     <option value="all">ALL TEAMS</option>
                                     {teams
-                                        .filter(t => t.name !== 'Registration')
+                                        .filter(t => t.name?.toLowerCase() !== 'registration')
                                         .map(t => (
                                             <option key={t.id} value={t.name}>
                                                 {(t.name || 'Unnamed').toUpperCase()}

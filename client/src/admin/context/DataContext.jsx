@@ -25,8 +25,11 @@ export const DataProvider = ({ children }) => {
 
     // Computed Stats (Re-calculated when participants/events/admins/teams change)
     const stats = useMemo(() => {
+        // Filter out any lingering registration events from statistics
+        const filteredEvents = data.events.filter(e => e.team !== 'Registration');
+        
         const totalParticipants = data.participants.length;
-        const totalEvents = data.events.length;
+        const totalEvents = filteredEvents.length;
         const totalAdmins = data.admins.length;
         const paidParticipants = data.participants.filter(p => p.payment_status === 'paid');
         const revenue = paidParticipants.reduce((sum, p) => sum + p.payment_amount, 0);
@@ -84,6 +87,8 @@ export const DataProvider = ({ children }) => {
     const value = {
         data: {
             ...data,
+            // Decisively exclude Registration events and stats from the entire application (case-insensitive)
+            events: data.events.filter(e => e.team?.toLowerCase() !== 'registration'),
             masterStats: stats.masterStats,
             adminDistribution: stats.adminDistribution
         },

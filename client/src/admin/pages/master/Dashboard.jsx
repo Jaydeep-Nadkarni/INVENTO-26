@@ -23,6 +23,9 @@ const MasterDashboard = () => {
         const stats = {};
         events.forEach(event => {
             const club = event.team || 'General';
+            // Explicitly exclude Registration from occupancy stats (case-insensitive)
+            if (club.toLowerCase() === 'registration') return;
+
             if (!stats[club]) {
                 stats[club] = {
                     totalSlots: 0,
@@ -130,7 +133,7 @@ const MasterDashboard = () => {
                             </h2>
                             <div className="space-y-4">
                                 {adminDistribution
-                                    ?.filter(dist => dist.team !== 'Registration')
+                                    ?.filter(dist => dist.team?.toLowerCase() !== 'registration')
                                     .map((dist, idx) => (
                                     <div key={idx} className="p-3 border border-gray-900 rounded hover:bg-gray-900 transition-colors">
                                         <div className="flex justify-between items-center mb-1">
