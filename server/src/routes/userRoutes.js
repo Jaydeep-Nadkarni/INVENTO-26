@@ -9,10 +9,11 @@ import {
   getProfile,
 } from "../controllers/userController.js";
 import { protect } from "../middlewares/authMiddleware.js";
+import upload from "../middlewares/uploadMiddleware.js";
 
 const router = express.Router();
 
-router.post("/register", registerUser);
+router.post("/register", upload.single("profilePhoto"), registerUser);
 router.post("/login", loginUser);
 router.post("/verify-otp", verifyOTP);
 router.post("/resend-verify-otp", resendVerifyOTP);

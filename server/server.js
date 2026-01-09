@@ -2,6 +2,8 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 import connectDB from "./src/config/db.js";
 import userRoutes from "./src/routes/userRoutes.js";
 import eventRoutes from "./src/routes/eventRoutes.js";
@@ -11,11 +13,15 @@ dotenv.config();
 connectDB();
 
 const app = express();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // ---------- Middleware ----------
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+// Serve static files from uploads directory
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ---------- Routes ----------
 app.get("/", (req, res) => {

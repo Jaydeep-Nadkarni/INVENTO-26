@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/userModel.js";
 import dotenv from "dotenv";
 import { verifyOTPService } from "../services/userService.js";
+import { processProfilePhoto } from "../services/imageService.js";
 
 dotenv.config();
 
@@ -154,7 +155,6 @@ export const registerUser = async (req, res) => {
       password: hashedPassword,
       phone,
       clgName,
-      profilePhoto,
       otp,
       otpExpiresAt,
       isVerified: false,
@@ -162,7 +162,22 @@ export const registerUser = async (req, res) => {
       present: false,
     });
 
-    await newUser.save();
+    // 📸 Handle Profile Photo if uploaded
+    if (req.file) {
+      // We need the ID first, so we save once to trigger the ID generation hook
+      await newUser.save();
+      
+      try {
+        const photoPath = await processProfilePhoto(req.file.buffer, newUser._id);
+        newUser.profilePhoto = photoPath;
+        await newUser.save();
+      } catch (error) {
+        console.error("Error processing profile photo:", error);
+        // We continue registration even if photo fails, but ideally we should handle it
+      }
+    } else {
+      await newUser.save();
+    }
 
     // 📧 Send Space-styled email
     await transporter.sendMail({
