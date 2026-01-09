@@ -177,10 +177,10 @@ const Hero = () => {
         </div>
       </div>
 
-      <div className="absolute bottom-8 left-2 md:bottom-12 md:left-4 z-10 hidden md:block">
+      <div className="absolute bottom-8 left-2 md:bottom-6 md:left-24 z-10 hidden md:block">
         <div className="relative transform">
           <img src={pin} alt="pin" className="absolute top-1 left-1/2 transform -translate-x-1/2 w-6 z-20" />
-          <img src={news} alt="Newspaper" className="w-56 md:w-64 shadow-2xl" />
+          <img src={news} alt="Newspaper" className="w-56 md:w-48 shadow-2xl" />
         </div>
       </div>
 
