@@ -254,6 +254,8 @@ const Home = () => {
         <>
             <audio ref={audioRef} src={introAudio} preload="auto" />
       
+      <Navbar onEventsClick={handleNavigateToEvents} isMobile={isMobile} />
+
       <AnimatePresence mode="wait">
         {isLoading && (
           <Loader key="loader" progress={loadProgress} onComplete={handleLoaderComplete} />
@@ -340,8 +342,6 @@ const Home = () => {
           <div className='absolute inset-0 bg-black/30 backdrop-blur-[1px]'></div>
         </div>
       )}
-
-      <Navbar onEventsClick={handleNavigateToEvents} isMobile={isMobile} />
 
       {/* Hero Section */}
       <section className="relative z-10 w-full min-h-screen flex items-center justify-center">

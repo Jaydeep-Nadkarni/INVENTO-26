@@ -50,9 +50,9 @@ const Navbar = ({ onEventsClick, isMobile }) => {
   }
 
   return (
-    <nav className="fixed top-0 left-0 w-full z-50 px-6 py-4 flex items-center justify-between">
+    <nav className={`fixed top-0 left-0 w-full z-50 px-4 h-16 md:px-6 py-3 md:py-4 flex items-center justify-between transition-colors duration-300 ${isMobile && mobileMenuOpen ? 'bg-black' : 'bg-transparent md:bg-transparent'}`}>
       {/* Logo/Brand */}
-      <Link to="/" className="text-yellow-500 font-serif font-bold text-xl tracking-tighter hover:opacity-80 transition-opacity">
+      <Link to="/" className="text-yellow-500 font-serif font-bold text-lg md:text-xl tracking-tighter hover:opacity-80 transition-opacity">
         INVENTO <span className="text-xs align-top opacity-70">'26</span>
       </Link>
 
@@ -77,28 +77,31 @@ const Navbar = ({ onEventsClick, isMobile }) => {
       </div>
 
       {/* User Section & Mobile Menu Toggle */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 mt-0">
         {/* Mobile Hamburger Menu Button */}
         {isMobile && (
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden flex flex-col gap-1.5 text-white hover:text-yellow-500 transition-colors"
-            aria-label="Toggle menu"
-          >
-            <motion.span 
-              animate={mobileMenuOpen ? { rotate: 45, y: 12 } : { rotate: 0, y: 0 }}
-              className="block w-6 h-0.5 bg-current transition-all"
-            />
-            <motion.span 
-              animate={mobileMenuOpen ? { opacity: 0 } : { opacity: 1 }}
-              className="block w-6 h-0.5 bg-current"
-            />
-            <motion.span 
-              animate={mobileMenuOpen ? { rotate: -45, y: -12 } : { rotate: 0, y: 0 }}
-              className="block w-6 h-0.5 bg-current transition-all"
-            />
-          </button>
-        )}
+  <button
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        className="md:hidden flex flex-col gap-1.5 text-white hover:text-yellow-500 transition-colors"
+        aria-label="Toggle menu"
+      >
+        <motion.span 
+          animate={mobileMenuOpen ? { rotate: 45, y: 8 } : { rotate: 0, y: 0 }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="block w-6 h-0.5 bg-current origin-center"
+        />
+        <motion.span 
+          animate={mobileMenuOpen ? { opacity: 0, scale: 0 } : { opacity: 1, scale: 1 }}
+          transition={{ duration: 0.2, ease: "easeInOut" }}
+          className="block w-6 h-0.5 bg-current"
+        />
+        <motion.span 
+          animate={mobileMenuOpen ? { rotate: -45, y: -8 } : { rotate: 0, y: 0 }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="block w-6 h-0.5 bg-current origin-center"
+        />
+      </button>
+    )}
 
         {currentUser ? (
           <button
@@ -148,11 +151,11 @@ const Navbar = ({ onEventsClick, isMobile }) => {
       <AnimatePresence>
         {isMobile && mobileMenuOpen && (
           <motion.div
-            initial={{ opacity: 0, x: -300 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -300 }}
+            initial={{ opacity: 0, y: -300 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -300 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="fixed left-0 top-20 h-screen w-64 bg-black/95 backdrop-blur-md border-r border-yellow-500/30 z-40"
+            className="fixed top-16 left-0 h-screen w-full bg-gradient-to-b from-black via-black to-black/80 backdrop-blur-md z-40"
           >
             <div className="flex flex-col p-6 gap-4">
               {/* Mobile Nav Items */}
@@ -191,7 +194,7 @@ const Navbar = ({ onEventsClick, isMobile }) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setMobileMenuOpen(false)}
-            className="fixed inset-0 bg-black/50 z-30 top-20"
+            className="fixed inset-0 bg-black/50 z-20 top-16"
           />
         )}
       </AnimatePresence>
