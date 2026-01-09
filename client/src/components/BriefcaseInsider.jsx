@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useCallback } from 'react'
 import { clubsData } from './Events/clubsData'
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion'
 import paperTexture from '../assets/UI/paper-texture.jpg'
@@ -130,13 +130,14 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
         playEffect(pageTurnSound)
         setCards((prev) => {
             const newCards = [...prev]
+            // Shift first card (top of stack) to end (creates infinite loop effect)
             const topCard = newCards.shift()
             newCards.push(topCard)
             return newCards
         })
     }
 
-    const handleCardClick = (id) => {
+    const handleCardClick = useCallback((id) => {
         const card = cards.find(c => c.id === id)
         if (selectedCardId === id) {
             // If already selected, navigate
@@ -153,15 +154,15 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
             setSelectedCardId(id)
             setStatusText(`Inspecting: ${card.name} File. Click "OPEN" to reveal details. Click outside the card to close.`)
         }
-    }
+    }, [selectedCardId, cards, navigate])
 
-    const handleCloseCard = (e) => {
+    const handleCloseCard = useCallback((e) => {
         e.stopPropagation()
         setSelectedCardId(null)
         setStatusText('Swipe cards to shuffle;')
-    }
+    }, [])
 
-    const handleRadioClick = (e) => {
+    const handleRadioClick = useCallback((e) => {
         e.stopPropagation()
         if (isRadioPlaying) {
             audioRef.current.pause()
@@ -173,22 +174,22 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
             setIsRadioPlaying(true)
             setStatusText("Intercepted: Frequency 148.5")
         }
-    }
+    }, [isRadioPlaying])
 
-    const handleMorseClick = (e) => {
+    const handleMorseClick = useCallback((e) => {
         e.stopPropagation()
         stopRadioIfPlaying()
         setIsMorseOpen(true)
         setStatusText("Incoming Transmission: Decrypting...")
-    }
+    }, [])
 
-    const handleLaptopClick = (e) => {
+    const handleLaptopClick = useCallback((e) => {
         e.stopPropagation()
         stopRadioIfPlaying()
         playEffect(laptopSound)
         setIsTerminalOpen(true)
         setStatusText("Accessing the laptop...")
-    }
+    }, [])
 
     return (
         <AnimatePresence>
@@ -200,8 +201,16 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="fixed inset-0 z-100 bg-black flex items-center justify-center overflow-hidden"
+                            className="fixed inset-0 z-100 bg-black flex items-center justify-center overflow-hidden will-change-transform"
                             onClick={onClose}
+                            style={{ 
+                                WebkitTouchCallout: 'none', 
+                                WebkitUserSelect: 'none',
+                                overscrollBehavior: 'none',
+                                position: 'fixed',
+                                backfaceVisibility: 'hidden',
+                                WebkitBackfaceVisibility: 'hidden'
+                            }}
                         >
                             {/* Mobile Cards Container */}
                             <motion.div
@@ -209,12 +218,13 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                                 animate={{ scale: 1, opacity: 1, y: 0 }}
                                 exit={{ scale: 0.95, opacity: 0, y: 20 }}
                                 transition={{ type: "spring", damping: 20, stiffness: 100 }}
-                                className="relative w-full h-screen bg-black flex items-center justify-center overflow-hidden"
+                                className="relative w-full h-screen bg-black flex items-center justify-center overflow-hidden will-change-transform"
                                 onClick={(e) => e.stopPropagation()}
+                                style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
                             >
                                 {/* Mobile: Show only cards in center */}
-                                <div className="absolute inset-0 flex items-center justify-center" style={{ perspective: '1000px' }}>
-                                    <div className="relative w-56 h-80" style={{ perspective: '1000px' }}>
+                                <div className="absolute inset-0 flex items-center justify-center will-change-transform" style={{ perspective: '1000px', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}>
+                                    <div className="relative w-56 h-80 will-change-transform" style={{ perspective: '1000px', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}>
                                         {/* Cards Stack */}
                                         {cards.slice().reverse().map((card, index) => {
                                             const isTop = index === cards.length - 1
@@ -241,7 +251,7 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                                 <motion.button
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
-                                    className="absolute top-6 right-6 z-1001 text-white text-2xl font-bold hover:text-red-500 transition-colors"
+                                    className="absolute top-16 right-6 z-1001 text-white text-2xl font-bold hover:text-red-500 transition-colors"
                                     onClick={onClose}
                                 >
                                     ✕
@@ -930,8 +940,8 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
     )
 }
 
-// Texture Helper Component
-const TextureOverlay = ({ opacity = 0.4 }) => (
+// Texture Helper Component - Memoized to prevent unnecessary re-renders
+const TextureOverlay = React.memo(({ opacity = 0.4 }) => (
     <div
         className="absolute inset-0 z-20 pointer-events-none mix-blend-multiply"
         style={{
@@ -940,18 +950,25 @@ const TextureOverlay = ({ opacity = 0.4 }) => (
             opacity: opacity
         }}
     ></div>
-)
+))
 
-// Individual Card Component
-const Card = ({ data, index, total, isTop, isSelected, onSwipe, onClick, onClose }) => {
+// Individual Card Component - Memoized to prevent unnecessary re-renders during drag operations
+const Card = React.memo(({ data, index, total, isTop, isSelected, onSwipe, onClick, onClose }) => {
     // Determine visuals based on stack position (0 is bottom, total-1 is top)
     const rotate = (index % 2 === 0 ? 1 : -1) * (index * 0.4) + (isTop ? 0 : (Math.random() * 2 - 1))
     const offset = (total - 1 - index) * 2 // slight vertical stack offset
 
-    // Drag Logic
+    // Drag Logic - Reset motion values when card becomes top
     const x = useMotionValue(0)
     const rotateValue = useTransform(x, [-200, 200], [-15, 15])
     const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0])
+
+    // Reset drag position when this card becomes the top card
+    useEffect(() => {
+        if (isTop) {
+            x.set(0)
+        }
+    }, [isTop, x])
 
     const handleDragEnd = (_, info) => {
         if (!isSelected && Math.abs(info.offset.x) > 100) {
@@ -971,10 +988,13 @@ const Card = ({ data, index, total, isTop, isSelected, onSwipe, onClick, onClose
                 zIndex: index,
                 y: offset,
                 opacity: isTop ? opacity : 1,
-                scale: isTop ? 1.05 : 1
+                scale: isTop ? 1.05 : 1,
+                willChange: isTop ? 'transform' : 'auto'
             }}
             drag={isTop && !isSelected ? "x" : false}
-            dragConstraints={{ left: 0, right: 0 }}
+            dragConstraints={{ left: -300, right: 300 }}
+            dragElastic={0.2}
+            dragTransition={{ power: 0.2, restDelta: 10 }}
             onDragEnd={handleDragEnd}
             onClick={() => isTop ? onClick() : null}
             className={`absolute top-0 left-0 w-56 h-80 bg-[#ebe8e3] rounded shadow-sm cursor-grab active:cursor-grabbing transform-gpu border border-gray-300`}
@@ -1008,7 +1028,7 @@ const Card = ({ data, index, total, isTop, isSelected, onSwipe, onClick, onClose
             </div>
         </motion.div>
     )
-}
+})
 
 
 export default BriefcaseInsider

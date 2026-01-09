@@ -1,5 +1,33 @@
 @import "tailwindcss";
 
+/* ========================================
+   VIEWPORT HEIGHT FIX FOR MOBILE BROWSERS
+   ======================================== */
+/* Small Viewport Height - accounts for browser UI (address bar/bottom nav) */
+@supports (height: 100svh) {
+  /* Modern browsers: svh = smallest viewport (with UI visible) */
+  html {
+    height: 100svh;
+  }
+}
+
+/* Fallback: Use 100vh for older browsers */
+@supports not (height: 100svh) {
+  html {
+    height: 100vh;
+  }
+}
+
+/* CSS custom properties for viewport heights */
+:root {
+  /* Small viewport (when browser UI is visible) - prevents content overlap */
+  --vh-full: 100svh;
+  --vh-half: 50svh;
+  --vh-quarter: 25svh;
+  /* Fallback for older browsers */
+  --vh-full-fallback: 100vh;
+}
+
 /* Mobile performance: Disable all animations on mobile devices */
 @media (max-width: 768px) {
   * {
@@ -43,15 +71,17 @@ body {
   padding: 0;
   background-color: #0a0a0a;
   width: 100%;
-  min-height: 100vh;
-  overflow: hidden;
+  min-height: 100svh;
+  /* Allow natural scrolling - do NOT use overflow: hidden */
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
-/* Comprehensive scroll lock */
+/* Scroll lock - ONLY when explicitly needed (modals, overlays) */
 html.scroll-locked,
 body.scroll-locked {
   overflow: hidden !important;
-  height: 100vh !important;
+  height: 100svh !important;
 }
 
 body.scroll-locked {

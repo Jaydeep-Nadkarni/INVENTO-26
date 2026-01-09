@@ -8,5 +8,12 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
-  assetsInclude: ['**/*.glb']
+  assetsInclude: ['**/*.glb'],
+  server: {
+    allowedHosts: [
+      'vegas-ebony-phenomenon-eugene.trycloudflare.com',
+      'localhost',
+      '127.0.0.1'
+    ]
+  }
 })

@@ -326,12 +326,11 @@ const Home = () => {
         className="w-full bg-[#0a0a0a] relative selection:bg-red-700/30"
       >
 
-        {/* Mobile: Full background image fixed */}
+        {/* Mobile: Full background image - absolute positioning for natural scroll */}
       {isMobile ? (
-        <div className='fixed inset-0 z-0 bg-cover bg-center bg-no-repeat'
+        <div className='absolute inset-0 z-0 min-h-svh bg-cover bg-center bg-no-repeat'
          style={{ 
-           backgroundImage: `url(${MobileBgImage})`,
-           backgroundAttachment: 'fixed'
+           backgroundImage: `url(${MobileBgImage})`
          }} />
       ) : (
         // Desktop: Full background image with lighter overlay
@@ -339,17 +338,17 @@ const Home = () => {
           className='fixed inset-0 bg-cover bg-center bg-no-repeat z-0'
           style={{ backgroundImage: `url(${bgImage})` }}
         >
-          <div className='absolute inset-0 bg-black/30 backdrop-blur-[1px]'></div>
+          <div className='absolute inset-0 bg-black/60 backdrop-blur-[1px]'></div>
         </div>
       )}
 
       {/* Hero Section */}
-      <section className="relative z-10 w-full min-h-screen flex items-center justify-center">
+      <section className="relative z-10 w-full min-h-svh flex items-center justify-center">
         <Hero />
       </section>
 
       {/* Briefcase Section */}
-      <section className="relative z-10 w-full min-h-screen flex flex-col items-center justify-center py-20 px-4">
+      <section className="relative z-10 w-full min-h-svh flex flex-col items-center justify-center py-20 px-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           whileInView={{ opacity: 1, scale: 1 }}
@@ -399,7 +398,7 @@ const Home = () => {
       </section>
 
       {/* Footer Space */}
-      <div className="h-[20vh] relative z-10 bg-linear-to-t from-black via-black/20 to-transparent"></div>
+      <div className="h-[20svh] relative z-10 bg-linear-to-t from-black via-black/20 to-transparent"></div>
     </motion.div>
     </>
   )
