@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import paperTexture from '../../assets/UI/paper-texture.jpg'
 import pageTurnSound from '../../assets/audios/page-turn.mp3'
@@ -99,6 +99,118 @@ const EventsGrid = () => {
             } else {
                 navigate(`/${prevClub.slug}`)
             }
+        }
+    }
+
+    // Registration States
+    const [regLoading, setRegLoading] = useState(false)
+    const [showTeamForm, setShowTeamForm] = useState(false)
+    const [teamInfo, setTeamInfo] = useState({ teamName: '', memberIds: [] })
+
+    const handleRegisterClick = async () => {
+        const userStr = localStorage.getItem('currentUser')
+        if (!userStr) {
+            alert('Access Denied. Please identify yourself (Login) to register.')
+            navigate('/login')
+            return
+        }
+        const user = JSON.parse(userStr)
+
+        const isTeam = currentEvent.type === 'Team' || parseInt(currentEvent.teamSize) > 1
+        
+        if (isTeam && !showTeamForm) {
+            const minSize = parseInt(currentEvent.teamSize?.split('-')[0] || currentEvent.teamSize || 1)
+            // We need members for teamSize - 1 (since leader is the currentUser)
+            setTeamInfo({ 
+                teamName: '', 
+                memberIds: Array(Math.max(0, minSize - 1)).fill('') 
+            })
+            setShowTeamForm(true)
+            return
+        }
+
+        initiatePayment(user)
+    }
+
+    const initiatePayment = async (user) => {
+        setRegLoading(true)
+        try {
+            const response = await fetch('http://localhost:5000/api/events/create-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ eventId: currentEvent.id })
+            })
+            
+            const data = await response.json()
+            if (!response.ok) throw new Error(data.message || 'Failed to create order')
+
+            // Handle Free Events
+            if (data.free) {
+                const regResponse = await fetch(`http://localhost:5000/api/events/register/${currentEvent.id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        inventoId: user._id || user.id,
+                        teamName: teamInfo.teamName,
+                        members: teamInfo.memberIds.filter(id => id.trim() !== ''),
+                    })
+                })
+
+                const regData = await regResponse.json()
+                if (!regResponse.ok) throw new Error(regData.message || 'Registration failed')
+
+                alert('MISSION ACCOMPLISHED: Registration Successful (Free Pass Used)!')
+                setShowTeamForm(false)
+                navigate('/profile')
+                return
+            }
+
+            const options = {
+                key: "rzp_test_Rr3Tw4ut1jLQJc", 
+                amount: data.amount,
+                currency: "INR",
+                name: "INVENTO 2026",
+                description: `Payment for ${currentEvent.realName || currentEvent.themeName}`,
+                order_id: data.orderId,
+                handler: async (paymentResponse) => {
+                    try {
+                        const regResponse = await fetch(`http://localhost:5000/api/events/register/${currentEvent.id}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                inventoId: user._id || user.id,
+                                teamName: teamInfo.teamName,
+                                members: teamInfo.memberIds.filter(id => id.trim() !== ''),
+                                razorpay_order_id: paymentResponse.razorpay_order_id,
+                                razorpay_payment_id: paymentResponse.razorpay_payment_id,
+                                razorpay_signature: paymentResponse.razorpay_signature,
+                            })
+                        })
+
+                        const regData = await regResponse.json()
+                        if (!regResponse.ok) throw new Error(regData.message || 'Registration failed')
+
+                        alert('MISSION ACCOMPLISHED: Registration Successful!')
+                        setShowTeamForm(false)
+                        navigate('/profile')
+                    } catch (err) {
+                        alert(`CRITICAL ERROR: ${err.message}`)
+                    }
+                },
+                prefill: {
+                    name: user.name,
+                    email: user.email,
+                    contact: user.phone
+                },
+                theme: { color: "#b91c1c" }
+            }
+
+            const rzp = new window.Razorpay(options)
+            rzp.open()
+        } catch (err) {
+            alert(`ORDER FAILED: ${err.message}`)
+        } finally {
+            setRegLoading(false)
         }
     }
 
@@ -382,14 +494,94 @@ const EventsGrid = () => {
                                         </div>
                                     </div>
 
-                                    <button className="w-full md:w-auto px-10 py-4 bg-red-700 text-white font-black text-lg uppercase tracking-widest hover:bg-black transition-all duration-300 shadow-xl rounded-sm flex items-center justify-center gap-4 group">
-                                        <span>Register Now</span>
-                                        <span className="group-hover:translate-x-1 transition-transform">→</span>
+                                    <button 
+                                        onClick={handleRegisterClick}
+                                        disabled={regLoading}
+                                        className="w-full md:w-auto px-10 py-4 bg-red-700 text-white font-black text-lg uppercase tracking-widest hover:bg-black transition-all duration-300 shadow-xl rounded-sm flex items-center justify-center gap-4 group disabled:opacity-50"
+                                    >
+                                        <span>{regLoading ? 'PROCESSING...' : 'Register Now'}</span>
+                                        {!regLoading && <span className="group-hover:translate-x-1 transition-transform">→</span>}
                                     </button>
                                 </section>
                             </div>
                         </div>
                     </div>
+
+                    {/* Team Form Modal */}
+                    <AnimatePresence>
+                        {showTeamForm && (
+                            <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                                <motion.div 
+                                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                                    className="w-full max-w-md bg-[#fdfbf7] p-8 border-4 border-gray-900 shadow-2xl relative overflow-hidden"
+                                    style={{ backgroundImage: `url(${paperTexture})`, backgroundSize: 'cover' }}
+                                >
+                                    <TextureOverlay opacity={0.3} />
+                                    <div className="relative z-10">
+                                        <h2 className="text-2xl font-black uppercase text-gray-900 mb-6 border-b-2 border-red-700 pb-2 flex justify-between items-center">
+                                            <span>Team Assembly</span>
+                                            <span className="text-[10px] font-mono text-gray-400">Classified</span>
+                                        </h2>
+                                        
+                                        <div className="space-y-6">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-gray-500">Classification: Team Name</label>
+                                                <input 
+                                                    type="text" 
+                                                    value={teamInfo.teamName}
+                                                    onChange={(e) => setTeamInfo({...teamInfo, teamName: e.target.value.toUpperCase()})}
+                                                    placeholder="ENTER TEAM CODENAME"
+                                                    className="w-full bg-white/50 border-2 border-gray-300 px-4 py-3 font-mono text-gray-900 focus:border-red-700 outline-none transition-all placeholder:text-gray-300"
+                                                />
+                                            </div>
+
+                                            <div className="space-y-4 max-h-[30vh] overflow-y-auto pr-2 custom-scrollbar">
+                                                <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-gray-500">Member Invento IDs (Excluding You)</label>
+                                                {teamInfo.memberIds.map((id, idx) => (
+                                                    <input 
+                                                        key={idx}
+                                                        type="text" 
+                                                        value={id}
+                                                        onChange={(e) => {
+                                                            const newIds = [...teamInfo.memberIds]
+                                                            newIds[idx] = e.target.value
+                                                            setTeamInfo({...teamInfo, memberIds: newIds})
+                                                        }}
+                                                        placeholder={`MEMBER #${idx + 2} ID`}
+                                                        className="w-full bg-white/50 border-2 border-gray-300 px-4 py-2 font-mono text-gray-900 focus:border-red-700 outline-none transition-all placeholder:text-gray-300"
+                                                    />
+                                                ))}
+                                            </div>
+
+                                            <div className="flex gap-4 pt-4">
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => setShowTeamForm(false)}
+                                                    className="flex-1 py-3 border-2 border-gray-900 text-gray-900 font-bold uppercase tracking-widest hover:bg-gray-100 transition-all font-mono text-xs"
+                                                >
+                                                    Abort
+                                                </button>
+                                                <button 
+                                                    type="button"
+                                                    disabled={regLoading}
+                                                    onClick={() => {
+                                                        if (!teamInfo.teamName) return alert('Team name is required')
+                                                        const user = JSON.parse(localStorage.getItem('currentUser'))
+                                                        initiatePayment(user)
+                                                    }}
+                                                    className="flex-1 py-3 bg-red-700 text-white font-bold uppercase tracking-widest hover:bg-red-800 transition-all shadow-[4px_4px_0px_#000] font-mono text-xs disabled:opacity-50"
+                                                >
+                                                    {regLoading ? 'SECURED...' : 'Confirm'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            </div>
+                        )}
+                    </AnimatePresence>
 
                     {/* Close button */}
                     <button

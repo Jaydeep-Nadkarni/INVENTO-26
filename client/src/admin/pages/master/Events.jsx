@@ -30,26 +30,26 @@ const MasterEvents = () => {
     };
 
     return (
-        <div className="flex h-screen bg-white text-gray-900 border-gray-200">
+        <div className="flex h-screen bg-black text-white border-gray-800">
             <Sidebar panelType="master" />
             <main className="flex-1 overflow-y-auto p-8 lg:ml-64">
                 <div className="max-w-7xl mx-auto">
                     {/* Header Section */}
-                    <header className="mb-8 border-b border-gray-100 pb-6">
+                    <header className="mb-8 border-b border-gray-800 pb-6">
                         <h1 className="text-2xl font-bold tracking-tight">Event Capacity Matrix</h1>
-                        <p className="text-sm text-gray-500">Monitor and adjust event slots and reservations</p>
+                        <p className="text-sm text-gray-400">Monitor and adjust event slots and reservations</p>
                     </header>
 
                     {/* Team Tabs */}
-                    <div className="mb-8 flex flex-wrap gap-2 border-b border-gray-100 pb-4">
-                        {['All', ...teams.map(t => t.name)].map(team => (
+                    <div className="mb-8 flex flex-wrap gap-2 border-b border-gray-800 pb-4">
+                        {['All', ...teams.filter(t => t.name?.toLowerCase() !== 'registration').map(t => t.name)].map(team => (
                             <button
                                 key={team}
                                 onClick={() => setActiveTeam(team)}
                                 className={`px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] rounded transition-all ${
                                     activeTeam === team 
-                                    ? 'bg-gray-900 text-white shadow-md' 
-                                    : 'bg-white text-gray-400 hover:text-gray-900'
+                                    ? 'bg-white text-black shadow-md' 
+                                    : 'bg-black text-gray-500 hover:text-white'
                                 }`}
                             >
                                 {team}
@@ -65,20 +65,20 @@ const MasterEvents = () => {
                             const available = event.total_slots - event.reserved_slots;
 
                             return (
-                                <div key={event.id} className="bg-white border border-gray-200 p-6 rounded group hover:border-gray-900 transition-all flex flex-col h-full shadow-sm">
+                                <div key={event.id} className="bg-gray-950 border border-gray-800 p-6 rounded group hover:border-white transition-all flex flex-col h-full shadow-sm">
                                     <div className="flex justify-between items-start mb-6">
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2 mb-2">
-                                                <span className="text-[9px] bg-gray-900 text-white px-1.5 py-0.5 rounded font-black uppercase tracking-widest">
+                                                <span className="text-[9px] bg-white text-black px-1.5 py-0.5 rounded font-black uppercase tracking-widest">
                                                     {event.team}
                                                 </span>
                                                 <span className={`text-[9px] font-black uppercase tracking-widest ${
-                                                    occupancy > 90 ? 'text-red-500' : 'text-green-600'
+                                                    occupancy > 90 ? 'text-red-500' : 'text-green-500'
                                                 }`}>
                                                     • {occupancy}% OCCUPIED
                                                 </span>
                                             </div>
-                                            <h3 className="text-lg font-black text-gray-900 uppercase tracking-tighter leading-snug">
+                                            <h3 className="text-lg font-black text-white uppercase tracking-tighter leading-snug">
                                                 {event.name}
                                             </h3>
                                         </div>
@@ -86,37 +86,37 @@ const MasterEvents = () => {
                                     
                                     <div className="space-y-4">
                                         <div className="grid grid-cols-2 gap-4">
-                                            <div className="p-3 bg-gray-50 border border-gray-100 rounded">
-                                                <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-1">Participants</p>
-                                                <p className="text-xl font-black text-gray-900">{partCount}</p>
+                                            <div className="p-3 bg-gray-900 border border-gray-800 rounded">
+                                                <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mb-1">Participants</p>
+                                                <p className="text-xl font-black text-white">{partCount}</p>
                                             </div>
-                                            <div className="p-3 bg-gray-50 border border-gray-100 rounded">
-                                                <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-1">Available</p>
-                                                <p className="text-xl font-black text-gray-900">{available}</p>
+                                            <div className="p-3 bg-gray-900 border border-gray-800 rounded">
+                                                <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mb-1">Available</p>
+                                                <p className="text-xl font-black text-white">{available}</p>
                                             </div>
                                         </div>
 
-                                        <div className="space-y-4 pt-4 border-t border-dotted border-gray-200">
+                                        <div className="space-y-4 pt-4 border-t border-dotted border-gray-800">
                                             <div className="flex justify-between text-[10px] font-bold uppercase">
-                                                <span className="text-gray-400 tracking-widest">Total Slots</span>
-                                                <span className="text-gray-900">{event.total_slots}</span>
+                                                <span className="text-gray-500 tracking-widest">Total Slots</span>
+                                                <span className="text-white">{event.total_slots}</span>
                                             </div>
                                             <div className="flex justify-between text-[10px] font-bold uppercase">
-                                                <span className="text-gray-400 tracking-widest">Reserved</span>
-                                                <span className="text-gray-900">{event.reserved_slots}</span>
+                                                <span className="text-gray-500 tracking-widest">Reserved</span>
+                                                <span className="text-white">{event.reserved_slots}</span>
                                             </div>
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-3 pt-4">
                                             <button 
                                                 onClick={() => handleIncrementSlots(event)}
-                                                className="py-2.5 bg-gray-50 border border-gray-200 text-[9px] font-black text-gray-900 uppercase tracking-widest rounded hover:bg-gray-100 transition-all"
+                                                className="py-2.5 bg-gray-900 border border-gray-800 text-[9px] font-black text-white uppercase tracking-widest rounded hover:bg-gray-800 transition-all"
                                             >
                                                 + Add Slots
                                             </button>
                                             <button 
                                                 onClick={() => handleReserveSlot(event)}
-                                                className="py-2.5 bg-gray-900 text-white text-[9px] font-black uppercase tracking-widest rounded hover:bg-black transition-all"
+                                                className="py-2.5 bg-white text-black text-[9px] font-black uppercase tracking-widest rounded hover:bg-gray-200 transition-all"
                                             >
                                                 Reserve Slot
                                             </button>

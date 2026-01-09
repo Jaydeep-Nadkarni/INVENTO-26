@@ -78,7 +78,7 @@ const Navbar = ({ onEventsClick }) => {
           >
             {currentUser.profilePhoto ? (
               <img
-                src={currentUser.profilePhoto}
+                src={currentUser.profilePhoto.startsWith('data:') || currentUser.profilePhoto.startsWith('http') ? currentUser.profilePhoto : `http://localhost:5000${currentUser.profilePhoto}`}
                 alt="Profile"
                 className="w-full h-full object-cover"
               />

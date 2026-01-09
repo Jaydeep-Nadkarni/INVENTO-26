@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
     profilePhoto: {
-      type: String, // Base64 encoded image string
+      type: String, // Relative path to the uploaded image file
     },
     registeredEvents: {
       type: [String],

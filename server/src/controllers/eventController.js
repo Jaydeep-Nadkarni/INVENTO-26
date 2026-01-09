@@ -6,10 +6,12 @@ import crypto from "crypto";
 import Razorpay from "razorpay";
 
 /* ================= RAZORPAY ================= */
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+const getRazorpayInstance = () => {
+  return new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID || 'missing_key',
+    key_secret: process.env.RAZORPAY_KEY_SECRET || 'missing_secret',
+  });
+};
 
 /* ================= MAIL TRANSPORT ================= */
 const transporter = nodemailer.createTransport({
@@ -51,6 +53,11 @@ export const createOrder = async (req, res) => {
   const event = await Event.findById(eventId);
   if (!event) return res.status(404).json({ message: "Event not found" });
 
+  if (event.price === 0) {
+    return res.json({ free: true });
+  }
+
+  const razorpay = getRazorpayInstance();
   const order = await razorpay.orders.create({
     amount: event.price * 100,
     currency: "INR",
@@ -70,39 +77,42 @@ export const registerForEvent = async (req, res) => {
     let { inventoId, // leader for team | participant for solo
           teamName, members, razorpay_order_id, razorpay_payment_id, razorpay_signature, } = req.body;
     
-    /* ================= PAYMENT VERIFICATION ================= */
-    if (!verifyRazorpayPayment(razorpay_order_id, razorpay_payment_id, razorpay_signature)) {
-      return res.status(400).json({
-        message: "Payment verification failed",
-      });
-    }
-
     const eventId = req.params.id.trim();
     const event = await Event.findById(eventId);
     if (!event) return res.status(404).json({ message: "Event not found" });
 
-    /* ---------- PREVENT PAYMENT REUSE ---------- */
-    const usedPayment = await Payment.findOne({ paymentId: razorpay_payment_id, eventId: event._id });
-    if (usedPayment) {
-      return res.status(400).json({ message: "Payment already used" });
+    /* ================= PAYMENT VERIFICATION ================= */
+    if (event.price > 0) {
+      if (!verifyRazorpayPayment(razorpay_order_id, razorpay_payment_id, razorpay_signature)) {
+        return res.status(400).json({
+          message: "Payment verification failed",
+        });
+      }
+
+      /* ---------- PREVENT PAYMENT REUSE ---------- */
+      const usedPayment = await Payment.findOne({ paymentId: razorpay_payment_id, eventId: event._id });
+      if (usedPayment) {
+        return res.status(400).json({ message: "Payment already used" });
+      }
+
+
+      /* ---------- AMOUNT VERIFICATION ---------- */
+      const razorpay = getRazorpayInstance();
+      const order = await razorpay.orders.fetch(razorpay_order_id);
+      if (order.status !== "paid" || order.currency !== "INR") {
+        return res.status(400).json({
+          message: "Payment not completed",
+        });
+      }
+      const expectedAmount = event.price * 100; // Razorpay uses paise
+
+      if (order.amount !== expectedAmount) {
+        return res.status(400).json({
+          message: "Payment amount mismatch for this event",
+        });
+      }
     }
-
-
-    /* ---------- AMOUNT VERIFICATION ---------- */
-    const order = await razorpay.orders.fetch(razorpay_order_id);
-    if (order.status !== "paid" || order.currency !== "INR") {
-      return res.status(400).json({
-        message: "Payment not completed",
-      });
-    }
-    const expectedAmount = event.price * 100; // Razorpay uses paise
-
-    if (order.amount !== expectedAmount) {
-      return res.status(400).json({
-        message: "Payment amount mismatch for this event",
-      });
-    }
-
+    
     // SOLO
     if (event.type === "solo") {
       if (!inventoId) return res.status(400).json({ message: "Invento ID required" });
@@ -117,16 +127,18 @@ export const registerForEvent = async (req, res) => {
       await event.save();
 
       // Unlock concert pass ONLY if false
-      if (!user.payment) {
-        user.payment = true;
-        await user.save();
-      }
+      // Update User Profile
+      user.registeredEvents.push(event.name);
+      user.payment = true;
+      await user.save();
 
-      await Payment.create({
-        paymentId: razorpay_payment_id,
-        orderId: razorpay_order_id,
-        eventId: event._id
-      });
+      if (event.price > 0) {
+        await Payment.create({
+          paymentId: razorpay_payment_id,
+          orderId: razorpay_order_id,
+          eventId: event._id
+        });
+      }
 
       await transporter.sendMail({
         from: `"Invento 2026" <${process.env.EMAIL_USER}>`,
@@ -177,21 +189,22 @@ export const registerForEvent = async (req, res) => {
       event.teams.push(newTeam);
       await event.save();
 
-      // Unlock concert pass for ALL team members
+      // Update ALL team members
       await Promise.all(
         memberData.map(async (u) => {
-          if (!u.payment) {
-            u.payment = true;
-            await u.save();
-          }
+          u.registeredEvents.push(event.name);
+          u.payment = true;
+          await u.save();
         })
       );
 
-      await Payment.create({
-        paymentId: razorpay_payment_id,
-        orderId: razorpay_order_id,
-        eventId: event._id
-      });
+      if (event.price > 0) {
+        await Payment.create({
+          paymentId: razorpay_payment_id,
+          orderId: razorpay_order_id,
+          eventId: event._id
+        });
+      }
 
       // Notify all members
       await Promise.all(memberData.map(u => transporter.sendMail({

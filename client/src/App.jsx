@@ -8,8 +8,7 @@ import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
 import Profile from './pages/Profile.jsx'
 import BriefcasePage from './pages/Briefcase.jsx'
-import { AdminAuthProvider, useAdminAuth } from './admin/context/AuthContext'
-import { DataProvider } from './admin/context/DataContext'
+import { useAdminAuth } from './admin/context/AuthContext'
 
 // Administrative Page Imports (Placeholders)
 import AdminLogin from './admin/pages/admin/login'
@@ -71,11 +70,9 @@ const NavigationManager = () => {
 function App() {
   return (
     <Router>
-      <DataProvider>
-        <AdminAuthProvider>
-          <NavigationManager />
-          <Routes>
-          <Route path="/" element={<Home />} />
+      <NavigationManager />
+      <Routes>
+      <Route path="/" element={<Home />} />
           <Route path="/briefcase" element={<BriefcasePage />} />
           <Route path="/events" element={<Events />} />
           <Route path="/schedule" element={<Schedule />} />
@@ -150,8 +147,6 @@ function App() {
           <Route path="/:clubSlug" element={<Events />} />
           <Route path="/:clubSlug/:eventSlug" element={<Events />} />
         </Routes>
-      </AdminAuthProvider>
-    </DataProvider>
   </Router>
   )
 }

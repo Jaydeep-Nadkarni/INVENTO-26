@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/userModel.js";
 import dotenv from "dotenv";
 import { verifyOTPService } from "../services/userService.js";
+import { processProfilePhoto } from "../services/imageService.js";
 
 dotenv.config();
 
@@ -154,32 +155,58 @@ export const registerUser = async (req, res) => {
       password: hashedPassword,
       phone,
       clgName,
-      profilePhoto,
       otp,
       otpExpiresAt,
-      isVerified: false,
+      isVerified: true, // Auto-verify as requested
       payment: false,
       present: false,
     });
 
-    await newUser.save();
+    // 📸 Handle Profile Photo if uploaded
+    if (req.file) {
+      // We need the ID first, so we save once to trigger the ID generation hook
+      await newUser.save();
+      
+      try {
+        const photoPath = await processProfilePhoto(req.file.buffer, newUser._id);
+        newUser.profilePhoto = photoPath;
+        await newUser.save();
+      } catch (error) {
+        console.error("Error processing profile photo:", error);
+      }
+    } else {
+      await newUser.save();
+    }
 
-    // 📧 Send Space-styled email
+    // Generate JWT for direct login
+    const token = jwt.sign({ id: newUser._id }, JWT_SECRET, {
+      expiresIn: JWT_EXPIRES_IN,
+    });
+
+    // 📧 Send Welcome email
     await transporter.sendMail({
       from: `"Invento 2026" <temp.sandesh372@gmail.com>`,
       to: email,
-      subject: "🚀 Invento 2026 - Verify Your Account",
+      subject: "🚀 Welcome to Invento 2026!",
       html: spaceMail(
-        "INVENTO 2026",
-        "Agent clearance initiated. Use the one-time access code below to verify your identity and activate your Invento account. This transmission is classified.",
-        otp,
+        "WELCOME AGENT",
+        "Your clearance has been granted. Your Invento account is now active. Access the command center to begin your mission.",
+        "ACCESS",
         name,
         newUser._id
       ),
     });
 
-    res.status(200).json({
-      message: `OTP sent to your email ${email}. Please verify to complete registration.`,
+    res.status(201).json({
+      message: "Registration successful. Welcome agent.",
+      token,
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        profilePhoto: newUser.profilePhoto,
+        clgName: newUser.clgName
+      }
     });
   } catch (error) {
     console.error("Error in registerUser:", error.message);

@@ -80,8 +80,8 @@ export default async function getCroppedImg(
   // paste generated rotate image with correct offsets for x,y crop values.
   ctx.putImageData(data, 0, 0)
 
-  // As Base64 string
-  return canvas.toDataURL('image/jpeg');
+  // As Base64 string with maximum quality (1.0)
+  return canvas.toDataURL('image/jpeg', 1.0);
 
   // As a blob
   // return new Promise((resolve, reject) => {

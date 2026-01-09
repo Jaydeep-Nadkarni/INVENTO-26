@@ -285,16 +285,6 @@ const Home = () => {
           </motion.div>
         )}
         
-        {showBlackout && (
-          <motion.div
-            key="blackout"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1 }}
-            className="fixed inset-0 z-9998 bg-black pointer-events-none"
-          />
-        )}
       </AnimatePresence>
 
       <motion.div 
@@ -310,8 +300,7 @@ const Home = () => {
         }}
         transition={{ 
           // Only apply transition when intro was played (isIntroPath)
-          duration: isIntroPath ? 2 : 0, 
-          ease: [0.43, 0.13, 0.23, 0.96] // Custom easing for smooth morph
+          duration: isIntroPath ? 0 : 0, 
         }}
         className="w-full bg-[#0a0a0a] relative selection:bg-red-700/30"
       >

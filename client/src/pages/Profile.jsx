@@ -85,8 +85,9 @@ const Profile = () => {
         const data = await response.json()
 
         if (response.ok) {
-          setUser(data)
-          localStorage.setItem('currentUser', JSON.stringify(data))
+          const userData = data.user || data;
+          setUser(userData)
+          localStorage.setItem('currentUser', JSON.stringify(userData))
         } else if (storedUser) {
           setUser(JSON.parse(storedUser))
         } else {
@@ -179,7 +180,7 @@ const Profile = () => {
                   <div className="w-56 h-72 md:w-64 md:h-80 border-4 border-gray-800 bg-white overflow-hidden flex items-center justify-center shadow-[10px_10px_20px_rgba(0,0,0,0.3)] transform -rotate-1 group-hover:rotate-0 transition-transform duration-500">
                     {user.profilePhoto ? (
                       <img
-                        src={user.profilePhoto}
+                        src={user.profilePhoto.startsWith('data:') || user.profilePhoto.startsWith('http') ? user.profilePhoto : `http://localhost:5000${user.profilePhoto}`}
                         alt="Profile"
                         className="w-full h-full object-cover transition-all duration-700"
                       />

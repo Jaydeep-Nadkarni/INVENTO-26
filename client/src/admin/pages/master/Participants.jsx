@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Sidebar from '../../components/sidebar';
 import { useData } from '../../context/DataContext';
 import { Search, Filter, Download, ExternalLink, ChevronDown } from 'lucide-react';
@@ -35,26 +35,26 @@ const MasterParticipants = () => {
     };
 
     return (
-        <div className="flex h-screen bg-white text-gray-900 border-gray-200">
+        <div className="flex h-screen bg-black text-white border-gray-800">
             <Sidebar panelType="master" />
             <main className="flex-1 overflow-y-auto p-8 lg:ml-64">
                 <div className="max-w-7xl mx-auto">
                     {/* Header Section */}
-                    <header className="mb-8 border-b border-gray-100 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <header className="mb-8 border-b border-gray-800 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
                             <h1 className="text-2xl font-bold tracking-tight">Global Registry</h1>
-                            <p className="text-sm text-gray-500">Master database of all event participants</p>
+                            <p className="text-sm text-gray-400">Master database of all event participants</p>
                         </div>
                     </header>
 
                     {/* Filters Strip */}
                     <div className="mb-8 flex flex-wrap gap-4 items-center">
                         <div className="relative flex-1 min-w-[250px]">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
                             <input 
                                 type="text" 
                                 placeholder="Search by name or ID..."
-                                className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded text-sm focus:outline-none focus:ring-1 focus:ring-gray-900 font-medium"
+                                className="w-full pl-10 pr-4 py-2 bg-gray-950 border border-gray-800 rounded text-sm focus:outline-none focus:ring-1 focus:ring-white font-medium text-white"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
@@ -67,16 +67,18 @@ const MasterParticipants = () => {
                                     setTeamFilter(e.target.value);
                                     setEventFilter('All');
                                 }}
-                                className="bg-white border border-gray-200 px-4 py-2 text-[10px] font-bold uppercase tracking-widest rounded cursor-pointer"
+                                className="bg-gray-950 border border-gray-800 px-4 py-2 text-[10px] font-bold uppercase tracking-widest rounded cursor-pointer text-gray-300"
                             >
                                 <option value="All">ALL TEAMS</option>
-                                {teams.map(t => <option key={t.id} value={t.name}>{t.name.toUpperCase()}</option>)}
+                                {teams
+                                    .filter(t => t.name?.toLowerCase() !== 'registration')
+                                    .map(t => <option key={t.id} value={t.name}>{t.name.toUpperCase()}</option>)}
                             </select>
 
                             <select 
                                 value={eventFilter}
                                 onChange={(e) => setEventFilter(e.target.value)}
-                                className="bg-white border border-gray-200 px-4 py-2 text-[10px] font-bold uppercase tracking-widest rounded cursor-pointer"
+                                className="bg-gray-950 border border-gray-800 px-4 py-2 text-[10px] font-bold uppercase tracking-widest rounded cursor-pointer text-gray-300"
                             >
                                 <option value="All">ALL EVENTS</option>
                                 {events
@@ -87,42 +89,42 @@ const MasterParticipants = () => {
                     </div>
 
                     {/* Data Table */}
-                    <div className="bg-white border border-gray-200 rounded-md overflow-hidden shadow-sm">
+                    <div className="bg-gray-950 border border-gray-800 rounded-md overflow-hidden shadow-sm">
                         <div className="overflow-x-auto">
                             <table className="w-full text-left text-sm border-collapse">
-                                <thead className="bg-gray-50 border-b border-gray-200">
+                                <thead className="bg-gray-900/50 border-b border-gray-800">
                                     <tr>
-                                        <th className="px-4 py-4 font-bold text-gray-400 uppercase tracking-widest text-[9px]">ID</th>
-                                        <th className="px-4 py-4 font-bold text-gray-400 uppercase tracking-widest text-[9px]">Name</th>
-                                        <th className="px-4 py-4 font-bold text-gray-400 uppercase tracking-widest text-[9px]">Team</th>
-                                        <th className="px-4 py-4 font-bold text-gray-400 uppercase tracking-widest text-[9px]">Event</th>
-                                        <th className="px-4 py-4 font-bold text-gray-400 uppercase tracking-widest text-[9px] text-center">Status</th>
-                                        <th className="px-4 py-4 font-bold text-gray-400 uppercase tracking-widest text-[9px] text-center">Verified</th>
-                                        <th className="px-4 py-4 font-bold text-gray-400 uppercase tracking-widest text-[9px] text-center">Present</th>
-                                        <th className="px-4 py-4 font-bold text-gray-400 uppercase tracking-widest text-[9px] text-right">Payment</th>
+                                        <th className="px-4 py-4 font-bold text-gray-500 uppercase tracking-widest text-[9px]">ID</th>
+                                        <th className="px-4 py-4 font-bold text-gray-500 uppercase tracking-widest text-[9px]">Name</th>
+                                        <th className="px-4 py-4 font-bold text-gray-500 uppercase tracking-widest text-[9px]">Team</th>
+                                        <th className="px-4 py-4 font-bold text-gray-500 uppercase tracking-widest text-[9px]">Event</th>
+                                        <th className="px-4 py-4 font-bold text-gray-500 uppercase tracking-widest text-[9px] text-center">Status</th>
+                                        <th className="px-4 py-4 font-bold text-gray-500 uppercase tracking-widest text-[9px] text-center">Verified</th>
+                                        <th className="px-4 py-4 font-bold text-gray-500 uppercase tracking-widest text-[9px] text-center">Present</th>
+                                        <th className="px-4 py-4 font-bold text-gray-500 uppercase tracking-widest text-[9px] text-right">Payment</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-100">
+                                <tbody className="divide-y divide-gray-800/50">
                                     {filteredParticipants.map((p) => (
-                                        <tr key={p.id} className="hover:bg-gray-50 transition-colors group">
-                                            <td className="px-4 py-4 font-mono text-[10px] font-bold text-gray-400">{p.id}</td>
-                                            <td className="px-4 py-4 font-bold text-gray-900">{p.name}</td>
+                                        <tr key={p.id} className="hover:bg-gray-900 transition-colors group">
+                                            <td className="px-4 py-4 font-mono text-[10px] font-bold text-gray-600">{p.id}</td>
+                                            <td className="px-4 py-4 font-bold text-white">{p.name}</td>
                                             <td className="px-4 py-4">
-                                                <span className="text-[9px] font-black px-1.5 py-0.5 border border-gray-200 text-gray-500 rounded uppercase">
+                                                <span className="text-[9px] font-black px-1.5 py-0.5 border border-gray-800 text-gray-400 rounded uppercase">
                                                     {p.team}
                                                 </span>
                                             </td>
                                             <td className="px-4 py-4 text-[10px] font-medium text-gray-500">{p.event}</td>
                                             <td className="px-4 py-4 text-center">
-                                                <span className={`text-[9px] font-bold ${p.verified ? 'text-green-500' : 'text-amber-500'}`}>
+                                                <span className={`text-[9px] font-bold ${p.verified ? 'text-green-400' : 'text-amber-400'}`}>
                                                     {p.verified ? 'ACTIVE' : 'LOCKED'}
                                                 </span>
                                             </td>
                                             <td className="px-4 py-4 text-center">
                                                 <button 
                                                     onClick={() => toggleVerification(p.id, p.verified)}
-                                                    className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
-                                                        p.verified ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                                    className={`px-2 py-0.5 rounded text-[9px] font-black uppercase transition-colors ${
+                                                        p.verified ? 'bg-green-950 text-green-400 hover:bg-green-900' : 'bg-red-950 text-red-400 hover:bg-red-900'
                                                     }`}
                                                 >
                                                     {p.verified ? 'YES' : 'NO'}
@@ -131,8 +133,8 @@ const MasterParticipants = () => {
                                             <td className="px-4 py-4 text-center">
                                                 <button 
                                                     onClick={() => togglePresence(p.id, p.present)}
-                                                    className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
-                                                        p.present ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-400'
+                                                    className={`px-2 py-0.5 rounded text-[9px] font-black uppercase transition-colors ${
+                                                        p.present ? 'bg-blue-950 text-blue-400 hover:bg-blue-900' : 'bg-gray-900 text-gray-600 hover:text-gray-400'
                                                     }`}
                                                 >
                                                     {p.present ? 'IN' : 'OUT'}
@@ -141,8 +143,8 @@ const MasterParticipants = () => {
                                             <td className="px-4 py-4 text-right">
                                                 <button 
                                                     onClick={() => togglePayment(p.id, p.payment_status)}
-                                                    className={`text-[9px] font-black uppercase ${
-                                                        p.payment_status === 'paid' ? 'text-green-600' : 'text-amber-600'
+                                                    className={`text-[9px] font-black uppercase transition-colors ${
+                                                        p.payment_status === 'paid' ? 'text-green-400 hover:text-green-300' : 'text-amber-400 hover:text-amber-300'
                                                     }`}
                                                 >
                                                     {p.payment_status === 'paid' ? '✓ PAID' : '⚠ PENDING'}

@@ -89,9 +89,6 @@ const Register = () => {
     password: '',
     confirmPassword: ''
   })
-  const [showOtpStep, setShowOtpStep] = useState(false)
-  const [otp, setOtp] = useState('')
-  const [otpLoading, setOtpLoading] = useState(false)
 
   // Cropper States
   const [crop, setCrop] = useState({ x: 0, y: 0 })
@@ -195,21 +192,33 @@ const Register = () => {
     }
 
     try {
-      const payload = {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-        phone: formData.phone,
-        clgName: formData.clgName === 'Other' ? formData.otherCollege : formData.clgName,
-        profilePhoto: previewImage
-      }
+      // Helper to convert DataURI to Blob
+      const dataURItoBlob = (dataURI) => {
+        const byteString = atob(dataURI.split(',')[1]);
+        const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < byteString.length; i++) {
+          ia[i] = byteString.charCodeAt(i);
+        }
+        return new Blob([ab], { type: mimeString });
+      };
+
+      const formDataObj = new FormData();
+      formDataObj.append('name', formData.name);
+      formDataObj.append('email', formData.email);
+      formDataObj.append('password', formData.password);
+      formDataObj.append('phone', formData.phone);
+      formDataObj.append('clgName', formData.clgName === 'Other' ? formData.otherCollege : formData.clgName);
+      
+      const imageBlob = dataURItoBlob(previewImage);
+      // Append file with filename
+      formDataObj.append('profilePhoto', imageBlob, 'profile.jpg');
 
       const response = await fetch('http://localhost:5000/api/users/register', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
+        body: formDataObj,
+        // No Content-Type header needed for FormData
       })
 
       const data = await response.json()
@@ -218,150 +227,20 @@ const Register = () => {
         throw new Error(data.message || 'Registration failed')
       }
 
-      // Success - Show OTP step
-      localStorage.setItem('temp_profile_photo', previewImage)
-      setShowOtpStep(true)
+      // Success - Store token and user data, then redirect to profile
+      if (data.token) {
+        localStorage.setItem('token', data.token)
+      }
+      if (data.user) {
+        localStorage.setItem('currentUser', JSON.stringify(data.user))
+      }
+      
+      navigate('/profile')
     } catch (err) {
       setError(err.message)
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleOtpSubmit = async (e) => {
-    e.preventDefault()
-    setOtpLoading(true)
-    setError('')
-
-    if (!otp || otp.length < 6) {
-      setError('Please enter the 6-digit access code')
-      setOtpLoading(false)
-      return
-    }
-
-    try {
-      const response = await fetch('http://localhost:5000/api/users/verify-otp', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          otp: otp
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.message || 'OTP Verification failed')
-      }
-
-      if (data.user) {
-        localStorage.setItem('currentUser', JSON.stringify(data.user))
-      }
-      
-      localStorage.removeItem('temp_profile_photo')
-      navigate('/login', { state: { message: 'Identity Verified. Log in to access command center.' } })
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setOtpLoading(false)
-    }
-  }
-
-  if (showOtpStep) {
-    return (
-      <div
-        className="min-h-screen relative overflow-hidden bg-gray-900"
-        style={{
-          backgroundImage: `url(${bgImage})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundAttachment: 'fixed'
-        }}
-      >
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="relative z-10 flex items-center justify-center min-h-screen p-6"
-        >
-          <div className="w-full max-w-md">
-            <div
-              className="p-8 md:p-12 shadow-[20px_20px_60px_rgba(0,0,0,0.4)] relative overflow-hidden border-2 border-gray-800 rounded-sm"
-              style={{
-                backgroundColor: '#f5f1e8',
-                backgroundImage: `url(${paperTexture})`,
-                backgroundSize: 'cover'
-              }}
-            >
-              <div className="absolute inset-0 bg-amber-50/20 mix-blend-multiply pointer-events-none" />
-
-              <div className="mb-10 text-center">
-                <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tighter mb-4">VERIFY CLEARANCE</h2>
-                <div className="w-16 h-1 bg-red-700 mx-auto mb-6"></div>
-                <p className="text-gray-700 font-mono text-[11px] uppercase tracking-widest leading-relaxed">
-                  AN ACCESS CODE HAS BEEN DISPATCHED TO THE FOLLOWING RELAY:
-                </p>
-                <p className="text-red-700 font-bold font-mono text-[12px] mt-2 select-all">{formData.email}</p>
-              </div>
-
-              <form onSubmit={handleOtpSubmit} className="space-y-8">
-                <div className="space-y-3">
-                  <label className="text-[10px] font-mono font-black text-gray-800 uppercase tracking-[0.3em] flex items-center justify-center gap-2">
-                    INPUT CODE
-                  </label>
-                  <input
-                    type="text"
-                    maxLength="6"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-                    placeholder="••••••"
-                    className="w-full px-4 py-5 bg-white/40 border-2 border-gray-400 text-gray-900 text-center text-3xl font-mono tracking-[0.6em] focus:outline-none focus:border-red-700 transition-all font-black"
-                    autoFocus
-                  />
-                </div>
-
-                {error && (
-                  <motion.div 
-                    initial={{ x: -10, opacity: 0 }}
-                    animate={{ x: 0, opacity: 1 }}
-                    className="p-4 bg-red-950 text-white text-[10px] font-mono uppercase border-l-4 border-red-500 flex items-center gap-3"
-                  >
-                    <span className="font-bold text-red-400">DENIED:</span> {error}
-                  </motion.div>
-                )}
-
-                <div className="pt-2">
-                  <motion.button
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    type="submit"
-                    disabled={otpLoading}
-                    className="w-full py-5 bg-gray-900 text-white font-black uppercase tracking-[0.2em] text-xs hover:bg-red-800 disabled:opacity-50 transition-all shadow-[8px_8px_0px_#333] hover:shadow-none hover:translate-x-1 hover:translate-y-1"
-                  >
-                    {otpLoading ? 'AUTH IN PROGRESS...' : 'AUTHORIZE ACCOUNT'}
-                  </motion.button>
-                </div>
-
-                <div className="flex flex-col items-center gap-3 pt-4 border-t border-gray-300">
-                  <p className="text-[9px] font-mono text-gray-500 uppercase tracking-widest text-center italic">
-                    Lost signal? Check your spam folder or re-register.
-                  </p>
-                  <button 
-                    type="button"
-                    onClick={() => setShowOtpStep(false)}
-                    className="text-[10px] text-gray-900 font-bold uppercase tracking-widest hover:text-red-700 transition-colors border-b border-gray-900 pb-0.5"
-                  >
-                    Return to dossier
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    )
   }
 
   return (
