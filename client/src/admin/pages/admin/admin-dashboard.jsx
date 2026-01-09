@@ -52,7 +52,7 @@ const AdminDashboard = () => {
         };
     }, [participants, events, adminUser?.team, isRegistration, selectedTeam, selectedEvent]);
 
-    const teams = ["Dance", "Music", "Media", "Coding", "Registration", "Gaming", "HR", "Art"];
+    const teams = ["Dance", "Music", "Media", "Coding", "Gaming", "HR", "Art"];
 
     return (
         <div className="flex h-screen bg-white text-gray-900 border-gray-200">

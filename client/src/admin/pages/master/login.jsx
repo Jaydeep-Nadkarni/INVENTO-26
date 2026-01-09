@@ -33,22 +33,22 @@ const MasterLogin = () => {
     };
 
     return (
-        <div className="min-h-screen bg-white flex items-center justify-center p-6 text-gray-900 border-t-4 border-gray-900">
-            <div className="w-full max-w-lg">
-                <div className="bg-white border border-gray-200 rounded-lg shadow-2xl overflow-hidden">
-                    <div className="p-10 border-b border-gray-100 bg-gray-50/50 text-center">
-                        <div className="w-20 h-20 bg-white border border-gray-200 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm group">
-                            <ShieldCheck className="w-10 h-10 text-gray-900 transition-transform group-hover:scale-110" />
+        <div className="min-h-screen bg-black flex items-center justify-center p-6 text-white border-t-4 border-white">
+            <div className="w-full max-w-lg relative z-10">
+                <div className="bg-gray-950 border border-gray-800 rounded-lg shadow-2xl overflow-hidden">
+                    <div className="p-10 border-b border-gray-900 bg-gray-900/50 text-center">
+                        <div className="w-20 h-20 bg-gray-950 border border-gray-800 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm group">
+                            <ShieldCheck className="w-10 h-10 text-white transition-transform group-hover:scale-110" />
                         </div>
-                        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Central Intelligence</h1>
+                        <h1 className="text-3xl font-bold tracking-tight text-white">Central Intelligence</h1>
                         <p className="text-sm font-semibold text-gray-500 uppercase tracking-[0.2em] mt-2 mb-1">Master Control Terminal</p>
-                        <div className="h-0.5 w-12 bg-gray-900 mx-auto mt-4 rounded-full" />
+                        <div className="h-0.5 w-12 bg-white mx-auto mt-4 rounded-full" />
                     </div>
 
                     <div className="p-10">
                         {error && (
-                            <div className="mb-8 p-4 bg-gray-50 border-l-4 border-gray-900 rounded-r-md flex items-center gap-4 text-gray-900 text-xs font-bold uppercase tracking-wider">
-                                <span className="p-1 bg-white rounded border border-gray-200">!</span>
+                            <div className="mb-8 p-4 bg-red-950/20 border-l-4 border-red-500 rounded-r-md flex items-center gap-4 text-red-400 text-xs font-bold uppercase tracking-wider">
+                                <span className="p-1 bg-red-900 rounded border border-red-800 text-white">!</span>
                                 Authority Denial: {error}
                             </div>
                         )}
@@ -64,7 +64,7 @@ const MasterLogin = () => {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
-                                    className="w-full bg-white border border-gray-200 rounded-md px-4 py-4 text-gray-900 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-gray-900 transition-all placeholder:text-gray-200"
+                                    className="w-full bg-black border border-gray-800 rounded-md px-4 py-4 text-white text-sm font-medium focus:outline-none focus:ring-1 focus:ring-white transition-all placeholder:text-gray-800"
                                     placeholder="master@invento.com"
                                 />
                             </div>
@@ -79,7 +79,7 @@ const MasterLogin = () => {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
-                                    className="w-full bg-white border border-gray-200 rounded-md px-4 py-4 text-gray-900 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-gray-900 transition-all placeholder:text-gray-200 font-mono"
+                                    className="w-full bg-black border border-gray-800 rounded-md px-4 py-4 text-white text-sm font-medium focus:outline-none focus:ring-1 focus:ring-white transition-all placeholder:text-gray-800 font-mono"
                                     placeholder="••••••••••••"
                                 />
                             </div>
@@ -87,11 +87,11 @@ const MasterLogin = () => {
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full py-5 bg-gray-900 text-white font-bold uppercase tracking-[0.2em] text-[11px] rounded transition-all hover:bg-gray-800 shadow-xl active:scale-[0.99] disabled:opacity-50"
+                                className="w-full py-5 bg-white text-black font-bold uppercase tracking-[0.2em] text-[11px] rounded transition-all hover:bg-gray-200 shadow-xl active:scale-[0.99] disabled:opacity-50"
                             >
                                 {isLoading ? (
                                     <span className="flex items-center justify-center gap-3">
-                                        <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                                        <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin"></div>
                                         Decrypting Identity...
                                     </span>
                                 ) : (
@@ -101,19 +101,19 @@ const MasterLogin = () => {
                         </form>
                     </div>
 
-                    <div className="px-10 py-6 bg-gray-50 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
-                         <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-4">
+                    <div className="px-10 py-6 bg-gray-900 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
+                         <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest flex items-center gap-4">
                              <div className="w-2 h-2 rounded-full bg-green-500"></div>
                              Network Status: Encrypted
                          </div>
-                         <div className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">
+                         <div className="text-[10px] font-bold text-gray-700 uppercase tracking-widest">
                              v1.0.4-LTS-Core
                          </div>
                     </div>
                 </div>
             </div>
             
-            <div className="fixed bottom-8 left-8 text-gray-100 text-7xl font-bold select-none pointer-events-none -rotate-12 opacity-5">
+            <div className="fixed bottom-8 left-8 text-gray-800 text-7xl font-bold select-none pointer-events-none -rotate-12 opacity-10">
                 MASTER ACCESS
             </div>
         </div>

@@ -1,7 +1,7 @@
 export const teams = [
     { id: "T-01", name: "Dance", assigned_event_id: "EVT-01" },
     { id: "T-02", name: "Media", assigned_event_id: "EVT-03" },
-    { id: "T-03", name: "Registration", assigned_event_id: "EVT-05" },
+    { id: "T-03", name: "Registration", assigned_event_id: null },
     { id: "T-04", name: "HR", assigned_event_id: "EVT-07" },
     { id: "T-05", name: "Music", assigned_event_id: "EVT-02" },
     { id: "T-06", name: "Coding", assigned_event_id: "EVT-04" },
@@ -14,7 +14,6 @@ export const eventsList = [
     { id: "EVT-02", name: "Staccato", team: "Music", total_slots: 40, reserved_slots: 32, status: "Upcoming" },
     { id: "EVT-03", name: "Shutter Speed", team: "Media", total_slots: 30, reserved_slots: 15, status: "Live" },
     { id: "EVT-04", name: "Logic Hack", team: "Coding", total_slots: 150, reserved_slots: 120, status: "Live" },
-    { id: "EVT-05", name: "Walk-in Registration", team: "Registration", total_slots: 500, reserved_slots: 245, status: "Live" },
     { id: "EVT-06", name: "Valorant Master", team: "Gaming", total_slots: 64, reserved_slots: 64, status: "Live" },
     { id: "EVT-07", name: "Pitch Perfect", team: "HR", total_slots: 30, reserved_slots: 12, status: "Upcoming" },
     { id: "EVT-08", name: "Canvas 1.0", team: "Art", total_slots: 50, reserved_slots: 28, status: "Completed" },
@@ -35,7 +34,7 @@ export const adminsList = [
 
 const indianNames = ["Amit", "Neha", "Sahil", "Anjali", "Kunal", "Sneha", "Rohan", "Pooja", "Vikram", "Ishita", "Arjun", "Kavya", "Rahul", "Deepika", "Suresh", "Priya", "Hardik", "Manish", "Shweta", "Aditya"];
 const surnames = ["Kumar", "Sharma", "Singh", "Gupta", "Verma", "Das", "Malviya", "Rathore", "Kapur", "Reddy", "Patel", "Iyer", "Khan", "Jain", "Mehta"];
-const teamNames = ["Dance", "Music", "Media", "Coding", "Registration", "Gaming", "HR", "Art"];
+const teamNames = ["Dance", "Music", "Media", "Coding", "Gaming", "HR", "Art"];
 
 const generateParticipants = (count) => {
     const participants = [];
@@ -88,7 +87,7 @@ export const masterStats = {
     activeNodes: 8
 };
 
-export const adminDistribution = teamNames.map(team => ({
+export const adminDistribution = ["Dance", "Music", "Media", "Coding", "Gaming", "HR", "Art"].map(team => ({
     team,
     admins: adminsList.filter(a => a.team === team).length,
     participants: allParticipants.filter(p => p.team === team).length

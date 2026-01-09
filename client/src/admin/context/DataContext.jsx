@@ -32,7 +32,7 @@ export const DataProvider = ({ children }) => {
         const revenue = paidParticipants.reduce((sum, p) => sum + p.payment_amount, 0);
 
         const adminDistribution = [
-            "Dance", "Music", "Media", "Coding", "Registration", "Gaming", "HR", "Art"
+            "Dance", "Music", "Media", "Coding", "Gaming", "HR", "Art"
         ].map(team => ({
             team,
             admins: data.admins.filter(a => a.team === team).length,
