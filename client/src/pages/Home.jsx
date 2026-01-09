@@ -12,10 +12,28 @@ import introAudio from '../assets/UI/intro.mp3'
 // Module-level flag tracks if we've already run the intro since JS loaded
 let introHasPlayed = false;
 
+// Mobile detection utility
+const isMobileDevice = () => {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(max-width: 767px)').matches;
+};
+
 const Home = () => {
     const navigate = useNavigate()
+    const [isMobile, setIsMobile] = useState(isMobileDevice())
+
+    // Listen for mobile/desktop switches
+    useEffect(() => {
+        const mediaQuery = window.matchMedia('(max-width: 767px)');
+        const handleChange = (e) => setIsMobile(e.matches);
+        mediaQuery.addListener(handleChange);
+        return () => mediaQuery.removeListener(handleChange);
+    }, []);
 
     const [isIntroPath] = useState(() => {
+        // On mobile, skip intro entirely for faster first paint
+        if (isMobileDevice()) return false;
+        
         // 1. If we already played it in this memory session, never play again
         if (introHasPlayed) return false;
 
@@ -72,9 +90,9 @@ const Home = () => {
     window.scrollTo(0, scrollPositionRef.current);
   };
 
-  // Real Asset Loading Tracker
+  // Real Asset Loading Tracker (Desktop Only)
   useEffect(() => {
-    if (!isIntroPath) return;
+    if (!isIntroPath || isMobile) return;
 
     lockScroll();
 
@@ -115,7 +133,7 @@ const Home = () => {
     return () => {
       if (isLoading || showIntro) unlockScroll();
     };
-  }, [isIntroPath]);
+  }, [isIntroPath, isMobile]);
 
   const handleLoaderComplete = () => {
     setIsLoading(false)
@@ -240,7 +258,7 @@ const Home = () => {
           <Loader key="loader" progress={loadProgress} onComplete={handleLoaderComplete} />
         )}
 
-        {showIntro && (
+        {showIntro && !isMobile && (
           <motion.div
             key="intro-video"
             initial={{ opacity: 0 }}
@@ -305,15 +323,20 @@ const Home = () => {
         className="w-full bg-[#0a0a0a] relative selection:bg-red-700/30"
       >
 
-        {/* Fixed Background with subtle blur */}
-      <div
-        className='fixed inset-0 bg-cover bg-center bg-no-repeat z-0'
-        style={{ backgroundImage: `url(${bgImage})` }}
-      >
-        <div className='absolute inset-0 bg-black/50 backdrop-blur-[1px]'></div>
-      </div>
+        {/* Mobile: Lightweight flat gradient background */}
+      {isMobile ? (
+        <div className='fixed inset-0 z-0 bg-gradient-to-b from-gray-900 via-black to-gray-950' />
+      ) : (
+        // Desktop: Full background image with subtle blur
+        <div
+          className='fixed inset-0 bg-cover bg-center bg-no-repeat z-0'
+          style={{ backgroundImage: `url(${bgImage})` }}
+        >
+          <div className='absolute inset-0 bg-black/50 backdrop-blur-[1px]'></div>
+        </div>
+      )}
 
-      <Navbar onEventsClick={handleNavigateToEvents} />
+      <Navbar onEventsClick={handleNavigateToEvents} isMobile={isMobile} />
 
       {/* Hero Section */}
       <section className="relative z-10 w-full min-h-screen flex items-center justify-center">

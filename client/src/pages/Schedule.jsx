@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Navbar from '../components/Navbar'
 import { scheduleData } from '../components/Events/scheduleData'
@@ -6,8 +6,23 @@ import paperTexture from '../assets/UI/paper-texture.jpg'
 import bgImage from '../assets/UI/Invento-bg.jpg'
 import spy1 from '../assets/UI/spy1.png'
 
+// Mobile detection utility
+const isMobileDevice = () => {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(max-width: 767px)').matches;
+};
+
 const Schedule = () => {
   const [selectedDayId, setSelectedDayId] = useState(0)
+  const [isMobile, setIsMobile] = useState(isMobileDevice())
+
+  // Listen for mobile/desktop switches
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 767px)');
+    const handleChange = (e) => setIsMobile(e.matches);
+    mediaQuery.addListener(handleChange);
+    return () => mediaQuery.removeListener(handleChange);
+  }, []);
 
   const currentDayData = scheduleData.find(d => d.dayId === selectedDayId)
   const currentEvents = currentDayData ? currentDayData.events : []
@@ -19,19 +34,26 @@ const Schedule = () => {
       exit={{ opacity: 0 }}
       className="w-full min-h-screen bg-[#1a1a1a] relative overflow-hidden font-serif"
     >
-      {/* Background */}
-      <div
-        className="fixed inset-0 z-0 opacity-30"
-        style={{
-          backgroundImage: `url(${bgImage})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      />
-      <div className="absolute inset-0 bg-black/50 pointer-events-none"></div>
-      <div className="absolute inset-0 opacity-[0.05] pointer-events-none mix-blend-overlay" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")` }}></div>
+      {/* Mobile: Lightweight flat gradient background */}
+      {isMobile ? (
+        <div className="fixed inset-0 z-0 bg-gradient-to-b from-gray-900 via-black to-gray-950" />
+      ) : (
+        // Desktop: Full background with multiple layers
+        <>
+          <div
+            className="fixed inset-0 z-0 opacity-30"
+            style={{
+              backgroundImage: `url(${bgImage})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          />
+          <div className="absolute inset-0 bg-black/50 pointer-events-none"></div>
+          <div className="absolute inset-0 opacity-[0.05] pointer-events-none mix-blend-overlay" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")` }}></div>
+        </>
+      )}
 
-      <Navbar />
+      <Navbar isMobile={isMobile} />
 
       <div className="relative z-10 pt-24 px-4 pb-0 max-w-7xl mx-auto flex flex-col md:flex-row gap-8 h-screen">
 

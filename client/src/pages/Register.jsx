@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react'
+import React, { useState, useRef, useCallback, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import Cropper from 'react-easy-crop'
@@ -6,6 +6,12 @@ import getCroppedImg from '../utils/cropImage'
 import paperTexture from '../assets/UI/paper-texture.jpg'
 import bgImage from '../assets/UI/Invento-bg.jpg'
 import Navbar from '../components/Navbar'
+
+// Mobile detection utility
+const isMobileDevice = () => {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(max-width: 767px)').matches;
+};
 
 // SVG Icons
 const Icons = {
@@ -72,6 +78,15 @@ const Register = () => {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [isMobile, setIsMobile] = useState(isMobileDevice())
+
+  // Listen for mobile/desktop switches
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 767px)');
+    const handleChange = (e) => setIsMobile(e.matches);
+    mediaQuery.addListener(handleChange);
+    return () => mediaQuery.removeListener(handleChange);
+  }, []);
 
   const colleges = [
     'KLE Dr. MS Sheshgiri College of Engineering and Technology',
@@ -246,7 +261,10 @@ const Register = () => {
   return (
     <div
       className="min-h-screen relative overflow-hidden bg-gray-900"
-      style={{
+      style={isMobile ? {
+        backgroundImage: 'none',
+        background: 'linear-gradient(135deg, #1f1f1f 0%, #0a0a0a 100%)'
+      } : {
         backgroundImage: `url(${bgImage})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',

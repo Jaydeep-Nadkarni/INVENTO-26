@@ -5,6 +5,12 @@ import paperTexture from '../assets/UI/paper-texture.jpg'
 import spy2 from '../assets/UI/spy2.png'
 import Navbar from '../components/Navbar'
 
+// Mobile detection utility
+const isMobileDevice = () => {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(max-width: 767px)').matches;
+};
+
 // Dummy Data for Teams
 const teamsData = [
   {
@@ -80,6 +86,15 @@ const teamsData = [
 
 const Contact = () => {
   const [activeTeam, setActiveTeam] = useState('registration')
+  const [isMobile, setIsMobile] = useState(isMobileDevice())
+
+  // Listen for mobile/desktop switches
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 767px)');
+    const handleChange = (e) => setIsMobile(e.matches);
+    mediaQuery.addListener(handleChange);
+    return () => mediaQuery.removeListener(handleChange);
+  }, []);
 
   const scrollToSection = (id) => {
     setActiveTeam(id)
@@ -166,19 +181,26 @@ const Contact = () => {
       exit={{ opacity: 0 }}
       className="w-full h-screen bg-[#1a1a1a] relative overflow-hidden flex flex-col font-serif"
     >
-      {/* Background */}
-      <div
-        className="fixed inset-0 z-0 opacity-20"
-        style={{
-          backgroundImage: `url(${bgImage})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      />
-      <div className="absolute inset-0 bg-black/60 z-0 pointer-events-none"></div>
+      {/* Mobile: Lightweight flat gradient background */}
+      {isMobile ? (
+        <div className="fixed inset-0 z-0 bg-gradient-to-b from-gray-900 via-black to-gray-950" />
+      ) : (
+        // Desktop: Full background with overlays
+        <>
+          <div
+            className="fixed inset-0 z-0 opacity-20"
+            style={{
+              backgroundImage: `url(${bgImage})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
+          />
+          <div className="absolute inset-0 bg-black/60 z-0 pointer-events-none"></div>
+        </>
+      )}
 
       {/* Navbar */}
-      <Navbar />
+      <Navbar isMobile={isMobile} />
 
       {/* Main Layout */}
       <div className="flex-1 relative z-10 pt-24 px-4 md:px-8 pb-4 max-w-7xl mx-auto w-full flex flex-col md:flex-row gap-6 overflow-hidden">
