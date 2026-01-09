@@ -10,9 +10,9 @@ const UPLOAD_DIR = path.join(__dirname, "../../uploads/profiles");
 
 /**
  * Processes the uploaded image:
- * 1. Resizes to 300x300
+ * 1. Resizes to 1000x1000 for high quality
  * 2. Converts to JPEG
- * 3. Compresses to 70% quality
+ * 3. Compresses to 95% quality (Aiming for 200-300kb)
  * 4. Saves to filesystem
  * 
  * @param {Buffer} buffer - Raw image buffer from multer
@@ -29,12 +29,12 @@ export const processProfilePhoto = async (buffer, userId) => {
   const filePath = path.join(UPLOAD_DIR, fileName);
 
   await sharp(buffer)
-    .resize(300, 300, {
+    .resize(1000, 1000, {
       fit: "cover",
       position: "center"
     })
     .toFormat("jpeg")
-    .jpeg({ quality: 70 })
+    .jpeg({ quality: 95 })
     .toFile(filePath);
 
   // Return the web-accessible path

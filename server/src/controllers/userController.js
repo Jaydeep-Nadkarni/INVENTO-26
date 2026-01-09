@@ -157,7 +157,7 @@ export const registerUser = async (req, res) => {
       clgName,
       otp,
       otpExpiresAt,
-      isVerified: false,
+      isVerified: true, // Auto-verify as requested
       payment: false,
       present: false,
     });
@@ -173,28 +173,40 @@ export const registerUser = async (req, res) => {
         await newUser.save();
       } catch (error) {
         console.error("Error processing profile photo:", error);
-        // We continue registration even if photo fails, but ideally we should handle it
       }
     } else {
       await newUser.save();
     }
 
-    // 📧 Send Space-styled email
+    // Generate JWT for direct login
+    const token = jwt.sign({ id: newUser._id }, JWT_SECRET, {
+      expiresIn: JWT_EXPIRES_IN,
+    });
+
+    // 📧 Send Welcome email
     await transporter.sendMail({
       from: `"Invento 2026" <temp.sandesh372@gmail.com>`,
       to: email,
-      subject: "🚀 Invento 2026 - Verify Your Account",
+      subject: "🚀 Welcome to Invento 2026!",
       html: spaceMail(
-        "INVENTO 2026",
-        "Agent clearance initiated. Use the one-time access code below to verify your identity and activate your Invento account. This transmission is classified.",
-        otp,
+        "WELCOME AGENT",
+        "Your clearance has been granted. Your Invento account is now active. Access the command center to begin your mission.",
+        "ACCESS",
         name,
         newUser._id
       ),
     });
 
-    res.status(200).json({
-      message: `OTP sent to your email ${email}. Please verify to complete registration.`,
+    res.status(201).json({
+      message: "Registration successful. Welcome agent.",
+      token,
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        profilePhoto: newUser.profilePhoto,
+        clgName: newUser.clgName
+      }
     });
   } catch (error) {
     console.error("Error in registerUser:", error.message);

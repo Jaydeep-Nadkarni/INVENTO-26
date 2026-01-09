@@ -242,7 +242,7 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                                             <div className="w-[32%] h-full bg-white/60 border-r border-gray-300 flex flex-col items-center py-2">
                                                 <div className="w-16 h-20 bg-gray-200 border-2 border-[#d4af37] rounded-sm overflow-hidden flex items-center justify-center relative shadow-inner mb-1.5">
                                                     {user ? (
-                                                        <img src={user.profilePhoto || user.photo || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"} alt="User" className="w-full h-full object-cover grayscale contrast-125 transition-all duration-700" />
+                                                        <img src={user.profilePhoto ? (user.profilePhoto.startsWith('data:') || user.profilePhoto.startsWith('http') ? user.profilePhoto : `http://localhost:5000${user.profilePhoto}`) : (user.photo || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix")} alt="User" className="w-full h-full object-cover grayscale contrast-125 transition-all duration-700" />
                                                     ) : (
                                                         <div className="w-full h-full bg-gray-300 flex flex-col items-center justify-center text-gray-500 text-[6px] font-bold text-center px-1">
                                                             <span className="text-lg opacity-30">👤</span>
@@ -553,7 +553,7 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                                                 <div className="w-[32%] h-full bg-white/60 border-r border-gray-300 flex flex-col items-center py-2">
                                                     <div className="w-16 h-20 bg-gray-200 border-2 border-[#d4af37] rounded-sm overflow-hidden flex items-center justify-center relative shadow-inner">
                                                         {user ? (
-                                                            <img src={user.profilePhoto || user.photo || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix"} alt="User" className="w-full h-full object-cover contrast-125" />
+                                                            <img src={user.profilePhoto ? (user.profilePhoto.startsWith('data:') || user.profilePhoto.startsWith('http') ? user.profilePhoto : `http://localhost:5000${user.profilePhoto}`) : (user.photo || "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix")} alt="User" className="w-full h-full object-cover contrast-125" />
                                                         ) : (
                                                             <div className="text-gray-400 text-[6px] font-bold uppercase">Unknown</div>
                                                         )}
