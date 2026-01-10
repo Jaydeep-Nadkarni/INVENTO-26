@@ -7,7 +7,7 @@ import MobileBgImage from '../assets/UI/invento-bg-mobile.webp'
 import Navbar from '../components/Navbar'
 import Briefcase from '../components/Briefcase'
 import Loader from '../components/Loader'
-import introVideo from '../assets/UI/intro.mp4'
+import introVideo from '../assets/UI/intro.webm'
 import introAudio from '../assets/UI/intro.mp3'
 
 // Module-level flag tracks if we've already run the intro since JS loaded
@@ -91,46 +91,65 @@ const Home = () => {
   };
 
   // Real Asset Loading Tracker (Desktop Only)
+  // This will prefer an `intro.webm` placed in the public root if available,
+  // falling back to the bundled MP4 imported as `introVideo`.
   useEffect(() => {
     if (!isIntroPath || isMobile) return;
 
+    let canceled = false;
     lockScroll();
 
-    const assets = [
-      { type: 'image', src: bgImage },
-      { type: 'video', src: introVideo },
-      { type: 'audio', src: introAudio }
-    ];
-
-    let loadedCount = 0;
-    const totalAssets = assets.length;
-
-    const updateProgress = () => {
-      loadedCount++;
-      const newProgress = Math.round((loadedCount / totalAssets) * 100);
-      setLoadProgress(newProgress);
-    };
-
-    assets.forEach(asset => {
-      if (asset.type === 'image') {
-        const img = new Image();
-        img.src = asset.src;
-        img.onload = updateProgress;
-        img.onerror = updateProgress; // Don't block on error
-      } else if (asset.type === 'video') {
-        const video = document.createElement('video');
-        video.src = asset.src;
-        video.oncanplaythrough = updateProgress;
-        video.onerror = updateProgress;
-      } else if (asset.type === 'audio') {
-        const audio = new Audio();
-        audio.src = asset.src;
-        audio.oncanplaythrough = updateProgress;
-        audio.onerror = updateProgress;
+    (async () => {
+      // Check for a public WEBM at the project root (e.g. /intro.webm)
+      let videoSrc = introVideo;
+      try {
+        const resp = await fetch('/intro.webm', { method: 'HEAD' });
+        if (resp && resp.ok) {
+          videoSrc = '/intro.webm';
+        }
+      } catch (e) {
+        // ignore network errors and keep mp4
       }
-    });
+
+      if (canceled) return;
+
+      const assets = [
+        { type: 'image', src: bgImage },
+        { type: 'video', src: videoSrc },
+        { type: 'audio', src: introAudio }
+      ];
+
+      let loadedCount = 0;
+      const totalAssets = assets.length;
+
+      const updateProgress = () => {
+        loadedCount++;
+        const newProgress = Math.round((loadedCount / totalAssets) * 100);
+        setLoadProgress(newProgress);
+      };
+
+      assets.forEach(asset => {
+        if (asset.type === 'image') {
+          const img = new Image();
+          img.src = asset.src;
+          img.onload = updateProgress;
+          img.onerror = updateProgress; // Don't block on error
+        } else if (asset.type === 'video') {
+          const video = document.createElement('video');
+          video.src = asset.src;
+          video.oncanplaythrough = updateProgress;
+          video.onerror = updateProgress;
+        } else if (asset.type === 'audio') {
+          const audio = new Audio();
+          audio.src = asset.src;
+          audio.oncanplaythrough = updateProgress;
+          audio.onerror = updateProgress;
+        }
+      });
+    })();
 
     return () => {
+      canceled = true;
       if (isLoading || showIntro) unlockScroll();
     };
   }, [isIntroPath, isMobile]);
@@ -281,6 +300,8 @@ const Home = () => {
               playsInline
               preload="auto"
             >
+              {/* Prefer a public /intro.webm if you place it in the public root; mp4 remains as fallback */}
+              <source src="/intro.webm" type="video/webm" />
               <source src={introVideo} type="video/mp4" />
             </video>
             
