@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import bgImage from '../assets/UI/Invento-bg.jpg'
+import bgImage from '../assets/UI/Invento-bg.webp'
 import paperTexture from '../assets/UI/paper-texture.jpg'
 import spy2 from '../assets/UI/spy2.png'
 import Navbar from '../components/Navbar'

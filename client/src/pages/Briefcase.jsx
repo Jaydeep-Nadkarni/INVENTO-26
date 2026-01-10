@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import bgImage from '../assets/UI/Invento-bg.jpg'
+import bgImage from '../assets/UI/Invento-bg.webp'
 import Navbar from '../components/Navbar'
 import Briefcase from '../components/Briefcase'
 import BriefcaseInsider from '../components/BriefcaseInsider'

@@ -11,7 +11,7 @@ export default defineConfig({
   assetsInclude: ['**/*.glb'],
   server: {
     allowedHosts: [
-      'vegas-ebony-phenomenon-eugene.trycloudflare.com',
+      'discuss-states-blackberry-halo.trycloudflare.com',
       'localhost',
       '127.0.0.1'
     ]

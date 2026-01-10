@@ -25,19 +25,6 @@ import MasterStats from './admin/pages/master/Stats'
 import MasterTeams from './admin/pages/master/Teams'
 import MasterActivity from './admin/pages/master/Activity'
 
-// Session initialization logic - runs immediately on module load
-// This ensures that the flags are set before any components render (avoiding race conditions)
-if (typeof window !== 'undefined') {
-  const hasSessionStarted = sessionStorage.getItem('sessionStarted');
-  if (!hasSessionStarted) {
-    // Check if we are landing on the home page
-    if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
-      sessionStorage.setItem('shouldPlayIntro', 'true');
-    }
-    sessionStorage.setItem('sessionStarted', 'true');
-  }
-}
-
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const user = localStorage.getItem('currentUser')

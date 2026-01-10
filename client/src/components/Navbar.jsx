@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { shouldSkipAnimations } from '../utils/performanceOptimization'
-import tex1 from '../assets/UI/button-texture-1.png'
-import tex2 from '../assets/UI/button-texture-1.png'
-import tex3 from '../assets/UI/button-texture-3.png'
+import tex1 from '../assets/UI/button-texture-1.webp'
+import tex2 from '../assets/UI/button-texture-2.webp'
+import tex3 from '../assets/UI/button-texture-3.webp'
 
 const Navbar = ({ onEventsClick, isMobile }) => {
   const location = useLocation()

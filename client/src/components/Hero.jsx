@@ -5,7 +5,7 @@ import img2 from '../assets/UI/img2.png'
 import pin from '../assets/UI/pin.png'
 import news from '../assets/UI/news.png'
 import year2026 from '../assets/UI/2026.png'
-import handprint from '../assets/UI/handprint.png'
+import handprint from '../assets/UI/handprint.webp'
 import windowsPlayer from '../assets/UI/windows-player.jpg'
 
 // Countdown Timer Component
@@ -177,10 +177,10 @@ const Hero = () => {
         </div>
       </div>
 
-      <div className="absolute bottom-8 left-2 md:bottom-6 md:left-24 z-10 hidden md:block">
+      <div className="absolute bottom-8 left-2 md:bottom-3 md:left-24 z-10 hidden md:block">
         <div className="relative transform">
-          <img src={pin} alt="pin" className="absolute top-1 left-1/2 transform -translate-x-1/2 w-6 z-20" />
-          <img src={news} alt="Newspaper" className="w-56 md:w-48 shadow-2xl" />
+          {/* Tape Effect - Realistic Scotch Tape */}
+          <img src={news} alt="Newspaper" className="w-56 md:w-48 shadow-2xl relative z-10" />
         </div>
       </div>
 
