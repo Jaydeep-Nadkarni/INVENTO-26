@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Navbar from '../components/Navbar'
 import { scheduleData } from '../components/Events/scheduleData'
 import paperTexture from '../assets/UI/paper-texture.jpg'
-import bgImage from '../assets/UI/Invento-bg.jpg'
+import bgImage from '../assets/UI/Invento-bg.webp'
 import spy1 from '../assets/UI/spy1.png'
 
 // Mobile detection utility

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import paperTexture from '../assets/UI/paper-texture.jpg'
-import bgImage from '../assets/UI/Invento-bg.jpg'
+import bgImage from '../assets/UI/Invento-bg.webp'
 import Navbar from '../components/Navbar'
 
 // Mobile detection utility

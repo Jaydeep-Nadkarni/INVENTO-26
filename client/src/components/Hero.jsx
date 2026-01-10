@@ -5,7 +5,7 @@ import img2 from '../assets/UI/img2.png'
 import pin from '../assets/UI/pin.png'
 import news from '../assets/UI/news.png'
 import year2026 from '../assets/UI/2026.png'
-import handprint from '../assets/UI/handprint.png'
+import handprint from '../assets/UI/handprint.webp'
 import windowsPlayer from '../assets/UI/windows-player.jpg'
 
 // Countdown Timer Component

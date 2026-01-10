@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Cropper from 'react-easy-crop'
 import getCroppedImg from '../utils/cropImage'
 import paperTexture from '../assets/UI/paper-texture.jpg'
-import bgImage from '../assets/UI/Invento-bg.jpg'
+import bgImage from '../assets/UI/Invento-bg.webp'
 import Navbar from '../components/Navbar'
 
 // Mobile detection utility

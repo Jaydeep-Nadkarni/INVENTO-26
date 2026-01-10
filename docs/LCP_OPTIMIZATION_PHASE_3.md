@@ -6,8 +6,8 @@
 
 #### 1. **Image Preloading with Media Queries**
 - Added `<link rel="preload">` directives for hero images in `index.html`
-- Desktop: `Invento-bg.jpg` (1000x1000px)
-- Mobile: `Invento-bg-mobile.png` (optimized size)
+- Desktop: `Invento-bg.webp` (1000x1000px)
+- Mobile: `Invento-bg-mobile.webp` (optimized size)
 - **Impact**: Images are requested immediately on page load, not discovered late
 
 #### 2. **Critical CSS Inlining**
@@ -71,8 +71,8 @@
 <link rel="preconnect" href="https://checkout.razorpay.com">
 
 <!-- Preload critical images with media queries -->
-<link rel="preload" as="image" href="/src/assets/UI/Invento-bg.jpg" media="(min-width: 768px)">
-<link rel="preload" as="image" href="/src/assets/UI/Invento-bg-mobile.png" media="(max-width: 767px)">
+<link rel="preload" as="image" href="/src/assets/UI/Invento-bg.webp" media="(min-width: 768px)">
+<link rel="preload" as="image" href="/src/assets/UI/Invento-bg-mobile.webp" media="(max-width: 767px)">
 
 <!-- Critical CSS inline to eliminate FOUC -->
 <style>
