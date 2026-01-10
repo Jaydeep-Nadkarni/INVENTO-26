@@ -1,6 +1,20 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
+
+// Session initialization logic - runs immediately on module load
+// This ensures that the flags are set before any components render (avoiding race conditions)
+if (typeof window !== 'undefined') {
+  const hasSessionStarted = sessionStorage.getItem('sessionStarted');
+  if (!hasSessionStarted) {
+    // Check if we are landing on the home page
+    if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
+      sessionStorage.setItem('shouldPlayIntro', 'true');
+    }
+    sessionStorage.setItem('sessionStarted', 'true');
+  }
+}
+
 import App from './App.jsx'
 import { AdminAuthProvider } from './admin/context/AuthContext'
 import { DataProvider } from './admin/context/DataContext'

@@ -39,16 +39,15 @@ const Home = () => {
         if (introHasPlayed) return false;
 
         // 2. Check the flag set in App.jsx (global session logic)
-        const shouldPlay = sessionStorage.getItem('shouldPlayIntro') === 'true';
+        return sessionStorage.getItem('shouldPlayIntro') === 'true';
+    });
 
-        if (shouldPlay) {
+    useEffect(() => {
+        if (isIntroPath && !introHasPlayed) {
             introHasPlayed = true;
             sessionStorage.removeItem('shouldPlayIntro');
-            return true;
         }
-
-        return false;
-    });
+    }, [isIntroPath]);
 
     const [isLoading, setIsLoading] = useState(isIntroPath)
     const [loadProgress, setLoadProgress] = useState(0)
@@ -254,9 +253,11 @@ const Home = () => {
         <>
             <audio ref={audioRef} src={introAudio} preload="auto" />
       
-      <Navbar onEventsClick={handleNavigateToEvents} isMobile={isMobile} />
+      {(!isLoading && !showIntro && !showBlackout) && (
+        <Navbar onEventsClick={handleNavigateToEvents} isMobile={isMobile} />
+      )}
 
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         {isLoading && (
           <Loader key="loader" progress={loadProgress} onComplete={handleLoaderComplete} />
         )}
@@ -320,8 +321,7 @@ const Home = () => {
           filter: isLoading || showIntro || showBlackout ? "blur(10px)" : "blur(0px)"
         }}
         transition={{ 
-          // Only apply transition when intro was played (isIntroPath)
-          duration: isIntroPath ? 0 : 0, 
+          duration: isIntroPath ? 1.2 : 0, 
         }}
         className="w-full bg-[#0a0a0a] relative selection:bg-red-700/30"
       >
