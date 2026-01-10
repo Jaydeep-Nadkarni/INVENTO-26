@@ -135,7 +135,7 @@ const EventsGrid = () => {
     const initiatePayment = async (user) => {
         setRegLoading(true)
         try {
-            const response = await fetch('http://localhost:5000/api/events/create-order', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/events/create-order`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ eventId: currentEvent.id })
@@ -146,7 +146,7 @@ const EventsGrid = () => {
 
             // Handle Free Events
             if (data.free) {
-                const regResponse = await fetch(`http://localhost:5000/api/events/register/${currentEvent.id}`, {
+                const regResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/events/register/${currentEvent.id}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -174,7 +174,7 @@ const EventsGrid = () => {
                 order_id: data.orderId,
                 handler: async (paymentResponse) => {
                     try {
-                        const regResponse = await fetch(`http://localhost:5000/api/events/register/${currentEvent.id}`, {
+                        const regResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/events/register/${currentEvent.id}`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
