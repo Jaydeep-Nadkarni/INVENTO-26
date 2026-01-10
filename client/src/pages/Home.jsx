@@ -349,10 +349,13 @@ const Home = () => {
 
         {/* Mobile: Full background image - absolute positioning for natural scroll */}
       {isMobile ? (
+        <div>
         <div className='absolute inset-0 z-0 min-h-svh bg-cover bg-center bg-no-repeat'
          style={{ 
            backgroundImage: `url(${MobileBgImage})`
          }} />
+        <div className='absolute inset-0 bg-black/60 backdrop-blur-[1px] z-0 min-h-svh'></div>
+        </div>
       ) : (
         // Desktop: Full background image with lighter overlay
         <div

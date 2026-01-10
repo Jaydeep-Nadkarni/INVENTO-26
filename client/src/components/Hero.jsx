@@ -3,7 +3,8 @@ import { motion } from 'framer-motion'
 import img1 from '../assets/UI/img1.png'
 import img2 from '../assets/UI/img2.png'
 import pin from '../assets/UI/pin.png'
-import news from '../assets/UI/news.png'
+import news from '../assets/UI/BREAKING.png'
+import paperTexture from '../assets/UI/paper-texture.jpg'
 import year2026 from '../assets/UI/2026.png'
 import handprint from '../assets/UI/handprint.webp'
 import windowsPlayer from '../assets/UI/windows-player.jpg'
@@ -50,8 +51,7 @@ const CountdownTimer = () => {
       {/* Elegant Dark Background with Gradient */}
       <div className="relative bg-transparent rounded-lg px-6 sm:px-8 md:px-12 py-2 sm:py-8 md:py-2 mx-4 overflow-hidden ">
         {/* Decorative light effects */}
-        <div className="absolute top-0 left-1/4 w-40 h-40 bg-amber-400 opacity-5 blur-3xl rounded-full -z-10"></div>
-        <div className="absolute bottom-0 right-1/4 w-40 h-40 bg-orange-400 opacity-5 blur-3xl rounded-full -z-10"></div>
+        
         
         {/* Main Content */}
         <div className="relative flex flex-col items-center gap-4">
@@ -105,7 +105,7 @@ const CountdownTimer = () => {
       </div>
       
       {/* Glow effect shadow */}
-      <div className="absolute -bottom-2 left-4 right-4 h-3 bg-gradient-to-r from-transparent via-amber-500 to-transparent opacity-30 blur-lg rounded-full"></div>
+      
     </motion.div>
   )
 }
@@ -177,10 +177,27 @@ const Hero = () => {
         </div>
       </div>
 
-      <div className="absolute bottom-8 left-2 md:bottom-3 md:left-24 z-10 hidden md:block">
+      <div className="absolute bottom-8 left-2 md:bottom-16 md:left-24 z-10 hidden md:block">
         <div className="relative transform">
-          {/* Tape Effect - Realistic Scotch Tape */}
-          <img src={news} alt="Newspaper" className="w-56 md:w-48 shadow-2xl relative z-10" />
+          {/* Paper textured background for newspaper */}
+          <div
+            className="w-56 md:w-50 shadow-2xl relative z-10 rounded-sm overflow-hidden"
+            style={{
+              backgroundImage: `url(${paperTexture})`,
+              backgroundSize: 'cover',
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'center',
+              padding: '4px'
+            }}
+          >
+            {/* Newspaper artwork sits above the texture; use multiply to blend slightly */}
+            <img
+              src={news}
+              alt="Newspaper"
+              className="w-full block"
+              style={{ mixBlendMode: 'multiply', display: 'block' }}
+            />
+          </div>
         </div>
       </div>
 
