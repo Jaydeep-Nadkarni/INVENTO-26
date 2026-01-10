@@ -10,7 +10,7 @@
     "userInterfaceStyle": "dark",
     "plugins": [
       [
-        "expo-barcode-scanner",
+        "expo-camera",
         {
           "cameraPermission": "Allow INVENTO Validator to access your camera to scan QR codes."
         }

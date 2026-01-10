@@ -1,85 +1,98 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, Image, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, Image, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 
-/**
- * ResultScreen - Display validation result for scanned QR code
- * Shows user information and verification status
- * 
- * @param {Object} scanData - Scanned QR code data
- * @param {Function} onNextParticipant - Callback to scan next participant
- * @param {Function} onReturnHome - Callback to return to home
- */
+const API_URL = 'http://192.168.1.6:5000'; // Update to your server
+
 export default function ResultScreen({ scanData, onNextParticipant, onReturnHome }) {
   const [validationResult, setValidationResult] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    validateData();
+    validateAndFetchData();
   }, [scanData]);
 
-  /**
-   * Mock validation function
-   * Checks if data exists and has required fields
-   */
-  const validateData = () => {
+  const validateAndFetchData = async () => {
+    setLoading(true);
     try {
-      // If scanData already has error flag, it's invalid
+      // Check for invalid QR
       if (scanData?.error || scanData?.verified === false) {
         setValidationResult({
           verified: false,
           message: scanData.message || 'Invalid QR Code Format',
           data: null,
         });
+        setLoading(false);
         return;
       }
 
-      // Check if it's INVENTO format
-      if (scanData?.format === 'INVENTO' && scanData?.userId && scanData?.email) {
-        // Fetch user data from API (mocked here)
-        // In production: fetch(`${API_URL}/api/users/validate/${scanData.userId}`)
-        
-        setValidationResult({
-          verified: true,
-          message: 'Clearance Verified',
-          data: {
-            userId: scanData.userId,
-            email: scanData.email,
-            name: 'Agent Name', // Would come from API
-            college: 'College Name', // Would come from API
-            type: 'PARTICIPANT', // Would come from API
-            profilePhoto: null, // Would come from API
-          },
-        });
-      } else if (scanData?.userId) {
-        // Generic user ID found
-        setValidationResult({
-          verified: true,
-          message: 'User Identified',
-          data: {
-            userId: scanData.userId,
-            email: scanData.email || 'N/A',
-            name: scanData.name || 'Unknown',
-            college: scanData.college || scanData.clgName || 'N/A',
-            type: scanData.type || 'PARTICIPANT',
-            profilePhoto: scanData.profilePhoto || null,
-          },
-        });
+      // Validate INVENTO format
+      if (scanData?.format === 'INVENTO' && scanData?.userId) {
+        try {
+          // Fetch user data from API
+          const response = await fetch(`${API_URL}/api/users/validate/${scanData.userId}`);
+          
+          console.log('API Response Status:', response.status);
+          console.log('API URL:', `${API_URL}/api/users/validate/${scanData.userId}`);
+          
+          if (!response.ok) {
+            throw new Error(`User not found (${response.status})`);
+          }
+
+          const result = await response.json();
+          console.log('Validation Result:', result);
+
+          setValidationResult({
+            verified: true,
+            message: 'Clearance Verified ✓',
+            data: {
+              userId: scanData.userId,
+              email: result.data.email,
+              name: result.data.name,
+              college: result.data.college,
+              type: result.data.passType,
+              profilePhoto: result.data.profilePhoto,
+            },
+          });
+        } catch (error) {
+          console.error('API Error:', error);
+          setValidationResult({
+            verified: false,
+            message: 'User not found in system',
+            data: null,
+          });
+        }
       } else {
-        throw new Error('Invalid data structure');
+        setValidationResult({
+          verified: false,
+          message: 'Invalid QR Code Format',
+          data: null,
+        });
       }
     } catch (error) {
       console.error('Validation error:', error);
       setValidationResult({
         verified: false,
-        message: 'Validation Failed',
+        message: 'Validation error occurred',
         data: null,
       });
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#f5c842" />
+        <Text style={styles.loadingText}>Validating user...</Text>
+      </View>
+    );
+  }
 
   if (!validationResult) {
     return (
       <View style={styles.container}>
-        <Text style={styles.loadingText}>Validating...</Text>
+        <Text style={styles.errorText}>No validation result</Text>
       </View>
     );
   }
@@ -88,38 +101,25 @@ export default function ResultScreen({ scanData, onNextParticipant, onReturnHome
 
   return (
     <View style={styles.container}>
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Status Badge */}
-        <View style={[
-          styles.statusBadge, 
-          verified ? styles.statusVerified : styles.statusDenied
-        ]}>
-          <Text style={styles.statusIcon}>
-            {verified ? '✓' : '✗'}
-          </Text>
-          <Text style={styles.statusText}>
-            {verified ? 'VERIFIED' : 'NOT VERIFIED'}
-          </Text>
+        <View style={[styles.statusBadge, verified ? styles.statusVerified : styles.statusDenied]}>
+          <Text style={styles.statusIcon}>{verified ? '✓' : '✗'}</Text>
+          <Text style={styles.statusText}>{verified ? 'VERIFIED' : 'NOT VERIFIED'}</Text>
         </View>
 
         {/* User Card */}
         <View style={styles.userCard}>
           {/* Profile Photo */}
           <View style={styles.photoContainer}>
-            {data?.profilePhoto ? (
+            {data?.profilePhoto && verified ? (
               <Image 
-                source={{ uri: data.profilePhoto }}
+                source={{ uri: `${API_URL}${data.profilePhoto}` }}
                 style={styles.profilePhoto}
-                defaultSource={require('../assets/placeholder.png')}
               />
             ) : (
               <View style={styles.photoPlaceholder}>
-                <Text style={styles.photoPlaceholderText}>
-                  {data?.name?.charAt(0) || '?'}
-                </Text>
+                <Text style={styles.photoPlaceholderText}>{data?.name?.charAt(0) || '?'}</Text>
               </View>
             )}
           </View>
@@ -137,7 +137,7 @@ export default function ResultScreen({ scanData, onNextParticipant, onReturnHome
                 </View>
                 <View style={styles.metaItem}>
                   <Text style={styles.metaLabel}>TYPE</Text>
-                  <Text style={styles.metaValue}>{data.type}</Text>
+                  <Text style={[styles.metaValue, getTypeColor(data.type)]}>{data.type}</Text>
                 </View>
               </View>
 
@@ -149,287 +149,290 @@ export default function ResultScreen({ scanData, onNextParticipant, onReturnHome
           ) : (
             <View style={styles.errorDetails}>
               <Text style={styles.errorMessage}>{message}</Text>
-              <Text style={styles.errorHint}>
-                {scanData?.raw ? `Raw data: ${scanData.raw.substring(0, 50)}...` : 'No valid data detected'}
-              </Text>
             </View>
           )}
         </View>
 
-        {/* Validation Message */}
-        <View style={[
-          styles.messageCard,
-          verified ? styles.messageVerified : styles.messageDenied
-        ]}>
+        {/* Message Card */}
+        <View style={[styles.messageCard, verified ? styles.messageVerified : styles.messageDenied]}>
           <Text style={styles.messageText}>{message}</Text>
-          <Text style={styles.timestampText}>
-            {new Date(scanData?.timestamp || Date.now()).toLocaleString()}
-          </Text>
+          <Text style={styles.timestamp}>{new Date().toLocaleTimeString()}</Text>
         </View>
       </ScrollView>
 
-      {/* Action Buttons */}
-      <View style={styles.actionsContainer}>
-        <TouchableOpacity 
-          style={styles.primaryButton} 
-          onPress={onNextParticipant}
-        >
-          <Text style={styles.primaryButtonText}>NEXT PARTICIPANT</Text>
+      {/* Actions */}
+      <View style={styles.actions}>
+        <TouchableOpacity style={styles.nextButton} onPress={onNextParticipant}>
+          <Text style={styles.nextButtonText}>NEXT PARTICIPANT</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.secondaryButton} 
-          onPress={onReturnHome}
-        >
-          <Text style={styles.secondaryButtonText}>RETURN HOME</Text>
+        
+        <TouchableOpacity style={styles.homeButton} onPress={onReturnHome}>
+          <Text style={styles.homeButtonText}>RETURN HOME</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 }
 
+function getTypeColor(type) {
+  switch (type) {
+    case 'AAA':
+      return { color: '#22c55e' }; // Green
+    case 'AA':
+      return { color: '#eab308' }; // Yellow
+    case 'A':
+    default:
+      return { color: '#f5c842' }; // Gold
+  }
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a0a0a',
+    backgroundColor: '#09090b',
   },
+  
   scrollContent: {
-    flexGrow: 1,
-    paddingTop: 60,
     paddingHorizontal: 20,
-    paddingBottom: 180,
+    paddingTop: 40,
+    paddingBottom: 140,
   },
+
   loadingText: {
-    fontSize: 18,
-    color: '#888888',
-    textAlign: 'center',
-    marginTop: 100,
+    color: '#f5c842',
+    fontSize: 16,
+    marginTop: 16,
+    fontWeight: '600',
+  },
+
+  errorText: {
+    color: '#dc2626',
+    fontSize: 16,
+    fontWeight: '600',
   },
 
   // Status Badge
   statusBadge: {
-    alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 16,
-    paddingHorizontal: 32,
+    paddingHorizontal: 24,
     borderRadius: 8,
-    marginBottom: 30,
-    borderWidth: 3,
+    marginBottom: 24,
   },
+
   statusVerified: {
-    backgroundColor: '#064e3b',
+    backgroundColor: 'rgba(34, 197, 94, 0.15)',
     borderColor: '#22c55e',
+    borderWidth: 1.5,
   },
+
   statusDenied: {
-    backgroundColor: '#450a0a',
+    backgroundColor: 'rgba(220, 38, 38, 0.15)',
     borderColor: '#dc2626',
+    borderWidth: 1.5,
   },
+
   statusIcon: {
-    fontSize: 32,
-    marginRight: 12,
-  },
-  statusText: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '900',
+    marginRight: 12,
+    color: '#f5c842',
+  },
+
+  statusText: {
+    fontSize: 18,
+    fontWeight: '900',
+    letterSpacing: 1,
     color: '#ffffff',
-    letterSpacing: 2,
   },
 
   // User Card
   userCard: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#18181b',
     borderRadius: 12,
-    padding: 24,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#333333',
-    alignItems: 'center',
+    padding: 20,
+    marginBottom: 24,
+    borderColor: '#f5c842',
+    borderWidth: 1.5,
   },
+
   photoContainer: {
+    alignItems: 'center',
     marginBottom: 20,
   },
+
   profilePhoto: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    borderWidth: 3,
     borderColor: '#f5c842',
+    borderWidth: 3,
   },
+
   photoPlaceholder: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#333333',
-    borderWidth: 3,
-    borderColor: '#f5c842',
+    backgroundColor: '#f5c842',
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   photoPlaceholderText: {
     fontSize: 48,
     fontWeight: '900',
-    color: '#666666',
+    color: '#000000',
   },
 
   // User Details
   userDetails: {
-    width: '100%',
     alignItems: 'center',
   },
+
   userName: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: '900',
     color: '#ffffff',
-    textAlign: 'center',
     marginBottom: 8,
-    letterSpacing: 1,
   },
+
   userCollege: {
     fontSize: 14,
-    color: '#888888',
-    textAlign: 'center',
+    color: '#a1a1aa',
     marginBottom: 20,
-    lineHeight: 20,
   },
+
   metaRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     width: '100%',
     marginBottom: 20,
-    paddingVertical: 16,
-    borderTopWidth: 1,
+    paddingBottom: 20,
+    borderBottomColor: '#3f3f46',
     borderBottomWidth: 1,
-    borderColor: '#333333',
   },
+
   metaItem: {
     alignItems: 'center',
-    flex: 1,
   },
+
   metaLabel: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#666666',
+    fontSize: 12,
+    color: '#71717a',
+    fontWeight: '600',
+    marginBottom: 4,
     letterSpacing: 1,
-    marginBottom: 6,
   },
+
   metaValue: {
     fontSize: 16,
     fontWeight: '900',
     color: '#f5c842',
-    letterSpacing: 1,
   },
+
   emailContainer: {
     width: '100%',
-    backgroundColor: '#0a0a0a',
-    padding: 12,
-    borderRadius: 6,
   },
+
   emailLabel: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#666666',
-    letterSpacing: 1,
-    marginBottom: 4,
-  },
-  emailValue: {
     fontSize: 12,
-    color: '#888888',
+    color: '#71717a',
+    fontWeight: '600',
+    marginBottom: 6,
+    letterSpacing: 1,
+  },
+
+  emailValue: {
+    fontSize: 13,
+    color: '#ffffff',
     fontFamily: 'monospace',
   },
 
-  // Error Details
   errorDetails: {
-    width: '100%',
     alignItems: 'center',
     paddingVertical: 20,
   },
+
   errorMessage: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
     color: '#dc2626',
     textAlign: 'center',
-    marginBottom: 12,
-  },
-  errorHint: {
-    fontSize: 12,
-    color: '#666666',
-    textAlign: 'center',
-    fontFamily: 'monospace',
-    lineHeight: 18,
   },
 
   // Message Card
   messageCard: {
-    padding: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
     borderRadius: 8,
-    borderWidth: 2,
+    marginBottom: 24,
   },
+
   messageVerified: {
-    backgroundColor: '#064e3b',
-    borderColor: '#22c55e',
+    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    borderLeftColor: '#22c55e',
+    borderLeftWidth: 4,
   },
+
   messageDenied: {
-    backgroundColor: '#450a0a',
-    borderColor: '#dc2626',
+    backgroundColor: 'rgba(220, 38, 38, 0.1)',
+    borderLeftColor: '#dc2626',
+    borderLeftWidth: 4,
   },
+
   messageText: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '600',
     color: '#ffffff',
-    textAlign: 'center',
     marginBottom: 8,
-    letterSpacing: 1,
   },
-  timestampText: {
-    fontSize: 10,
-    color: '#888888',
-    textAlign: 'center',
-    fontFamily: 'monospace',
+
+  timestamp: {
+    fontSize: 12,
+    color: '#71717a',
   },
 
   // Actions
-  actionsContainer: {
+  actions: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: '#0a0a0a',
-    paddingVertical: 20,
+    backgroundColor: '#09090b',
     paddingHorizontal: 20,
+    paddingVertical: 20,
+    borderTopColor: '#27272a',
     borderTopWidth: 1,
-    borderTopColor: '#333333',
+    gap: 12,
   },
-  primaryButton: {
+
+  nextButton: {
     backgroundColor: '#f5c842',
-    paddingVertical: 18,
+    paddingVertical: 16,
     borderRadius: 8,
-    marginBottom: 12,
-    shadowColor: '#f5c842',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    alignItems: 'center',
   },
-  primaryButtonText: {
-    fontSize: 18,
+
+  nextButtonText: {
+    fontSize: 16,
     fontWeight: '900',
     color: '#000000',
-    textAlign: 'center',
-    letterSpacing: 2,
+    letterSpacing: 1,
   },
-  secondaryButton: {
-    backgroundColor: 'transparent',
-    paddingVertical: 14,
+
+  homeButton: {
+    backgroundColor: '#3f3f46',
+    paddingVertical: 16,
     borderRadius: 8,
-    borderWidth: 2,
-    borderColor: '#444444',
+    alignItems: 'center',
   },
-  secondaryButtonText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#888888',
-    textAlign: 'center',
+
+  homeButtonText: {
+    fontSize: 16,
+    fontWeight: '900',
+    color: '#ffffff',
     letterSpacing: 1,
   },
 });
