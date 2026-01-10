@@ -16,17 +16,37 @@ const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // ---------- Middleware ----------
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
-// Serve static files from uploads directory
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// Serve static files from uploads directory with proper CORS headers
+app.use("/uploads", express.static(path.join(__dirname, "uploads"), {
+  setHeaders: (res, path) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+  }
+}));
 
 // ---------- Routes ----------
 app.get("/", (req, res) => {
   res.send("Invento 2026 is running");
 });
+
+// Debug endpoint to check if uploads are accessible
+app.get("/api/debug/check-uploads", (req, res) => {
+  res.json({
+    message: "Uploads endpoint is accessible",
+    uploadDir: path.join(__dirname, "uploads"),
+    note: "Access images at: {API_URL}/uploads/profiles/{userId}.jpg"
+  });
+});
+
 app.use("/api/users", userRoutes);
 app.use("/api/events", eventRoutes);
 

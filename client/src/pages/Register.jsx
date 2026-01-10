@@ -230,7 +230,7 @@ const Register = () => {
       // Append file with filename
       formDataObj.append('profilePhoto', imageBlob, 'profile.jpg');
 
-      const response = await fetch('http://localhost:5000/api/users/register', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/register`, {
         method: 'POST',
         body: formDataObj,
         // No Content-Type header needed for FormData

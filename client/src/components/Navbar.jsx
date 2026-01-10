@@ -113,8 +113,9 @@ const Navbar = ({ onEventsClick, isMobile }) => {
           >
             {currentUser.profilePhoto ? (
               <img
-                src={currentUser.profilePhoto.startsWith('data:') || currentUser.profilePhoto.startsWith('http') ? currentUser.profilePhoto : `http://localhost:5000${currentUser.profilePhoto}`}
+                src={currentUser.profilePhoto.startsWith('data:') || currentUser.profilePhoto.startsWith('http') ? currentUser.profilePhoto : `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}${currentUser.profilePhoto}`}
                 alt="Profile"
+                onError={(e) => console.error('Navbar image failed:', e.target.src)}
                 className="w-full h-full object-cover"
               />
             ) : (

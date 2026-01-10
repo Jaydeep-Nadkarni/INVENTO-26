@@ -8,6 +8,7 @@ import Login from './pages/Login.jsx'
 import Register from './pages/Register.jsx'
 import Profile from './pages/Profile.jsx'
 import BriefcasePage from './pages/Briefcase.jsx'
+import Pass from './pages/Pass.jsx'
 import { useAdminAuth } from './admin/context/AuthContext'
 import { monitorLongTasks, isMobileDevice } from './utils/performanceOptimization'
 
@@ -118,6 +119,14 @@ function App() {
           />
           
           {/* Protected Routes */}
+          <Route 
+            path="/pass" 
+            element={
+              <ProtectedRoute>
+                <Pass />
+              </ProtectedRoute>
+            } 
+          />
           <Route 
             path="/profile" 
             element={

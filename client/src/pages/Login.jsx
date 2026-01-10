@@ -102,7 +102,7 @@ const Login = () => {
 
     try {
       // 1. Login to get token
-      const loginResponse = await fetch('http://localhost:5000/api/users/login', {
+      const loginResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/users/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -120,7 +120,7 @@ const Login = () => {
       localStorage.setItem('token', token)
 
       // 2. Fetch user profile using the token
-      const profileResponse = await fetch('http://localhost:5000/api/users/profile', {
+      const profileResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
