@@ -157,7 +157,6 @@ const Hero = () => {
       {/* Pins and Photos - Static on Desktop, Hidden on Mobile */}
       <div className="absolute top-20 left-4 md:top-32 md:left-8 z-10 hidden md:block">
         <motion.div
-          whileHover={{ scale: 1.05, rotate: -2 }}
           onClick={handleEasterEgg}
           className="relative w-32 md:w-36 cursor-pointer"
         >
@@ -168,7 +167,6 @@ const Hero = () => {
 
       <div className="absolute top-20 left-36 md:top-18 md:left-48 z-10 hidden lg:block">
         <motion.div
-          whileHover={{ scale: 1.05, rotate: 2 }}
           onClick={handleEasterEgg}
           className="relative w-32 md:w-36 cursor-pointer"
         >
@@ -181,7 +179,6 @@ const Hero = () => {
         <div className="relative transform flex items-start gap-2">
           {/* Handprint on the left */}
           <motion.div
-            whileHover={{ scale: 1.1, rotate: 5 }}
             onClick={handleEasterEgg}
             className="relative rotate-0 cursor-pointer"
           >
@@ -190,7 +187,6 @@ const Hero = () => {
           </motion.div>
           {/* 2026 card with pin */}
           <motion.div
-            whileHover={{ scale: 1.05, rotate: -10 }}
             onClick={handleEasterEgg}
             className="relative top-20 -rotate-6 ml-6 cursor-pointer"
           >
@@ -202,7 +198,6 @@ const Hero = () => {
 
       <div className="absolute bottom-8 left-2 md:bottom-16 md:left-24 z-10 hidden md:block">
         <motion.div
-          whileHover={{ y: -10, rotate: 1 }}
           onClick={handleEasterEgg}
           className="relative transform cursor-pointer"
         >
@@ -230,7 +225,6 @@ const Hero = () => {
 
       <div className="absolute bottom-8 right-4 md:bottom-12 md:right-8 z-10 hidden md:block">
         <motion.div
-          whileHover={{ scale: 1.02 }}
           onClick={handleEasterEgg}
           className="transform cursor-pointer"
         >

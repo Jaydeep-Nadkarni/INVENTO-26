@@ -84,20 +84,6 @@ const TeamMember = ({ name, role, quote, specialty, image, index }) => {
 const TeamReveal = () => {
     const team = [
         {
-            name: "BANTY",
-            role: "BUNKER",
-            quote: "Sometimes, it's better to bunk a class and enjoy with friends, because now, when I look back, marks never make me laugh, but memories do.",
-            specialty: "SPECIALIST",
-            image: spy1
-        },
-        {
-            name: "AGENT X",
-            role: "ARCHITECT",
-            quote: "Designing systems that survive the chaos. The grid is my canvas, and logic is my brush.",
-            specialty: "ENGINEER",
-            image: spy2
-        },
-        {
             name: "CIPHER",
             role: "GHOST",
             quote: "If you can see me, I've already failed. The best code is the one that's never suspected.",

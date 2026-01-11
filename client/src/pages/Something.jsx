@@ -5,6 +5,10 @@ import TeamReveal from '../components/Something/TeamReveal';
 import CreditsLink from '../components/Something/CreditsLink';
 
 const Something = () => {
+    React.useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
     return (
         <div className="bg-black">
             <JamesBondEasterEgg />

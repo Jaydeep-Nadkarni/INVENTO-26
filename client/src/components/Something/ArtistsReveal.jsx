@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 const ArtistsReveal = () => {
     return (
-        <div className="relative w-full min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center overflow-hidden py-20 px-4 z-20 shadow-[0_-50px_100px_rgba(0,0,0,1)]">
+        <div className="relative w-full min-h-[120vh] bg-[#0a0a0a] flex flex-col items-center justify-center overflow-hidden py-20 px-4 z-20 shadow-[0_-50px_100px_rgba(0,0,0,1)]">
             {/* Dark Red Ambient Background */}
             <div className="absolute inset-0 bg-[#991b1b] opacity-10 pointer-events-none" />
 
