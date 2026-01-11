@@ -7,6 +7,7 @@ import {
   requestPasswordReset,
   resetPassword,
   getProfile,
+  validateUser,
 } from "../controllers/userController.js";
 import { protect } from "../middlewares/authMiddleware.js";
 import upload from "../middlewares/uploadMiddleware.js";
@@ -24,5 +25,8 @@ router.post("/reset-password", resetPassword);
 
 // 🔐 Profile
 router.get("/profile", protect, getProfile);
+
+// 🎫 Public validation endpoint for event pass verification
+router.get("/validate/:userId", validateUser);
 
 export default router;

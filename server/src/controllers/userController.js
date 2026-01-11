@@ -417,3 +417,38 @@ export const getProfile = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
+// 🎫 Validate user for event pass (public endpoint)
+export const validateUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Find user by ID
+    const user = await User.findById(userId).select('name email college profilePhoto passType');
+
+    if (!user) {
+      return res.status(404).json({
+        verified: false,
+        message: 'User not found',
+      });
+    }
+
+    // Return user data for validation
+    return res.status(200).json({
+      verified: true,
+      message: 'User verified',
+      data: {
+        name: user.name,
+        email: user.email,
+        college: user.college || 'Not specified',
+        profilePhoto: user.profilePhoto || null,
+        passType: user.passType || 'A', // AAA, AA, or A
+      },
+    });
+  } catch (error) {
+    console.error('Error in validateUser:', error.message);
+    return res.status(500).json({
+      verified: false,
+      message: 'Server error',
+    });
+  }
+};

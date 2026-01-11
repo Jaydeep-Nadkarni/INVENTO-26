@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "INVENTO Validator",
+    "slug": "invento-validator",
+    "version": "1.0.0",
+
+    "experiments": {
+      "cssInterop": true
+    },
+
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow INVENTO Validator to access your camera to scan QR codes."
+        }
+      ]
+    ],
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ]
+  }
+}
