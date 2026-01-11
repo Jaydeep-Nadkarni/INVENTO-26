@@ -75,8 +75,9 @@ export const createOrder = async (req, res) => {
 export const registerForEvent = async (req, res) => {
   try {
     let { inventoId, // leader for team | participant for solo
-          teamName, members, razorpay_order_id, razorpay_payment_id, razorpay_signature, } = req.body;
-    
+      teamName, members, razorpay_order_id, razorpay_payment_id, razorpay_signature,
+      isOfficial, contingentKey } = req.body;
+
     const eventId = req.params.id.trim();
     const event = await Event.findById(eventId);
     if (!event) return res.status(404).json({ message: "Event not found" });
@@ -112,9 +113,9 @@ export const registerForEvent = async (req, res) => {
         });
       }
     }
-    
+
     // SOLO
-    if (event.type === "solo") {
+    if (event.type === "solo" || (event.maxTeamSize === 1)) {
       if (!inventoId) return res.status(400).json({ message: "Invento ID required" });
 
       const user = await User.findById(inventoId);
@@ -123,10 +124,18 @@ export const registerForEvent = async (req, res) => {
       const already = event.participants.some(p => p.inventoId === user._id.toString());
       if (already) return res.status(400).json({ message: "Already registered" });
 
-      event.participants.push({ inventoId: user._id, name: user.name, email: user.email, phone:user.phone, clgName: user.clgName, paid: true });
+      event.participants.push({
+        inventoId: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        clgName: user.clgName,
+        paid: true,
+        isOfficial: !!isOfficial,
+        contingentKey: contingentKey
+      });
       await event.save();
 
-      // Unlock concert pass ONLY if false
       // Update User Profile
       user.registeredEvents.push(event.name);
       user.payment = true;
@@ -147,10 +156,14 @@ export const registerForEvent = async (req, res) => {
         html: spaceMail("REGISTRATION CONFIRMED", "You are successfully registered!", event.name, user.name, user._id)
       });
 
-      return res.status(200).json({ message: "Solo registration successful", eventId: event._id });
+      return res.status(200).json({
+        message: "Solo registration successful",
+        eventId: event._id,
+        whatsappLink: event.whatsappLink
+      });
     }
 
-    // TEAM (2–4 members)
+    // TEAM
     else {
       // Parse members safely (important)
       try {
@@ -170,20 +183,34 @@ export const registerForEvent = async (req, res) => {
       }
 
       const memberData = await Promise.all(members.map(id => User.findById(id)));
-      const invalidMembers = memberData.filter(u => !u || !u.isVerified );
-      if (invalidMembers.length > 0)
-        return res.status(400).json({ message: "Invalid or unverified team member(s)" });
+      const missingMembers = memberData.filter(u => !u);
+      if (missingMembers.length > 0) {
+        return res.status(400).json({
+          message: `Registration Denied: One or more IDs were not found in the directory.`
+        });
+      }
 
-      const alreadyTeam = event.teams.some(team =>
+      // Check for already registered members in any team of this event
+      const alreadyRegistered = event.teams.some(team =>
         team.members.some(m => members.includes(m.inventoId))
       );
-      if (alreadyTeam) return res.status(400).json({ message: "One or more members already registered" });
+      if (alreadyRegistered) {
+        return res.status(400).json({ message: "One or more squad members are already registered for this operation." });
+      }
+
+      // Ensure no duplicate IDs in the request itself
+      const uniqueMembers = [...new Set(members)];
+      if (uniqueMembers.length !== members.length) {
+        return res.status(400).json({ message: "Duplicate agents detected in the squad roster." });
+      }
 
       const newTeam = {
         teamName,
         leaderId: inventoId,
         paid: true,
-        members: memberData.map(u => ({ inventoId: u._id, name: u.name, email: u.email, phone:u.phone, clgName: u.clgName }))
+        isOfficial: !!isOfficial,
+        contingentKey: contingentKey,
+        members: memberData.map(u => ({ inventoId: u._id, name: u.name, email: u.email, phone: u.phone, clgName: u.clgName }))
       };
 
       event.teams.push(newTeam);
@@ -214,7 +241,11 @@ export const registerForEvent = async (req, res) => {
         html: spaceMail("TEAM REGISTRATION CONFIRMED", `Your team ${teamName} is registered for ${event.name}.`, event.name, u.name, u._id)
       })));
 
-      return res.status(200).json({ message: "Team registered successfully", eventId: event._id });
+      return res.status(200).json({
+        message: "Team registered successfully",
+        eventId: event._id,
+        whatsappLink: event.whatsappLink
+      });
     }
   } catch (error) {
     console.error("Error registering:", error);

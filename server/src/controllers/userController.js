@@ -126,7 +126,7 @@ const spaceMail = (title, message, otp, name, id) => `
 // ================= REGISTER =================
 export const registerUser = async (req, res) => {
   try {
-    const { name, email,  password, phone, clgName, profilePhoto } = req.body;
+    const { name, email, password, phone, clgName, profilePhoto } = req.body;
 
     if (!name || !email || !password || !phone || !clgName) {
       return res.status(400).json({ message: "All fields are required." });
@@ -166,7 +166,7 @@ export const registerUser = async (req, res) => {
     if (req.file) {
       // We need the ID first, so we save once to trigger the ID generation hook
       await newUser.save();
-      
+
       try {
         const photoPath = await processProfilePhoto(req.file.buffer, newUser._id);
         newUser.profilePhoto = photoPath;
@@ -420,23 +420,32 @@ export const getProfile = async (req, res) => {
 // 🎫 Validate user for event pass (public endpoint)
 export const validateUser = async (req, res) => {
   try {
-    const { userId } = req.params;
+    let { userId } = req.params;
 
-    // Find user by ID
+    // Extract digits and handle flexible formats (e.g., "2", "0108", "inv108")
+    const digits = userId.match(/\d+/);
+    if (digits) {
+      const seqNum = parseInt(digits[0]).toString().padStart(5, "0");
+      userId = `inv${seqNum}`;
+    }
+    console.log(`[DEBUG] Validating User ID: ${userId}`);
+
+    // Find user by processed ID
     const user = await User.findById(userId).select('name email clgName profilePhoto passType');
 
     if (!user) {
       return res.status(404).json({
         verified: false,
-        message: 'User not found',
+        message: 'Agent not found in central directory',
       });
     }
 
     // Return user data for validation
     return res.status(200).json({
       verified: true,
-      message: 'User verified',
+      message: 'Agent identified',
       data: {
+        _id: user._id,
         name: user.name,
         email: user.email,
         college: user.clgName || 'Not specified',

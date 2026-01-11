@@ -7,27 +7,31 @@ const eventSchema = new mongoose.Schema({
   name: { type: String, required: true },
   type: { type: String, enum: ["solo", "team"], required: true },
   club: [{ type: String }], // e.g., ["Media"]
-  price: {type: Number, required: true},  // Price for THIS event (important for stats & Razorpay)
+  price: { type: Number, required: true },  // Price for THIS event (important for stats & Razorpay)
   minTeamSize: { type: Number, default: 1 }, // 1 for solo
   maxTeamSize: { type: Number, default: 1 }, // 1 for solo
   participants: [
     {
-      inventoId: {type: String, required: true},
+      inventoId: { type: String, required: true },
       name: String,
       email: String,
       phone: String,
       clgName: String,
-      paid: { type: Boolean, default: false } //Event-specific payment
+      paid: { type: Boolean, default: false }, //Event-specific payment
+      isOfficial: { type: Boolean, default: false },
+      contingentKey: { type: String }
     }
   ],
   teams: [
     {
       teamName: String,
-      leaderId: {type: String, required: true}, // Leader who paid
+      leaderId: { type: String, required: true }, // Leader who paid
       paid: { type: Boolean, default: false }, //Team-level payment
+      isOfficial: { type: Boolean, default: false },
+      contingentKey: { type: String },
       members: [
         {
-          inventoId: {type: String, required: true},
+          inventoId: { type: String, required: true },
           name: String,
           email: String,
           phone: String,
@@ -35,7 +39,8 @@ const eventSchema = new mongoose.Schema({
         }
       ]
     }
-  ]
+  ],
+  whatsappLink: { type: String }
 }, { timestamps: true });
 
 const Event = mongoose.model("Event", eventSchema);
