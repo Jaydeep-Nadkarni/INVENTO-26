@@ -3,6 +3,11 @@
     "name": "INVENTO Validator",
     "slug": "invento-validator",
     "version": "1.0.0",
+
+    "experiments": {
+      "cssInterop": true
+    },
+
     "assetBundlePatterns": [
       "**/*"
     ],
