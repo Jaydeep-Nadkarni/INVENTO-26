@@ -7,7 +7,7 @@ import MobileBgImage from '../assets/UI/invento-bg-mobile.webp'
 import Navbar from '../components/Navbar'
 import Briefcase from '../components/Briefcase'
 import Loader from '../components/Loader'
-import introVideo from '../assets/UI/intro.webm'
+import introVideo from '../assets/UI/intro.mp4'
 import introAudio from '../assets/UI/intro.mp3'
 
 // Module-level flag tracks if we've already run the intro since JS loaded
@@ -100,15 +100,15 @@ const Home = () => {
     lockScroll();
 
     (async () => {
-      // Check for a public WEBM at the project root (e.g. /intro.webm)
+      // Check for a public MP4 at the project root (e.g. /intro.mp4)
       let videoSrc = introVideo;
       try {
-        const resp = await fetch('/intro.webm', { method: 'HEAD' });
+        const resp = await fetch('/intro.mp4', { method: 'HEAD' });
         if (resp && resp.ok) {
-          videoSrc = '/intro.webm';
+          videoSrc = '/intro.mp4';
         }
       } catch (e) {
-        // ignore network errors and keep mp4
+        // ignore network errors and keep bundled mp4
       }
 
       if (canceled) return;
@@ -122,10 +122,36 @@ const Home = () => {
       let loadedCount = 0;
       const totalAssets = assets.length;
 
+      // Start animated progress that moves up to 98% while real assets load
+      setLoadProgress(0);
+      const animInterval = setInterval(() => {
+        setLoadProgress(prev => {
+          if (prev >= 98) return 98;
+          const inc = Math.ceil(Math.random() * 3); // subtle jitter
+          return Math.min(prev + inc, 98);
+        });
+      }, 120);
+
+      const clearAnim = () => {
+        try { clearInterval(animInterval); } catch (e) {}
+      };
+
+      const finalize = () => {
+        if (canceled) return;
+        clearAnim();
+        setLoadProgress(100);
+      };
+
       const updateProgress = () => {
         loadedCount++;
-        const newProgress = Math.round((loadedCount / totalAssets) * 100);
-        setLoadProgress(newProgress);
+        const percent = Math.round((loadedCount / totalAssets) * 100);
+        // If all assets are ready, finalize loader immediately
+        if (loadedCount >= totalAssets) {
+          finalize();
+        } else {
+          // bump to a realistic intermediate percent
+          setLoadProgress(Math.min(percent, 98));
+        }
       };
 
       assets.forEach(asset => {
@@ -136,16 +162,33 @@ const Home = () => {
           img.onerror = updateProgress; // Don't block on error
         } else if (asset.type === 'video') {
           const video = document.createElement('video');
+          video.preload = 'auto';
           video.src = asset.src;
-          video.oncanplaythrough = updateProgress;
+          // When the video can play through, we consider assets loaded
+          video.oncanplaythrough = () => updateProgress();
           video.onerror = updateProgress;
         } else if (asset.type === 'audio') {
           const audio = new Audio();
+          audio.preload = 'auto';
           audio.src = asset.src;
           audio.oncanplaythrough = updateProgress;
           audio.onerror = updateProgress;
         }
       });
+
+      // Safety: if for some reason assets never fire, timeout after 20s to finalize
+      const safetyTimeout = setTimeout(() => {
+        finalize();
+      }, 20000);
+
+      // cleanup for this async block
+      const cleanupInner = () => {
+        clearAnim();
+        clearTimeout(safetyTimeout);
+      };
+
+      // Attach cleanup to window unload (in case) — but we'll clear in outer return as well
+      if (canceled) cleanupInner();
     })();
 
     return () => {
@@ -300,8 +343,8 @@ const Home = () => {
               playsInline
               preload="auto"
             >
-              {/* Prefer a public /intro.webm if you place it in the public root; mp4 remains as fallback */}
-              <source src="/intro.webm" type="video/webm" />
+              {/* Prefer a public /intro.mp4 if you place it in the public root; bundled mp4 is used otherwise */}
+              <source src="/intro.mp4" type="video/mp4" />
               <source src={introVideo} type="video/mp4" />
             </video>
             
