@@ -1,61 +1,98 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, StatusBar } from 'react-native';
+import { Scan, ShieldAlert, Lock, ChevronRight, Activity } from 'lucide-react-native';
 
 /**
- * HomeScreen - Welcome screen for INVENTO Validator
- * Dark spy theme with high contrast for easy readability
- * Uses NativeWind for styling
- * 
- * @param {Function} onVerify - Callback to navigate to scanner screen
+ * HomeScreen - INVENTO Validator
+ * Theme: Industrial Dark Mode / High-Tech
  */
 export default function HomeScreen({ onVerify }) {
   return (
-    <View className="flex-1 bg-[#0a0a0a] justify-between items-center py-16 px-5">
-      {/* Header Section */}
-      <View className="flex-1 justify-center items-center w-full">
-        <Text className="text-[10px] font-black text-[#dc2626] tracking-[3px] bg-[#1a0a0a] px-4 py-1 border border-[#dc2626] mb-8 uppercase">
-          CLASSIFIED
-        </Text>
-        <Text className="text-5xl font-black text-white tracking-[4px] text-center mb-1 uppercase">
-          INVENTO
-        </Text>
-        <Text className="text-3xl font-bold text-[#f5c842] tracking-[8px] text-center mb-5 uppercase">
-          VALIDATOR
-        </Text>
-        <View className="w-20 h-0.5 bg-[#f5c842] my-5" />
-        <Text className="text-base font-semibold text-gray-500 tracking-[2px] text-center uppercase">
-          Spyverse Clearance Check
-        </Text>
-      </View>
+    <View className="flex-1 bg-[#09090b] relative">
+      <StatusBar barStyle="light-content" />
+      
+      {/* Background Tech Elements (Optional decorative borders) */}
+      <View className="absolute top-0 left-0 w-full h-full border-[10px] border-[#18181b] opacity-50 pointer-events-none" />
 
-      {/* Main Action */}
-      <View className="flex-1 justify-center items-center w-full">
-        <TouchableOpacity 
-          onPress={onVerify}
-          activeOpacity={0.8}
-          className="bg-[#f5c842] w-full py-6 px-8 rounded-lg shadow-lg mb-6"
-        >
-          <View className="flex-col items-center justify-center">
-            <Text className="text-[40px] mb-2">🔍</Text>
-            <Text className="text-xl font-black text-black tracking-[2px] text-center uppercase">
-              VERIFY USER
+      <View className="flex-1 justify-between items-center py-20 px-8">
+        
+        {/* Header Section */}
+        <View className="w-full items-center space-y-6">
+          {/* Security Badge */}
+          <View className="flex-row items-center space-x-2 bg-[#2a1515] px-4 py-2 border border-[#7f1d1d] rounded">
+            <ShieldAlert size={14} color="#ef4444" />
+            <Text className="text-[10px] font-bold text-[#ef4444] tracking-[3px] uppercase">
+              Classified Access
             </Text>
           </View>
-        </TouchableOpacity>
 
-        <Text className="text-sm text-gray-500 text-center leading-5 px-5">
-          Tap to scan QR codes and verify agent credentials
-        </Text>
-      </View>
+          {/* Titles */}
+          <View className="items-center mt-8">
+            <Text className="text-5xl font-black text-white tracking-[6px] text-center uppercase shadow-sm">
+              INVENTO
+            </Text>
+            <View className="flex-row items-center justify-center space-x-3 mt-2">
+              <View className="h-[1px] w-8 bg-[#eab308]" />
+              <Text className="text-2xl font-bold text-[#eab308] tracking-[6px] uppercase">
+                VALIDATOR
+              </Text>
+              <View className="h-[1px] w-8 bg-[#eab308]" />
+            </View>
+          </View>
 
-      {/* Footer Info */}
-      <View className="items-center w-full pb-5">
-        <Text className="text-xs font-semibold text-[#dc2626] tracking-[1px] mb-2 uppercase">
-          🔒 Authorized Personnel Only
-        </Text>
-        <Text className="text-[10px] text-gray-600 tracking-[1px] uppercase">
-          v1.0.0 | INVENTO 2026
-        </Text>
+          {/* Status Text */}
+          <View className="flex-row items-center mt-6 opacity-70">
+            <Activity size={16} color="#71717a" />
+            <Text className="text-xs font-medium text-zinc-400 tracking-[2px] ml-2 uppercase">
+              System Online // Ready for Input
+            </Text>
+          </View>
+        </View>
+
+        {/* Main Action Section */}
+        <View className="w-full space-y-6">
+          <TouchableOpacity 
+            onPress={onVerify}
+            activeOpacity={0.9}
+            className="group w-full"
+          >
+            {/* Button Container */}
+            <View className="bg-[#eab308] w-full py-5 px-6 rounded-lg shadow-xl shadow-yellow-900/20 flex-row items-center justify-between border-b-4 border-[#ca8a04]">
+              <View className="flex-row items-center space-x-4">
+                <View className="bg-black/10 p-3 rounded-md">
+                  <Scan size={28} color="#18181b" strokeWidth={2.5} />
+                </View>
+                <View>
+                  <Text className="text-lg font-black text-[#18181b] tracking-[1px] uppercase">
+                    Scan Credentials
+                  </Text>
+                  <Text className="text-[10px] font-bold text-[#18181b]/70 tracking-[1px] uppercase">
+                    Verify Agent Identity
+                  </Text>
+                </View>
+              </View>
+              <ChevronRight size={24} color="#18181b" />
+            </View>
+          </TouchableOpacity>
+
+          <Text className="text-xs text-zinc-500 text-center tracking-wide leading-5 px-4">
+            Align camera with authorized QR matrix to proceed with clearance verification.
+          </Text>
+        </View>
+
+        {/* Footer Info */}
+        <View className="items-center space-y-3 w-full border-t border-zinc-800 pt-6">
+          <View className="flex-row items-center space-x-2">
+            <Lock size={12} color="#52525b" />
+            <Text className="text-[10px] font-semibold text-zinc-500 tracking-[2px] uppercase">
+              Encrypted Connection
+            </Text>
+          </View>
+          <Text className="text-[10px] text-zinc-700 tracking-[1px] uppercase">
+            Invento SecOps v1.0.0
+          </Text>
+        </View>
+
       </View>
     </View>
   );
