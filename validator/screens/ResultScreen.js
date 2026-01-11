@@ -48,7 +48,7 @@ export default function ResultScreen({ scanData, onNextParticipant, onReturnHome
               userId: scanData.userId,
               email: result.data.email,
               name: result.data.name,
-              college: result.data.college,
+              college: result.data.clgName,
               type: result.data.passType,
               profilePhoto: result.data.profilePhoto,
             },
