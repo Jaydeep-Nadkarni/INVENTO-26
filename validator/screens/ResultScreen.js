@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, Image, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, Image, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { CheckCircle2, XCircle, User, Mail, School, IdCard, ArrowRight, Home } from 'lucide-react-native';
 
 const API_URL = 'http://192.168.1.6:5000'; // Update to your server
 
@@ -14,33 +15,21 @@ export default function ResultScreen({ scanData, onNextParticipant, onReturnHome
   const validateAndFetchData = async () => {
     setLoading(true);
     try {
-      // Check for invalid QR
       if (scanData?.error || scanData?.verified === false) {
         setValidationResult({
           verified: false,
           message: scanData.message || 'Invalid QR Code Format',
           data: null,
         });
-        setLoading(false);
         return;
       }
 
-      // Validate INVENTO format
       if (scanData?.format === 'INVENTO' && scanData?.userId) {
         try {
-          // Fetch user data from API
           const response = await fetch(`${API_URL}/api/users/validate/${scanData.userId}`);
-          
-          console.log('API Response Status:', response.status);
-          console.log('API URL:', `${API_URL}/api/users/validate/${scanData.userId}`);
-          
-          if (!response.ok) {
-            throw new Error(`User not found (${response.status})`);
-          }
+          if (!response.ok) throw new Error(`User not found (${response.status})`);
 
           const result = await response.json();
-          console.log('Validation Result:', result);
-
           setValidationResult({
             verified: true,
             message: 'Clearance Verified ✓',
@@ -48,13 +37,12 @@ export default function ResultScreen({ scanData, onNextParticipant, onReturnHome
               userId: scanData.userId,
               email: result.data.email,
               name: result.data.name,
-              college: result.data.college,
+              college: result.data.clgName,
               type: result.data.passType,
               profilePhoto: result.data.profilePhoto,
             },
           });
         } catch (error) {
-          console.error('API Error:', error);
           setValidationResult({
             verified: false,
             message: 'User not found in system',
@@ -69,12 +57,7 @@ export default function ResultScreen({ scanData, onNextParticipant, onReturnHome
         });
       }
     } catch (error) {
-      console.error('Validation error:', error);
-      setValidationResult({
-        verified: false,
-        message: 'Validation error occurred',
-        data: null,
-      });
+      setValidationResult({ verified: false, message: 'Validation error occurred', data: null });
     } finally {
       setLoading(false);
     }
@@ -82,92 +65,107 @@ export default function ResultScreen({ scanData, onNextParticipant, onReturnHome
 
   if (loading) {
     return (
-      <View style={styles.container}>
+      <View className="flex-1 bg-[#09090b] justify-center items-center">
         <ActivityIndicator size="large" color="#f5c842" />
-        <Text style={styles.loadingText}>Validating user...</Text>
+        <Text className="text-[#f5c842] mt-4 font-semibold">Validating user...</Text>
       </View>
     );
   }
 
-  if (!validationResult) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>No validation result</Text>
-      </View>
-    );
-  }
-
-  const { verified, message, data } = validationResult;
+  const { verified, message, data } = validationResult || {};
 
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+    <View className="flex-1 bg-[#09090b]">
+      <ScrollView contentContainerStyle={{ paddingBottom: 160 }} className="px-5 pt-10">
+        
         {/* Status Badge */}
-        <View style={[styles.statusBadge, verified ? styles.statusVerified : styles.statusDenied]}>
-          <Text style={styles.statusIcon}>{verified ? '✓' : '✗'}</Text>
-          <Text style={styles.statusText}>{verified ? 'VERIFIED' : 'NOT VERIFIED'}</Text>
+        <View className={`flex-row items-center justify-center py-4 px-6 rounded-xl mb-6 border-2 ${
+          verified ? 'bg-green-500/10 border-green-500' : 'bg-red-500/10 border-red-500'
+        }`}>
+          {verified ? <CheckCircle2 color="#22c55e" size={28} /> : <XCircle color="#dc2626" size={28} />}
+          <Text className="text-white text-lg font-black tracking-widest ml-3">
+            {verified ? 'VERIFIED' : 'NOT VERIFIED'}
+          </Text>
         </View>
 
         {/* User Card */}
-        <View style={styles.userCard}>
+        <View className="bg-[#18181b] rounded-2xl p-5 mb-6 border-2 border-[#f5c842]">
           {/* Profile Photo */}
-          <View style={styles.photoContainer}>
+          <View className="items-center mb-5 border-b border-[#f5c842] pb-5">
             {data?.profilePhoto && verified ? (
               <Image 
                 source={{ uri: `${API_URL}${data.profilePhoto}` }}
-                style={styles.profilePhoto}
+                className="w-32 h-32 border-4 border-[#f5c842]"
               />
             ) : (
-              <View style={styles.photoPlaceholder}>
-                <Text style={styles.photoPlaceholderText}>{data?.name?.charAt(0) || '?'}</Text>
+              <View className="w-32 h-32 bg-[#f5c842] justify-center items-center">
+                <Text className="text-4xl font-black text-black">{data?.name?.charAt(0) || '?'}</Text>
               </View>
             )}
           </View>
 
           {/* User Details */}
           {verified && data ? (
-            <View style={styles.userDetails}>
-              <Text style={styles.userName}>{data.name}</Text>
-              <Text style={styles.userCollege}>{data.college}</Text>
+            <View className="items-center">
+              <Text className="text-white text-2xl font-black mb-1 text-center">{data.name}</Text>
+              <View className="flex-row items-center mb-5">
+                <School size={14} color="#a1a1aa" />
+                <Text className="text-[#a1a1aa] text-sm ml-1">{data.college}</Text>
+              </View>
               
-              <View style={styles.metaRow}>
-                <View style={styles.metaItem}>
-                  <Text style={styles.metaLabel}>ID</Text>
-                  <Text style={styles.metaValue}>{data.userId}</Text>
+              <View className="flex-row justify-around w-full py-5 border-y border-[#3f3f46] mb-5">
+                <View className="items-center">
+                  <Text className="text-[#71717a] text-[10px] font-bold tracking-widest mb-1 uppercase">ID</Text>
+                  <Text className="text-[#f5c842] text-base font-black">{data.userId?.toUpperCase()}</Text>
                 </View>
-                <View style={styles.metaItem}>
-                  <Text style={styles.metaLabel}>TYPE</Text>
-                  <Text style={[styles.metaValue, getTypeColor(data.type)]}>{data.type}</Text>
+                <View className="items-center">
+                  <Text className="text-[#71717a] text-[10px] font-bold tracking-widest mb-1 uppercase">Pass Type</Text>
+                  <Text style={getTypeColor(data.type)} className="text-base font-black">{data.type}</Text>
                 </View>
               </View>
 
-              <View style={styles.emailContainer}>
-                <Text style={styles.emailLabel}>EMAIL</Text>
-                <Text style={styles.emailValue}>{data.email}</Text>
+              <View className="w-full">
+                <Text className="text-[#71717a] text-[10px] font-bold tracking-widest mb-1 uppercase">Email Address</Text>
+                <View className="flex-row items-center">
+                  <Mail size={14} color="#f5c842" />
+                  <Text className="text-white text-sm ml-2 font-mono">{data.email}</Text>
+                </View>
               </View>
             </View>
           ) : (
-            <View style={styles.errorDetails}>
-              <Text style={styles.errorMessage}>{message}</Text>
+            <View className="items-center py-5">
+              <Text className="text-[#dc2626] text-lg font-bold text-center">{message}</Text>
             </View>
           )}
         </View>
 
         {/* Message Card */}
-        <View style={[styles.messageCard, verified ? styles.messageVerified : styles.messageDenied]}>
-          <Text style={styles.messageText}>{message}</Text>
-          <Text style={styles.timestamp}>{new Date().toLocaleTimeString()}</Text>
+        <View className={`p-4 rounded-xl border-l-4 ${
+          verified ? 'bg-green-500/5 border-green-500' : 'bg-red-500/5 border-red-500'
+        }`}>
+          <Text className="text-white font-semibold text-base mb-1">{message}</Text>
+          <Text className="text-[#71717a] text-xs italic">{new Date().toLocaleTimeString()}</Text>
         </View>
       </ScrollView>
 
       {/* Actions */}
-      <View style={styles.actions}>
-        <TouchableOpacity style={styles.nextButton} onPress={onNextParticipant}>
-          <Text style={styles.nextButtonText}>NEXT PARTICIPANT</Text>
+      <View className="absolute bottom-0 left-0 right-0 bg-[#09090b] p-5 border-t border-[#27272a] gap-3">
+        <TouchableOpacity 
+          activeOpacity={0.8}
+          className="bg-[#f5c842] py-4 rounded-xl flex-row justify-center items-center shadow-lg" 
+          onPress={onNextParticipant}
+        >
+          <Text className="text-black font-black tracking-widest mr-2">NEXT PARTICIPANT</Text>
+          <ArrowRight color="black" size={18} />
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.homeButton} onPress={onReturnHome}>
-          <Text style={styles.homeButtonText}>RETURN HOME</Text>
+        <TouchableOpacity 
+          activeOpacity={0.7}
+          className="bg-[#3f3f46] py-4 rounded-xl flex-row justify-center items-center" 
+          onPress={onReturnHome}
+        >
+          <Home color="white" size={18} className="mr-2" />
+          <Text className="text-white font-black tracking-widest ml-2">RETURN HOME</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -176,263 +174,8 @@ export default function ResultScreen({ scanData, onNextParticipant, onReturnHome
 
 function getTypeColor(type) {
   switch (type) {
-    case 'AAA':
-      return { color: '#22c55e' }; // Green
-    case 'AA':
-      return { color: '#eab308' }; // Yellow
-    case 'A':
-    default:
-      return { color: '#f5c842' }; // Gold
+    case 'AAA': return { color: '#22c55e' };
+    case 'AA': return { color: '#eab308' };
+    default: return { color: '#f5c842' };
   }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#09090b',
-  },
-  
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 40,
-    paddingBottom: 140,
-  },
-
-  loadingText: {
-    color: '#f5c842',
-    fontSize: 16,
-    marginTop: 16,
-    fontWeight: '600',
-  },
-
-  errorText: {
-    color: '#dc2626',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-
-  // Status Badge
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    marginBottom: 24,
-  },
-
-  statusVerified: {
-    backgroundColor: 'rgba(34, 197, 94, 0.15)',
-    borderColor: '#22c55e',
-    borderWidth: 1.5,
-  },
-
-  statusDenied: {
-    backgroundColor: 'rgba(220, 38, 38, 0.15)',
-    borderColor: '#dc2626',
-    borderWidth: 1.5,
-  },
-
-  statusIcon: {
-    fontSize: 28,
-    fontWeight: '900',
-    marginRight: 12,
-    color: '#f5c842',
-  },
-
-  statusText: {
-    fontSize: 18,
-    fontWeight: '900',
-    letterSpacing: 1,
-    color: '#ffffff',
-  },
-
-  // User Card
-  userCard: {
-    backgroundColor: '#18181b',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 24,
-    borderColor: '#f5c842',
-    borderWidth: 1.5,
-  },
-
-  photoContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-
-  profilePhoto: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderColor: '#f5c842',
-    borderWidth: 3,
-  },
-
-  photoPlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#f5c842',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  photoPlaceholderText: {
-    fontSize: 48,
-    fontWeight: '900',
-    color: '#000000',
-  },
-
-  // User Details
-  userDetails: {
-    alignItems: 'center',
-  },
-
-  userName: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: '#ffffff',
-    marginBottom: 8,
-  },
-
-  userCollege: {
-    fontSize: 14,
-    color: '#a1a1aa',
-    marginBottom: 20,
-  },
-
-  metaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    marginBottom: 20,
-    paddingBottom: 20,
-    borderBottomColor: '#3f3f46',
-    borderBottomWidth: 1,
-  },
-
-  metaItem: {
-    alignItems: 'center',
-  },
-
-  metaLabel: {
-    fontSize: 12,
-    color: '#71717a',
-    fontWeight: '600',
-    marginBottom: 4,
-    letterSpacing: 1,
-  },
-
-  metaValue: {
-    fontSize: 16,
-    fontWeight: '900',
-    color: '#f5c842',
-  },
-
-  emailContainer: {
-    width: '100%',
-  },
-
-  emailLabel: {
-    fontSize: 12,
-    color: '#71717a',
-    fontWeight: '600',
-    marginBottom: 6,
-    letterSpacing: 1,
-  },
-
-  emailValue: {
-    fontSize: 13,
-    color: '#ffffff',
-    fontFamily: 'monospace',
-  },
-
-  errorDetails: {
-    alignItems: 'center',
-    paddingVertical: 20,
-  },
-
-  errorMessage: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#dc2626',
-    textAlign: 'center',
-  },
-
-  // Message Card
-  messageCard: {
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    marginBottom: 24,
-  },
-
-  messageVerified: {
-    backgroundColor: 'rgba(34, 197, 94, 0.1)',
-    borderLeftColor: '#22c55e',
-    borderLeftWidth: 4,
-  },
-
-  messageDenied: {
-    backgroundColor: 'rgba(220, 38, 38, 0.1)',
-    borderLeftColor: '#dc2626',
-    borderLeftWidth: 4,
-  },
-
-  messageText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#ffffff',
-    marginBottom: 8,
-  },
-
-  timestamp: {
-    fontSize: 12,
-    color: '#71717a',
-  },
-
-  // Actions
-  actions: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#09090b',
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    borderTopColor: '#27272a',
-    borderTopWidth: 1,
-    gap: 12,
-  },
-
-  nextButton: {
-    backgroundColor: '#f5c842',
-    paddingVertical: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-
-  nextButtonText: {
-    fontSize: 16,
-    fontWeight: '900',
-    color: '#000000',
-    letterSpacing: 1,
-  },
-
-  homeButton: {
-    backgroundColor: '#3f3f46',
-    paddingVertical: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-
-  homeButtonText: {
-    fontSize: 16,
-    fontWeight: '900',
-    color: '#ffffff',
-    letterSpacing: 1,
-  },
-});

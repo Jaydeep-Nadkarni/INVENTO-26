@@ -423,7 +423,7 @@ export const validateUser = async (req, res) => {
     const { userId } = req.params;
 
     // Find user by ID
-    const user = await User.findById(userId).select('name email college profilePhoto passType');
+    const user = await User.findById(userId).select('name email clgName profilePhoto passType');
 
     if (!user) {
       return res.status(404).json({
@@ -439,7 +439,7 @@ export const validateUser = async (req, res) => {
       data: {
         name: user.name,
         email: user.email,
-        college: user.college || 'Not specified',
+        college: user.clgName || 'Not specified',
         profilePhoto: user.profilePhoto || null,
         passType: user.passType || 'A', // AAA, AA, or A
       },
