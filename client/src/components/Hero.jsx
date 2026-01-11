@@ -1,5 +1,6 @@
 import React from 'react'
 import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import img1 from '../assets/UI/img1.png'
 import img2 from '../assets/UI/img2.png'
 import pin from '../assets/UI/pin.png'
@@ -51,32 +52,32 @@ const CountdownTimer = () => {
       {/* Elegant Dark Background with Gradient */}
       <div className="relative bg-transparent rounded-lg px-6 sm:px-8 md:px-12 py-2 sm:py-8 md:py-2 mx-4 overflow-hidden ">
         {/* Decorative light effects */}
-        
-        
+
+
         {/* Main Content */}
         <div className="relative flex flex-col items-center gap-4">
-          
+
           {/* Timer Display */}
           <div className="flex gap-1 sm:gap-2 md:gap-3 justify-center items-center">
             {/* Days */}
             <div className="flex flex-col items-center">
-              <span className="text-4xl sm:text-6xl md:text-7xl bg-gradient-to-b from-amber-300 via-yellow-300 to-amber-400 bg-clip-text text-transparent drop-shadow-lg" 
-                style={{fontFamily: '"DM Serif Text", serif', fontVariantNumeric: 'tabular-nums', textShadow: '0 0 20px rgba(251, 191, 36, 0.5), 0 0 40px rgba(217, 119, 6, 0.3)'}}>
+              <span className="text-4xl sm:text-6xl md:text-7xl bg-gradient-to-b from-amber-300 via-yellow-300 to-amber-400 bg-clip-text text-transparent drop-shadow-lg"
+                style={{ fontFamily: '"DM Serif Text", serif', fontVariantNumeric: 'tabular-nums', textShadow: '0 0 20px rgba(251, 191, 36, 0.5), 0 0 40px rgba(217, 119, 6, 0.3)' }}>
                 {String(timeLeft.days).padStart(2, '0')}
               </span>
               <span className="mt-2 font-serif text-xs sm:text-sm text-amber-300/80 uppercase tracking-widest font-semibold">
                 Days
               </span>
             </div>
-            
+
             {/* Colon */}
             <div className="pb-4 md:pb-6">
               <span className="font-serif text-4xl sm:text-4xl md:text-6xl text-amber-400/60 font-light">:</span>
             </div>
-            
+
             {/* Hours */}
             <div className="flex flex-col items-center">
-              <span style={{fontFamily: '"DM Serif Text", serif', fontVariantNumeric: 'tabular-nums', textShadow: '0 0 20px rgba(251, 191, 36, 0.5), 0 0 40px rgba(217, 119, 6, 0.3)'}}
+              <span style={{ fontFamily: '"DM Serif Text", serif', fontVariantNumeric: 'tabular-nums', textShadow: '0 0 20px rgba(251, 191, 36, 0.5), 0 0 40px rgba(217, 119, 6, 0.3)' }}
                 className="text-4xl sm:text-6xl md:text-7xl bg-gradient-to-b from-amber-300 via-yellow-300 to-amber-400 bg-clip-text text-transparent drop-shadow-lg">
                 {String(timeLeft.hours).padStart(2, '0')}
               </span>
@@ -84,15 +85,15 @@ const CountdownTimer = () => {
                 Hours
               </span>
             </div>
-            
+
             {/* Colon */}
             <div className="pb-4 md:pb-6">
               <span className="font-serif text-4xl sm:text-4xl md:text-6xl text-amber-400/60 font-light">:</span>
             </div>
-            
+
             {/* Minutes */}
             <div className="flex flex-col items-center">
-              <span style={{fontFamily: '"DM Serif Text", serif', fontVariantNumeric: 'tabular-nums', textShadow: '0 0 20px rgba(251, 191, 36, 0.5), 0 0 40px rgba(217, 119, 6, 0.3)'}}
+              <span style={{ fontFamily: '"DM Serif Text", serif', fontVariantNumeric: 'tabular-nums', textShadow: '0 0 20px rgba(251, 191, 36, 0.5), 0 0 40px rgba(217, 119, 6, 0.3)' }}
                 className="text-4xl sm:text-6xl md:text-7xl bg-gradient-to-b from-amber-300 via-yellow-300 to-amber-400 bg-clip-text text-transparent drop-shadow-lg">
                 {String(timeLeft.minutes).padStart(2, '0')}
               </span>
@@ -103,14 +104,20 @@ const CountdownTimer = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Glow effect shadow */}
-      
+
     </motion.div>
   )
 }
 
 const Hero = () => {
+  const navigate = useNavigate();
+
+  const handleEasterEgg = () => {
+    navigate('/something');
+  };
+
   return (
     <div className="relative w-full max-w-[90%] h-screen mx-auto flex items-center justify-center overflow-hidden pt-20 md:pt-24">
 
@@ -143,42 +150,62 @@ const Hero = () => {
         <p className="mt-4 text-white italic font-serif text-sm md:text-base max-w-xs text-center">
           "Smiles in the Spotlight, Secrets in the Shadow"
         </p>
-        
+
         <CountdownTimer />
       </motion.div>
 
       {/* Pins and Photos - Static on Desktop, Hidden on Mobile */}
       <div className="absolute top-20 left-4 md:top-32 md:left-8 z-10 hidden md:block">
-        <div className="relative w-32 md:w-36">
+        <motion.div
+          whileHover={{ scale: 1.05, rotate: -2 }}
+          onClick={handleEasterEgg}
+          className="relative w-32 md:w-36 cursor-pointer"
+        >
           <img src={pin} alt="pin" className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-8 z-20" />
           <img src={img1} alt="Spy 1" className="w-full shadow-xl" />
-        </div>
+        </motion.div>
       </div>
 
       <div className="absolute top-20 left-36 md:top-18 md:left-48 z-10 hidden lg:block">
-        <div className="relative w-32 md:w-36">
+        <motion.div
+          whileHover={{ scale: 1.05, rotate: 2 }}
+          onClick={handleEasterEgg}
+          className="relative w-32 md:w-36 cursor-pointer"
+        >
           <img src={pin} alt="pin" className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-8 z-20" />
           <img src={img2} alt="Spy 2" className="w-full shadow-xl" />
-        </div>
+        </motion.div>
       </div>
 
       <div className="absolute top-20 right-4 md:top-24 md:right-8 z-10 hidden md:block">
         <div className="relative transform flex items-start gap-2">
           {/* Handprint on the left */}
-          <div className="relative rotate-0">
+          <motion.div
+            whileHover={{ scale: 1.1, rotate: 5 }}
+            onClick={handleEasterEgg}
+            className="relative rotate-0 cursor-pointer"
+          >
             <img src={pin} alt="pin" className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-6 z-20" />
             <img src={handprint} alt="handprint" className="w-16 md:w-36 opacity-70 transform" />
-          </div>
+          </motion.div>
           {/* 2026 card with pin */}
-          <div className="relative top-20 -rotate-6 ml-6">
+          <motion.div
+            whileHover={{ scale: 1.05, rotate: -10 }}
+            onClick={handleEasterEgg}
+            className="relative top-20 -rotate-6 ml-6 cursor-pointer"
+          >
             <img src={pin} alt="pin" className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-6 z-20" />
             <img src={year2026} alt="2026" className="w-28 md:w-32 shadow-xl" />
-          </div>
+          </motion.div>
         </div>
       </div>
 
       <div className="absolute bottom-8 left-2 md:bottom-16 md:left-24 z-10 hidden md:block">
-        <div className="relative transform">
+        <motion.div
+          whileHover={{ y: -10, rotate: 1 }}
+          onClick={handleEasterEgg}
+          className="relative transform cursor-pointer"
+        >
           {/* Paper textured background for newspaper */}
           <div
             className="w-56 md:w-50 shadow-2xl relative z-10 rounded-sm overflow-hidden"
@@ -198,13 +225,17 @@ const Hero = () => {
               style={{ mixBlendMode: 'multiply', display: 'block' }}
             />
           </div>
-        </div>
+        </motion.div>
       </div>
 
       <div className="absolute bottom-8 right-4 md:bottom-12 md:right-8 z-10 hidden md:block">
-        <div className="transform">
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          onClick={handleEasterEgg}
+          className="transform cursor-pointer"
+        >
           <img src={windowsPlayer} alt="Media Player" className="w-56 md:w-72 shadow-2xl border-2 border-gray-600 rounded-sm" />
-        </div>
+        </motion.div>
       </div>
 
     </div>

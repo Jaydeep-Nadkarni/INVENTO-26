@@ -9,6 +9,8 @@ import Register from './pages/Register.jsx'
 import Profile from './pages/Profile.jsx'
 import BriefcasePage from './pages/Briefcase.jsx'
 import Pass from './pages/Pass.jsx'
+import Something from './pages/Something.jsx'
+import Credits from './pages/Credits.jsx'
 import { useAdminAuth } from './admin/context/AuthContext'
 import { monitorLongTasks, isMobileDevice } from './utils/performanceOptimization'
 
@@ -63,7 +65,7 @@ function App() {
     if (!isMobileDevice()) {
       monitorLongTasks();
     }
-    
+
     // Log Core Web Vitals on mobile
     if (isMobileDevice()) {
       console.log('📱 Mobile optimization enabled: Animations disabled, lazy loading active');
@@ -74,90 +76,92 @@ function App() {
     <Router>
       <NavigationManager />
       <Routes>
-      <Route path="/" element={<Home />} />
-          <Route path="/briefcase" element={<BriefcasePage />} />
-          <Route path="/events" element={<Events />} />
-          <Route path="/schedule" element={<Schedule />} />
-          <Route path="/contact" element={<Contact />} />
-          
-          {/* Admin and Master Auth */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/master/login" element={<MasterLogin />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/briefcase" element={<BriefcasePage />} />
+        <Route path="/events" element={<Events />} />
+        <Route path="/schedule" element={<Schedule />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/something" element={<Something />} />
+        <Route path="/credits" element={<Credits />} />
 
-          {/* Admin Routes */}
-          <Route 
-            path="/admin/*" 
-            element={
-              <AdminRoute>
-                <Routes>
-                  <Route path="/" element={<AdminDashboard />} />
-                  <Route path="/dashboard" element={<AdminDashboard />} />
-                  <Route path="/participants" element={<AdminParticipants />} />
-                  <Route path="/stats" element={<AdminStats />} />
-                </Routes>
-              </AdminRoute>
-            } 
-          />
+        {/* Admin and Master Auth */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/master/login" element={<MasterLogin />} />
 
-          {/* Master Routes */}
-          <Route 
-            path="/master/*" 
-            element={
-              <MasterRoute>
-                <Routes>
-                  <Route path="/" element={<MasterDashboard />} />
-                  <Route path="/dashboard" element={<MasterDashboard />} />
-                  <Route path="/admins" element={<MasterAdmins />} />
-                  <Route path="/events" element={<MasterEvents />} />
-                  <Route path="/participants" element={<MasterParticipants />} />
-                  <Route path="/stats" element={<MasterStats />} />
-                  <Route path="/teams" element={<MasterTeams />} />
-                  <Route path="/activity" element={<MasterActivity />} />
-                </Routes>
-              </MasterRoute>
-            } 
-          />
-          
-          {/* Protected Routes */}
-          <Route 
-            path="/pass" 
-            element={
-              <ProtectedRoute>
-                <Pass />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/profile" 
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            } 
-          />
+        {/* Admin Routes */}
+        <Route
+          path="/admin/*"
+          element={
+            <AdminRoute>
+              <Routes>
+                <Route path="/" element={<AdminDashboard />} />
+                <Route path="/dashboard" element={<AdminDashboard />} />
+                <Route path="/participants" element={<AdminParticipants />} />
+                <Route path="/stats" element={<AdminStats />} />
+              </Routes>
+            </AdminRoute>
+          }
+        />
 
-          {/* Auth Routes */}
-          <Route 
-            path="/login" 
-            element={
-              <PublicRoute>
-                <Login />
-              </PublicRoute>
-            } 
-          />
-          <Route 
-            path="/register" 
-            element={
-              <PublicRoute>
-                <Register />
-              </PublicRoute>
-            } 
-          />
+        {/* Master Routes */}
+        <Route
+          path="/master/*"
+          element={
+            <MasterRoute>
+              <Routes>
+                <Route path="/" element={<MasterDashboard />} />
+                <Route path="/dashboard" element={<MasterDashboard />} />
+                <Route path="/admins" element={<MasterAdmins />} />
+                <Route path="/events" element={<MasterEvents />} />
+                <Route path="/participants" element={<MasterParticipants />} />
+                <Route path="/stats" element={<MasterStats />} />
+                <Route path="/teams" element={<MasterTeams />} />
+                <Route path="/activity" element={<MasterActivity />} />
+              </Routes>
+            </MasterRoute>
+          }
+        />
 
-          <Route path="/:clubSlug" element={<Events />} />
-          <Route path="/:clubSlug/:eventSlug" element={<Events />} />
-        </Routes>
-  </Router>
+        {/* Protected Routes */}
+        <Route
+          path="/pass"
+          element={
+            <ProtectedRoute>
+              <Pass />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Auth Routes */}
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <PublicRoute>
+              <Register />
+            </PublicRoute>
+          }
+        />
+
+        <Route path="/:clubSlug" element={<Events />} />
+        <Route path="/:clubSlug/:eventSlug" element={<Events />} />
+      </Routes>
+    </Router>
   )
 }
 
