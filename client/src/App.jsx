@@ -12,6 +12,7 @@ import Pass from './pages/Pass.jsx'
 import Something from './pages/Something.jsx'
 import Credits from './pages/Credits.jsx'
 import Newspaper from './pages/Newspaper.jsx'
+import ForgotPassword from './pages/ForgotPassword.jsx'
 import { useAdminAuth } from './admin/context/AuthContext'
 import { monitorLongTasks, isMobileDevice } from './utils/performanceOptimization'
 
@@ -156,6 +157,14 @@ function App() {
           element={
             <PublicRoute>
               <Register />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={
+            <PublicRoute>
+              <ForgotPassword />
             </PublicRoute>
           }
         />

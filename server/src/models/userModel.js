@@ -67,6 +67,12 @@ const userSchema = new mongoose.Schema(
       default: false,
     },
 
+    // Pass type (AAA, A, G, VIP)
+    passType: {
+      type: String,
+      enum: ["AAA", "A", "G", "VIP"],
+      default: "G",
+    },
     // Attendance flag
     present: {
       type: Boolean,

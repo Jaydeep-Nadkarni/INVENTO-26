@@ -249,7 +249,29 @@ const EventsGrid = () => {
             }
         }
 
-        if (isOfficial && !contingentKey) return showAlert('ENCRYPTION ERROR', 'Contingent Key required for official registration', 'error')
+        if (isOfficial) {
+            if (!contingentKey) return showAlert('ENCRYPTION ERROR', 'Contingent Key required for official registration', 'error')
+
+            // Validate key before proceeding
+            try {
+                const keyCheck = await fetch(`${import.meta.env.VITE_API_URL}/api/events/validate-key`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key: contingentKey })
+                })
+                const keyData = await keyCheck.json()
+                if (!keyCheck.ok) throw new Error(keyData.message || 'Invalid Contingent Key')
+
+                // Optional: Verify if user's college matches (if you want strictness)
+                // if (user.clgName !== keyData.clgName) {
+                //    showAlert('AUTH MISMATCH', `This key is for ${keyData.clgName}. You are registered as ${user.clgName}.`, 'error')
+                //    return
+                // }
+            } catch (err) {
+                showAlert('ACCESS DENIED', err.message, 'error')
+                return
+            }
+        }
 
         setRegLoading(true)
         try {
@@ -292,13 +314,13 @@ const EventsGrid = () => {
             }
 
             const options = {
-                key: "rzp_test_Rr3Tw4ut1jLQJc",
+                key: data.keyId,
                 amount: data.amount,
                 currency: "INR",
                 name: "INVENTO 2026",
                 image: logoLoader,
                 description: `Payment for ${currentEvent.realName || currentEvent.themeName}`,
-                order_id: data.orderId,
+                order_id: data.id,
                 handler: async (paymentResponse) => {
                     try {
                         const regResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/events/register/${currentEvent.id}`, {

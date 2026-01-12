@@ -4,6 +4,7 @@ const eventSchema = new mongoose.Schema({
   _id: {
     type: String, // ✅ allow custom string IDs like evt0001
   },
+  id: { type: String, unique: true, sparse: true }, // Add explicit id/slug field
   name: { type: String, required: true },
   type: { type: String, enum: ["solo", "team"], required: true },
   club: [{ type: String }], // e.g., ["Media"]
