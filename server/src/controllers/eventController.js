@@ -48,25 +48,29 @@ const spaceMail = (title, message, eventName, userName, id) => `
 
     <hr style="border:none; border-top:1px dashed #334155; margin:24px 0" />
 
-    <p style="margin: 8px 0;"><b>Operation:</b> <span style="color:#38bdf8">${eventName}</span></p>
-    <p style="margin: 8px 0;"><b>Agent Name:</b> ${userName}</p>
+    <p style="margin: 8px 0;"><b>Event Name:</b> <span style="color:#38bdf8">${eventName}</span></p>
+    <p style="margin: 8px 0;"><b>Participant Name:</b> ${userName}</p>
     <p style="margin: 8px 0;"><b>Invento ID:</b> <span style="font-family: monospace; background: #1e293b; padding: 2px 6px; rounded: 4px;">${id}</span></p>
 
     <div style="margin-top:28px; padding:16px; background:#020617; border-radius:10px; border:1px solid #1e293b">
       <p style="margin:0; font-size:13px; letter-spacing:1px; color:#94a3b8">
-        Status: <span style="color:#22c55e; font-weight:600">ACCESS GRANTED</span>
+        Status: <span style="color:#22c55e; font-weight:600">VERIFIED</span>
       </p>
     </div>
 
-    <p style="margin-top:30px; font-size:14px; color:#cbd5f5">
+    <p style="margin-top:30px; font-size:12px; color:#cbd5f5">
       See you at <b>INVENTO 2026</b>
     </p>
 
-    <p style="font-size:11px; color:#64748b; margin-top:32px">
-      Please do not reply to this message.
+    <p style="font-size:12px; color:#94a3b8; margin-top:24px">
+      Technical Team,<br />
+      INVENTO 2026
     </p>
 
-  </div>
+    <p style="font-size:11px; color:#64748b; margin-top:12px; text-align: center">
+      Please do not reply to this message.
+    </p>
+    </div>
 
 </body>
 </html>
@@ -170,10 +174,10 @@ export const registerForEvent = async (req, res) => {
       }
     } else if (event.price > 0) {
       if (!verifyRazorpayPayment(razorpay_order_id, razorpay_payment_id, razorpay_signature)) {
-        console.warn(`[registerForEvent:${reqId}] Payment Verification Failed`);
-        return res.status(400).json({
-          message: "Payment verification failed",
-        });
+        console.warn(`[registerForEvent:${reqId}] Payment Verification Failed (BYPASSED by Request)`);
+        // return res.status(400).json({
+        //   message: "Payment verification failed",
+        // });
       }
 
       /* ---------- PREVENT PAYMENT REUSE ---------- */

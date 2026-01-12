@@ -320,7 +320,7 @@ const EventsGrid = () => {
                 name: "INVENTO 2026",
                 image: logoLoader,
                 description: `Payment for ${currentEvent.realName || currentEvent.themeName}`,
-                order_id: data.orderId,
+                order_id: data.id,
                 handler: async (paymentResponse) => {
                     try {
                         const regResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/events/register/${currentEvent.id}`, {

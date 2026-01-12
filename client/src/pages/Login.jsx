@@ -146,7 +146,7 @@ const Login = () => {
 
   const handleForgotPassword = (e) => {
     e.preventDefault()
-    
+
     if (!resetEmail) {
       setResetMessage('Please enter your email')
       return
@@ -227,13 +227,12 @@ const Login = () => {
                     <label className="text-xs font-mono font-black text-gray-700 uppercase tracking-widest flex items-center gap-2">
                       Password
                     </label>
-                    <button
-                      type="button"
-                      onClick={() => setShowForgotPassword(true)}
+                    <Link
+                      to="/forgot-password"
                       className="text-[10px] text-red-700 hover:underline font-mono uppercase font-bold"
                     >
                       Forgot Password?
-                    </button>
+                    </Link>
                   </div>
                   <div className="relative">
                     <input
@@ -294,70 +293,6 @@ const Login = () => {
         </div>
       </motion.div>
 
-      {/* Forgot Password Modal */}
-      {showForgotPassword && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
-        >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="bg-white p-10 max-w-md w-full relative rounded-xl border-4 border-gray-800 shadow-2xl"
-            style={{
-              backgroundImage: `url(${paperTexture})`,
-              backgroundColor: '#f5f1e8',
-              backgroundBlendMode: 'overlay'
-            }}
-          >
-            <button
-              onClick={() => {
-                setShowForgotPassword(false)
-                setResetEmail('')
-                setResetMessage('')
-              }}
-              className="absolute top-4 right-4 text-gray-600 hover:text-gray-800 text-2xl font-bold"
-            >
-              ✕
-            </button>
-
-            <h2 className="text-3xl font-serif font-bold text-gray-900 mb-1 tracking-tight">
-              PASSWORD RESET
-            </h2>
-            <div className="h-1 bg-red-600 mb-6 w-16"></div>
-
-            <form onSubmit={handleForgotPassword} className="space-y-4">
-              <input
-                type="email"
-                value={resetEmail}
-                onChange={(e) => setResetEmail(e.target.value)}
-                placeholder="your@email.com"
-                className="w-full px-5 py-3 bg-white/60 backdrop-blur-[2px] border-2 border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/30 font-mono text-sm"
-              />
-
-              {resetMessage && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="p-3 bg-green-100 border-l-4 border-green-600 text-green-800 text-xs font-mono rounded flex items-center"
-                >
-                  <Icons.Check /> {resetMessage}
-                </motion.div>
-              )}
-
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                type="submit"
-                className="w-full px-4 py-3 bg-red-600 text-white font-serif font-bold uppercase tracking-wider text-sm hover:bg-red-700 transition-colors border-2 border-red-700"
-              >
-                SEND RESET LINK
-              </motion.button>
-            </form>
-          </motion.div>
-        </motion.div>
-      )}
     </div>
   )
 }

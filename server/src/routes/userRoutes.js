@@ -9,6 +9,8 @@ import {
   getProfile,
   validateUser,
   inviteVIP,
+  sendLoginOTP,
+  verifyLoginOTP
 } from "../controllers/userController.js";
 import { protect } from "../middlewares/authMiddleware.js";
 import upload from "../middlewares/uploadMiddleware.js";
@@ -23,6 +25,10 @@ router.post("/resend-verify-otp", resendVerifyOTP);
 // 🔑 Password Reset
 router.post("/request-password-reset", requestPasswordReset);
 router.post("/reset-password", resetPassword);
+
+// 🔑 Passwordless / OTP Login
+router.post("/send-login-otp", sendLoginOTP);
+router.post("/verify-login-otp", verifyLoginOTP);
 
 // 🔐 Profile
 router.get("/profile", protect, getProfile);

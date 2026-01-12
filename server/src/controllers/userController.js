@@ -559,3 +559,81 @@ export const inviteVIP = async (req, res) => {
     res.status(500).json({ message: "Error sending VIP invitation." });
   }
 };
+
+// ==========================================
+// 🔑 Passwordless Login (OTP)
+// ==========================================
+
+export const sendLoginOTP = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: "No agent found with this email frequency." });
+
+    const otp = otpGenerator.generate(6, {
+      upperCaseAlphabets: false,
+      specialChars: false,
+      lowerCaseAlphabets: false,
+    });
+
+    const hashedOTP = await bcrypt.hash(otp, 10);
+    user.otp = hashedOTP;
+    user.otpExpiresAt = Date.now() + 10 * 60 * 1000; // 10 mins
+    await user.save();
+
+    await transporter.sendMail({
+      from: `"Invento 2026 Security" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: "Priority Access Code - INVENTO 2026",
+      html: spaceMail("ACCESS CODE REQUESTED", "Use the following One-Time Password to access your dossier.", otp, user.name, user._id),
+    });
+
+    res.status(200).json({ message: "Access code transmitted to secure channel (Email)." });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Transmission failed." });
+  }
+};
+
+export const verifyLoginOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) return res.status(404).json({ message: "Agent not found." });
+    if (!user.otp || !user.otpExpiresAt || Date.now() > user.otpExpiresAt) {
+      return res.status(400).json({ message: "Access code expired. Request a new one." });
+    }
+
+    const isMatch = await bcrypt.compare(otp, user.otp);
+    if (!isMatch) return res.status(400).json({ message: "Invalid access code." });
+
+    // Clear OTP and Verify User
+    user.otp = undefined;
+    user.otpExpiresAt = undefined;
+    user.isVerified = true;
+    await user.save();
+
+    const token = generateToken(user._id);
+
+    return res.status(200).json({
+      message: "Access Granted.",
+      token,
+      payment: user.payment,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        clgName: user.clgName,
+        phone: user.phone,
+        profilePhoto: user.profilePhoto,
+        passType: user.passType,
+        registeredEvents: user.registeredEvents
+      }
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Login verification failed." });
+  }
+};
