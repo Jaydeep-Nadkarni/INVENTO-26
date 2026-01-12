@@ -7,6 +7,7 @@ import { fileURLToPath } from "url";
 import connectDB from "./src/config/db.js";
 import userRoutes from "./src/routes/userRoutes.js";
 import eventRoutes from "./src/routes/eventRoutes.js";
+import noticeRoutes from "./src/routes/noticeRoutes.js";
 
 dotenv.config();
 
@@ -49,6 +50,7 @@ app.get("/api/debug/check-uploads", (req, res) => {
 
 app.use("/api/users", userRoutes);
 app.use("/api/events", eventRoutes);
+app.use("/api/notices", noticeRoutes);
 
 // ---------- 404 Handler (must be before global error handler) ----------
 app.use((req, res, next) => {

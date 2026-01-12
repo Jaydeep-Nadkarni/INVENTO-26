@@ -118,6 +118,10 @@ const Hero = () => {
     navigate('/something');
   };
 
+  const handleNewspaper = () => {
+    navigate('/newspaper');
+  };
+
   return (
     <div className="relative w-full max-w-[90%] h-screen mx-auto flex items-center justify-center overflow-hidden pt-20 md:pt-24">
 
@@ -198,7 +202,7 @@ const Hero = () => {
 
       <div className="absolute bottom-8 left-2 md:bottom-16 md:left-24 z-10 hidden md:block">
         <motion.div
-          onClick={handleEasterEgg}
+          onClick={handleNewspaper}
           className="relative transform cursor-pointer"
         >
           {/* Paper textured background for newspaper */}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import paperTexture from '../../assets/UI/paper-texture.jpg'
-import logoLoader from '../../assets/UI/Logo-loader.svg'
+import logoLoader from '../../assets/UI/KLE-logo-small.png'
 import pageTurnSound from '../../assets/audios/page-turn.mp3'
 import closeSound from '../../assets/audios/briefcase-open.mp3'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -339,27 +339,6 @@ const EventsGrid = () => {
                     wallet: false,
                     emi: false,
                     paylater: false
-                },
-                config: {
-                    display: {
-                        blocks: {
-                            banks: {
-                                name: 'Pay using UPI or Card',
-                                instruments: [
-                                    {
-                                        method: 'upi'
-                                    },
-                                    {
-                                        method: 'card'
-                                    }
-                                ]
-                            }
-                        },
-                        sequence: ['block.banks'],
-                        preferences: {
-                            show_default_blocks: false
-                        }
-                    }
                 }
             }
 
