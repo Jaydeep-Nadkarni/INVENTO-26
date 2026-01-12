@@ -150,6 +150,7 @@ const Profile = () => {
     navigate('/login')
   }
 
+
   const handleOpenLinks = (eventId) => {
     setSelectedEventId(eventId);
     setShowLinksModal(true);
@@ -157,146 +158,143 @@ const Profile = () => {
 
   return (
     <div
-      className="min-h-screen relative overflow-hidden bg-[#1a1a1a] font-serif flex items-center justify-center p-4"
+      className="min-h-screen relative overflow-hidden bg-[#1a1a1a] font-serif flex items-center justify-center p-4 lg:p-8"
     >
       {/* Background - Dark Noir Theme */}
       <div className="fixed inset-0 z-0 bg-neutral-950" style={{ backgroundImage: `url(${bgImage})`, backgroundSize: 'cover', backgroundBlendMode: 'overlay', opacity: 0.4 }} />
       <Navbar />
 
-      <div className="relative z-10 w-full max-w-4xl mt-16 md:mt-0">
+      <div className="relative z-10 w-full max-w-5xl mt-20 md:mt-10">
 
         {/* The Stack Effect - Pages behind */}
-        <div className="absolute top-2 left-2 w-full h-full bg-[#e8e0cc] border border-[#8c7e60] shadow-lg transform -rotate-2 rounded z-0 opacity-80" style={{ backgroundImage: `url(${paperTexture})` }}></div>
-        <div className="absolute top-1 left-1 w-full h-full bg-[#f0eadd] border border-[#8c7e60] shadow-md transform rotate-1 rounded z-0 opacity-90" style={{ backgroundImage: `url(${paperTexture})` }}></div>
+        <div className="absolute -top-5 -left-4 w-full h-full bg-[#dfd7c2] border border-[#d4c5a3] shadow-sm transform -rotate-3 rounded z-0 opacity-60" style={{ backgroundImage: `url(${paperTexture})` }}></div>
+        <div className="absolute -top-3 -left-2 w-full h-full bg-[#e8e0cc] border border-[#d4c5a3] shadow-md transform -rotate-1 rounded z-0 opacity-80" style={{ backgroundImage: `url(${paperTexture})` }}></div>
+        <div className="absolute -top-1 left-1 w-full h-full bg-[#f0eadd] border border-[#d4c5a3] shadow-lg transform rotate-1 rounded z-0 opacity-95" style={{ backgroundImage: `url(${paperTexture})` }}></div>
 
         {/* Main Dossier Page */}
-        <div className="relative bg-[#f4f1ea] w-full min-h-[600px] shadow-2xl rounded p-8 md:p-12 border border-[#d4c5a3] z-10" style={{ backgroundImage: `url(${paperTexture})` }}>
+        <div className="relative bg-[#f4f1ea] w-full min-h-[600px] shadow-2l rounded-sm p-6 md:p-12 border border-[#d4c5a3] z-10" style={{ backgroundImage: `url(${paperTexture})`, backgroundSize: 'cover' }}>
 
-          {/* Watermark */}
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-[0.07] z-0">
-            <h1 className="text-8xl md:text-9xl font-black text-red-900 -rotate-45 uppercase tracking-widest whitespace-nowrap">CLASSIFIED</h1>
-          </div>
-
-          {/* Stamp */}
-          <div className="absolute top-6 right-6 z-10 opacity-80">
-            <div className="border-4 border-red-800 p-2 transform rotate-12">
-              <span className="text-red-800 font-bold text-lg uppercase tracking-widest">TOP SECRET</span>
-            </div>
-          </div>
-
-          {/* Header */}
-          <div className="relative z-10 border-b-2 border-dashed border-[#8c7e60] pb-6 mb-8 flex flex-col md:flex-row justify-between items-start md:items-end">
+          {/* Header Section */}
+          <div className="flex flex-col md:flex-row justify-between items-start mb-10">
             <div>
-              <h2 className="text-4xl font-black text-[#1a1a1a] uppercase tracking-widest mb-1 font-teko">Agent Profile</h2>
-              <p className="font-mono text-xs text-red-800 font-bold uppercase tracking-widest">Authorized Personnel Only // Level 4 Clearance</p>
+              <h1 className="text-5xl md:text-7xl font-black text-black-900 uppercase tracking-tighter leading-none mb-2">AGENT
+                <br/> <h1 className='text-red-900'>PROFILE</h1></h1>
+              <div className="h-1.5 w-24 bg-red-900 mb-2"></div>
+              <p className="font-mono text-sm text-red-800 font-bold uppercase tracking-[0.3em]">PARTICIPANT ID: INV{user?._id?.slice(-4) || '0000'}</p>
             </div>
-            <div className="mt-4 md:mt-0 text-right">
-              <p className="font-mono text-[#5c5446] text-xs uppercase">Dossier ID: {user?._id || 'UNKNOWN'}</p>
-              <p className="font-mono text-[#5c5446] text-xs uppercase">Date: {new Date().toLocaleDateString()}</p>
+            
+            <div className="mt-6 md:mt-0 text-right">
+              <p className="font-mono text-[10px] text-red-800 uppercase tracking-widest font-bold">STATUS</p>
+              <p className="text-red-800 font-bold flex items-center justify-end">
+                <span className="w-2 h-2 bg-red-600 rounded-full mr-2 animate-pulse"></span>
+                ACTIVE
+              </p>
             </div>
           </div>
 
-          {/* Content Area */}
           {loading ? (
             <ProfileSkeleton />
           ) : user ? (
-            <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-12">
-
-              {/* Left Column: Photo & Details */}
-              <div className="md:col-span-1 space-y-6">
-                {/* Photo Box */}
-                <div className="relative w-40 h-40 mx-auto transform -rotate-2 bg-white p-2 shadow-lg border border-gray-300">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-16 pb-12">
+              
+              {/* Photo Area */}
+              <div className="md:col-span-5 lg:col-span-4">
+                <div className="relative w-full aspect-[4/5] bg-white p-4 shadow-2xl border border-gray-300 transform -rotate-2">
+                  {/* Paperclip */}
+                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-10 h-16 border-2 border-gray-400 rounded-full bg-gray-200/50 z-20"></div>
                   <img
                     src={user.profilePhoto || "https://api.dicebear.com/7.x/avataaars/svg?seed=" + user.name}
                     alt="Agent"
-                    className="w-full h-full object-cover filter sepia-[.3] contrast-110"
+                    className="w-full h-full object-cover"
                   />
-                  <div className="absolute -bottom-6 w-full text-center">
-                    <span className="font-handwriting text-xl text-blue-900 transform -rotate-6 inline-block">Agent {user.name.split(' ')[0]}</span>
-                  </div>
-                  {/* Paperclip effect could go here */}
-                  <div className="absolute -top-3 left-1/2 w-4 h-8 border-2 border-gray-400 rounded-full transform -translate-x-1/2 bg-gray-100 z-20"></div>
-                </div>
-
-                {/* Stats Panel */}
-                <div className="bg-[#e8e4da] p-4 border border-[#8c7e60] mt-8">
-                  <div className="mb-2 flex items-center">
-                    <Icons.User />
-                    <div>
-                      <p className="text-[10px] uppercase text-[#5c5446] tracking-widest">Full Name</p>
-                      <p className="font-bold text-[#1a1a1a] font-mono">{user.name}</p>
-                    </div>
-                  </div>
-                  <div className="mb-2 flex items-center">
-                    <Icons.Email />
-                    <div className="overflow-hidden">
-                      <p className="text-[10px] uppercase text-[#5c5446] tracking-widest">Contact Frequency</p>
-                      <p className="font-bold text-[#1a1a1a] font-mono text-sm truncate">{user.email}</p>
-                    </div>
-                  </div>
-                  <div className="mb-2 flex items-center">
-                    <Icons.School />
-                    <div>
-                      <p className="text-[10px] uppercase text-[#5c5446] tracking-widest">Affiliation</p>
-                      <p className="font-bold text-[#1a1a1a] font-mono leading-tight">{user.clgName}</p>
-                    </div>
+                  {/* Red Stamp Overlay */}
+                  <div className="absolute bottom-6 right-6 w-28 h-28 border-4 border-red-800/40 rounded-full flex items-center justify-center -rotate-12 pointer-events-none">
+                     <span className="text-red-800/40 font-bold text-xs text-center uppercase leading-none">INVENTO '26<br/>CAPTURED</span>
                   </div>
                 </div>
-
-                <button
-                  onClick={handleLogout}
-                  className="w-full bg-[#1a1a1a] text-[#f4f1ea] py-3 font-bold uppercase tracking-widest hover:bg-red-900 transition-colors shadow-lg text-sm flex items-center justify-center gap-2"
-                >
-                  <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span> Terminate Session
-                </button>
               </div>
 
-              {/* Right Column: Mission Log */}
-              <div className="md:col-span-2">
-                <div className="mb-6 flex items-center justify-between">
-                  <h3 className="text-2xl font-bold text-[#1a1a1a] uppercase font-teko tracking-wide border-b-4 border-red-800 inline-block">Assigned Missions</h3>
-                  <span className="bg-[#1a1a1a] text-[#f4f1ea] text-[10px] px-2 py-1 font-mono uppercase rounded">Active Status</span>
+              {/* Bio & Details Area */}
+              <div className="md:col-span-7 lg:col-span-8 space-y-10">
+                <div>
+                  <p className="text-lg font-mono text-red-800 uppercase tracking-widest font-bold mb-1">FULL NAME</p>
+                  <h2 className="text-6xl md:text-6xl font-black text-[#1a1a1a] leading-tight tracking-tighter">{user.name}</h2>
+                  <p className="text-xl md:text-xl text-[#5c5446] font-mono mt-3 uppercase">{user.clgName}</p>
                 </div>
 
-                {user.registeredEvents && user.registeredEvents.length > 0 ? (
-                  <div className="space-y-4">
-                    {user.registeredEvents.map((evt, idx) => (
-                      <motion.div
-                        key={idx}
-                        whileHover={{ scale: 1.01 }}
-                        className="bg-white/60 p-4 border-l-4 border-red-800 shadow-sm flex items-center justify-between group cursor-pointer hover:bg-white/90 transition-all"
-                        onClick={() => handleOpenLinks(evt)}
-                      >
-                        <div>
-                          <p className="font-bold text-lg text-[#1a1a1a] font-teko uppercase tracking-wide">{evt}</p>
-                          <p className="text-xs text-[#5c5446] font-mono uppercase">Status: Confirmed</p>
-                        </div>
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                          <span className="text-xs font-bold text-red-800 underline uppercase">View Intel</span>
-                        </div>
-                      </motion.div>
-                    ))}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10 border-t-2 border-black pt-8">
+                  <div className="flex border-l-2 border-black pl-4">
+                    <div>
+                      <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest font-bold mb-1">EMAIL ADDRESS</p>
+                      <p className="font-bold text-[#1a1a1a] font-mono break-all">{user.email}</p>
+                    </div>
                   </div>
-                ) : (
-                  <div className="border-2 border-dashed border-[#8c7e60] p-8 text-center bg-[#8c7e60]/5">
-                    <p className="font-mono text-[#5c5446] uppercase mb-4">No active missions detected.</p>
-                    <Link to="/events" className="inline-block bg-red-800 text-white px-6 py-2 font-bold uppercase tracking-widest text-sm hover:bg-red-900 transition-colors">Abort R&R / Find Mission</Link>
+                  <div className="flex border-l-2 border-black pl-4">
+                    <div>
+                      <p className="text-[10px] font-mono text-gray-500 uppercase tracking-widest font-bold mb-1">PHONE</p>
+                      <p className="font-bold text-[#1a1a1a] font-mono">{user.phone || "---"}</p>
+                    </div>
                   </div>
-                )}
+                </div>
 
-                {/* Recent Activity / Meta */}
-                <div className="mt-12 pt-6 border-t border-[#8c7e60]/30">
-                  <h4 className="text-sm font-bold text-[#5c5446] uppercase tracking-widest mb-4">Operations Log</h4>
-                  <div className="font-mono text-xs text-[#5c5446] space-y-2">
-                    <p>&gt; User verification status: <span className={user.isVerified ? "text-green-700 font-bold" : "text-red-700 font-bold"}>{user.isVerified ? "CLEARED" : "PENDING"}</span></p>
-                    <p>&gt; Last login: {new Date().toLocaleString()}</p>
-                    <p>&gt; Security Protocol: Encrypted (SHA-256)</p>
+                <div className="pt-6 border-t border-black">
+                  <span className="bg-yellow-400 px-3 py-1 font-mono text-xs font-bold uppercase tracking-widest">PARTICIPATING EVENTS</span>
+                  <div className="mt-4">
+                    {user.registeredEvents && user.registeredEvents.length > 0 ? (
+                      <div className="flex flex-wrap gap-2 uppercase font-mono text-sm font-bold text-[#5c5446]">
+                        {user.registeredEvents.map((event, index) => (
+                          <div key={index} className="bg-[#e0d7bc] px-3 py-1 border-2 border-black shadow-[2px_2px_0px_#000] mb-2">
+                            {event}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="font-mono text-[#5c5446] uppercase text-sm">NO EVENTS REGISTERED YET</p>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
           ) : null}
 
+          {/* Footer Interactive Section */}
+          <div className="mt-0 pt-12 space-y-10 border-t-2 border-black border-dotted">
+            {/* Quick Links Row */}
+            <div className="flex flex-wrap gap-4 align-middle justify-center font-sans">
+              <button onClick={() => setShowLinksModal(true)} className="flex items-center gap-3 bg-[#fffefd] p-3 border-2 border-black shadow-[4px_4px_0px_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
+                <Icons.WhatsApp />
+                <div className="text-left leading-none uppercase">
+                   <p className="text-[8px] font-bold text-gray-500">LINKS</p>
+                   <p className="text-xs font-bold">WHATSAPP LINKS</p>
+                </div>
+              </button>
+              <button className="flex items-center gap-3 bg-[#fffefd] p-3 border-2 border-black shadow-[4px_4px_0px_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
+                <Icons.PDF />
+                <div className="text-left leading-none uppercase">
+                   <p className="text-[8px] font-bold text-gray-500">DOWNLOAD</p>
+                   <p className="text-xs font-bold">EVENTS SCHEDULE</p>
+                </div>
+              </button>
+            </div>
+
+            {/* Separator Dash Line */}
+            <div className="w-full border-t border-dashed border-gray-400 py-4"></div>
+
+            {/* Bottom Actions */}
+            <div className="flex flex-wrap justify-center gap-6 pt-4">
+              <button onClick={() => navigate('/')} className="px-12 py-5 bg-[#0a111b] text-white border-2 border-[#0a111b] shadow-[6px_6px_0px_#991b1b] font-bold uppercase tracking-[0.2em] text-sm hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
+                RETURN TO BASE
+              </button>
+              <button onClick={handleLogout} className="px-12 py-5 bg-[#b4b4b4] text-red-700 border-4 border-red-700 shadow-[6px_6px_0px_#000000] font-bold uppercase tracking-[0.2em] text-sm hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-al hover:bg-red-700 hover:text-white">
+                LOG OUT
+              </button>
+            </div>
+          </div>
+
+          <div className="absolute bottom-4 right-8 font-mono text-[8px] text-gray-400 uppercase pointer-events-none">
+            DOSSIER_CREATED_OUT_7E/3<br/>
+            SECURITY CLEARANCE LEVEL 4+
+          </div>
         </div>
       </div>
 
@@ -329,10 +327,33 @@ const Profile = () => {
               <h3 className="text-2xl font-black text-[#1a1a1a] uppercase tracking-widest mb-6 font-teko border-b-2 border-black pb-2">Mission Intel</h3>
 
               <div className="space-y-4">
-                <a href="#" className="flex items-center p-3 bg-green-100 border border-green-300 hover:bg-green-200 transition-colors group">
-                  <Icons.WhatsApp />
-                  <span className="font-bold text-green-900 uppercase text-sm group-hover:underline">Secure Comms Channel</span>
-                </a>
+                {/* Render WhatsApp links from fetched user.eventDetails if available */}
+                {user && user.eventDetails && user.eventDetails.length > 0 ? (
+                  user.eventDetails.map((e, idx) => {
+                    const raw = e.whatsappLink || '';
+                    let href = '#';
+                    try {
+                      if (/^https?:\/\//i.test(raw)) {
+                        href = raw;
+                      } else if (/^[+\d]/.test(raw)) {
+                        const digits = raw.replace(/\D/g, '');
+                        if (digits) href = `https://wa.me/${digits}`;
+                      }
+                    } catch (err) {
+                      href = '#';
+                    }
+
+                    return (
+                      <a key={idx} href={href} target="_blank" rel="noopener noreferrer" className="flex items-center p-3 bg-green-100 border border-green-300 hover:bg-green-200 transition-colors group">
+                        <Icons.WhatsApp />
+                        <span className="font-bold text-green-900 uppercase text-sm group-hover:underline">{e.name}{e.type ? ` (${e.type})` : ''}</span>
+                      </a>
+                    )
+                  })
+                ) : (
+                  <div className="p-3 bg-yellow-50 border border-yellow-200 text-sm text-yellow-800">No WhatsApp links available for your events.</div>
+                )}
+
                 <a href="#" className="flex items-center p-3 bg-red-100 border border-red-300 hover:bg-red-200 transition-colors group">
                   <Icons.PDF />
                   <span className="font-bold text-red-900 uppercase text-sm group-hover:underline">Declassified Briefing (Rulebook)</span>
