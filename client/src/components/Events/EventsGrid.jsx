@@ -314,7 +314,7 @@ const EventsGrid = () => {
             }
 
             const options = {
-                key: "rzp_test_Rr3Tw4ut1jLQJc",
+                key: data.keyId,
                 amount: data.amount,
                 currency: "INR",
                 name: "INVENTO 2026",

@@ -25,17 +25,55 @@ const transporter = nodemailer.createTransport({
 
 /* ================= HTML MAIL ================= */
 const spaceMail = (title, message, eventName, userName, id) => `
-<div style="font-family:Poppins,Arial; background:#0f172a; color:#e5e7eb; padding:30px; border-radius:12px; max-width:600px; margin:auto">
-  <h1 style="color:#38bdf8">${title}</h1>
-  <p>${message}</p>
-  <h3>Event: ${eventName}</h3>
-  <p>Name: <b>${userName}</b></p>
-  <p>Invento ID: <b>${id}</b></p>
-  <p>See you at <b>Invento 2026 </b></p>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>INVENTO 2026 – Spyverse Email</title>
+</head>
+<body style="margin:0; padding:40px; background:#020617; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+
+  <div style="background:#0b1220; color:#e5e7eb; padding:32px; border-radius:14px; max-width:600px; margin:auto; border:1px solid #1e293b">
+
+    <h1 style="color:#38bdf8; margin-top:0; margin-bottom:16px; font-size: 24px; text-transform: uppercase; letter-spacing: 1px;">
+      ${title} — INVENTO 2026
+    </h1>
+
+    <p style="line-height:1.7; color: #cbd5e1;">
+      ${message}
+      <br /><br />
+      Please keep this information secure and present your credentials whenever requested during the event.
+    </p>
+
+    <hr style="border:none; border-top:1px dashed #334155; margin:24px 0" />
+
+    <p style="margin: 8px 0;"><b>Operation:</b> <span style="color:#38bdf8">${eventName}</span></p>
+    <p style="margin: 8px 0;"><b>Agent Name:</b> ${userName}</p>
+    <p style="margin: 8px 0;"><b>Invento ID:</b> <span style="font-family: monospace; background: #1e293b; padding: 2px 6px; rounded: 4px;">${id}</span></p>
+
+    <div style="margin-top:28px; padding:16px; background:#020617; border-radius:10px; border:1px solid #1e293b">
+      <p style="margin:0; font-size:13px; letter-spacing:1px; color:#94a3b8">
+        Status: <span style="color:#22c55e; font-weight:600">ACCESS GRANTED</span>
+      </p>
+    </div>
+
+    <p style="margin-top:30px; font-size:14px; color:#cbd5f5">
+      See you at <b>INVENTO 2026</b>
+    </p>
+
+    <p style="font-size:11px; color:#64748b; margin-top:32px">
+      Please do not reply to this message.
+    </p>
+
+  </div>
+
+</body>
+</html>
 `;
 
 const verifyRazorpayPayment = (orderId, paymentId, signature) => {
+  console.log(`[verifyRazorpayPayment] Checking: Order=${orderId}, Payment=${paymentId}, Sig=${signature ? 'Present' : 'MISSING'}`);
   const body = `${orderId}|${paymentId}`;
 
   const expectedSignature = crypto
@@ -43,7 +81,14 @@ const verifyRazorpayPayment = (orderId, paymentId, signature) => {
     .update(body)
     .digest("hex");
 
-  return expectedSignature === signature;
+  const isValid = expectedSignature === signature;
+  if (!isValid) {
+    console.warn(`[verifyRazorpayPayment] Mismatch!`);
+    console.warn(`Order: ${orderId}, Payment: ${paymentId}`);
+    console.warn(`Expected: ${expectedSignature}`);
+    console.warn(`Received: ${signature}`);
+  }
+  return isValid;
 };
 
 
@@ -79,7 +124,11 @@ export const createOrder = async (req, res) => {
     // The route '/create-order' in eventRoutes doesn't seem to use 'protect' middleware.
     // So we just return the order.
 
-    res.json(order);
+    // Return keyId so frontend uses the same key
+    res.json({
+      ...order,
+      keyId: process.env.RAZORPAY_KEY_ID
+    });
   } catch (error) {
     console.error("Error in createOrder:", error);
     res.status(500).json({ message: error.message });

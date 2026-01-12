@@ -10,12 +10,12 @@ export default function HomeScreen({ onVerify }) {
   return (
     <View className="flex-1 bg-[#09090b] relative">
       <StatusBar barStyle="light-content" />
-      
+
       {/* Background Tech Elements (Optional decorative borders) */}
       <View className="absolute top-0 left-0 w-full h-full border-[10px] border-[#18181b] opacity-50 pointer-events-none" />
 
       <View className="flex-1 justify-between items-center py-20 px-8">
-        
+
         {/* Header Section */}
         <View className="w-full items-center space-y-6">
           {/* Security Badge */}
@@ -51,7 +51,7 @@ export default function HomeScreen({ onVerify }) {
 
         {/* Main Action Section */}
         <View className="w-full space-y-6">
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={onVerify}
             activeOpacity={0.9}
             className="group w-full"
@@ -88,6 +88,12 @@ export default function HomeScreen({ onVerify }) {
               Encrypted Connection
             </Text>
           </View>
+
+          <TouchableOpacity onPress={onLogout} className="mt-2">
+            <Text className="text-[11px] font-bold text-red-500/70 tracking-[2px] uppercase border-b border-red-900/30">
+              Terminate Session [Logout]
+            </Text>
+          </TouchableOpacity>
           <Text className="text-[10px] text-zinc-700 tracking-[1px] uppercase">
             Invento SecOps v1.0.0
           </Text>
