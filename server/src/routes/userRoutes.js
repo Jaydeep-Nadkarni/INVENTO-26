@@ -8,6 +8,7 @@ import {
   resetPassword,
   getProfile,
   validateUser,
+  inviteVIP,
 } from "../controllers/userController.js";
 import { protect } from "../middlewares/authMiddleware.js";
 import upload from "../middlewares/uploadMiddleware.js";
@@ -28,5 +29,8 @@ router.get("/profile", protect, getProfile);
 
 // 🎫 Public validation endpoint for event pass verification
 router.get("/validate/:userId", validateUser);
+
+// 🌟 VIP
+router.post("/invite-vip", inviteVIP);
 
 export default router;

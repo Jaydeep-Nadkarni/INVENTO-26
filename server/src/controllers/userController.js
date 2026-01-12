@@ -1,8 +1,10 @@
 import nodemailer from "nodemailer";
+import crypto from "crypto";
 import otpGenerator from "otp-generator";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/userModel.js";
+import Event from "../models/eventModel.js";
 import dotenv from "dotenv";
 import { verifyOTPService } from "../services/userService.js";
 import { processProfilePhoto } from "../services/imageService.js";
@@ -328,6 +330,16 @@ export const loginUser = async (req, res) => {
       message: "Login successful.",
       token,
       payment: user.payment,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        clgName: user.clgName,
+        phone: user.phone,
+        profilePhoto: user.profilePhoto,
+        passType: user.passType,
+        registeredEvents: user.registeredEvents
+      }
     });
   } catch (error) {
     console.error("Error in loginUser:", error.message);
@@ -408,9 +420,39 @@ export const getProfile = async (req, res) => {
     const user = await User.findById(req.user._id).select("-password");
     if (!user) return res.status(404).json({ message: "User not found." });
 
+    // Fetch details for registered events to get WhatsApp links
+    const events = await Event.find({ name: { $in: user.registeredEvents } });
+
+    // Map events to a simplified format with WhatsApp links
+    const eventDetails = events.map(e => ({
+      name: e.name,
+      whatsappLink: e.whatsappLink,
+      type: e.type
+    }));
+
+    // Double check passType based on actual participation
+    let finalPassType = user.passType || "G";
+
+    // If not VIP and not AAA, check if they are registered for anything
+    if (finalPassType !== "VIP" && finalPassType !== "AAA") {
+      if (user.registeredEvents.length > 0) {
+        finalPassType = "A";
+      } else {
+        finalPassType = "G";
+      }
+    }
+
+    if (finalPassType !== user.passType) {
+      user.passType = finalPassType;
+      await user.save();
+    }
+
     return res.status(200).json({
       message: "User profile fetched successfully",
-      user,
+      user: {
+        ...user.toObject(),
+        eventDetails
+      },
     });
   } catch (error) {
     console.error("Error in getProfile:", error.message);
@@ -443,14 +485,14 @@ export const validateUser = async (req, res) => {
     // Return user data for validation
     return res.status(200).json({
       verified: true,
-      message: 'Agent identified',
+      message: user.passType === 'VIP' ? 'VIP Guest Identified' : 'Agent identified',
       data: {
         _id: user._id,
         name: user.name,
         email: user.email,
         college: user.clgName || 'Not specified',
         profilePhoto: user.profilePhoto || null,
-        passType: user.passType || 'A', // AAA, AA, or A
+        passType: user.passType,
       },
     });
   } catch (error) {
@@ -459,5 +501,61 @@ export const validateUser = async (req, res) => {
       verified: false,
       message: 'Server error',
     });
+  }
+};
+
+// 🌟 Invite VIP Guests
+export const inviteVIP = async (req, res) => {
+  try {
+    const { name, email, clgName } = req.body;
+
+    if (!name || !email) {
+      return res.status(400).json({ message: "Name and Email are required for VIP invitations." });
+    }
+
+    let user = await User.findOne({ email });
+
+    if (user) {
+      user.passType = "VIP";
+      await user.save();
+    } else {
+      // Create a dummy user for VIP
+      const dummyPassword = crypto.randomBytes(8).toString('hex');
+      const hashedPassword = await bcrypt.hash(dummyPassword, 10);
+
+      user = new User({
+        name,
+        email,
+        password: hashedPassword,
+        phone: "0000000000",
+        clgName: clgName || "Invited Guest",
+        isVerified: true,
+        passType: "VIP",
+        payment: true
+      });
+      await user.save();
+    }
+
+    // 📧 Send VIP Invitation email
+    await transporter.sendMail({
+      from: `"Invento 2026" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "🎟️ Exclusive Invitation: Invento 2026 VIP Access",
+      html: `
+        <div style="font-family: sans-serif; padding: 20px; color: #333;">
+          <h2>VIP Invitation</h2>
+          <p>Dear ${name},</p>
+          <p>We are honored to invite you to Invento 2026 as a VIP Guest.</p>
+          <p>Your digital pass is attached to your account. You can access it by logging in with your email.</p>
+          <p style="font-weight: bold;">Your Secret Entry ID: ${user._id}</p>
+          <p>See you at the Spyverse!</p>
+        </div>
+      `
+    });
+
+    res.json({ success: true, message: "VIP invitation sent.", id: user._id });
+  } catch (error) {
+    console.error("Error in inviteVIP:", error);
+    res.status(500).json({ message: "Error sending VIP invitation." });
   }
 };
