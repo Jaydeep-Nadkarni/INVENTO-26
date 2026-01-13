@@ -6,7 +6,7 @@ import { Scan, ShieldAlert, Lock, ChevronRight, Activity } from 'lucide-react-na
  * HomeScreen - INVENTO Validator
  * Theme: Industrial Dark Mode / High-Tech
  */
-export default function HomeScreen({ onVerify }) {
+export default function HomeScreen({ user, onVerify, onLogout }) {
   return (
     <View className="flex-1 bg-[#09090b] relative">
       <StatusBar barStyle="light-content" />
@@ -22,7 +22,7 @@ export default function HomeScreen({ onVerify }) {
           <View className="flex-row items-center space-x-2 bg-[#2a1515] px-4 py-2 border border-[#7f1d1d] rounded">
             <ShieldAlert size={14} color="#ef4444" />
             <Text className="text-[10px] font-bold text-[#ef4444] tracking-[3px] uppercase">
-              Classified Access
+              Secure
             </Text>
           </View>
 
@@ -44,7 +44,7 @@ export default function HomeScreen({ onVerify }) {
           <View className="flex-row items-center mt-6 opacity-70">
             <Activity size={16} color="#71717a" />
             <Text className="text-xs font-medium text-zinc-400 tracking-[2px] ml-2 uppercase">
-              System Online // Ready for Input
+              Official Pass Verification App
             </Text>
           </View>
         </View>
@@ -95,7 +95,7 @@ export default function HomeScreen({ onVerify }) {
             </Text>
           </TouchableOpacity>
           <Text className="text-[10px] text-zinc-700 tracking-[1px] uppercase">
-            Invento SecOps v1.0.0
+            Invento Validator v1.0.0
           </Text>
         </View>
 

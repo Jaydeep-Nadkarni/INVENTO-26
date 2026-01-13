@@ -1,21 +1,18 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, SafeAreaView, Alert, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
-import { Lock, Mail, ChevronRight } from 'lucide-react-native';
+import { Lock, Mail, ChevronRight, Eye, EyeOff } from 'lucide-react-native';
 
 // Use localhost for emulator, or your machine IP for physical device
 // Android Emulator uses 10.0.2.2 usually.
-const API_URL = "http://192.168.1.5:5000"; // CHANGE THIS TO YOUR LOCAL IP IF TESTING ON DEVICE
+// NOTE: Replace 192.168.x.x with YOUR actual machine IP (run: ipconfig)
+const BASE_URL = "http://192.168.1.6:5000"; // CHANGE THIS TO YOUR LOCAL IP IF TESTING ON DEVICE
 
 
 const LoginScreen = ({ onLoginSuccess }) => {
     const [email, setEmail] = useState('');
     const [accessId, setAccessId] = useState('');
     const [loading, setLoading] = useState(false);
-
-    // Helper to determine API URL
-    // If you are running physically, replace localhost with your IP.
-    // Ideally passed as prop or context, but for now defining locally or importing.
-    const BASE_URL = "http://192.168.1.35:5000"; // Replace with your computer's local IP
+    const [showPassword, setShowPassword] = useState(false);
 
 
     const handleLogin = async () => {
@@ -94,10 +91,17 @@ const LoginScreen = ({ onLoginSuccess }) => {
                                 placeholderTextColor="#475569"
                                 className="flex-1 ml-3 text-white text-base"
                                 autoCapitalize="none"
-                                secureTextEntry
+                                secureTextEntry={!showPassword}
                                 value={accessId}
                                 onChangeText={setAccessId}
                             />
+                            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                                {showPassword ? (
+                                    <EyeOff color="#94a3b8" size={20} />
+                                ) : (
+                                    <Eye color="#94a3b8" size={20} />
+                                )}
+                            </TouchableOpacity>
                         </View>
                     </View>
 

@@ -21,9 +21,12 @@ export const loginVolunteer = async (req, res) => {
         return res.status(200).json({
             message: "Access Granted",
             volunteer: {
+                id: volunteer._id,
                 name: volunteer.name,
                 email: volunteer.email,
-                id: volunteer.accessId
+                accessId: volunteer.accessId,
+                createdAt: volunteer.createdAt,
+                updatedAt: volunteer.updatedAt
             }
         });
 
