@@ -10,12 +10,13 @@ import ScannerScreen from './screens/ScannerScreen';
 import ResultScreen from './screens/ResultScreen';
 import SplashScreen from './screens/SplashScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
+import AgreementScreen from './screens/AgreementScreen';
 import LoginScreen from './screens/LoginScreen';
 
 import "./global.css"
 
 export default function App() {
-  const [currentScreen, setCurrentScreen] = useState('splash'); // splash, onboarding, login, home, scanner, result
+  const [currentScreen, setCurrentScreen] = useState('splash'); // splash, onboarding, agreement, login, home, scanner, result
   const [scanData, setScanData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [userToken, setUserToken] = useState(null);
@@ -38,7 +39,7 @@ export default function App() {
             setCurrentScreen('onboarding');
             await AsyncStorage.setItem('isFirstLaunch', 'false');
           } else {
-            setCurrentScreen('login');
+            setCurrentScreen('agreement');
           }
         }
       } catch (e) {
@@ -87,6 +88,10 @@ export default function App() {
   };
 
   const handleFinishOnboarding = () => {
+    setCurrentScreen('agreement');
+  };
+
+  const handleAgreem = () => {
     setCurrentScreen('login');
   };
 
@@ -102,12 +107,16 @@ export default function App() {
         <OnboardingScreen onFinish={handleFinishOnboarding} />
       )}
 
+      {currentScreen === 'agreement' && (
+        <AgreementScreen onAgree={handleAgreem} />
+      )}
+
       {currentScreen === 'login' && (
         <LoginScreen onLoginSuccess={handleLoginSuccess} />
       )}
 
       {currentScreen === 'home' && (
-        <HomeScreen onVerify={handleStartScan} onLogout={handleLogout} />
+        <HomeScreen user={userToken} onVerify={handleStartScan} onLogout={handleLogout} />
       )}
 
       {currentScreen === 'scanner' && (

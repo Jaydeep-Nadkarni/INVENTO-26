@@ -3,27 +3,61 @@ import { View, Text, Animated, Image } from 'react-native';
 
 const SplashScreen = () => {
     const fadeAnim = useRef(new Animated.Value(0)).current;
+    const scaleAnim = useRef(new Animated.Value(0.8)).current;
 
     useEffect(() => {
-        Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 1000,
-            useNativeDriver: true,
-        }).start();
-    }, [fadeAnim]);
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 800,
+                useNativeDriver: true,
+            }),
+            Animated.timing(scaleAnim, {
+                toValue: 1,
+                duration: 800,
+                useNativeDriver: true,
+            }),
+        ]).start();
+    }, [fadeAnim, scaleAnim]);
 
     return (
         <View className="flex-1 bg-slate-950 items-center justify-center">
-            <Animated.View style={{ opacity: fadeAnim }} className="items-center">
-                {/* You can replace this with an actual Logo Image if available */}
-                <View className="w-32 h-32 bg-cyan-500 rounded-full items-center justify-center mb-6 shadow-lg shadow-cyan-500/50">
-                    <Text className="text-4xl font-bold text-white">IV</Text>
+            {/* Background Glow Effect */}
+            <View className="absolute w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
+            
+            <Animated.View
+                style={{
+                    opacity: fadeAnim,
+                    transform: [{ scale: scaleAnim }],
+                }}
+                className="items-center"
+            >
+                {/* Logo SVG */}
+                <View className="mb-8">
+                    <Image
+                        source={require('../assets/images/Logo-loader.svg')}
+                        style={{ width: 120, height: 120 }}
+                        resizeMode="contain"
+                    />
                 </View>
-                <Text className="text-3xl font-bold text-cyan-400 tracking-widest text-center">
+
+                {/* Text */}
+                <Text className="text-4xl font-black text-white tracking-[4px] text-center mb-2">
                     INVENTO
                 </Text>
-                <Text className="text-sm font-light text-slate-400 tracking-[5px] mt-2 uppercase">
-                    Validator Access
+                <Text className="text-sm font-medium text-cyan-400 tracking-[3px] uppercase">
+                    Pass Validator
+                </Text>
+
+                {/* Loading Indicator */}
+                <View className="mt-12 flex-row items-center space-x-2">
+                    <View className="w-2 h-2 bg-cyan-500 rounded-full" />
+                    <View className="w-2 h-2 bg-cyan-500 rounded-full" />
+                    <View className="w-2 h-2 bg-cyan-500 rounded-full" />
+                </View>
+
+                <Text className="text-xs text-slate-500 tracking-wider mt-6 uppercase">
+                    Loading System...
                 </Text>
             </Animated.View>
         </View>
