@@ -67,7 +67,7 @@ const MasterActivity = () => {
                     </div>
 
                     <div className="mt-12 p-12 bg-black border border-dashed border-gray-800 rounded-md text-center">
-                        <p className="text-xs text-gray-600 font-bold uppercase tracking-[0.4em]">End of accessible telemetry for current session</p>
+                        <p className="text-xs text-gray-600 font-bold uppercase tracking-[0.4em]">End of current session</p>
                     </div>
                 </div>
             </main>
