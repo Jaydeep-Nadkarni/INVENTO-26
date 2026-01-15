@@ -396,7 +396,7 @@ const EventsGrid = () => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-xs md:max-w-none mx-auto md:mx-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
                         {clubsData.map((club, index) => (
                             <EventGridCard
                                 key={club.id}
