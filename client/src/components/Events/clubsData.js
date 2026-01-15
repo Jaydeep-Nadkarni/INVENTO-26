@@ -9,6 +9,8 @@ import sportsIllustartion from '../../assets/UI/Events/sports.png'
 import fineartsIllustration from '../../assets/UI/Events/finearts.png'
 import titleEventsIllustration from '../../assets/UI/Events/title-events.png'
 import fashionIllustration from '../../assets/UI/Events/fashion.png'
+import specialsIllustration from '../../assets/UI/Events/specials.png'
+import gamingIllustration from '../../assets/UI/Events/gaming.png'
 
 export const clubsData = [
     {
@@ -327,6 +329,7 @@ export const clubsData = [
         name: 'Specials',
         tagline: 'Innovation & Code',
         event: 'CodeBreaker',
+        illustration: specialsIllustration,
         date: 'March 3, 2026',
         time: '24 Hours',
         venue: 'Labs',
@@ -499,5 +502,41 @@ export const clubsData = [
                 ]
             }
         ]
+    },
+    {
+        id: 13,
+        slug: 'Gaming',
+        name: 'Gaming',
+        tagline: 'Virtual Battles & E-Sports',
+        illustration: gamingIllustration,
+        event: 'E-Sports Championship',
+        date: 'March 20-22, 2026',
+        time: 'Varies',
+        venue: 'Gaming Arena',
+        description: 'Competitive gaming tournaments across popular titles.',
+        color: '#10b981',
+        events: [
+            {
+                id: 'cs-go-tournament',
+                themeName: 'Counter-Strike Showdown',
+                realName: 'CS:GO Tournament',
+                type: 'Team',
+                description: 'Assemble your squad and dominate the battlefield in this high-stakes CS:GO tournament.',
+                fee: 'Rs. 1200',
+                teamSize: '5',
+                slotsAvailable: 16,
+                rounds: 'Knockout',
+                date: 'March 20, 10:00 AM',
+                venue: 'Gaming Arena',
+                rules: [
+                    'Standard CS:GO competitive rules apply.',
+                    'Bring your own peripherals.',
+                    'Match format: Best of 3.'
+                ],
+                contacts: [
+                    { name: 'Gaming Head', phone: '3344556677' }
+                ]
+            }
+        ],
     }
 ]
