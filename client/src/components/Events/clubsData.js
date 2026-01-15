@@ -1,16 +1,17 @@
-import paperTexture from '../../assets/UI/paper-texture.jpg'
+import melodiaIllustration from '../../assets/UI/Events/melodia.png'
+import danceIllustration from '../../assets/UI/Events/dance.png'
+import mediaIllustartion from '../../assets/UI/Events/media.png'
+import hrillustartion from '../../assets/UI/Events/hr.png'
+import literaryIllustration from '../../assets/UI/Events/literary.png'
+import cdcIllustartion from '../../assets/UI/Events/cdc.png'
 
 export const clubsData = [
     {
         id: 1,
         slug: 'melodia',
         name: 'Melodia',
+        illustration: melodiaIllustration,
         tagline: 'Music & Performance Club',
-        event: 'Harmony Night 2026',
-        date: 'February 15, 2026',
-        time: '6:00 PM - 9:00 PM',
-        venue: 'Main Auditorium',
-        description: 'A musical evening featuring live performances, band battles, and acoustic sessions.',
         color: '#dc2626',
         events: [
             {
@@ -64,6 +65,7 @@ export const clubsData = [
         slug: 'cdc',
         name: 'CDC',
         tagline: 'Social Impact Initiative',
+        illustration: cdcIllustartion,
         event: 'Social Impact Summit',
         date: 'February 18, 2026',
         time: '10:00 AM',
@@ -133,6 +135,7 @@ export const clubsData = [
         slug: 'dance',
         name: 'Dance',
         tagline: 'Rhythm & Movement',
+        illustration: danceIllustration,
         event: 'Rhythm Revolution',
         date: 'February 22, 2026',
         time: '5:00 PM',
@@ -209,6 +212,7 @@ export const clubsData = [
         slug: 'hr',
         name: 'HR',
         tagline: 'Talent & Strategy',
+        illustration: hrillustartion,
         event: 'Talent Acquisition',
         date: 'February 25, 2026',
         time: '11:00 AM',
@@ -244,6 +248,7 @@ export const clubsData = [
         slug: 'media',
         name: 'Media',
         tagline: 'Lens & Vision',
+        illustration: mediaIllustartion,
         event: 'Lens & Light',
         date: 'February 27, 2026',
         time: '9:00 AM',
@@ -279,6 +284,7 @@ export const clubsData = [
         slug: 'literary',
         name: 'Literary',
         tagline: 'Words & Wisdom',
+        illustration: literaryIllustration,
         event: 'WordSmith Highlights',
         date: 'March 1, 2026',
         time: '3:00 PM',

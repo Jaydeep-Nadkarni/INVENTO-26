@@ -972,16 +972,26 @@ const EventGridCard = ({ club, index, onSelect }) => {
                     </div>
 
                     {/* Main Image/Graphic Placeholder */}
-                    <div className="relative mb-8 flex-1 group-hover:scale-105 transition-transform duration-700 overflow-hidden">
+                    <div className={`relative ${club.illustration ? 'mb-0' : 'mb-8'} flex-1 group-hover:scale-105 transition-transform duration-700 overflow-hidden`}>
                         <div className="absolute inset-0 border-2 border-black/5 m-2" />
-                        <div className="w-full h-full bg-black/5 flex items-center justify-center grayscale opacity-60 group-hover:opacity-100 transition-opacity">
+                        
+                        {/* Background Letter */}
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                             <h3
-                                className="text-8xl md:text-9xl font-black text-black/5 select-none pointer-events-none"
+                                className="text-[12rem] md:text-[18rem] font-black text-black/[0.08] select-none"
                                 style={{ fontFamily: "'Playfair Display', serif" }}
                             >
                                 {club.name.charAt(0)}
                             </h3>
                         </div>
+
+                        {club.illustration && (
+                            <img
+                                src={club.illustration}
+                                alt={club.name}
+                                className="absolute inset-0 w-full h-full object-contain object-bottom grayscale group-hover:grayscale-0 transition-all duration-700 z-10 p-2"
+                            />
+                        )}
 
                         <div className="absolute bottom-4 -right-2 transform rotate-[-15deg] opacity-0 group-hover:opacity-100 transition-all duration-500 translate-x-10 group-hover:translate-x-0">
                             <div className="px-3 py-1 border-2 border-red-700 text-red-700 text-[10px] font-black uppercase tracking-tighter">
