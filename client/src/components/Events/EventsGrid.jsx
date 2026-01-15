@@ -66,7 +66,7 @@ const EventsGrid = () => {
     }
 
     const currentClub = clubsData.find(c => c.slug === clubSlug)
-    const currentEvent = currentClub?.events.find(e => e.id === eventSlug)
+    const currentEvent = currentClub?.events?.find(e => e.id === eventSlug)
 
     const handleClubClick = (slug) => {
         playSound(pageTurnSound)
@@ -452,7 +452,7 @@ const EventsGrid = () => {
 
                     {/* Events Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {currentClub?.events.map((event, index) => (
+                        {currentClub?.events?.map((event, index) => (
                             <motion.div
                                 key={event.id}
                                 initial={{ opacity: 0, y: 30 }}
