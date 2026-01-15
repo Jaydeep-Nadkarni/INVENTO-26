@@ -1,16 +1,24 @@
-import paperTexture from '../../assets/UI/paper-texture.jpg'
+import melodiaIllustration from '../../assets/UI/Events/melodia.png'
+import danceIllustration from '../../assets/UI/Events/dance.png'
+import mediaIllustartion from '../../assets/UI/Events/media.png'
+import hrillustartion from '../../assets/UI/Events/hr.png'
+import literaryIllustration from '../../assets/UI/Events/literary.png'
+import cdcIllustartion from '../../assets/UI/Events/cdc.png'
+import wecIllustartion from '../../assets/UI/Events/wec.png'
+import sportsIllustartion from '../../assets/UI/Events/sports.png'
+import fineartsIllustration from '../../assets/UI/Events/finearts.png'
+import titleEventsIllustration from '../../assets/UI/Events/title-events.png'
+import fashionIllustration from '../../assets/UI/Events/fashion.png'
+import specialsIllustration from '../../assets/UI/Events/specials.png'
+import gamingIllustration from '../../assets/UI/Events/gaming.png'
 
 export const clubsData = [
     {
         id: 1,
         slug: 'melodia',
         name: 'Melodia',
+        illustration: melodiaIllustration,
         tagline: 'Music & Performance Club',
-        event: 'Harmony Night 2026',
-        date: 'February 15, 2026',
-        time: '6:00 PM - 9:00 PM',
-        venue: 'Main Auditorium',
-        description: 'A musical evening featuring live performances, band battles, and acoustic sessions.',
         color: '#dc2626',
         events: [
             {
@@ -64,6 +72,7 @@ export const clubsData = [
         slug: 'cdc',
         name: 'CDC',
         tagline: 'Social Impact Initiative',
+        illustration: cdcIllustartion,
         event: 'Social Impact Summit',
         date: 'February 18, 2026',
         time: '10:00 AM',
@@ -99,6 +108,7 @@ export const clubsData = [
         slug: 'wec',
         name: 'WEC',
         tagline: 'Leadership & Equality',
+        illustration: wecIllustartion,
         event: 'Empower Her 2026',
         date: 'February 20, 2026',
         time: '2:00 PM',
@@ -133,6 +143,7 @@ export const clubsData = [
         slug: 'dance',
         name: 'Dance',
         tagline: 'Rhythm & Movement',
+        illustration: danceIllustration,
         event: 'Rhythm Revolution',
         date: 'February 22, 2026',
         time: '5:00 PM',
@@ -209,6 +220,7 @@ export const clubsData = [
         slug: 'hr',
         name: 'HR',
         tagline: 'Talent & Strategy',
+        illustration: hrillustartion,
         event: 'Talent Acquisition',
         date: 'February 25, 2026',
         time: '11:00 AM',
@@ -244,6 +256,7 @@ export const clubsData = [
         slug: 'media',
         name: 'Media',
         tagline: 'Lens & Vision',
+        illustration: mediaIllustartion,
         event: 'Lens & Light',
         date: 'February 27, 2026',
         time: '9:00 AM',
@@ -279,6 +292,7 @@ export const clubsData = [
         slug: 'literary',
         name: 'Literary',
         tagline: 'Words & Wisdom',
+        illustration: literaryIllustration,
         event: 'WordSmith Highlights',
         date: 'March 1, 2026',
         time: '3:00 PM',
@@ -315,6 +329,7 @@ export const clubsData = [
         name: 'Specials',
         tagline: 'Innovation & Code',
         event: 'CodeBreaker',
+        illustration: specialsIllustration,
         date: 'March 3, 2026',
         time: '24 Hours',
         venue: 'Labs',
@@ -344,4 +359,184 @@ export const clubsData = [
             }
         ],
     },
+    {
+        id: 9,
+        slug: 'sports',
+        name: 'Sports',
+        tagline: 'Athletics & Team Spirit',
+        illustration: sportsIllustartion,
+        event: 'Champions League',
+        date: 'March 5-7, 2026',
+        time: 'Varies',
+        venue: 'Sports Complex',
+        description: 'Inter-college sports tournaments.',
+        color: '#16a34a',
+        events: [
+            {
+                id: 'football',
+                themeName: 'Goal Diggers',
+                realName: 'Football Tournament',
+                type: 'Team',
+                description: 'Showcase your football skills and lead your team to victory.',
+                fee: 'Rs. 1500',
+                teamSize: '11',
+                slotsAvailable: 8,
+                rounds: 'Knockout',
+                date: 'March 5, 9:00 AM',
+                venue: 'Main Football Ground',
+                rules: [
+                    'FIFA rules apply.',
+                    'Team jersey mandatory.',
+                    'Substitutions allowed as per standard rules.'
+                ],
+                contacts: [
+                    { name: 'Coach Carter', phone: '6655443322' }
+                ]
+            }
+        ],
+    },
+    {
+        id: 10,
+        slug: 'fine-arts',
+        name: 'Fine Arts',
+        tagline: 'Creativity & Expression',
+        illustration: fineartsIllustration,
+        event: 'Canvas Carnival',
+        date: 'March 10, 2026',
+        time: '10:00 AM',
+        venue: 'Art Studio',
+        description: 'Art competition showcasing various mediums and styles.',
+        color: '#db2777',
+        events: [
+            {
+                id: 'Ramp-walk',
+                themeName: 'VOGUE VOYAGE',
+                realName: 'Fashion Show',
+                type: 'Special',
+                description: 'Strut your stuff and showcase the latest trends on the runway.',
+                fee: 'Rs. 300',
+                teamSize: 'N/A',
+                slotsAvailable: 20,
+                rounds: '1',
+                date: 'March 10, 10:00 AM',
+                venue: 'Main Ramp',
+                rules: [
+                    'Participants must bring their own outfits.',
+                    'Time limit: 5 minutes per walk.',
+                    'Judges decision is final.'
+                ],
+                contacts: [
+                    { name: 'Fashion Guru', phone: '5544667788' }
+                ]
+            }
+        ],
+    },
+    {
+        id: 11,
+        slug: 'title-events',
+        name: 'Title Events',
+        tagline: 'Flagship Extravaganzas',
+        event: 'The Grand Gala',
+        illustration: titleEventsIllustration,
+        date: 'March 15-17, 2026',
+        time: 'Varies',
+        venue: 'Main Auditorium & Grounds',
+        description: 'The crown jewels of our event lineup, featuring star-studded performances and grand finales.',
+        color: '#f59e0b',
+        events: [
+            {
+                id: 'Mr-Ms-Invento',
+                themeName: 'The Epitome',
+                realName: 'Mr. & Ms. Invento',
+                type: 'Solo',
+                description: 'A prestigious pageant celebrating charisma, talent, and intellect.',
+                fee: 'Rs. 500',
+                teamSize: '1',
+                slotsAvailable: 30,
+                rounds: '3',
+                date: 'March 15, 6:00 PM',
+                venue: 'Main Auditorium',
+                rules: [
+                    'Multiple rounds including talent, Q&A, and ramp walk.',
+                    'Formal and casual wear segments included.',
+                    'Judges decision is final and binding.'
+                ],
+                contacts: [
+                    { name: 'Pageant Coordinator', phone: '4433221100' }
+                ]
+            }
+        ]
+    },
+    {
+        id: 12,
+        slug: 'Fashion',
+        name: 'Fashion',
+        tagline: 'Style & Glamour',
+        illustration: fashionIllustration,
+        event: 'Style Saga',
+        date: 'March 12, 2026',
+        time: '4:00 PM',
+        venue: 'Main Ramp',
+        description: 'Fashion show highlighting contemporary trends and designs.',
+        color: '#db2777',
+        events: [
+            {
+                id: 'Ramp-walk',
+                themeName: 'VOGUE VOYAGE',
+                realName: 'Fashion Show',
+                type: 'Special',
+                description: 'Strut your stuff and showcase the latest trends on the runway.',
+                fee: 'Rs. 300',
+                teamSize: 'N/A',
+                slotsAvailable: 20,
+                rounds: '1',
+                date: 'March 10, 10:00 AM',
+                venue: 'Main Ramp',
+                rules: [
+                    'Participants must bring their own outfits.',
+                    'Time limit: 5 minutes per walk.',
+                    'Judges decision is final.'
+                ],
+                contacts: [
+                    { name: 'Fashion Guru', phone: '5544667788' }
+                ]
+            }
+        ]
+    },
+    {
+        id: 13,
+        slug: 'Gaming',
+        name: 'Gaming',
+        tagline: 'Virtual Battles & E-Sports',
+        illustration: gamingIllustration,
+        event: 'E-Sports Championship',
+        date: 'March 20-22, 2026',
+        time: 'Varies',
+        venue: 'Gaming Arena',
+        description: 'Competitive gaming tournaments across popular titles.',
+        color: '#10b981',
+        events: [
+            {
+                id: 'cs-go-tournament',
+                themeName: 'Counter-Strike Showdown',
+                realName: 'CS:GO Tournament',
+                type: 'Team',
+                description: 'Assemble your squad and dominate the battlefield in this high-stakes CS:GO tournament.',
+                fee: 'Rs. 1200',
+                teamSize: '5',
+                slotsAvailable: 16,
+                rounds: 'Knockout',
+                date: 'March 20, 10:00 AM',
+                venue: 'Gaming Arena',
+                rules: [
+                    'Standard CS:GO competitive rules apply.',
+                    'Bring your own peripherals.',
+                    'Match format: Best of 3.'
+                ],
+                contacts: [
+                    { name: 'Gaming Head', phone: '3344556677' }
+                ]
+            }
+        ],
+    }
 ]

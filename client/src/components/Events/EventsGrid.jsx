@@ -66,7 +66,7 @@ const EventsGrid = () => {
     }
 
     const currentClub = clubsData.find(c => c.slug === clubSlug)
-    const currentEvent = currentClub?.events.find(e => e.id === eventSlug)
+    const currentEvent = currentClub?.events?.find(e => e.id === eventSlug)
 
     const handleClubClick = (slug) => {
         playSound(pageTurnSound)
@@ -396,7 +396,7 @@ const EventsGrid = () => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-xs md:max-w-none mx-auto md:mx-0">
                         {clubsData.map((club, index) => (
                             <EventGridCard
                                 key={club.id}
@@ -452,14 +452,14 @@ const EventsGrid = () => {
 
                     {/* Events Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {currentClub?.events.map((event, index) => (
+                        {currentClub?.events?.map((event, index) => (
                             <motion.div
                                 key={event.id}
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.1 }}
                                 onClick={() => handleEventClick(event.id)}
-                                className="group relative h-[450px] bg-[#f0efe9] cursor-pointer overflow-hidden flex flex-col p-6 shadow-xl hover:shadow-2xl transition-all duration-500"
+                                className="group relative h-[500px] md:h-[450px] bg-[#f0efe9] cursor-pointer overflow-hidden flex flex-col p-6 shadow-xl hover:shadow-2xl transition-all duration-500"
                             >
                                 {/* Paper Texture */}
                                 <div className="absolute inset-0 opacity-40 pointer-events-none mix-blend-multiply" style={{ backgroundImage: `url(${paperTexture})` }}></div>
@@ -972,18 +972,28 @@ const EventGridCard = ({ club, index, onSelect }) => {
                     </div>
 
                     {/* Main Image/Graphic Placeholder */}
-                    <div className="relative mb-8 flex-1 group-hover:scale-105 transition-transform duration-700 overflow-hidden">
+                    <div className={`relative ${club.illustration ? 'mb-0' : 'mb-8'} flex-1 group-hover:scale-105 transition-transform duration-700 overflow-hidden`}>
                         <div className="absolute inset-0 border-2 border-black/5 m-2" />
-                        <div className="w-full h-full bg-black/5 flex items-center justify-center grayscale opacity-60 group-hover:opacity-100 transition-opacity">
+                        
+                        {/* Background Letter */}
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                             <h3
-                                className="text-8xl md:text-9xl font-black text-black/5 select-none pointer-events-none"
+                                className="text-[12rem] md:text-[18rem] font-black text-black/[0.08] select-none"
                                 style={{ fontFamily: "'Playfair Display', serif" }}
                             >
                                 {club.name.charAt(0)}
                             </h3>
                         </div>
 
-                        <div className="absolute bottom-4 -right-2 transform rotate-[-15deg] opacity-0 group-hover:opacity-100 transition-all duration-500 translate-x-10 group-hover:translate-x-0">
+                        {club.illustration && (
+                            <img
+                                src={club.illustration}
+                                alt={club.name}
+                                className="absolute inset-0 w-full h-full object-contain object-bottom grayscale group-hover:grayscale-0 transition-all duration-700 z-10"
+                            />
+                        )}
+
+                        <div className="absolute z-12 bottom-4 -right-2 transform rotate-[-15deg] opacity-0 group-hover:opacity-100 transition-all duration-500 translate-x-10 group-hover:translate-x-0">
                             <div className="px-3 py-1 border-2 border-red-700 text-red-700 text-[10px] font-black uppercase tracking-tighter">
                                 INVENTO 2026
                             </div>

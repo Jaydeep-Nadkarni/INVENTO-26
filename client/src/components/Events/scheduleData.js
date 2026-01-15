@@ -3,7 +3,7 @@ import { clubsData } from './clubsData';
 // Helper to distribute club events across days roughly
 const allClubEvents = [];
 clubsData.forEach(club => {
-    if (club.events) {
+    if (Array.isArray(club.events)) {
         club.events.forEach(event => {
             allClubEvents.push({
                 ...event,
