@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import Cropper from 'react-easy-crop'
+import * as faceapi from '@vladmandic/face-api'
 import getCroppedImg from '../utils/cropImage'
 import paperTexture from '../assets/UI/paper-texture.jpg'
 import bgImage from '../assets/UI/Invento-bg.webp'
@@ -79,6 +80,27 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isMobile, setIsMobile] = useState(isMobileDevice())
+  const [modelsLoaded, setModelsLoaded] = useState(false)
+  const [detecting, setDetecting] = useState(false)
+
+  // Load face-api models
+  useEffect(() => {
+    const loadModels = async () => {
+      try {
+        const MODEL_URL = 'https://vladmandic.github.io/face-api/model/'
+        await Promise.all([
+          faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+          faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+          faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+        ])
+        setModelsLoaded(true)
+        console.log('Face detection models loaded')
+      } catch (err) {
+        console.error('Failed to load face detection models:', err)
+      }
+    }
+    loadModels()
+  }, [])
 
   // Listen for mobile/desktop switches
   useEffect(() => {
@@ -149,17 +171,65 @@ const Register = () => {
 
   const handleDoneCropping = async () => {
     try {
+      setDetecting(true)
+      setError('')
       const croppedImage = await getCroppedImg(
         tempImage,
         croppedAreaPixels,
         rotation
       )
+      
+      // Face Detection
+      if (modelsLoaded) {
+        const img = new Image()
+        img.src = croppedImage
+        await new Promise((resolve) => {
+          img.onload = resolve
+          img.onerror = () => {
+            setError("FACE DETECTION: SCANNING FAILED. PLEASE TRY A DIFFERENT IMAGE.")
+            resolve() // Still resolve to exit the promise
+          }
+        })
+
+        if (img.complete && img.naturalWidth !== 0) {
+          const detections = await faceapi.detectAllFaces(img, new faceapi.TinyFaceDetectorOptions({
+            inputSize: 160,
+            scoreThreshold: 0.5
+          }))
+          
+          if (detections.length === 0) {
+            setError("FACE DETECTION: NO FACE DETECTED. ENSURE YOUR FACE IS CLEAR AND WELL-LIT.")
+            setDetecting(false)
+            return
+          }
+          
+          if (detections.length > 1) {
+            setError("FACE DETECTION: MULTIPLE SUBJECTS DETECTED. ONLY ONE AGENT ALLOWED PER PHOTO.")
+            setDetecting(false)
+            return
+          }
+
+          // Check face size (e.g. at least 25% of image width for better quality)
+          const face = detections[0].box
+          if (face.width < img.width * 0.15) {
+            setError("FACE DETECTION: SUBJECT TOO DISTANT. PLEASE ZOOM IN TO FILL THE FRAME.")
+            setDetecting(false)
+            return
+          }
+        }
+      } else {
+        // Models not loaded yet
+        console.warn('Face detection models not yet loaded. Skipping verification.')
+      }
+
       setPreviewImage(croppedImage)
       setImageFile(croppedImage)
       setIsCropping(false)
+      setDetecting(false)
     } catch (e) {
       console.error(e)
       setError('Failed to crop image')
+      setDetecting(false)
     }
   }
 
@@ -353,7 +423,7 @@ const Register = () => {
                                   UPLOAD IDENTIFICATION PHOTO
                                 </p>
                                 <p className="text-gray-500 text-[8px] uppercase tracking-wider font-mono mt-2">
-                                  5MB MAX • FACIAL RECOGNITION REQUIRED
+                                  5MB MAX • Face Must be clearly visible
                                 </p>
                               </div>
                             )}
@@ -384,19 +454,19 @@ const Register = () => {
                             <li className="flex items-start gap-2">
                               <div className="w-1.5 h-1.5 bg-gray-600 mt-1 flex-shrink-0"></div>
                               <p className="text-gray-600 text-[8px] font-mono uppercase tracking-wide leading-tight">
-                                All fields are encrypted in transit
+                                All fields are mandatory for registration
                               </p>
                             </li>
                             <li className="flex items-start gap-2">
                               <div className="w-1.5 h-1.5 bg-gray-600 mt-1 flex-shrink-0"></div>
                               <p className="text-gray-600 text-[8px] font-mono uppercase tracking-wide leading-tight">
-                                Photo used for biometric verification
+                                Uploaded images are secured 
                               </p>
                             </li>
                             <li className="flex items-start gap-2">
                               <div className="w-1.5 h-1.5 bg-gray-600 mt-1 flex-shrink-0"></div>
                               <p className="text-gray-600 text-[8px] font-mono uppercase tracking-wide leading-tight">
-                                Access codes are single-use only
+                                All the contact deatils must be valid and reachable
                               </p>
                             </li>
                           </ul>
@@ -419,7 +489,7 @@ const Register = () => {
                           name="name"
                           value={formData.name}
                           onChange={handleInputChange}
-                          placeholder="Jaydeep Nadkarni"
+                          placeholder="Name"
                           className="w-full px-4 py-3 bg-white/60 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 font-mono text-sm transition-all"
                         />
                       </div>
@@ -436,7 +506,7 @@ const Register = () => {
                             name="email"
                             value={formData.email}
                             onChange={handleInputChange}
-                            placeholder="agent@gmail.com"
+                            placeholder="Email"
                             className="w-full px-4 py-3 bg-white/60 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 font-mono text-sm transition-all"
                           />
                         </div>
@@ -451,7 +521,7 @@ const Register = () => {
                             name="phone"
                             value={formData.phone}
                             onChange={handleInputChange}
-                            placeholder="10-digit secure line"
+                            placeholder="Contact"
                             className="w-full px-4 py-3 bg-white/60 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 font-mono text-sm transition-all"
                           />
                         </div>
@@ -595,7 +665,7 @@ const Register = () => {
                           className="px-10 py-4 bg-linear-to-r from-gray-900 to-gray-800 text-white font-black uppercase tracking-[0.2em] text-xs hover:from-red-800 hover:to-red-700 disabled:opacity-50 transition-all shadow-[8px_8px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 relative group"
                         >
                           <span className="relative z-10">
-                            {loading ? 'INITIATING ENCRYPTION...' : 'SUBMIT DOSSIER'}
+                            {loading ? 'INITIATING ENCRYPTION...' : 'SUBMIT'}
                           </span>
                           <div className="absolute inset-0 bg-linear-to-r from-red-700/0 via-red-600/20 to-red-700/0 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                         </motion.button>
@@ -617,51 +687,96 @@ const Register = () => {
                 className="fixed inset-0 z-[100] flex flex-col bg-black"
               >
                 {/* Header bar */}
-                <div className="flex justify-between items-center p-4 bg-black/50 backdrop-blur-md z-20">
+                <div className="flex justify-between items-center py-6 px-8 bg-black/80 border-b border-white/10 backdrop-blur-md z-20">
                   <button 
                     type="button"
-                    onClick={() => setIsCropping(false)}
-                    className="p-2 text-white hover:bg-white/10 rounded-full transition-colors flex items-center gap-2"
+                    onClick={() => {
+                      setIsCropping(false)
+                      setError('')
+                    }}
+                    className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-all flex items-center gap-2"
                   >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
-                    <span className="font-mono text-xs uppercase tracking-widest hidden sm:inline">Abort</span>
+                    <span className="font-mono text-[9px] uppercase tracking-[0.2em] hidden sm:inline">Abort Mission</span>
                   </button>
+
                   <h3 className="text-white text-[10px] font-black uppercase tracking-[0.4em] font-mono">
-                    Adjust Identity Photo
+                    Upload Your Photo
                   </h3>
+
                   <button
                     type="button"
                     onClick={handleDoneCropping}
-                    className="px-5 py-2 bg-red-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-colors rounded-sm"
+                    disabled={detecting}
+                    className="px-8 py-2 bg-red-600 text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-red-700 transition-all rounded-sm disabled:opacity-50 shadow-[0_0_15px_rgba(220,38,38,0.3)]"
                   >
-                    Confirm
+                    {detecting ? 'SCANNING...' : 'CONFIRM'}
                   </button>
                 </div>
 
                 {/* Cropper area */}
-                <div className="relative flex-1 bg-neutral-900">
+                <div className="relative flex-1 bg-neutral-900 overflow-hidden">
                   <Cropper
                     image={tempImage}
                     crop={crop}
                     zoom={zoom}
                     rotation={rotation}
                     aspect={3/4}
-                    onCropChange={setCrop}
-                    onRotationChange={setRotation}
+                    onCropChange={(c) => { setCrop(c); if (error) setError(''); }}
+                    onRotationChange={(r) => { setRotation(r); if (error) setError(''); }}
                     onCropComplete={onCropComplete}
-                    onZoomChange={setZoom}
+                    onZoomChange={(z) => { setZoom(z); if (error) setError(''); }}
                     showGrid={true}
                     style={{
                       containerStyle: { background: '#0a0a0a' },
-                      cropAreaStyle: { border: '2px solid rgba(255,255,255,0.5)' }
+                      cropAreaStyle: { border: '1px solid rgba(255,255,255,0.2)' }
                     }}
                   />
                 </div>
 
                 {/* Controls area */}
-                <div className="p-8 bg-black/90 backdrop-blur-md z-20 flex flex-col items-center gap-6">
+                <div className="p-12 bg-black/90 backdrop-blur-md z-20 flex flex-col items-center gap-6 border-t border-white/5">
+                  <div className="w-full max-w-md">
+                    <AnimatePresence mode="wait">
+                      {error && error.includes("FACE DETECTION") ? (
+                        <motion.div
+                          key="error"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0 }}
+                          className="px-4 py-3 bg-red-950/20 border border-red-500/30 rounded-sm text-center"
+                        >
+                          <div className="flex items-center justify-center gap-2 mb-1">
+                            <div className="w-1 h-1 bg-red-500 animate-pulse rounded-full" />
+                            <p className="text-red-500 text-[8px] font-black uppercase tracking-[0.2em] font-mono">
+                              SYSTEM ERROR
+                            </p>
+                          </div>
+                          <p className="text-white text-[9px] font-bold uppercase tracking-widest font-mono leading-tight px-4">
+                            {error}
+                          </p>
+                        </motion.div>
+                      ) : (
+                        modelsLoaded && (
+                          <motion.div
+                            key="status"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="px-4 py-2 border rounded-sm text-center"
+                          >
+                            <div className="flex items-center justify-center gap-2">
+                              <p className="text-green-500 text-[8px] font-black uppercase tracking-[0.4em] font-mono whitespace-nowrap">
+                                FACE DETEACTION ACTIVE
+                              </p>
+                            </div>
+                          </motion.div>
+                        )
+                      )}
+                    </AnimatePresence>
+                  </div>
+
                   {/* Zoom Slider */}
                   <div className="w-full max-w-md space-y-3">
                     <div className="flex justify-between items-center px-1">
@@ -686,45 +801,11 @@ const Register = () => {
                     />
                   </div>
 
-                  {/* Rotate Control */}
-                  <div className="flex gap-10 items-center">
-                    <button 
-                      type="button"
-                      onClick={() => setRotation((r) => (r - 90) % 360)}
-                      className="flex flex-col items-center gap-2 group"
-                    >
-                      <div className="w-10 h-10 rounded-full border border-gray-700 flex items-center justify-center group-hover:border-red-600 transition-colors">
-                        <svg className="w-5 h-5 text-gray-400 group-hover:text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                      </div>
-                      <span className="text-[8px] font-mono text-gray-500 uppercase tracking-widest">Rotate 90°</span>
-                    </button>
-
-                    <button 
-                      type="button"
-                      onClick={() => {setZoom(1); setRotation(0)}}
-                      className="flex flex-col items-center gap-2 group"
-                    >
-                      <div className="w-10 h-10 rounded-full border border-gray-700 flex items-center justify-center group-hover:border-red-600 transition-colors">
-                        <svg className="w-5 h-5 text-gray-400 group-hover:text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                      </div>
-                      <span className="text-[8px] font-mono text-gray-500 uppercase tracking-widest">Reset</span>
-                    </button>
-                  </div>
+                  
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
-
-          {/* Bottom Security Note */}
-          <div className="mt-8 text-center">
-            <p className="text-[8px] font-mono text-gray-400 uppercase tracking-widest">
-              ALL DATA IS ENCRYPTED WITH AES-256 • THIS SESSION IS MONITORED
-            </p>
-          </div>
         </div>
       </motion.div>
     </div>
