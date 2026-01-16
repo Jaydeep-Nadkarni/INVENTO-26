@@ -6,6 +6,7 @@ import pageTurnSound from '../../assets/audios/page-turn.mp3'
 import closeSound from '../../assets/audios/briefcase-open.mp3'
 import { useParams, useNavigate } from 'react-router-dom'
 import { clubsData } from './clubsData'
+import Eventcard1 from '../../assets/UI/Events/Eventcard1.png'
 
 const TextureOverlay = ({ opacity = 0.4 }) => (
     <div
@@ -451,7 +452,7 @@ const EventsGrid = () => {
                     </div>
 
                     {/* Events Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div className="flex flex-wrap justify-center gap-20 w-full max-w-7xl mx-auto">
                         {currentClub?.events?.map((event, index) => (
                             <motion.div
                                 key={event.id}
@@ -459,36 +460,14 @@ const EventsGrid = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.1 }}
                                 onClick={() => handleEventClick(event.id)}
-                                className="group relative h-[500px] md:h-[450px] bg-[#f0efe9] cursor-pointer overflow-hidden flex flex-col p-6 shadow-xl hover:shadow-2xl transition-all duration-500"
+                                className="group relative cursor-pointer transition-transform duration-500 hover:z-10 hover:scale-105 w-full sm:w-1/2 md:w-1/3"
                             >
-                                {/* Paper Texture */}
-                                <div className="absolute inset-0 opacity-40 pointer-events-none mix-blend-multiply" style={{ backgroundImage: `url(${paperTexture})` }}></div>
-
-                                {/* Start of Empty Space */}
-                                <div className="flex-1 relative group-hover:bg-yellow-500/5 transition-colors duration-500">
-                                    {/* Optional: Add illustration placeholder here if available later */}
-                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-10 transition-opacity">
-                                        <span className="text-6xl font-black text-black">{(event.themeName || event.realName || '').charAt(0)}</span>
-                                    </div>
-                                </div>
-
-                                {/* Bottom Info Section */}
-                                <div className="relative z-10 pt-6 border-t border-black/10">
-                                    <h3 className="text-2xl font-black uppercase text-black leading-none mb-2 font-serif group-hover:text-red-700 transition-colors">
-                                        {event.themeName || event.realName}
-                                    </h3>
-
-                                    <div className="flex justify-between items-end mt-4">
-                                        <div>
-                                            <p className="font-mono text-[10px] text-gray-500 uppercase tracking-widest mb-1">Fee</p>
-                                            <p className="font-bold text-lg text-black">{event.fee || 'Free'}</p>
-                                        </div>
-
-                                        <div className="w-10 h-10 border border-black/20 rounded-full flex items-center justify-center group-hover:bg-black group-hover:border-black transition-all">
-                                            <span className="text-black group-hover:text-white text-lg transition-colors">→</span>
-                                        </div>
-                                    </div>
-                                </div>
+                                {/* Test Event Card Image - Full Card Image - No Crop */}
+                                <img 
+                                    src={Eventcard1} 
+                                    alt={event.themeName || event.realName}
+                                    className="w-full h-auto block"
+                                />
 
                                 {/* Hover Border Reveal */}
                                 <div className="absolute inset-0 border-2 border-transparent group-hover:border-red-600/50 transition-colors pointer-events-none"></div>
