@@ -55,7 +55,7 @@ const Schedule = () => {
 
       <Navbar isMobile={isMobile} />
 
-      <div className="relative z-10 pt-24 px-4 pb-0 max-w-7xl mx-auto flex flex-col md:flex-row gap-8 h-screen">
+      <div className="relative z-10 pt-16 md:pt-24 px-4 pb-0 max-w-7xl mx-auto flex flex-col md:flex-row gap-4 md:gap-8 h-screen">
 
         {/* LEFT SIDEBAR: DAY INDEX */}
         <div className="flex flex-row md:flex-col justify-center md:justify-center items-stretch md:items-center gap-3 mb-6 md:mb-0 shrink-0 z-30 md:h-[80vh]">
@@ -70,7 +70,7 @@ const Schedule = () => {
                 className={`
                                     relative flex flex-col items-center justify-center transition-all duration-300
                                     ${isActive
-                    ? 'w-40 h-32 md:w-56 md:h-44 bg-[#f4f1ea] shadow-[0_8px_30px_rgba(0,0,0,0.4)]'
+                    ? 'w-32 h-24 md:w-56 md:h-44 bg-[#f4f1ea] shadow-[0_8px_30px_rgba(0,0,0,0.4)]'
                     : 'w-32 h-24 md:w-48 md:h-32 bg-[#f4f1ea] shadow-lg opacity-70 hover:opacity-90'}
                                     rounded-2xl border-4 ${isActive ? 'border-red-800' : 'border-gray-800/20'}
                                 `}
@@ -85,11 +85,11 @@ const Schedule = () => {
                 <div className="relative z-10 flex flex-col items-center">
                   {/* Month/Label */}
                   <span className={`font-black tracking-tight uppercase font-serif ${isActive ? 'text-base md:text-xl text-gray-800 mb-1' : 'text-sm md:text-base text-gray-700'}`}>
-                    March
+                    {isMobile ? 'FEB' : 'FEBRUARY'}
                   </span>
 
                   {/* Day Number */}
-                  <span className={`font-black leading-none tracking-tighter ${isActive ? 'text-6xl md:text-8xl text-black' : 'text-4xl md:text-6xl text-gray-800'}`}>
+                  <span className={`font-black leading-none tracking-tighter ${isActive ? 'text-4xl md:text-8xl text-black' : 'text-4xl md:text-6xl text-gray-800'}`}>
                     {day.date.split(' ')[1]}
                   </span>
 
@@ -114,8 +114,8 @@ const Schedule = () => {
         >
           <div className="absolute inset-0 bg-amber-50/30 mix-blend-multiply pointer-events-none" />
 
-          {/* Spy Background Illustration */}
-          <div className="absolute bottom-0 right-0 z-0 pointer-events-none opacity-40 mix-blend-multiply overflow-hidden">
+          {/* Spy Background Illustration - Hidden on Mobile */}
+          <div className="hidden md:block absolute bottom-0 right-0 z-0 pointer-events-none opacity-40 mix-blend-multiply overflow-hidden">
             <motion.img
               src={spy1}
               alt=""

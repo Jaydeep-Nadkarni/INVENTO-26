@@ -87,6 +87,7 @@ const teamsData = [
 const Contact = () => {
   const [activeTeam, setActiveTeam] = useState('registration')
   const [isMobile, setIsMobile] = useState(isMobileDevice())
+  const mobileTeamScrollRef = React.useRef(null)
 
   // Listen for mobile/desktop switches
   useEffect(() => {
@@ -95,6 +96,16 @@ const Contact = () => {
     mediaQuery.addListener(handleChange);
     return () => mediaQuery.removeListener(handleChange);
   }, []);
+
+  // Auto-scroll team selector on mobile when active team changes
+  useEffect(() => {
+    if (isMobile && mobileTeamScrollRef.current) {
+      const activeButton = mobileTeamScrollRef.current.querySelector('[data-active="true"]')
+      if (activeButton) {
+        activeButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+      }
+    }
+  }, [activeTeam, isMobile])
 
   const scrollToSection = (id) => {
     setActiveTeam(id)
@@ -205,8 +216,8 @@ const Contact = () => {
       {/* Main Layout */}
       <div className="flex-1 relative z-10 pt-24 px-4 md:px-8 pb-4 max-w-7xl mx-auto w-full flex flex-col md:flex-row gap-6 overflow-hidden">
 
-        {/* LEFT SIDEBAR: TEAM LIST */}
-        <div className="w-full md:w-1/4 shrink-0 flex flex-col gap-2 h-auto md:h-full overflow-y-auto custom-scrollbar md:pr-4">
+        {/* LEFT SIDEBAR: TEAM LIST - Hidden on Mobile */}
+        <div className="hidden md:flex w-full md:w-1/4 shrink-0 flex-col gap-2 h-auto md:h-full overflow-y-auto custom-scrollbar md:pr-4">
           <style jsx>{`
                 .custom-scrollbar::-webkit-scrollbar { width: 4px; }
                 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
@@ -235,6 +246,30 @@ const Contact = () => {
           </div>
         </div>
 
+        {/* MOBILE: Team List - Horizontal Scrolling */}
+        <div ref={mobileTeamScrollRef} className="md:hidden w-full flex overflow-x-auto gap-2 pb-3 px-0 custom-scrollbar-horizontal snap-x snap-mandatory">
+          <style jsx>{`
+                .custom-scrollbar-horizontal::-webkit-scrollbar { height: 3px; }
+                .custom-scrollbar-horizontal::-webkit-scrollbar-track { background: transparent; }
+                .custom-scrollbar-horizontal::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+            `}</style>
+          {teamsData.map((team) => (
+            <button
+              key={team.id}
+              data-active={activeTeam === team.id}
+              onClick={() => scrollToSection(team.id)}
+              className={`
+                  shrink-0 px-3 py-2 text-xs font-mono uppercase tracking-widest transition-all duration-300 rounded snap-start
+                  ${activeTeam === team.id
+                  ? 'bg-red-700 text-white font-bold'
+                  : 'bg-white/10 text-gray-300 hover:bg-white/20'}
+                `}
+            >
+              {team.name}
+            </button>
+          ))}
+        </div>
+
         {/* RIGHT SIDE: SCROLLABLE MEMBERS Area */}
         <div className="flex-1 h-full relative bg-[#f4f1ea] rounded-xl overflow-hidden shadow-2xl flex flex-col">
           {/* Paper Texture Overlay */}
@@ -243,9 +278,9 @@ const Contact = () => {
             style={{ backgroundImage: `url(${paperTexture})`, backgroundSize: 'cover' }}
           />
           <div className="absolute inset-0 bg-amber-50/30 mix-blend-multiply pointer-events-none z-0" />
-          {/* Spy2 Watermark */}
+          {/* Spy2 Watermark - Hidden on Mobile */}
           <div
-            className="absolute inset-0 opacity-[0.1] pointer-events-none z-0"
+            className="hidden md:block absolute inset-0 opacity-[0.1] pointer-events-none z-0"
             style={{
               backgroundImage: `url(${spy2})`,
               backgroundSize: 'contain',
@@ -285,10 +320,15 @@ const Contact = () => {
                     <div className="h-px bg-black/20 flex-1"></div>
                   </div>
 
-                  {/* Members Grid - Flexbox for Equal Height & Centering */}
-                  <div className="flex flex-wrap justify-center gap-8">
-                    {team.members.map((member, idx) => (
-                      <div key={idx} className="group relative flex flex-col items-center w-full md:w-[calc(50%-1.5rem)]">
+                  {/* Members Grid - 2 Column Layout */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-8 justify-items-center">
+                    {team.members.map((member, idx) => {
+                      const isLastAndOdd = idx === team.members.length - 1 && team.members.length % 2 === 1
+                      return (
+                        <div 
+                          key={idx} 
+                          className={`group relative flex flex-col items-center w-full max-w-[300px] ${isLastAndOdd ? 'sm:col-span-2 sm:max-w-[300px]' : ''}`}
+                        >
 
                         {/* Tape Visual */}
                         <div className="absolute -top-3 w-24 h-6 bg-yellow-100/90 rotate-[-2deg] opacity-70 z-20 shadow-sm border border-white/40 left-1/2 -translate-x-1/2"></div>
@@ -343,7 +383,8 @@ const Contact = () => {
                           </div>
                         </div>
                       </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
               ))}

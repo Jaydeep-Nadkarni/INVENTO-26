@@ -23,7 +23,7 @@ const day3Events = allClubEvents.slice(12);
 export const scheduleData = [
     {
         dayId: 0,
-        date: 'DEC 15',
+        date: 'FEB 26',
         label: 'DAY 0',
         title: 'The Awakening',
         events: [
@@ -65,7 +65,7 @@ export const scheduleData = [
     },
     {
         dayId: 1,
-        date: 'DEC 16',
+        date: 'FEB 27',
         label: 'DAY 1',
         title: 'The Momentum',
         events: [
@@ -95,7 +95,7 @@ export const scheduleData = [
     },
     {
         dayId: 2,
-        date: 'DEC 17',
+        date: 'FEB 28',
         label: 'DAY 2',
         title: 'The Finale',
         events: [
