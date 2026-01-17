@@ -16,14 +16,14 @@ import browserIcon from '../../assets/UI/OS/browser.png'
 import radioIcon from '../../assets/UI/OS/Radio.png'
 import mailIcon from '../../assets/UI/OS/mail.png'
 
-const RetroTerminal = ({ isOpen, onClose }) => {
+const RetroTerminal = ({ isOpen, onClose, initialBootProgress = 0 }) => {
     const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
     const [selectedCardId, setSelectedCardId] = useState(null)
     const [openApps, setOpenApps] = useState([]) // Array of objects {id, title, type}
     const [activeApp, setActiveApp] = useState(null)
     const [minimizedApps, setMinimizedApps] = useState([])
     const [selectedDesktopIcon, setSelectedDesktopIcon] = useState(null)
-    const [bootStatus, setBootStatus] = useState('starting') // 'starting', 'running', 'shutting'
+    const [bootStatus, setBootStatus] = useState(initialBootProgress >= 100 ? 'running' : 'starting') // 'starting', 'running', 'shutting'
     const desktopRef = useRef(null)
 
     // Play startup sound when OS finishes booting
@@ -122,7 +122,7 @@ const RetroTerminal = ({ isOpen, onClose }) => {
                 }}
             >
                 {bootStatus === 'starting' && (
-                    <Shutdown mode="startup" onComplete={() => setBootStatus('running')} />
+                    <Shutdown mode="startup" onComplete={() => setBootStatus('running')} initialProgress={initialBootProgress} />
                 )}
 
                 {bootStatus === 'shutting' && (

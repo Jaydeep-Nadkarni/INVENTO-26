@@ -52,16 +52,21 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
         }
     }, [isOpen])
 
-    // Card Data
+    // Card Data - All Clubs from clubsData
     const [cards, setCards] = useState([
         { id: 1, name: 'Melodia', color: 'bg-red-700' },
         { id: 2, name: 'CDC', color: 'bg-green-600' },
         { id: 3, name: 'WEC', color: 'bg-purple-600' },
-        { id: 4, name: 'Dance', color: 'bg-yellow-500' },
+        { id: 4, name: 'Dance', color: 'bg-orange-600' },
         { id: 5, name: 'HR', color: 'bg-blue-600' },
-        { id: 6, name: 'Media', color: 'bg-pink-600' },
-        { id: 7, name: 'Literary', color: 'bg-orange-600' },
-        { id: 8, name: 'Specials', color: 'bg-blue-600' },
+        { id: 6, name: 'Media', color: 'bg-yellow-600' },
+        { id: 7, name: 'Literary', color: 'bg-violet-600' },
+        { id: 8, name: 'Specials', color: 'bg-cyan-600' },
+        { id: 9, name: 'Sports', color: 'bg-emerald-600' },
+        { id: 10, name: 'Fine Arts', color: 'bg-pink-600' },
+        { id: 11, name: 'Title Events', color: 'bg-amber-600' },
+        { id: 12, name: 'Fashion', color: 'bg-rose-600' },
+        { id: 13, name: 'Gaming', color: 'bg-green-500' },
     ])
 
     const [selectedCardId, setSelectedCardId] = useState(null)
@@ -71,8 +76,21 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
     const [isTerminalOpen, setIsTerminalOpen] = useState(false)
     const [isMorseOpen, setIsMorseOpen] = useState(false)
     const [isRadioPlaying, setIsRadioPlaying] = useState(false)
+    const [osBootProgress, setOsBootProgress] = useState(0)
     const audioRef = useRef(null)
     const morseAudioRef = useRef(null)
+
+    // Background OS Loading Simulation
+    useEffect(() => {
+        if (isOpen) {
+            // Reset boot progress to 0 when briefcase is opened
+            // The loading animation will now only trigger when handleLaptopClick is called (on laptop click)
+            setOsBootProgress(0)
+        } else {
+            setOsBootProgress(0)
+            setIsTerminalOpen(false)
+        }
+    }, [isOpen])
 
     useEffect(() => {
         audioRef.current = new Audio(radioAudio)
@@ -680,6 +698,7 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                                 <RetroTerminal
                                     isOpen={isTerminalOpen}
                                     onClose={() => setIsTerminalOpen(false)}
+                                    initialBootProgress={osBootProgress}
                                 />
                             )}
 
@@ -856,65 +875,97 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                                 </>
                             )}
 
-                            {/* Morse Transmission View - Minimal & Cool HUD */}
+                            {/* Morse Transmission View - Vintage Spy Tool Design */}
                             {isMorseOpen && (
                                 <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
-                                    className="fixed inset-0 z-1000 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                                    className="fixed inset-0 z-1000 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
                                     onClick={() => {
                                         setIsMorseOpen(false)
                                         setStatusText('Click on the items to explore')
                                     }}
                                 >
                                     <motion.div
-                                        initial={{ scale: 0.9, opacity: 0, y: 10 }}
-                                        animate={{ scale: 1, opacity: 1, y: 0 }}
-                                        className="relative w-full max-w-sm bg-[#0a0a0a] border border-white/10 p-8 shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden"
+                                        initial={{ scale: 0.8, opacity: 0, rotateY: 30 }}
+                                        animate={{ scale: 1, opacity: 1, rotateY: 0 }}
+                                        className="relative w-full max-w-md aspect-[4/3] bg-[#2a2a2a] border-t-8 border-x-4 border-b-12 border-[#1a1a1a] shadow-[0_30px_60px_rgba(0,0,0,0.8),inset_0_2px_10px_rgba(255,255,255,0.1)] overflow-hidden rounded-lg"
                                         onClick={(e) => e.stopPropagation()}
                                     >
-                                        {/* Subtle Reception Pulse */}
-                                        <div className="absolute top-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-yellow-500/50 to-transparent"></div>
+                                        {/* Brushed Metal Texture */}
+                                        <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")` }}></div>
 
-                                        <div className="relative z-10 space-y-8">
-                                            {/* Header */}
-                                            <div className="flex justify-between items-start">
-                                                <div className="space-y-1">
-                                                    <span className="text-[10px] text-yellow-500 font-mono tracking-[0.3em] uppercase">Intercept active</span>
-                                                    <h3 className="text-white font-mono text-xs opacity-40 uppercase tracking-widest">Sig: 1000 Hz</h3>
+                                        <div className="relative z-10 h-full flex flex-col p-6">
+                                            {/* Top Control Panel */}
+                                            <div className="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
+                                                <div className="flex gap-4 items-center">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] text-yellow-500 font-mono font-bold uppercase tracking-widest leading-tight">Signal Received</span>
+                                                        <span className="text-[8px] text-white/40 font-mono uppercase tracking-[0.2em]">Frequency: 148.5 MHz</span>
+                                                    </div>
                                                 </div>
-                                                <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
-                                            </div>
-
-                                            {/* Data Streams */}
-                                            <div className="space-y-6">
-                                                <div className="space-y-2">
-                                                    <span className="text-[9px] text-white/20 font-mono uppercase tracking-widest">Raw Signal</span>
-                                                    <p className="text-white/80 font-mono text-sm tracking-[0.4em] leading-relaxed break-all">
-                                                        .-- . .-.. -.-. --- -- . / - --- / .. -. ...- . -. - --- / ..--- ----- ..--- -....
-                                                    </p>
-                                                </div>
-
-                                                <div className="pt-4 border-t border-white/5 space-y-2">
-                                                    <span className="text-[9px] text-white/20 font-mono uppercase tracking-widest">Decoded Output</span>
-                                                    <p className="text-white font-mono text-xl tracking-tight uppercase">
-                                                        Welcome to <span className="text-yellow-500">INVENTO 2026</span>
-                                                    </p>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="text-right mr-3">
+                                                        <div className="text-[10px] text-green-500 font-mono font-bold uppercase">Active</div>
+                                                    </div>
+                                                    <div className="w-3 h-3 rounded-full bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.8)] animate-pulse"></div>
                                                 </div>
                                             </div>
 
-                                            {/* Minimal Footer Action */}
-                                            <div className="pt-4 flex justify-between items-center">
-                                                <span className="text-[10px] text-white/20 font-mono italic">10 WPM</span>
+                                            {/* Circular Dial / Scope Visual */}
+                                            <div className="flex-1 flex gap-6">
+                                                <div className="w-1/3 aspect-square bg-[#1a1a1a] rounded-full border-4 border-[#333] shadow-inner relative flex items-center justify-center overflow-hidden">
+                                                    {/* Scanning pulse */}
+                                                    <div className="absolute inset-0 bg-green-500/5"></div>
+                                                    <div className="w-full h-0.5 bg-green-500/20 absolute animate-[scan_2s_linear_infinite]"></div>
+                                                    <div className="text-green-500 text-xs font-mono opacity-40">AUTO-RX</div>
+                                                    
+                                                    {/* Compass-like marks */}
+                                                    {[...Array(8)].map((_, i) => (
+                                                        <div key={i} className="absolute w-1 h-0.5 bg-white/20" style={{ transform: `rotate(${i * 45}deg) translateY(-20px)` }}></div>
+                                                    ))}
+                                                </div>
+
+                                                <div className="flex-1 flex flex-col justify-center space-y-4">
+                                                    <div className="space-y-1">
+                                                        <span className="text-[9px] text-white/30 font-mono uppercase tracking-widest font-bold">Encrypted Stream</span>
+                                                        <div className="bg-black/50 p-3 rounded border border-white/5">
+                                                            <p className="text-yellow-500/90 font-mono text-sm tracking-[0.3em] leading-relaxed break-all h-12 overflow-hidden italic">
+                                                            .-- . .-.. -.-. --- -- . / - --- / .. -. ...- . -. - --- / ..--- ----- ..--- -.... / ... .--. -.-- / ...- . .-. ... .
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="space-y-1">
+                                                        <span className="text-[9px] text-white/30 font-mono uppercase tracking-widest font-bold">Decrypted Message</span>
+                                                        <div className="bg-[#111] p-3 rounded border border-green-500/20">
+                                                            <p className="text-white font-mono text-lg tracking-tight uppercase">
+                                                                Welcome to <span className="text-yellow-500 underline decoration-dotted underline-offset-4">Invento 2026</span>
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Bottom Panel / Knobs Mockup */}
+                                            <div className="mt-6 flex justify-between items-end border-t border-white/10 pt-4">
+                                                <div className="flex gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-[#3d3d3d] border-b-4 border-black flex items-center justify-center">
+                                                        <div className="w-1 h-4 bg-white/10 rounded-full rotate-45"></div>
+                                                    </div>
+                                                    <div className="w-8 h-8 rounded-full bg-[#3d3d3d] border-b-4 border-black flex items-center justify-center">
+                                                        <div className="w-1 h-4 bg-white/10 rounded-full -rotate-12"></div>
+                                                    </div>
+                                                </div>
                                                 <button
                                                     onClick={() => {
                                                         setIsMorseOpen(false)
                                                         setStatusText('Click on the items to explore')
                                                     }}
-                                                    className="text-[10px] text-white/60 hover:text-white font-mono uppercase tracking-widest underline underline-offset-4 transition-colors"
+                                                    className="px-4 py-1.5 bg-[#444] hover:bg-[#555] text-white text-[10px] font-mono font-black uppercase tracking-widest rounded transition-all border-b-4 border-black active:border-b-0 active:translate-y-1"
                                                 >
-                                                    Dismiss
+                                                    Terminate Link
                                                 </button>
                                             </div>
                                         </div>
@@ -958,10 +1009,11 @@ const Card = React.memo(({ data, index, total, isTop, isSelected, onSwipe, onCli
     const rotate = (index % 2 === 0 ? 1 : -1) * (index * 0.4) + (isTop ? 0 : (Math.random() * 2 - 1))
     const offset = (total - 1 - index) * 2 // slight vertical stack offset
 
-    // Drag Logic - Reset motion values when card becomes top
+    // Drag Logic
     const x = useMotionValue(0)
-    const rotateValue = useTransform(x, [-200, 200], [-15, 15])
-    const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0])
+    const rotateValue = useTransform(x, [-300, 300], [-15, 15]) 
+    const opacity = useTransform(x, [-400, -250, 0, 250, 400], [0, 1, 1, 1, 0])
+    const scaleValue = useTransform(x, [-200, 0, 200], [0.95, 1.02, 0.95])
 
     // Reset drag position when this card becomes the top card
     useEffect(() => {
@@ -971,13 +1023,28 @@ const Card = React.memo(({ data, index, total, isTop, isSelected, onSwipe, onCli
     }, [isTop, x])
 
     const handleDragEnd = (_, info) => {
-        if (!isSelected && Math.abs(info.offset.x) > 100) {
-            // Swiped far enough - trigger shuffle/next
+        if (!isTop || isSelected) return;
+        
+        const dragDistance = Math.abs(info.offset.x)
+        const velocity = Math.abs(info.velocity.x)
+
+        // Swiped far enough - trigger shuffle/next
+        if (dragDistance > 100 || velocity > 500) {
             onSwipe()
+        } else {
+            // Spring back if not swiped far enough
+            x.set(0)
         }
     }
 
-    if (isSelected) return null // Handled by parent overlay now
+    const handleClick = (e) => {
+        // Only trigger click if movement was minimal (not a swipe)
+        if (isTop && Math.abs(x.get()) < 5) {
+            onClick()
+        }
+    }
+
+    if (isSelected) return null
 
     return (
         <motion.div
@@ -988,43 +1055,88 @@ const Card = React.memo(({ data, index, total, isTop, isSelected, onSwipe, onCli
                 zIndex: index,
                 y: offset,
                 opacity: isTop ? opacity : 1,
-                scale: isTop ? 1.05 : 1,
-                willChange: isTop ? 'transform' : 'auto'
+                scale: isTop ? scaleValue : 1,
+                willChange: 'transform, opacity',
+                backgroundImage: `url(${paperTexture})`,
+                backgroundSize: 'cover',
+                backgroundBlendMode: 'multiply'
             }}
             drag={isTop && !isSelected ? "x" : false}
-            dragConstraints={{ left: -300, right: 300 }}
-            dragElastic={0.2}
-            dragTransition={{ power: 0.2, restDelta: 10 }}
+            dragConstraints={{ left: -1500, right: 1500 }}
+            dragElastic={0.05}
             onDragEnd={handleDragEnd}
-            onClick={() => isTop ? onClick() : null}
-            className={`absolute top-0 left-0 w-56 h-80 bg-[#ebe8e3] rounded shadow-sm cursor-grab active:cursor-grabbing transform-gpu border border-gray-300`}
+            onClick={handleClick}
+            className={`absolute top-0 left-0 w-56 h-80 bg-[#f4f1ea] rounded shadow-[0_4px_15px_rgba(0,0,0,0.1)] cursor-grab active:cursor-grabbing transform-gpu  flex flex-col overflow-hidden`}
         >
-            <div className="absolute inset-0 rounded shadow-[1px_1px_4px_rgba(0,0,0,0.1)]"></div>
-            <TextureOverlay opacity={0.5} />
-            <div className="relative w-full h-full p-3 flex flex-col items-center">
-                <div className="w-24 h-6 bg-yellow-100/50 absolute -top-2 rotate-1 opacity-80 backdrop-blur-sm mix-blend-multiply shadow-sm"></div>
-                <div className="w-full aspect-square mt-4 bg-white p-2 shadow-inner relative overflow-hidden group">
-                    <div className={`w-full h-full ${data.color} relative`}>
-                        <div className="absolute inset-0 bg-linear-to-tr from-black/20 to-transparent"></div>
-                        <div className="absolute inset-0 bg-linear-to-b from-white/30 to-transparent opacity-40"></div>
+            {/* Darken the texture slightly with an overlay since the image might be bright */}
+            <div className="absolute inset-0 bg-[#f8f5eb]/80 mix-blend-multiply z-0 pointer-events-none"></div>
+
+            <div className="relative flex-1 p-6 flex flex-col h-full z-10">
+                {/* ID Header */}
+                <div className="flex justify-between items-center mb-6">
+                    <div className="flex flex-col gap-0.5">
+                        <div className="w-12 h-1 bg-black/80"></div>
+                        <div className="w-8 h-0.5 bg-gray-400"></div>
+                    </div>
+                    <span className="font-mono text-[7px] text-gray-500 tracking-[0.2em] uppercase bg-transparent px-1">
+                        DOC_Ref_{2026 + data.id}
+                    </span>
+                </div>
+
+                {/* Main Content Area */}
+                <div className="flex-1 flex flex-col justify-start pt-0 space-y-6">
+                    
+                    {/* 1. Header: Club Name (Top) */}
+                    <div className="relative pb-2">
+                        <p className="font-mono text-[8px] text-gray-500 uppercase tracking-widest pl-1 border-l-2 border-red-800/60 mb-1 opacity-70">Subject:</p>
+                        <h2 className={`font-serif font-black text-3xl text-gray-900 uppercase tracking-tight mix-blend-color-burn leading-[0.85] break-words ${data.name.length > 9 ? 'text-2xl' : ''}`}>
+                            {data.name}
+                        </h2>
+                        {/* Decorative dash */}
+                        <div className="mt-3 w-12 h-0.5 bg-black/10"></div>
+                    </div>
+
+                    {/* 2. Skeleton Illusion (Bottom) */}
+                    <div className="space-y-3 opacity-60">
+                         {/* Fake Paragraph 1 */}
+                         <div className="space-y-1.5">
+                            <div className="h-1.5 bg-black/10 w-full rounded-sm"></div>
+                            <div className="h-1.5 bg-black/10 w-[92%] rounded-sm"></div>
+                            <div className="h-1.5 bg-black/10 w-[96%] rounded-sm"></div>
+                            <div className="flex gap-2 w-full pt-1">
+                                <div className="h-1.5 bg-black/10 w-2/3 rounded-sm"></div>
+                                {/* Redacted word */}
+                                <div className="h-2 bg-black/80 w-1/4 rounded-xs skew-x-[-10deg] opacity-80"></div>
+                            </div>
+                         </div>
+                         
+                         {/* Spacer */}
+                         <div className="h-4"></div>
+
+                         {/* Fake Paragraph 2 */}
+                         <div className="space-y-1.5">
+                            <div className="h-1.5 bg-black/5 w-full rounded-sm"></div>
+                            <div className="h-1.5 bg-black/5 w-[85%] rounded-sm"></div>
+                            <div className="flex items-center gap-2 pt-1">
+                                <div className="w-1.5 h-1.5 bg-black/20 rounded-full"></div>
+                                <div className="h-1 bg-black/10 w-1/3 rounded-full"></div>
+                            </div>
+                         </div>
+                    </div>
+
+                </div>
+
+                {/* Footer Section */}
+                <div className="mt-auto flex justify-between items-end  pt-4">
+                    <div className="flex flex-col gap-1">
+                        <div className="h-1 bg-gray-900/[0.08] w-8 rounded-full"></div>
+                        <div className="h-1 bg-gray-900/[0.04] w-12 rounded-full"></div>
+                    </div>
+                    {/* Security Stamp Style */}
+                    <div className="border-2 border-red-700/30 px-2 py-0.5 rounded-sm rotate-[-10deg] scale-90">
+                        <span className="text-red-700/50 font-black text-[7px] uppercase tracking-widest block leading-none">Confidential</span>
                     </div>
                 </div>
-                <div className="mt-6 text-center">
-                    <h3 className="font-serif font-black text-3xl text-gray-800 tracking-tighter uppercase mix-blend-multiply leading-none transform rotate-1 opacity-90">
-                        {data.name}
-                    </h3>
-                    <p className="font-mono text-[10px] text-gray-400 mt-2 tracking-widest uppercase">
-                        Evidence #{100 + data.id}
-                    </p>
-                </div>
-                <div className="absolute bottom-6 right-6 text-red-700/60 border-4 border-red-700/60 px-2 py-1 text-[10px] font-black -rotate-12 tracking-widest uppercase rounded-sm mix-blend-multiply">
-                    Verified
-                </div>
-                {isTop && (
-                    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                        <span className="bg-black/80 text-white text-[10px] px-2 py-1 rounded backdrop-blur-md">Inspect</span>
-                    </div>
-                )}
             </div>
         </motion.div>
     )
