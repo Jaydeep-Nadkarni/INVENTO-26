@@ -29,6 +29,7 @@ const getEventsByClub = (clubName) => {
             date: `${event.date}, ${event.time}`,
             venue: event.venue,
             rules: event.rules,
+            whatsapplink: event.whatsapplink || "", // Use for participant outreach
             roundDetails: (event.rounddetails || []).map(r => ({
                 title: `Round ${r.round}`,
                 details: [r.description]

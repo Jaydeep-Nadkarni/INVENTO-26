@@ -50,7 +50,8 @@ const eventsData = [
     ],
     status: "Open",
     createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z"
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
   },
 
   {
@@ -104,7 +105,8 @@ const eventsData = [
     ],
     status: "Open",
     createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z"
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
   },
 
   {
@@ -155,7 +157,8 @@ const eventsData = [
     ],
     status: "Open",
     createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z"
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
   },
   {
     id: 4,
@@ -203,7 +206,8 @@ const eventsData = [
     ],
     status: "Open",
     createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z"
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
     },
     {
     id: 5,
@@ -251,7 +255,8 @@ const eventsData = [
     ],
     status: "Open",
     createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z"
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
     },
     {
     id: 6,
@@ -313,7 +318,8 @@ const eventsData = [
     ],
     status: "Open",
     createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z"
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
     },
     {
     id: 7,
@@ -366,7 +372,8 @@ const eventsData = [
     ],
     status: "Open",
     createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z"
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
     },
 
     {
@@ -420,7 +427,8 @@ const eventsData = [
     ],
     status: "Open",
     createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z"
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
     },
 
     {
@@ -474,7 +482,8 @@ const eventsData = [
     ],
     status: "Open",
     createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z"
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
     },
 
     {
@@ -529,7 +538,8 @@ const eventsData = [
     ],
     status: "Open",
     createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z"
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
     },
 
     {
@@ -579,7 +589,8 @@ const eventsData = [
     ],
     status: "Open",
     createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z"
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
     },
 
     {
@@ -631,7 +642,8 @@ const eventsData = [
     ],
     status: "Open",
     createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z"
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
     },
 
     {
@@ -688,7 +700,8 @@ const eventsData = [
     ],
     status: "Open",
     createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z"
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
     },
 
     {
@@ -750,7 +763,8 @@ const eventsData = [
     ],
     status: "Open",
     createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z"
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
     },
     {
     id: 15,
@@ -814,7 +828,8 @@ const eventsData = [
     ],
     status: "Open",
     createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z"
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
     },
     {
     id: 16,
@@ -874,7 +889,8 @@ const eventsData = [
     ],
     status: "Open",
     createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z"
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
     },
     {
     id: 17,
@@ -931,7 +947,8 @@ const eventsData = [
     ],
     status: "Open",
     createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z"
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
     },
     {
     id: 18,
@@ -986,7 +1003,8 @@ const eventsData = [
     ],
     status: "Open",
     createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z"
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
     },
     {
     id: 19,
@@ -1036,7 +1054,8 @@ const eventsData = [
     ],
     status: "Open",
     createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z"
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
     },
     {
     id: 20,
@@ -1091,7 +1110,8 @@ const eventsData = [
     ],
     status: "Open",
     createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z"
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
     },
     {
     id: 21,
@@ -1145,7 +1165,8 @@ const eventsData = [
     ],
     status: "Open",
     createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z"
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
     },
     {
     id: 22,
@@ -1204,7 +1225,8 @@ const eventsData = [
     ],
     status: "Open",
     createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z"
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
     },
     {
     id: 23,
@@ -1265,7 +1287,8 @@ const eventsData = [
     ],
     status: "Open",
     createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z"
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
     },
     {
     id: 24,
@@ -1317,7 +1340,8 @@ const eventsData = [
     ],
     status: "Open",
     createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z"
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
     },
     {
     id: 25,
@@ -1369,7 +1393,8 @@ const eventsData = [
     ],
     status: "Open",
     createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z"
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
     },
     {
     id: 26,
@@ -1426,7 +1451,8 @@ const eventsData = [
     ],
     status: "Open",
     createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z"
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
     },
     {
     id: 27,
@@ -1481,7 +1507,8 @@ const eventsData = [
     ],
     status: "Open",
     createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z"
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
   },
 
   {
@@ -1544,7 +1571,8 @@ const eventsData = [
     ],
     status: "Open",
     createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z"
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
   },
 
   {
@@ -1600,7 +1628,8 @@ const eventsData = [
     ],
     status: "Open",
     createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z"
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
   }
 ]
 
