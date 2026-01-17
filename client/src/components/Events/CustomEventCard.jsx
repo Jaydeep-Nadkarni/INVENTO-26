@@ -1,86 +1,118 @@
 import React from 'react';
-import { Calendar, MapPin, Users, Ticket } from 'lucide-react';
+import { motion } from 'framer-motion';
+import paperTexture from '../../assets/UI/paper-texture.jpg';
 
 const CustomEventCard = ({ event, onClick }) => {
     return (
-        <div
+        <motion.div
+            whileHover={{
+                y: -10,
+                rotateX: 2,
+                rotateY: -2,
+                boxShadow: '20px 20px 60px rgba(0,0,0,0.5)',
+            }}
             onClick={onClick}
-            className="group relative w-full bg-[#f4f1ea] border-2 border-[#2a2a2a] p-6 flex flex-col justify-between overflow-hidden cursor-pointer hover:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 min-h-[300px]"
+            className="group relative w-full aspect-4/5 overflow-hidden rounded-sm transition-all duration-500 cursor-pointer perspective-1000"
+            style={{
+                backgroundColor: '#ebe8e3',
+                backgroundImage: `url(${paperTexture})`,
+                backgroundSize: 'cover',
+            }}
         >
-            {/* Background Texture Effect (Optional subtle noise like paper) */}
-            <div className="absolute inset-0 opacity-5 pointer-events-none" 
-                 style={{backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")`}} 
+            <div className="absolute inset-0 bg-amber-50/80 mix-blend-multiply transition-colors group-hover:bg-red-50/40" />
+            
+            {/* Texture Overlay */}
+            <div
+                className="absolute inset-0 z-20 pointer-events-none"
+                style={{
+                    backgroundImage: `url(${paperTexture})`,
+                    backgroundSize: 'cover',
+                    opacity: 0.4,
+                    mixBlendMode: 'multiply'
+                }}
             />
 
-            {/* Corner Accents */}
-            <div className="absolute top-0 left-0 w-0 h-0 border-t-[40px] border-t-[#2a2a2a] border-r-[40px] border-r-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-[#2a2a2a]" />
+            {/* Card Top Binding/Tape */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-8 bg-gray-900/5 backdrop-blur-sm transform rotate-1 flex items-center justify-center z-30">
+                <div className="w-full h-px bg-black/10" />
+            </div>
 
             {/* Content Container */}
-            <div className="relative z-10 flex flex-col h-full space-y-4">
+            <div className="relative z-30 h-full p-8 flex flex-col">
                 
-                {/* Header */}
-                <div className="border-b-2 border-dashed border-[#2a2a2a] pb-4">
-                    <div className="flex justify-between items-start">
-                        <h3 className="font-black text-2xl uppercase tracking-tighter leading-none text-[#2a2a2a] group-hover:text-red-700 transition-colors duration-300">
-                            {event.themeName || event.realName}
-                        </h3>
-                        {/* ID Badge */}
-                        <span className="text-[10px] font-mono border border-[#2a2a2a] px-1 py-0.5 rounded-sm">
-                            #{event.id?.slice(0, 4).toUpperCase()}
+                {/* Top Meta Info & Slots */}
+                <div className="flex justify-between items-start mb-8">
+                    <div className="space-y-1">
+                        <span className="block text-[8px] font-mono text-gray-400 uppercase tracking-[0.3em]">
+                            Event #{event.id?.slice(0, 4).toUpperCase()}
+                        </span>
+                        <span className="block text-[8px] font-mono text-red-800 font-bold uppercase tracking-widest">
+                            Classified Briefing
                         </span>
                     </div>
-                    <p className="font-serif italic text-sm text-gray-600 mt-2">
-                        {event.realName}
-                    </p>
+
+                    <div className="flex flex-col items-end">
+                        <span className="text-[8px] font-mono text-gray-400 uppercase tracking-tighter">Capacity</span>
+                        <div className="px-2 py-0.5 border border-red-700 text-red-700 text-[10px] font-black uppercase tracking-tighter mt-1">
+                            {event.slotsAvailable === 'TBD' ? 'OPEN' : event.slotsAvailable}
+                        </div>
+                    </div>
                 </div>
 
-                {/* Details Grid */}
-                <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-xs font-bold text-[#2a2a2a] uppercase tracking-wide">
-                    {event.date && (
-                        <div className="flex items-center gap-2">
-                            <Calendar size={14} className="text-red-700" />
-                            <span>{event.date}</span>
+                {/* Main Graphic Area with Background Letter */}
+                <div className="relative flex-1 flex items-center justify-center overflow-hidden">
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <h3
+                            className="text-[12rem] md:text-[18rem] font-black text-black/[0.08] select-none"
+                            style={{ fontFamily: "'Playfair Display', serif" }}
+                        >
+                            {(event.themeName || event.realName).charAt(0)}
+                        </h3>
+                    </div>
+                    
+                    {/* Hover Stamp */}
+                    <div className="absolute z-40 transform rotate-[-15deg] opacity-0 group-hover:opacity-100 transition-all duration-500 translate-x-10 group-hover:translate-x-0">
+                        <div className="px-3 py-1 border-2 border-red-700 text-red-700 text-[10px] font-black uppercase tracking-tighter bg-red-50/50 backdrop-blur-sm">
+                            INVENTO 2026
                         </div>
-                    )}
-                    {event.venue && (
-                        <div className="flex items-center gap-2">
-                            <MapPin size={14} className="text-red-700" />
-                            <span>{event.venue}</span>
-                        </div>
-                    )}
-                    {event.type && (
-                         <div className="flex items-center gap-2">
-                            <Users size={14} className="text-red-700" />
-                            <span>{event.type}</span>
-                        </div>
-                    )}
-                    {event.fee && (
-                        <div className="flex items-center gap-2">
-                            <Ticket size={14} className="text-red-700" />
-                            <span>{event.fee}</span>
-                        </div>
-                    )}
+                    </div>
                 </div>
 
-                {/* Description Truncated */}
-                <div className="flex-grow">
-                     <p className="font-serif text-gray-800 text-sm leading-relaxed line-clamp-3 mt-2">
-                        {event.description}
-                    </p>
-                </div>
+                {/* Event Name & Fee Section */}
+                <div className="space-y-4">
+                    <div className="h-px w-full bg-black/20" />
+                    
+                    <div className="flex flex-col gap-1">
+                        <h3
+                            className="text-3xl font-black text-gray-900 uppercase tracking-tighter leading-none group-hover:text-red-700 transition-colors"
+                            style={{ fontFamily: "'Playfair Display', serif" }}
+                        >
+                            {event.themeName || event.realName}
+                        </h3>
+                        <p className="text-[11px] font-serif italic text-gray-600 leading-tight">
+                            {event.realName}
+                        </p>
+                    </div>
 
-                {/* Action Area */}
-                <div className="pt-4 flex items-center justify-between">
-                    <span className="text-xs font-black uppercase text-gray-400 group-hover:text-[#2a2a2a] transition-colors">
-                        INVENTO 2026 // CLASSIFIED
-                    </span>
-                    <div className="w-8 h-8 rounded-full bg-[#2a2a2a] flex items-center justify-center text-[#f4f1ea] group-hover:bg-red-700 group-hover:scale-110 transition-all duration-300">
-                         <span className="font-bold -mt-1">↗</span>
+                    <div className="flex justify-between items-end pt-2">
+                        <div className="flex flex-col">
+                            <span className="text-[8px] font-mono text-gray-400 uppercase tracking-[0.2em]">Briefing Fee</span>
+                            <span className="text-sm font-bold text-gray-900 tracking-tight">
+                                {event.fee}
+                            </span>
+                        </div>
+                        <div className="w-6 h-6 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-bold group-hover:bg-red-700 transition-colors">
+                            →
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+
+            {/* Decorative Edge Shadows */}
+            <div className="absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-black/10 to-transparent pointer-events-none" />
+            <div className="absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />
+            <div className="absolute -right-1 top-24 w-1 h-16 bg-black/20 group-hover:bg-red-600 transition-colors duration-500" />
+        </motion.div>
     );
 };
 

@@ -29,6 +29,10 @@ const getEventsByClub = (clubName) => {
             date: `${event.date}, ${event.time}`,
             venue: event.venue,
             rules: event.rules,
+            roundDetails: (event.rounddetails || []).map(r => ({
+                title: `Round ${r.round}`,
+                details: [r.description]
+            })),
             contacts: (event.contact || []).filter(c => c && c.name).map(c => ({
                 name: c.name,
                 phone: c.phone
