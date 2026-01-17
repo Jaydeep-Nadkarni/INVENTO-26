@@ -10,7 +10,6 @@ import Profile from './pages/Profile.jsx'
 import BriefcasePage from './pages/Briefcase.jsx'
 import Pass from './pages/Pass.jsx'
 import Something from './pages/Something.jsx'
-import Credits from './pages/Credits.jsx'
 import Newspaper from './pages/Newspaper.jsx'
 import ForgotPassword from './pages/ForgotPassword.jsx'
 import { useAdminAuth } from './admin/context/AuthContext'
@@ -84,7 +83,6 @@ function App() {
         <Route path="/schedule" element={<Schedule />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/something" element={<Something />} />
-        <Route path="/credits" element={<Credits />} />
         <Route path="/newspaper" element={<Newspaper />} />
 
         {/* Admin and Master Auth */}
