@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import paperTexture from '../assets/UI/paper-texture.jpg';
 import breakingLogo from '../assets/UI/BREAKING.png';
 import kleLogo from '../assets/UI/KLE-TECH.png';
 
 const Newspaper = () => {
+    const navigate = useNavigate();
     const [notices, setNotices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [weather, setWeather] = useState(null);
@@ -63,6 +65,16 @@ const Newspaper = () => {
                 backgroundImage: `radial-gradient(circle at center, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.8) 100%)`
             }}
         >
+            {/* Back Button */}
+                <button
+                    onClick={() => navigate(-1)}
+                    className="fixed top-4 left-4 z-40 p-2 hover:-translate-x-1 transition-transform flex items-center gap-2"
+                    title="Return to Base"
+                >
+                    <ArrowLeft size={22} className="group-hover:-translate-x-1 transition-transform text-white" />
+                    <span className="font-medium text-white">Home</span>
+                </button>
+
             {/* Newspaper Container */}
             <motion.div
                 initial={{ opacity: 0, y: 50, rotateX: 20 }}
@@ -75,6 +87,8 @@ const Newspaper = () => {
                     minHeight: '250vh'
                 }}
             >
+                
+
                 {/* Newspaper Header */}
                 <div className="border-b-4 border-black mx-6 md:mx-10 mt-10 md:mt-16 pb-4 mb-2 flex flex-col items-center">
                     <h1 className="text-4xl md:text-8xl font-black font-serif leading-tight mb-8 uppercase">
@@ -134,11 +148,16 @@ const Newspaper = () => {
                         <div className="flex flex-col">
                             <h2 className="text-2xl font-bold font-serif mb-3 uppercase underline decoration-double">CLASSIFIED INTEL LEAKED</h2>
                             <p className="font-serif text-base leading-relaxed mb-4">
-                                Internal memos from the high command suggest a new addition to the arsenal: The Notice Board. This centralized intelligence hub will provide real-time updates to all field agents.
+                                Internal updates from the organizing committee introduce a new feature: the Notice Board. This centralized hub will deliver real-time announcements, schedules, and important updates throughout INVENTO 2026
                             </p>
-                            <div className="bg-black/5 p-4 border border-dashed border-black/40 rotate-1">
-                                <p className="font-mono text-sm uppercase">/// TOP SECRET ///</p>
-                                <p className="font-serif text-sm">Ly8vIENMQVNTSUZJRUQgLy8vCkxvY2F0aW9uOiBLTEU<br /> gVGVjaCBDYW1wdXMKTWlzc2lvbjogRXhwbG9yZSDigKIgQ3JlYXRlIOKAoiBDZ<br />WxlYnJhdGUKU3RhdHVzOiBJTlZFTlRPIDIwMjYg4oCUIExJVkU=</p>
+                            <div className="bg-black/5  p-4 border-2 border-black/20 shadow-xl">
+                                <div className="flex justify-between text-black items-center mb-2 border-b border-white/10 pb-2">
+                                    <p className="font-mono text-xs uppercase text-red-500 tracking-tighter">/// TOP SECRET: ENCRYPTED DATA STREAM ///</p>
+                                    <span className="text-[10px] opacity-40">[X-99 PROTOCOL]</span>
+                                </div>
+                                <p className="font-mono text-black text-[11px] break-all opacity-70 leading-relaxed tracking-widest">
+                                    U1RBVEVNRU5UOiBPUEVSQVRJT04gU1BZVkVSU0UgSVMgR08uIDxicj4KREVQTE9ZTUVOVCBDT01QTEVURSAyMDI2LjA0LjE1IDxicj4KQ09NTVVOSUNBVElPTlM6IFNFQ1VSRS4gPGicj4KQ09ERU5BTUU6IElOVkVOVE8uIDxicj4KQVVUSE9SSVpBVElPTjogUkVRVUlSRUQgRk9SIEVER0UgQUNDRVNTLiA8YnI+ClRBUkdFVDogQkVMQUdBVkkvS0xFLlRFQ0gu
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -171,14 +190,34 @@ const Newspaper = () => {
                         </div>
 
                         <div className="border-t-2 border-black pt-4">
-                            <h3 className="text-lg font-bold font-serif mb-2 uppercase">LATEST COMMUNIQUÉS</h3>
-                            <div className="space-y-4">
-                                {[1, 2, 3].map(i => (
-                                    <div key={i} className="border-b border-black/20 pb-2">
-                                        <p className="font-serif text-xs font-bold uppercase">Intercepted {i}2:00 Hours</p>
-                                        <p className="font-serif text-sm italic">Transmission received from anonymous source regarding the 2026 protocol.</p>
+                            <h3 className="text-lg font-bold font-serif mb-4 uppercase text-black border-b border-black pb-1">MARKETPLACE DISPATCHES</h3>
+                            <div className="space-y-6">
+                                {/* Ad Placement 1 */}
+                                <div className="border border-black/20 p-3 bg-black/5 hover:bg-black/10 transition-colors cursor-pointer">
+                                    <div className="flex justify-between items-center mb-1">
+                                        <span className="text-[9px] font-bold bg-black text-white px-1">SPONSORED</span>
                                     </div>
-                                ))}
+                                    <p className="font-serif text-sm font-bold uppercase leading-tight">Official Tech Partner</p>
+                                    <p className="font-serif text-xs italic mt-1 opacity-70">Empowering the digital frontier of Invento 2026. Stay connected.</p>
+                                </div>
+
+                                {/* Ad Placement 2 */}
+                                <div className="border border-black/20 p-3 bg-black/5 hover:bg-black/10 transition-colors cursor-pointer">
+                                    <div className="flex justify-between items-center mb-1">
+                                        <span className="text-[9px] font-bold bg-black text-white px-1">SPONSORED</span>
+                                    </div>
+                                    <p className="font-serif text-sm font-bold uppercase leading-tight">Vantage View Estates</p>
+                                    <p className="font-serif text-xs italic mt-1 opacity-70">Luxury living for the modern operative. Special rates for Invento attendees.</p>
+                                </div>
+
+                                {/* Ad Placement 3 */}
+                                <div className="border border-black/20 p-3 bg-black/5 hover:bg-black/10 transition-colors cursor-pointer">
+                                    <div className="flex justify-between items-center mb-1">
+                                        <span className="text-[9px] font-bold bg-black text-white px-1">SPONSORED</span>
+                                    </div>
+                                    <p className="font-serif text-sm font-bold uppercase leading-tight">Quantum Cyber Cafe</p>
+                                    <p className="font-serif text-xs italic mt-1 opacity-70">The best brews and the fastest bandwidth in the Spyverse sector.</p>
+                                </div>
                             </div>
                         </div>
 

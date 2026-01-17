@@ -6,7 +6,7 @@ import pageTurnSound from '../../assets/audios/page-turn.mp3'
 import closeSound from '../../assets/audios/briefcase-open.mp3'
 import { useParams, useNavigate } from 'react-router-dom'
 import { clubsData } from './clubsData'
-import Eventcard1 from '../../assets/UI/Events/Eventcard1.png'
+import CustomEventCard from './CustomEventCard'
 
 const TextureOverlay = ({ opacity = 0.4 }) => (
     <div
@@ -452,25 +452,19 @@ const EventsGrid = () => {
                     </div>
 
                     {/* Events Grid */}
-                    <div className="flex flex-wrap justify-center gap-20 w-full max-w-7xl mx-auto">
+                    <div className="flex flex-wrap justify-center gap-10 w-full max-w-7xl mx-auto px-4">
                         {currentClub?.events?.map((event, index) => (
                             <motion.div
                                 key={event.id}
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.1 }}
-                                onClick={() => handleEventClick(event.id)}
-                                className="group relative cursor-pointer transition-transform duration-500 hover:z-10 hover:scale-105 w-full sm:w-1/2 md:w-1/3"
+                                className="w-full sm:w-[calc(50%-2.5rem)] lg:w-[calc(33.33%-2.5rem)]"
                             >
-                                {/* Test Event Card Image - Full Card Image - No Crop */}
-                                <img 
-                                    src={Eventcard1} 
-                                    alt={event.themeName || event.realName}
-                                    className="w-full h-auto block"
+                                <CustomEventCard 
+                                    event={event} 
+                                    onClick={() => handleEventClick(event.id)}
                                 />
-
-                                {/* Hover Border Reveal */}
-                                <div className="absolute inset-0 border-2 border-transparent group-hover:border-red-600/50 transition-colors pointer-events-none"></div>
                             </motion.div>
                         ))}
                     </div>

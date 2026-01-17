@@ -7,6 +7,7 @@ import Notes from './Notes'
 import Radio from './Radio'
 import Browser from './Browser'
 import VideoPlayer from './VideoPlayer'
+import SnakeGame from './SnakeGame'
 import Shutdown from './shutdown'
 import shutdownAudio from '../../assets/audios/shutdown.mp3'
 import wallpaperImg from '../../assets/UI/OS/wallpaper.png'
@@ -15,15 +16,16 @@ import terminalIcon from '../../assets/UI/OS/terminal.png'
 import browserIcon from '../../assets/UI/OS/browser.png'
 import radioIcon from '../../assets/UI/OS/Radio.png'
 import mailIcon from '../../assets/UI/OS/mail.png'
+import snakegame from '../../assets/UI/OS/Snake.png'
 
-const RetroTerminal = ({ isOpen, onClose }) => {
+const RetroTerminal = ({ isOpen, onClose, initialBootProgress = 0 }) => {
     const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
     const [selectedCardId, setSelectedCardId] = useState(null)
     const [openApps, setOpenApps] = useState([]) // Array of objects {id, title, type}
     const [activeApp, setActiveApp] = useState(null)
     const [minimizedApps, setMinimizedApps] = useState([])
     const [selectedDesktopIcon, setSelectedDesktopIcon] = useState(null)
-    const [bootStatus, setBootStatus] = useState('starting') // 'starting', 'running', 'shutting'
+    const [bootStatus, setBootStatus] = useState(initialBootProgress >= 100 ? 'running' : 'starting') // 'starting', 'running', 'shutting'
     const desktopRef = useRef(null)
 
     // Play startup sound when OS finishes booting
@@ -47,6 +49,7 @@ const RetroTerminal = ({ isOpen, onClose }) => {
         { id: 'browser', name: 'Internet Explorer', icon: browserIcon, type: 'browser', isImg: true },
         { id: 'mail', name: 'SpyMail', icon: mailIcon, type: 'mail', isImg: true },
         { id: 'radio', name: 'Intercept', icon: radioIcon, type: 'radio', isImg: true },
+        { id: 'snake', name: 'Snake Game', icon: snakegame, type: 'snake', isImg: true },
     ]
 
     const launchApp = (app) => {
@@ -91,12 +94,13 @@ const RetroTerminal = ({ isOpen, onClose }) => {
     const renderAppContent = (app) => {
         switch (app.type) {
             case 'cmd': return <CMD />
-            case 'filemanager': return <FileManager onOpenFile={(file) => launchApp({ id: file.id, title: file.name.toUpperCase(), type: file.type === 'video' ? 'video' : 'notes' })} />
+            case 'filemanager': return <FileManager onOpenFile={(file) => launchApp({ ...file, id: file.id, title: file.name.toUpperCase(), type: (file.type === 'video' || file.type === 'image') ? 'video' : 'notes' })} />
             case 'mail': return <Mail />
-            case 'notes': return <Notes title={app.title} />
-            case 'video': return <VideoPlayer title={app.title} />
+            case 'notes': return <Notes title={app.title} content={app.content} />
+            case 'video': return <VideoPlayer title={app.title} url={app.url} />
             case 'radio': return <Radio />
             case 'browser': return <Browser />
+            case 'snake': return <SnakeGame />
             default: return null
         }
     }
@@ -122,7 +126,7 @@ const RetroTerminal = ({ isOpen, onClose }) => {
                 }}
             >
                 {bootStatus === 'starting' && (
-                    <Shutdown mode="startup" onComplete={() => setBootStatus('running')} />
+                    <Shutdown mode="startup" onComplete={() => setBootStatus('running')} initialProgress={initialBootProgress} />
                 )}
 
                 {bootStatus === 'shutting' && (
@@ -134,7 +138,7 @@ const RetroTerminal = ({ isOpen, onClose }) => {
                         {/* Desktop Body */}
                         <div
                             ref={desktopRef}
-                            className="flex-1 relative p-4 grid grid-cols-1 auto-rows-max gap-4 w-min content-start h-full"
+                            className="flex-1 relative p-4 grid grid-rows-5 grid-flow-col gap-4 w-min content-start h-full"
                             onClick={handleDesktopClick}
                         >
                             {desktopIcons.map(icon => (
@@ -235,7 +239,7 @@ const RetroTerminal = ({ isOpen, onClose }) => {
     )
 }
 
-const Window = ({ app, children, isActive, isMinimized, onClose, onMinimize, onFocus, width = "500px", height = "400px" }) => {
+const Window = ({ app, children, isActive, isMinimized, onClose, onMinimize, onFocus, width = "500px", height = "400px", defaultX = 40, defaultY = 80 }) => {
     const [openMenu, setOpenMenu] = useState(null);
     const menuRef = useRef(null);
 
@@ -265,8 +269,8 @@ const Window = ({ app, children, isActive, isMinimized, onClose, onMinimize, onF
             drag
             dragMomentum={false}
             onPointerDown={onFocus}
-            style={{ width, height }}
-            className={`absolute top-20 left-40 bg-[#c0c0c0] win95-border-raised flex flex-col shadow-xl overflow-visible`}
+            style={{ width, height, top: defaultY, left: defaultX }}
+            className={`absolute bg-[#c0c0c0] win95-border-raised flex flex-col shadow-xl overflow-visible`}
         >
             {/* Title Bar */}
             <div

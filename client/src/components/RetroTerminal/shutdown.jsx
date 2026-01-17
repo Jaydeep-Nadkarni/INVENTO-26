@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import shutdownAudio from '../../assets/audios/shutdown.mp3'
 
-const Shutdown = ({ mode = 'shutdown', onComplete }) => {
-    const [progress, setProgress] = useState(0)
+const Shutdown = ({ mode = 'shutdown', onComplete, initialProgress = 0 }) => {
+    const [progress, setProgress] = useState(initialProgress)
     const [status, setStatus] = useState(mode === 'startup' ? 'Starting SpyVerse OS...' : 'Shutting down system...')
 
     useEffect(() => {
@@ -13,19 +13,21 @@ const Shutdown = ({ mode = 'shutdown', onComplete }) => {
             audio.play().catch(e => console.log("Shutdown sound failed:", e))
         }
 
-        const duration = 3000 // 3 seconds for the effect
+        const duration = initialProgress > 0 ? 1200 : 2500 // Faster if already background loaded
         const interval = 50
         const steps = duration / interval
-        const increment = 100 / steps
+        const increment = (100 - initialProgress) / steps
 
         const timer = setInterval(() => {
             setProgress(prev => {
                 const next = prev + increment
                 if (next >= 100) {
                     clearInterval(timer)
+                    // If it was already near 100, exit even faster
+                    const exitDelay = initialProgress > 80 ? 100 : 400
                     setTimeout(() => {
                         onComplete()
-                    }, 500)
+                    }, exitDelay)
                     return 100
                 }
                 return next
@@ -33,8 +35,10 @@ const Shutdown = ({ mode = 'shutdown', onComplete }) => {
         }, interval)
 
         if (mode === 'startup') {
-            setTimeout(() => setStatus('Loading Secure Shell...'), 1000)
-            setTimeout(() => setStatus('Finalizing Authentication...'), 2000)
+            // Speed up status messages as well
+            const msgDelay = initialProgress > 50 ? 400 : 1000
+            setTimeout(() => setStatus('Loading Secure Shell...'), msgDelay)
+            setTimeout(() => setStatus('Finalizing Authentication...'), msgDelay * 2)
         } else {
             setTimeout(() => setStatus('Saving Session Data...'), 800)
             setTimeout(() => setStatus('Encrypting Personal Files...'), 1600)
