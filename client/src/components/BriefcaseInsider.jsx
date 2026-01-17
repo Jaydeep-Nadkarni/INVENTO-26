@@ -75,6 +75,7 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
     const [statusText, setStatusText] = useState('Swipe cards to shuffle;')
     const [isTerminalOpen, setIsTerminalOpen] = useState(false)
     const [isMorseOpen, setIsMorseOpen] = useState(false)
+    const [morseStep, setMorseStep] = useState(0)
     const [isRadioPlaying, setIsRadioPlaying] = useState(false)
     const [osBootProgress, setOsBootProgress] = useState(0)
     const audioRef = useRef(null)
@@ -197,9 +198,31 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
     const handleMorseClick = useCallback((e) => {
         e.stopPropagation()
         stopRadioIfPlaying()
+        setMorseStep(0) // Reset animation
         setIsMorseOpen(true)
         setStatusText("Incoming Transmission: Decrypting...")
     }, [])
+
+    // Dynamic morse terminal animation
+    useEffect(() => {
+        if (!isMorseOpen) {
+            setMorseStep(0)
+            return
+        }
+
+        const timers = [
+            setTimeout(() => setMorseStep(1), 400),   // System init
+            setTimeout(() => setMorseStep(2), 800),   // Signal detected
+            setTimeout(() => setMorseStep(3), 1200),  // Decryption
+            setTimeout(() => setMorseStep(4), 1600),  // Show encrypted
+            setTimeout(() => setMorseStep(5), 2200),  // Processing
+            setTimeout(() => setMorseStep(6), 2600),  // Translation complete
+            setTimeout(() => setMorseStep(7), 3000),  // Show decrypted
+            setTimeout(() => setMorseStep(8), 3400),  // Success status
+        ]
+
+        return () => timers.forEach(timer => clearTimeout(timer))
+    }, [isMorseOpen])
 
     const handleLaptopClick = useCallback((e) => {
         e.stopPropagation()
@@ -585,12 +608,11 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                                                 {/* Envelope Flap visual */}
                                                 <div className="absolute top-0 right-0 border-t-60 border-r-60 border-t-[#ebe1d1] border-r-[#b8aa8e] shadow-sm transform rotate-90"></div>
 
-                                                <div className="flex flex-col items-center gap-2 transform -rotate-2">
-                                                    <span className="font-serif text-[#8f2727] font-bold text-2xl tracking-[0.2em] uppercase mix-blend-multiply opacity-90 border-2 border-[#8f2727] px-4 py-2 rounded-sm"
+                                                <div className="flex flex-col items-center gap-2 transform -rotate-6">
+                                                    <span className="font-serif text-[#8f2727] font-bold text-2xl tracking-[0.2em] uppercase mix-blend-multiply opacity-90 border-2 border-[#8f2727] px-2 py-1 rounded-sm"
                                                         style={{ transform: 'rotate(-5deg)' }}>
                                                         CONFIDENTIAL
                                                     </span>
-                                                    <span className="font-mono text-[10px] text-gray-500 tracking-widest">LETTER</span>
                                                 </div>
                                             </motion.div>
                                         </div>
@@ -816,7 +838,7 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                                                                 </span>
                                                             </button>
 
-                                                           
+
                                                         </div>
                                                     </div>
                                                 </div>
@@ -953,46 +975,40 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                                                             </p>
                                                         </div>
                                                         <div className="text-right flex flex-col items-end">
-                                                            <p className="font-mono text-[8px] text-gray-400 uppercase">Priority: Alpha</p>
-                                                            <p className="font-mono text-[8px] text-gray-400 uppercase">Date: 17/03/2026</p>
-                                                            <div className="mt-2 px-2 py-0.5 border border-red-800 text-red-800 text-[8px] font-bold uppercase rotate-1">Eyes Only</div>
+                                                            <p className="font-mono text-[8px] text-gray-400 uppercase">Priority: High</p>
+                                                            <p className="font-mono text-[8px] text-gray-400 uppercase">{new Date().toLocaleDateString('en-GB')}</p>
+                                                            <div className="mt-2 px-2 py-0.5 border border-red-800 text-red-800 text-[8px] font-bold uppercase rotate-1">KLE Technological University</div>
                                                         </div>
                                                     </div>
 
                                                     {/* Letter Content */}
                                                     <div className="flex-1 relative z-10 font-serif text-gray-800 space-y-6 overflow-y-auto hide-scrollbar">
                                                         <div className="space-y-1">
-                                                            <p className="font-bold text-sm">TO: FIELD AGENT [CLASSIFIED]</p>
+                                                            <p className="font-bold text-sm">TO: {user?.name || "Participant"}</p>
                                                             <p className="font-bold text-sm">SUBJECT: OPERATION INVENTO 2026</p>
                                                         </div>
 
-                                                        <p className="text-base leading-relaxed italic border-l-4 border-[#8f2727]/20 pl-4 py-1 bg-black/5">
-                                                            "The shadows are lengthening, Agent. The SpyVerse is no longer a simulation—it is our reality. The assets recovered from the recent breach indicate a massive convergence at the KLE Technological University sector."
+                                                        <p className="text-base text-sm leading-relaxed italic border-l-4 border-[#8f2727]/20 pl-4 py-1 bg-black/5">
+                                                            "The boundaries between creativity and innovation are fading. INVENTO returns in 2026 as SPYVERSE, a space where ideas, talent, and expression converge at KLE Technological University"
                                                         </p>
+
+                                                        <p>Dear {user?.name || "Participant"},</p>
 
                                                         <div className="space-y-4 text-sm leading-relaxed">
                                                             <p>
-                                                                Your mission is to infiltrate the <span className="bg-red-200 px-1 font-bold">INVENTO 2026</span> summit. Intelligence reports suggest that the greatest minds, artists, and strategists are gathering under the guise of an annual fest.
+                                                                You are invited to be a part of <span className="bg-red-200 px-1 font-bold">INVENTO 2026</span>, the annual fest of KLE Technological University, Dr. M.S. Sheshgiri Campus. What began as a celebration of talent has evolved into a platform where talent, culture, and creativity intersect.
                                                             </p>
                                                             <p>
-                                                                Key targets have been identified across multiple divisions: Media, CDC, CDC Specials, and the Title Events. Each node contains a piece of the puzzle.
+                                                                This year’s edition brings together some of the most passionate minds, performers, and creators across diverse domains, all united under a single experience <span className="font-bold">SPYVERSE</span>.
                                                             </p>
                                                             <p>
-                                                                Trust no one. The 'Evidence Bundle' you are carrying contains the decrypted profiles of all involved clubs. Swipe through them, analyze their frequencies, and identify the core signatures.
+                                                                We invite you to explore, participate, and become a part of INVENTO 2026.
                                                             </p>
                                                         </div>
 
                                                         <div className="pt-8 opacity-80 pb-4">
-                                                            <p className="text-xs font-bold uppercase mb-4">Authorized By:</p>
-                                                            <div className="flex items-center gap-4">
-                                                                <div className="w-24 h-12 bg-black/10 rounded-sm overflow-hidden relative grayscale opacity-40">
-                                                                    {/* Fake Signature Pattern */}
-                                                                    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 40">
-                                                                        <path d="M10 25 C 20 5, 40 35, 50 15 S 80 0, 90 20" stroke="black" fill="none" strokeWidth="1" />
-                                                                    </svg>
-                                                                </div>
-                                                                <p className="font-serif italic text-sm">Director of Operations</p>
-                                                            </div>
+                                                            <p className="text-xs font-bold uppercase mb-4">Team INVENTO,</p>
+                                                            <p className="font-serif italic text-xs">KLE Technological University, <br /> Dr. M.S. Sheshgiri Campus</p>
                                                         </div>
                                                     </div>
 
@@ -1019,93 +1035,188 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
                                             exit={{ opacity: 0 }}
-                                            className="fixed inset-0 z-1000 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+                                            className="fixed inset-0 z-1000 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm"
                                             onClick={() => {
                                                 setIsMorseOpen(false)
                                                 setStatusText('Click on the items to explore')
                                             }}
                                         >
                                             <motion.div
-                                                initial={{ scale: 0.8, opacity: 0, rotateY: 30 }}
-                                                animate={{ scale: 1, opacity: 1, rotateY: 0 }}
-                                                className="relative w-full max-w-md aspect-[4/3] bg-[#2a2a2a] border-t-8 border-x-4 border-b-12 border-[#1a1a1a] shadow-[0_30px_60px_rgba(0,0,0,0.8),inset_0_2px_10px_rgba(255,255,255,0.1)] overflow-hidden rounded-lg"
+                                                initial={{ scale: 0.9, opacity: 0 }}
+                                                animate={{ scale: 1, opacity: 1 }}
+                                                exit={{ scale: 0.9, opacity: 0 }}
+                                                transition={{ type: "spring", damping: 20 }}
+                                                className="relative w-full max-w-3xl"
                                                 onClick={(e) => e.stopPropagation()}
                                             >
-                                                {/* Brushed Metal Texture */}
-                                                <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='1'/%3E%3C/svg%3E")` }}></div>
+                                                {/* Old CRT Monitor Frame */}
+                                                <div className="relative bg-[#2a2520] rounded-2xl p-6 shadow-[0_20px_60px_rgba(0,0,0,0.9),inset_0_0_20px_rgba(0,0,0,0.5)]">
+                                                    {/* Monitor Bezel */}
+                                                    <div className="relative bg-[#1a1816] rounded-lg p-4 shadow-[inset_0_0_30px_rgba(0,0,0,0.8)]">
+                                                        {/* Screen */}
+                                                        <div className="relative bg-black rounded overflow-hidden" style={{ aspectRatio: '4/3' }}>
+                                                            {/* CRT Screen Glow */}
+                                                            <div className="absolute inset-0 bg-gradient-radial from-green-500/5 via-transparent to-black/50"></div>
 
-                                                <div className="relative z-10 h-full flex flex-col p-6">
-                                                    {/* Top Control Panel */}
-                                                    <div className="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
-                                                        <div className="flex gap-4 items-center">
-                                                            <div className="flex flex-col">
-                                                                <span className="text-[10px] text-yellow-500 font-mono font-bold uppercase tracking-widest leading-tight">Signal Received</span>
-                                                                <span className="text-[8px] text-white/40 font-mono uppercase tracking-[0.2em]">Frequency: 148.5 MHz</span>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="text-right mr-3">
-                                                                <div className="text-[10px] text-green-500 font-mono font-bold uppercase">Active</div>
-                                                            </div>
-                                                            <div className="w-3 h-3 rounded-full bg-red-600 shadow-[0_0_10px_rgba(220,38,38,0.8)] animate-pulse"></div>
-                                                        </div>
-                                                    </div>
+                                                            {/* Scanlines Effect */}
+                                                            <div className="absolute inset-0 pointer-events-none z-50" style={{
+                                                                backgroundImage: 'repeating-linear-gradient(0deg, rgba(0,255,0,0.03) 0px, transparent 1px, transparent 2px, rgba(0,255,0,0.03) 3px)',
+                                                                animation: 'scanline 8s linear infinite'
+                                                            }}></div>
 
-                                                    {/* Circular Dial / Scope Visual */}
-                                                    <div className="flex-1 flex gap-6">
-                                                        <div className="w-1/3 aspect-square bg-[#1a1a1a] rounded-full border-4 border-[#333] shadow-inner relative flex items-center justify-center overflow-hidden">
-                                                            {/* Scanning pulse */}
-                                                            <div className="absolute inset-0 bg-green-500/5"></div>
-                                                            <div className="w-full h-0.5 bg-green-500/20 absolute animate-[scan_2s_linear_infinite]"></div>
-                                                            <div className="text-green-500 text-xs font-mono opacity-40">AUTO-RX</div>
+                                                            {/* Screen Flicker */}
+                                                            <div className="absolute inset-0 bg-green-500/5 pointer-events-none animate-pulse" style={{ animationDuration: '0.1s' }}></div>
 
-                                                            {/* Compass-like marks */}
-                                                            {[...Array(8)].map((_, i) => (
-                                                                <div key={i} className="absolute w-1 h-0.5 bg-white/20" style={{ transform: `rotate(${i * 45}deg) translateY(-20px)` }}></div>
-                                                            ))}
-                                                        </div>
+                                                            {/* Terminal Content */}
+                                                            <div className="relative z-10 h-full p-6 font-mono text-green-500 overflow-y-auto hide-scrollbar">
+                                                                {/* Terminal Header */}
+                                                                <div className="border-b border-green-500/30 pb-3 mb-4">
+                                                                    <div className="flex justify-between items-center">
+                                                                        <div>
+                                                                            <div className="text-xs opacity-70">CLASSIFIED TRANSMISSION SYSTEM v2.4</div>
+                                                                            <div className="text-[10px] opacity-50 mt-1">SECURE CHANNEL :: FREQ 148.5 MHz</div>
+                                                                        </div>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]"></div>
+                                                                            <span className="text-[10px] opacity-70">RECEIVING</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
 
-                                                        <div className="flex-1 flex flex-col justify-center space-y-4">
-                                                            <div className="space-y-1">
-                                                                <span className="text-[9px] text-white/30 font-mono uppercase tracking-widest font-bold">Encrypted Stream</span>
-                                                                <div className="bg-black/50 p-3 rounded border border-white/5">
-                                                                    <p className="text-yellow-500/90 font-mono text-sm tracking-[0.3em] leading-relaxed break-all h-12 overflow-hidden italic">
-                                                                        .-- . .-.. -.-. --- -- . / - --- / .. -. ...- . -. - --- / ..--- ----- ..--- -.... / ... .--. -.-- / ...- . .-. ... .
-                                                                    </p>
+                                                                {/* Terminal Output */}
+                                                                <div className="space-y-3 text-sm">
+                                                                    {morseStep >= 1 && (
+                                                                        <motion.div
+                                                                            initial={{ opacity: 0, x: -10 }}
+                                                                            animate={{ opacity: 0.6, x: 0 }}
+                                                                            className="opacity-60"
+                                                                        >
+                                                                            <span className="text-yellow-500">[SYSTEM]</span> Initializing morse decoder...
+                                                                        </motion.div>
+                                                                    )}
+
+                                                                    {morseStep >= 2 && (
+                                                                        <motion.div
+                                                                            initial={{ opacity: 0, x: -10 }}
+                                                                            animate={{ opacity: 0.6, x: 0 }}
+                                                                            className="opacity-60"
+                                                                        >
+                                                                            <span className="text-yellow-500">[SYSTEM]</span> Signal detected on frequency 148.5 MHz
+                                                                        </motion.div>
+                                                                    )}
+
+                                                                    {morseStep >= 3 && (
+                                                                        <motion.div
+                                                                            initial={{ opacity: 0, x: -10 }}
+                                                                            animate={{ opacity: 0.6, x: 0 }}
+                                                                            className="opacity-60"
+                                                                        >
+                                                                            <span className="text-yellow-500">[SYSTEM]</span> Decryption in progress...
+                                                                        </motion.div>
+                                                                    )}
+
+                                                                    {morseStep >= 4 && (
+                                                                        <motion.div
+                                                                            initial={{ opacity: 0, y: 10 }}
+                                                                            animate={{ opacity: 1, y: 0 }}
+                                                                            className="my-4 border-l-2 border-green-500/30 pl-4 py-2 bg-green-500/5"
+                                                                        >
+                                                                            <div className="text-[10px] opacity-50 mb-2">ENCRYPTED STREAM:</div>
+                                                                            <div className="text-yellow-400/80 text-xs tracking-[0.2em] break-all leading-relaxed">
+                                                                                .-- . .-.. -.-. --- -- . / - --- / .. -. ...- . -. - --- / ..--- ----- ..--- -.... / ... .--. -.-- / ...- . .-. ... .
+                                                                            </div>
+                                                                        </motion.div>
+                                                                    )}
+
+                                                                    {morseStep >= 5 && (
+                                                                        <motion.div
+                                                                            initial={{ opacity: 0, x: -10 }}
+                                                                            animate={{ opacity: 0.6, x: 0 }}
+                                                                            className="opacity-60"
+                                                                        >
+                                                                            <span className="text-yellow-500">[DECODER]</span> Processing morse sequence...
+                                                                        </motion.div>
+                                                                    )}
+
+                                                                    {morseStep >= 6 && (
+                                                                        <motion.div
+                                                                            initial={{ opacity: 0, x: -10 }}
+                                                                            animate={{ opacity: 0.6, x: 0 }}
+                                                                            className="opacity-60"
+                                                                        >
+                                                                            <span className="text-yellow-500">[DECODER]</span> Translation complete.
+                                                                        </motion.div>
+                                                                    )}
+
+                                                                    {morseStep >= 7 && (
+                                                                        <motion.div
+                                                                            initial={{ opacity: 0, scale: 0.95 }}
+                                                                            animate={{ opacity: 1, scale: 1 }}
+                                                                            transition={{ type: "spring", damping: 15 }}
+                                                                            className="my-4 border border-green-500/40 p-4 bg-green-500/10 rounded"
+                                                                        >
+                                                                            <div className="text-[10px] opacity-50 mb-2">DECRYPTED MESSAGE:</div>
+                                                                            <div className="text-green-400 text-lg font-bold tracking-wide uppercase">
+                                                                                Welcome to INVENTO 2026
+                                                                            </div>
+                                                                        </motion.div>
+                                                                    )}
+
+                                                                    {morseStep >= 8 && (
+                                                                        <motion.div
+                                                                            initial={{ opacity: 0, x: -10 }}
+                                                                            animate={{ opacity: 0.6, x: 0 }}
+                                                                            className="opacity-60"
+                                                                        >
+                                                                            <span className="text-green-500">[STATUS]</span> Transmission received successfully
+                                                                        </motion.div>
+                                                                    )}
+
+                                                                    {/* Blinking Cursor */}
+                                                                    {morseStep >= 8 && (
+                                                                        <motion.div
+                                                                            initial={{ opacity: 0 }}
+                                                                            animate={{ opacity: 1 }}
+                                                                            className="flex items-center gap-1 mt-4"
+                                                                        >
+                                                                            <span className="opacity-70">$</span>
+                                                                            <span className="inline-block w-2 h-4 bg-green-500 animate-pulse"></span>
+                                                                        </motion.div>
+                                                                    )}
                                                                 </div>
                                                             </div>
 
-                                                            <div className="space-y-1">
-                                                                <span className="text-[9px] text-white/30 font-mono uppercase tracking-widest font-bold">Decrypted Message</span>
-                                                                <div className="bg-[#111] p-3 rounded border border-green-500/20">
-                                                                    <p className="text-white font-mono text-lg tracking-tight uppercase">
-                                                                        Welcome to <span className="text-yellow-500 underline decoration-dotted underline-offset-4">Invento 2026</span>
-                                                                    </p>
-                                                                </div>
-                                                            </div>
+                                                            {/* Screen Vignette */}
+                                                            <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_100px_rgba(0,0,0,0.8)] rounded"></div>
                                                         </div>
                                                     </div>
 
-                                                    {/* Bottom Panel / Knobs Mockup */}
-                                                    <div className="mt-6 flex justify-between items-end border-t border-white/10 pt-4">
+                                                    {/* Monitor Controls */}
+                                                    <div className="mt-4 flex justify-between items-center px-2">
                                                         <div className="flex gap-3">
-                                                            <div className="w-8 h-8 rounded-full bg-[#3d3d3d] border-b-4 border-black flex items-center justify-center">
-                                                                <div className="w-1 h-4 bg-white/10 rounded-full rotate-45"></div>
+                                                            {/* Fake Control Knobs */}
+                                                            <div className="w-8 h-8 rounded-full bg-gradient-to-b from-[#3a3530] to-[#1a1510] border-2 border-[#0a0805] shadow-inner flex items-center justify-center">
+                                                                <div className="w-1 h-3 bg-white/20 rounded-full rotate-45"></div>
                                                             </div>
-                                                            <div className="w-8 h-8 rounded-full bg-[#3d3d3d] border-b-4 border-black flex items-center justify-center">
-                                                                <div className="w-1 h-4 bg-white/10 rounded-full -rotate-12"></div>
+                                                            <div className="w-8 h-8 rounded-full bg-gradient-to-b from-[#3a3530] to-[#1a1510] border-2 border-[#0a0805] shadow-inner flex items-center justify-center">
+                                                                <div className="w-1 h-3 bg-white/20 rounded-full -rotate-12"></div>
                                                             </div>
                                                         </div>
+
+                                                        {/* Close Button */}
                                                         <button
                                                             onClick={() => {
                                                                 setIsMorseOpen(false)
                                                                 setStatusText('Click on the items to explore')
                                                             }}
-                                                            className="px-4 py-1.5 bg-[#444] hover:bg-[#555] text-white text-[10px] font-mono font-black uppercase tracking-widest rounded transition-all border-b-4 border-black active:border-b-0 active:translate-y-1"
+                                                            className="px-4 py-2 bg-gradient-to-b from-[#4a4540] to-[#2a2520] hover:from-[#5a5550] hover:to-[#3a3530] text-white/90 text-xs font-mono font-bold uppercase tracking-wider rounded border-2 border-[#1a1510] shadow-lg transition-all active:translate-y-0.5"
                                                         >
-                                                            Terminate Link
+                                                            [ESC] Close Terminal
                                                         </button>
                                                     </div>
+
+                                                    {/* Power LED */}
+                                                    <div className="absolute top-3 right-3 w-2 h-2 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.8)]"></div>
                                                 </div>
                                             </motion.div>
                                         </motion.div>
