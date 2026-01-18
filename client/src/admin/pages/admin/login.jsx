@@ -113,10 +113,6 @@ const AdminLogin = () => {
                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Authorized Access Only</span>
                     </div>
                 </div>
-                
-                <p className="text-center mt-8 text-[11px] text-gray-400 font-medium uppercase tracking-[0.2em] px-8 leading-relaxed">
-                    By logging in, you agree to the internal security protocols of the Invento technical committee. All sessions are logged and monitored.
-                </p>
             </div>
         </div>
     );
