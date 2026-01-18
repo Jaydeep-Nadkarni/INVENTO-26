@@ -5,6 +5,7 @@ import { shouldSkipAnimations } from '../utils/performanceOptimization'
 import tex1 from '../assets/UI/button-texture-1.webp'
 import tex2 from '../assets/UI/button-texture-2.webp'
 import tex3 from '../assets/UI/button-texture-3.webp'
+import registerBtn from '../assets/UI/register.png'
 
 const Navbar = ({ onEventsClick, isMobile }) => {
   const location = useLocation()
@@ -126,24 +127,13 @@ const Navbar = ({ onEventsClick, isMobile }) => {
           !isMobile && (
             <button
               onClick={handleRegisterClick}
-              className="group transform hover:scale-105 hover:active:scale-95 transition-all duration-300 focus:outline-none hidden md:block"
+              className="group transform cursor-pointer active:scale-95 transition-all duration-300 focus:outline-none hidden md:block"
             >
-              <div className="relative border-[6px] border-red-700 px-1 py-1
-                opacity-90 mix-blend-multiply bg-transparent
-                cursor-pointer
-              "
-                style={{
-                  maskImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.5'/%3E%3C/svg%3E")`,
-                  maskMode: 'alpha',
-                  WebkitMaskImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 150' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E")`,
-                  WebkitMaskSize: 'contain'
-                }}>
-                <div className="border-[2px] border-red-700/90 px-3 py-1">
-                  <span className="block text-red-700 font-black font-sans text-xl md:text-xl tracking-tighter uppercase leading-[0.85] select-none">
-                    REGISTER NOW
-                  </span>
-                </div>
-              </div>
+              <img 
+                src={registerBtn} 
+                alt="Register Now" 
+                className="w-40 md:w-40 h-auto object-contain" 
+              />
             </button>
           )
         )}
@@ -174,14 +164,16 @@ const Navbar = ({ onEventsClick, isMobile }) => {
 
               {/* Register button in mobile menu if not logged in */}
               {!currentUser && (
-                <motion.button
+                <button
                   onClick={handleRegisterClick}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="mt-4 px-4 py-2 bg-red-700/80 text-white font-bold uppercase text-xs rounded hover:bg-red-600 transition-colors w-full"
+                  className="mt-6 self-center transform hover:scale-105 active:scale-95 transition-all duration-300 focus:outline-none"
                 >
-                  Register Now
-                </motion.button>
+                  <img 
+                    src={registerBtn} 
+                    alt="Register Now" 
+                    className="w-48 h-auto object-contain drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]" 
+                  />
+                </button>
               )}
             </div>
           </motion.div>
@@ -205,3 +197,4 @@ const Navbar = ({ onEventsClick, isMobile }) => {
 }
 
 export default Navbar
+
