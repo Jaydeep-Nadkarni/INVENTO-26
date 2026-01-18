@@ -614,7 +614,7 @@ export const verifyLoginOTP = async (req, res) => {
     user.isVerified = true;
     await user.save();
 
-    const token = generateToken(user._id);
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET || 'your-secret-key', { expiresIn: '7d' });
 
     return res.status(200).json({
       message: "Access Granted.",
