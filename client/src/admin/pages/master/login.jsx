@@ -36,7 +36,16 @@ const MasterLogin = () => {
         <div className="min-h-screen bg-black flex items-center justify-center p-6 text-white border-t-4 border-white">
             <div className="w-full max-w-lg relative z-10">
                 <div className="bg-gray-950 border border-gray-800 rounded-lg shadow-2xl overflow-hidden">
-                    <div className="p-10 border-b border-gray-900 bg-gray-900/50 text-center">
+                    <div className="p-10 border-b border-gray-900 bg-gray-900/50 text-center relative">
+                        <button 
+                            onClick={() => navigate('/')}
+                            className="absolute top-6 left-6 p-2 text-gray-500 hover:text-white transition-colors"
+                            title="Return to Home"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                        </button>
                         <div className="w-20 h-20 bg-gray-950 border border-gray-800 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-sm group">
                             <ShieldCheck className="w-10 h-10 text-white transition-transform group-hover:scale-110" />
                         </div>

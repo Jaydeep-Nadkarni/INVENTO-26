@@ -82,6 +82,18 @@ const ForgotPassword = () => {
             {/* Background Effects */}
             <div className="absolute inset-0 bg-red-900/5 pointer-events-none"></div>
 
+            {/* Back Button Outside Card */}
+            <button 
+                onClick={() => navigate(-1)}
+                className="fixed top-8 left-8 z-50 flex items-center gap-2 px-4 py-2 bg-stone-900/80 hover:bg-stone-900 text-stone-200 font-mono text-xs uppercase tracking-widest border border-stone-700 transition-all rounded shadow-lg backdrop-blur-sm"
+                title="Return to Previous Page"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back
+            </button>
+
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
