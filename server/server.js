@@ -2,6 +2,8 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import path from "path";
 import { fileURLToPath } from "url";
 import connectDB from "./src/config/db.js";
@@ -9,28 +11,114 @@ import userRoutes from "./src/routes/userRoutes.js";
 import eventRoutes from "./src/routes/eventRoutes.js";
 import noticeRoutes from "./src/routes/noticeRoutes.js";
 import volunteerRoutes from "./src/routes/volunteerRoutes.js";
+import { validateEnvironmentVariables } from "./src/utils/envValidator.js";
 
 dotenv.config();
+
+// Validate environment variables on startup
+validateEnvironmentVariables();
 
 connectDB();
 
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// ---------- Middleware ----------
+// ========== SECURITY MIDDLEWARE ==========
+
+// Helmet middleware for security headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+  hsts: {
+    maxAge: 31536000, // 1 year
+    includeSubDomains: true,
+    preload: true
+  },
+  frameguard: {
+    action: 'deny'
+  },
+  referrerPolicy: {
+    policy: 'strict-origin-when-cross-origin'
+  }
+}));
+
+// CORS Configuration - Restrict to allowed origins
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+  : ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:3000'];
+
 app.use(cors({
-  origin: '*',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS policy violation: Origin not allowed'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 200,
+  maxAge: 86400 // 24 hours
 }));
+
+// Rate limiting middleware for general API
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => {
+    // Skip rate limiting for health checks
+    return req.path === '/';
+  },
+  keyGenerator: (req) => {
+    // Use IP address or X-Forwarded-For header (for proxies)
+    return req.ip || req.get('x-forwarded-for') || req.connection.remoteAddress;
+  }
+});
+
+// Strict rate limiting for authentication endpoints
+const authLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 5, // limit each IP to 5 requests per minute
+  message: 'Too many authentication attempts from this IP. Please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: false, // Count all requests, not just failures
+  keyGenerator: (req) => {
+    return req.ip || req.get('x-forwarded-for') || req.connection.remoteAddress;
+  },
+  handler: (req, res) => {
+    console.warn(`[RATE_LIMIT] Auth endpoint rate limit exceeded from IP: ${req.ip}`);
+    res.status(429).json({
+      success: false,
+      message: 'Too many authentication attempts. Please try again in a minute.',
+      retryAfter: req.rateLimit.resetTime
+    });
+  }
+});
+
+// ---------- Body Parsing Middleware ----------
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+// Apply general rate limiter to all routes
+app.use(generalLimiter);
 
 // Serve static files from uploads directory with proper CORS headers
 app.use("/uploads", express.static(path.join(__dirname, "uploads"), {
   setHeaders: (res, path) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Cache-Control', 'public, max-age=3600');
   }
 }));
@@ -48,6 +136,9 @@ app.get("/api/debug/check-uploads", (req, res) => {
     note: "Access images at: {API_URL}/uploads/profiles/{userId}.jpg"
   });
 });
+
+// Apply strict auth rate limiting to authentication endpoints
+app.use("/api/users/auth", authLimiter);
 
 app.use("/api/users", userRoutes);
 app.use("/api/events", eventRoutes);

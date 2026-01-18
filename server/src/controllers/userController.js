@@ -4,6 +4,13 @@ import dotenv from "dotenv";
 import { verifyGoogleIdToken } from "../services/authService.js";
 import { processProfilePhoto } from "../services/imageService.js";
 import { generateToken } from "../services/jwtService.js";
+import {
+  validateIdTokenFormat,
+  validateOnboardingData,
+  sanitizeOnboardingData,
+  logAuthAttempt,
+  validateFirebaseUid
+} from "../utils/securityUtils.js";
 
 dotenv.config();
 
@@ -15,13 +22,33 @@ dotenv.config();
  */
 export const googleAuth = async (req, res) => {
   const { idToken } = req.body;
+  const clientIp = req.ip || req.get('x-forwarded-for') || req.connection.remoteAddress;
   
   if (!idToken) {
+    logAuthAttempt({
+      eventType: 'GOOGLE_AUTH_MISSING_TOKEN',
+      ip: clientIp,
+      email: 'unknown',
+      status: 'failure',
+      message: 'ID Token is required'
+    });
     return res.status(400).json({ message: "ID Token is required." });
   }
 
+  // Validate token format
+  if (!validateIdTokenFormat(idToken)) {
+    logAuthAttempt({
+      eventType: 'GOOGLE_AUTH_INVALID_FORMAT',
+      ip: clientIp,
+      email: 'unknown',
+      status: 'failure',
+      message: 'Invalid token format'
+    });
+    return res.status(400).json({ message: "Invalid token format." });
+  }
+
   try {
-    const { uid, email, emailVerified } = await verifyGoogleIdToken(idToken);
+    const { uid, email, emailVerified } = await verifyGoogleIdToken(idToken, clientIp);
     
     let user = await User.findOne({ firebaseUid: uid });
     
@@ -56,6 +83,16 @@ export const googleAuth = async (req, res) => {
       token = generateToken(user);
     }
 
+    // Log successful authentication
+    logAuthAttempt({
+      eventType: 'GOOGLE_AUTH_SUCCESS',
+      userId: user._id,
+      ip: clientIp,
+      email: email,
+      status: 'success',
+      message: 'Google authentication successful'
+    });
+
     res.status(200).json({
       message: "Authentication successful",
       token,
@@ -70,6 +107,13 @@ export const googleAuth = async (req, res) => {
       }
     });
   } catch (error) {
+    logAuthAttempt({
+      eventType: 'GOOGLE_AUTH_FAILED',
+      ip: clientIp,
+      email: 'unknown',
+      status: 'failure',
+      message: error.message
+    });
     console.error("Google Auth Error:", error.message);
     res.status(401).json({ message: "Verification failed: " + error.message });
   }
@@ -83,18 +127,68 @@ export const googleAuth = async (req, res) => {
  */
 export const completeOnboarding = async (req, res) => {
   const { firebaseUid, name, phone, clgName, gender } = req.body;
-  
+  const clientIp = req.ip || req.get('x-forwarded-for') || req.connection.remoteAddress;
+
+  // Validate required fields
   if (!firebaseUid || !name || !phone || !clgName || !gender) {
+    logAuthAttempt({
+      eventType: 'ONBOARDING_MISSING_FIELDS',
+      ip: clientIp,
+      email: 'unknown',
+      status: 'failure',
+      message: 'Missing required onboarding fields'
+    });
     return res.status(400).json({ message: "All fields are required for onboarding." });
   }
 
+  // Validate onboarding data
+  const validationResult = validateOnboardingData({ firebaseUid, name, phone, clgName, gender });
+  if (!validationResult.isValid) {
+    logAuthAttempt({
+      eventType: 'ONBOARDING_VALIDATION_FAILED',
+      ip: clientIp,
+      email: 'unknown',
+      status: 'failure',
+      message: `Validation failed: ${validationResult.errors.join(', ')}`
+    });
+    return res.status(400).json({
+      message: "Validation failed",
+      errors: validationResult.errors
+    });
+  }
+
   try {
+    // Validate Firebase UID format
+    if (!validateFirebaseUid(firebaseUid)) {
+      throw new Error('Invalid Firebase UID format');
+    }
+
     const user = await User.findOne({ firebaseUid });
-    if (!user) return res.status(404).json({ message: "User not found." });
+    if (!user) {
+      logAuthAttempt({
+        eventType: 'ONBOARDING_USER_NOT_FOUND',
+        ip: clientIp,
+        email: 'unknown',
+        status: 'failure',
+        message: 'User not found for given Firebase UID'
+      });
+      return res.status(404).json({ message: "User not found." });
+    }
 
     if (user.onboardingCompleted) {
-       return res.status(400).json({ message: "Onboarding already completed." });
+      logAuthAttempt({
+        eventType: 'ONBOARDING_ALREADY_COMPLETED',
+        userId: user._id,
+        ip: clientIp,
+        email: user.email,
+        status: 'failure',
+        message: 'Onboarding already completed for this user'
+      });
+      return res.status(400).json({ message: "Onboarding already completed." });
     }
+
+    // Sanitize input data
+    const sanitizedData = sanitizeOnboardingData({ firebaseUid, name, phone, clgName, gender });
 
     // Update profile photo if uploaded
     if (req.file) {
@@ -103,19 +197,38 @@ export const completeOnboarding = async (req, res) => {
         user.profilePhoto = photoPath;
       } catch (error) {
         console.error("Error processing profile photo:", error);
+        logAuthAttempt({
+          eventType: 'ONBOARDING_PHOTO_PROCESSING_FAILED',
+          userId: user._id,
+          ip: clientIp,
+          email: user.email,
+          status: 'warning',
+          message: 'Profile photo processing failed, continuing without photo'
+        });
       }
     }
 
-    user.name = name;
-    user.phone = phone;
-    user.clgName = clgName;
-    user.gender = gender;
+    // Update user with sanitized data
+    user.name = sanitizedData.name;
+    user.phone = sanitizedData.phone;
+    user.clgName = sanitizedData.clgName;
+    user.gender = sanitizedData.gender;
     user.onboardingCompleted = true;
 
     await user.save();
 
     // Now generate the application JWT
     const token = generateToken(user);
+
+    // Log successful onboarding
+    logAuthAttempt({
+      eventType: 'ONBOARDING_SUCCESS',
+      userId: user._id,
+      ip: clientIp,
+      email: user.email,
+      status: 'success',
+      message: 'User onboarding completed successfully'
+    });
 
     res.status(200).json({
       message: "Onboarding completed successfully.",
@@ -131,6 +244,13 @@ export const completeOnboarding = async (req, res) => {
       }
     });
   } catch (error) {
+    logAuthAttempt({
+      eventType: 'ONBOARDING_ERROR',
+      ip: clientIp,
+      email: 'unknown',
+      status: 'failure',
+      message: error.message
+    });
     console.error("Onboarding Error:", error.message);
     res.status(500).json({ message: "Onboarding failed: " + error.message });
   }
