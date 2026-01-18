@@ -1,6 +1,5 @@
 import admin from "firebase-admin";
 import dotenv from "dotenv";
-import fs from "fs";
 
 dotenv.config();
 
@@ -10,17 +9,20 @@ dotenv.config();
 let auth;
 
 try {
-  const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
-
-  if (!serviceAccountPath) {
-    throw new Error("FIREBASE_SERVICE_ACCOUNT_PATH is not defined in environment variables.");
-  }
-
-  if (!fs.existsSync(serviceAccountPath)) {
-    throw new Error(`Firebase service account file not found at: ${serviceAccountPath}`);
-  }
-
-  const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
+  // Build service account from environment variables
+  const serviceAccount = {
+    type: "service_account",
+    project_id: process.env.FIREBASE_PROJECT_ID,
+    private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
+    private_key: process.env.FIREBASE_PRIVATE_KEY,
+    client_email: process.env.FIREBASE_CLIENT_EMAIL,
+    client_id: process.env.FIREBASE_CLIENT_ID,
+    auth_uri: "https://accounts.google.com/o/oauth2/auth",
+    token_uri: "https://oauth2.googleapis.com/token",
+    auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
+    client_x509_cert_url: "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40invento-2026.iam.gserviceaccount.com",
+    universe_domain: "googleapis.com"
+  };
 
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),

@@ -81,10 +81,6 @@ const generalLimiter = rateLimit({
   skip: (req) => {
     // Skip rate limiting for health checks
     return req.path === '/';
-  },
-  keyGenerator: (req) => {
-    // Use IP address or X-Forwarded-For header (for proxies)
-    return req.ip || req.get('x-forwarded-for') || req.connection.remoteAddress;
   }
 });
 
@@ -96,9 +92,6 @@ const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: false, // Count all requests, not just failures
-  keyGenerator: (req) => {
-    return req.ip || req.get('x-forwarded-for') || req.connection.remoteAddress;
-  },
   handler: (req, res) => {
     console.warn(`[RATE_LIMIT] Auth endpoint rate limit exceeded from IP: ${req.ip}`);
     res.status(429).json({
