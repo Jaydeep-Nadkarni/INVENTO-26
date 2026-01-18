@@ -28,19 +28,6 @@ const Login = () => {
     return () => mediaQuery.removeListener(handleChange);
   }, []);
 
-  // Check if already logged in
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
-    if (token) {
-      if (user.onboardingCompleted) {
-        navigate('/profile');
-      } else {
-        navigate('/register');
-      }
-    }
-  }, [navigate]);
-
   const handleGoogleLogin = async () => {
     setLoading(true);
     setError('');

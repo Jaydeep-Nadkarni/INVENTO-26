@@ -37,8 +37,13 @@ const ProtectedRoute = ({ children }) => {
 
 // Public-only Route Component (redirects to profile if already logged in)
 const PublicRoute = ({ children }) => {
-  const user = localStorage.getItem('currentUser')
-  return user ? <Navigate to="/profile" replace /> : children
+  const user = JSON.parse(localStorage.getItem('currentUser') || 'null')
+  if (user) {
+    if (user.onboardingCompleted) {
+      return <Navigate to="/profile" replace />
+    }
+  }
+  return children
 }
 
 // Admin Route Guard
