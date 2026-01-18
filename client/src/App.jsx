@@ -157,14 +157,6 @@ function App() {
             </PublicRoute>
           }
         />
-        <Route
-          path="/forgot-password"
-          element={
-            <PublicRoute>
-              <ForgotPassword />
-            </PublicRoute>
-          }
-        />
 
         <Route path="/:clubSlug" element={<Events />} />
         <Route path="/:clubSlug/:eventSlug" element={<Events />} />
