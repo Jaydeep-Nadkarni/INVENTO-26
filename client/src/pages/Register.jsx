@@ -18,6 +18,11 @@ const isMobileDevice = () => {
 
 // SVG Icons
 const Icons = {
+  ArrowLeft: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    </svg>
+  ),
   User: () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -78,6 +83,7 @@ const Register = () => {
   const [previewImage, setPreviewImage] = useState(null)
   const [imageFile, setImageFile] = useState(null)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState('auth') // 'auth' | 'onboarding'
   const [firebaseUser, setFirebaseUser] = useState(null)
@@ -91,20 +97,30 @@ const Register = () => {
     return () => mediaQuery.removeListener(handleChange);
   }, []);
 
-  // Auto-check session
+  // Auto-check session or redirected incomplete user
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
-    if (user) {
-      if (user.onboardingCompleted) {
-        navigate('/profile');
-      } else {
-        setFirebaseUser(user);
-        setStep('onboarding');
-        setFormData(prev => ({
-          ...prev,
-          name: user.name || '',
-        }));
-      }
+    const incompleteUser = JSON.parse(localStorage.getItem('incompleteUser') || 'null');
+
+    if (user && user.onboardingCompleted) {
+      navigate('/profile');
+    } else if (incompleteUser) {
+      // Detected a redirect from Login page with incomplete user data
+      setFirebaseUser(incompleteUser);
+      setStep('onboarding');
+      setFormData(prev => ({
+        ...prev,
+        name: incompleteUser.name || '',
+      }));
+      // Clear the temporary storage so it doesn't persist
+      localStorage.removeItem('incompleteUser');
+    } else if (user && !user.onboardingCompleted) {
+      setFirebaseUser(user);
+      setStep('onboarding');
+      setFormData(prev => ({
+        ...prev,
+        name: user.name || '',
+      }));
     }
   }, [navigate]);
 
@@ -150,20 +166,20 @@ const Register = () => {
       // Send token to backend
       const { data } = await apiPost('/api/users/auth/google', { idToken }, navigate)
 
-      setFirebaseUser(data.user)
-      
-      if (data.user.onboardingCompleted) {
-        // User already onboarded, store token and redirect
+      if (data.status === 'AUTHENTICATED') {
         localStorage.setItem('token', data.token)
         localStorage.setItem('currentUser', JSON.stringify(data.user))
         navigate('/profile')
-      } else {
-        // Switch to onboarding step
-        setStep('onboarding')
+      } else if (data.status === 'NEW_USER' || data.status === 'ONBOARDING_REQUIRED') {
+        setFirebaseUser(data.user)
         setFormData(prev => ({
           ...prev,
           name: data.user.name || result.user.displayName || '',
         }))
+        setStep('onboarding')
+        
+        // Auto-scroll to top
+        window.scrollTo(0, 0);
       }
     } catch (err) {
       console.error(err)
@@ -271,6 +287,10 @@ const Register = () => {
 
       const formDataObj = new FormData();
       formDataObj.append('firebaseUid', firebaseUser.firebaseUid);
+      // Pass email if available from temporary storage or firebase object
+      if (firebaseUser.email) {
+        formDataObj.append('email', firebaseUser.email); 
+      }
       formDataObj.append('name', formData.name);
       formDataObj.append('phone', formData.phone);
       formDataObj.append('gender', formData.gender);
@@ -310,6 +330,18 @@ const Register = () => {
         backgroundAttachment: 'fixed'
       }}
     >
+      {isMobile ? (
+        <Navbar position="absolute" isMobile={isMobile} />
+      ) : (
+        <Link 
+          to="/" 
+          className="absolute top-4 left-4 sm:top-8 sm:left-8 z-50 flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-full hover:bg-white hover:text-gray-900 transition-all group shadow-lg"
+        >
+          <Icons.ArrowLeft />
+          <span className="font-mono text-[10px] sm:text-xs font-bold uppercase tracking-widest hidden sm:inline">Home</span>
+        </Link>
+      )}
+
       {/* Spy-themed Illustration Elements */}
       <div className="absolute top-20 left-10 opacity-10">
         <svg width="200" height="200" viewBox="0 0 200 200">
@@ -334,18 +366,6 @@ const Register = () => {
         transition={{ duration: 0.6 }}
         className="relative z-10 flex items-center justify-center min-h-screen p-6"
       >
-        {/* Back Button Outside Card */}
-        <button 
-          onClick={() => navigate(-1)}
-          className="fixed top-4 left-4 sm:top-8 sm:left-8 z-50 flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-gray-900/80 hover:bg-gray-900 text-white font-mono text-[10px] sm:text-xs uppercase tracking-widest border border-white/20 transition-all rounded shadow-lg backdrop-blur-sm"
-          title="Return to Previous Page"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          <span className="hidden xs:inline">Back</span>
-        </button>
-
         <div className="w-full max-w-6xl mt-8 sm:mt-0">
           {/* Document Style Card */}
           <div className="relative">
@@ -372,7 +392,7 @@ const Register = () => {
                 </div>
                 <p className="text-red-700 text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.15em] sm:tracking-[0.2em] font-bold flex items-center gap-2">
                   <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-600 animate-pulse"></span>
-                  NEW AGENT ONBOARDING PROTOCOL
+                  NEW AGENT ONBOARDING
                 </p>
               </div>
 
@@ -407,13 +427,19 @@ const Register = () => {
                       </span>
                     </motion.button>
 
-                    <div className="w-full text-center mt-4">
-                      <Link
-                        to="/login"
-                        className="text-[9px] sm:text-[10px] text-gray-500 font-mono uppercase tracking-[0.2em] hover:text-red-700 transition-colors inline-block"
-                      >
-                        Already have an account? <span className="text-gray-900 font-black ml-1 border-b border-gray-900/30 hover:border-red-700">Log In</span>
-                      </Link>
+                    {/* Info Text */}
+                    <div className="text-center space-y-4 pt-4 border-t border-gray-300">
+                      <div className="pt-2">
+                        <p className="text-gray-600 text-[10px] font-mono uppercase mb-2 tracking-widest">
+                          Already have an account?
+                        </p>
+                        <Link
+                          to="/register"
+                          className="text-xs text-gray-900 font-black uppercase tracking-widest border-b-2 border-gray-900 pb-1 hover:text-red-700 hover:border-red-700 transition-all"
+                        >
+                          Login
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -499,11 +525,10 @@ const Register = () => {
                     <div className="lg:col-span-2">
                       <div className="space-y-6 sm:space-y-8">
                         {/* Status Message */}
-                        <div className="p-3 bg-green-50 border border-green-200 flex flex-col sm:flex-row items-center sm:justify-between gap-3 rounded-sm">
+                        <div className="p- flex flex-col sm:flex-row items-center sm:justify-between gap-3 rounded-sm">
                           <div className="flex items-center gap-3 w-full sm:w-auto">
-                            <div className="w-2 h-2 bg-green-600 rounded-full shrink-0"></div>
-                            <p className="text-[9px] sm:text-[10px] font-mono text-green-700 font-bold uppercase tracking-widest break-all">
-                              ✓ Verified: {firebaseUser?.email}
+                            <p className="text-[9px] sm:text-[10px] font-mono text-green-700 font-bold tracking-widest break-all">
+                              ✓ VERIFIED: {firebaseUser?.email}
                             </p>
                           </div>
                           <button 
@@ -541,7 +566,7 @@ const Register = () => {
                               GENDER
                             </label>
                             <div className="flex gap-2 sm:gap-4">
-                              {['Male', 'Female', 'Other'].map((g) => (
+                              {['Male', 'Female'].map((g) => (
                                 <label key={g} className="flex-1 cursor-pointer group">
                                   <input
                                     type="radio"
@@ -597,7 +622,6 @@ const Register = () => {
                                 {college}
                               </option>
                             ))}
-                            <option value="Other">Other</option>
                           </select>
 
                           {formData.clgName === 'Other' && (
@@ -620,14 +644,14 @@ const Register = () => {
                         </div>
                       </div>
 
-                      {/* Error Message */}
+                      {/* Status Messages */}
                       <AnimatePresence>
                         {error && (
                           <motion.div
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0 }}
-                            className="mt-8 p-4 bg-linear-to-r from-red-900/20 to-red-800/10 border-l-4 border-red-600"
+                            className="mt-8 p-4 bg-red-900/10 border-l-4 border-red-600"
                           >
                             <div className="flex items-center gap-3">
                               <div className="w-3 h-3 bg-red-600 animate-pulse"></div>
@@ -636,6 +660,24 @@ const Register = () => {
                                   SECURITY ALERT
                                 </p>
                                 <p className="text-gray-700 text-[10px] font-mono mt-1">{error}</p>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                        {success && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0 }}
+                            className="mt-8 p-4 bg-green-900/10 border-l-4 border-green-600"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-3 h-3 bg-green-600 animate-pulse"></div>
+                              <div>
+                                <p className="text-[10px] font-mono font-black text-green-700 uppercase tracking-wider">
+                                  VERIFICATION CLEAR
+                                </p>
+                                <p className="text-gray-700 text-[10px] font-mono mt-1">{success}</p>
                               </div>
                             </div>
                           </motion.div>

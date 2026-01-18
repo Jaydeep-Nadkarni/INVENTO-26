@@ -11,7 +11,6 @@ import BriefcasePage from './pages/Briefcase.jsx'
 import Pass from './pages/Pass.jsx'
 import Something from './pages/Something.jsx'
 import Newspaper from './pages/Newspaper.jsx'
-import ForgotPassword from './pages/ForgotPassword.jsx'
 import { useAdminAuth } from './admin/context/AuthContext'
 import { monitorLongTasks, isMobileDevice } from './utils/performanceOptimization'
 
@@ -37,13 +36,8 @@ const ProtectedRoute = ({ children }) => {
 
 // Public-only Route Component (redirects to profile if already logged in)
 const PublicRoute = ({ children }) => {
-  const user = JSON.parse(localStorage.getItem('currentUser') || 'null')
-  if (user) {
-    if (user.onboardingCompleted) {
-      return <Navigate to="/profile" replace />
-    }
-  }
-  return children
+  const user = localStorage.getItem('currentUser')
+  return user ? <Navigate to="/profile" replace /> : children
 }
 
 // Admin Route Guard

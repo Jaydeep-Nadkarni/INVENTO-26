@@ -27,12 +27,16 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Helmet middleware for security headers
 app.use(helmet({
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
+  crossOriginResourcePolicy: { policy: "cross-origin" },
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
+      scriptSrc: ["'self'", "https://apis.google.com", "https://*.firebaseapp.com"],
+      imgSrc: ["'self'", "data:", "https:", "https://*.googleusercontent.com"],
+      connectSrc: ["'self'", "https://*.googleapis.com", "https://*.firebaseapp.com", "https://*.identitytoolkit.com"],
+      frameSrc: ["'self'", "https://*.firebaseapp.com"],
     },
   },
   hsts: {
@@ -51,16 +55,29 @@ app.use(helmet({
 // CORS Configuration - Restrict to allowed origins
 const allowedOrigins = process.env.ALLOWED_ORIGINS 
   ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
-  : ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:3000'];
+  : [
+      'http://localhost:3000', 
+      'http://localhost:5173', 
+      'http://localhost:5174',
+      'http://127.0.0.1:3000', 
+      'http://127.0.0.1:5173',
+      'http://127.0.0.1:5174'
+    ];
 
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
-    if (allowedOrigins.includes(origin)) {
+    // Check if origin is in the allowed list or is a local address
+    const isAllowed = allowedOrigins.includes(origin) || 
+                     origin.startsWith('http://localhost:') || 
+                     origin.startsWith('http://127.0.0.1:');
+
+    if (isAllowed) {
       callback(null, true);
     } else {
+      console.warn(`[CORS] Blocked request from origin: ${origin}`);
       callback(new Error('CORS policy violation: Origin not allowed'));
     }
   },
@@ -159,6 +176,6 @@ app.use((err, req, res, next) => {
 
 // ---------- Start Server ----------
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
 });

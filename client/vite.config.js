@@ -10,6 +10,9 @@ export default defineConfig({
   ],
   assetsInclude: ['**/*.glb'],
   server: {
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+    },
     allowedHosts: [
       'localhost',
       '127.0.0.1',
