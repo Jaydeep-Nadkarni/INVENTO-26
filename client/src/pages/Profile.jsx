@@ -61,6 +61,11 @@ const Icons = {
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
     </svg>
+  ),
+  ArrowLeft: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    </svg>
   )
 }
 
@@ -157,7 +162,18 @@ const Profile = () => {
     >
       {/* Background - Dark Noir Theme */}
       <div className="fixed inset-0 z-0 bg-neutral-950" style={{ backgroundImage: `url(${bgImage})`, backgroundSize: 'cover', backgroundBlendMode: 'overlay', opacity: 0.4 }} />
-      <Navbar />
+      
+      {isMobile ? (
+        <Navbar position="absolute" isMobile={isMobile} />
+      ) : (
+        <Link 
+          to="/" 
+          className="fixed top-4 left-4 sm:top-8 sm:left-8 z-50 flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-full hover:bg-white hover:text-gray-900 transition-all group shadow-lg"
+        >
+          <Icons.ArrowLeft />
+          <span className="font-mono text-[10px] sm:text-xs font-bold uppercase tracking-widest hidden sm:inline">Home</span>
+        </Link>
+      )}
 
       <div className="relative z-10 w-full max-w-5xl mt-20 md:mt-10">
 

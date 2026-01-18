@@ -8,6 +8,7 @@ import { apiPost, apiPostFormData } from '../utils/apiClient'
 import getCroppedImg from '../utils/cropImage'
 import paperTexture from '../assets/UI/paper-texture.jpg'
 import bgImage from '../assets/UI/Invento-bg.webp'
+import Navbar from '../components/Navbar'
 
 // Mobile detection utility
 const isMobileDevice = () => {
@@ -329,14 +330,17 @@ const Register = () => {
         backgroundAttachment: 'fixed'
       }}
     >
-      {/* Back Button */}
-      <Link 
-        to="/" 
-        className="absolute top-4 left-4 sm:top-8 sm:left-8 z-50 flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-full hover:bg-white hover:text-gray-900 transition-all group shadow-lg"
-      >
-        <Icons.ArrowLeft />
-        <span className="font-mono text-[10px] sm:text-xs font-bold uppercase tracking-widest hidden sm:inline">Home</span>
-      </Link>
+      {isMobile ? (
+        <Navbar position="absolute" isMobile={isMobile} />
+      ) : (
+        <Link 
+          to="/" 
+          className="absolute top-4 left-4 sm:top-8 sm:left-8 z-50 flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-full hover:bg-white hover:text-gray-900 transition-all group shadow-lg"
+        >
+          <Icons.ArrowLeft />
+          <span className="font-mono text-[10px] sm:text-xs font-bold uppercase tracking-widest hidden sm:inline">Home</span>
+        </Link>
+      )}
 
       {/* Spy-themed Illustration Elements */}
       <div className="absolute top-20 left-10 opacity-10">

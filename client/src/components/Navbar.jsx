@@ -7,7 +7,7 @@ import tex2 from '../assets/UI/button-texture-2.webp'
 import tex3 from '../assets/UI/button-texture-3.webp'
 import registerBtn from '../assets/UI/register.png'
 
-const Navbar = ({ onEventsClick, isMobile }) => {
+const Navbar = ({ onEventsClick, isMobile, position = 'fixed' }) => {
   const location = useLocation()
   const navigate = useNavigate()
   const [currentUser, setCurrentUser] = useState(null)
@@ -52,7 +52,7 @@ const Navbar = ({ onEventsClick, isMobile }) => {
   }
 
   return (
-    <nav className={`fixed top-0 left-0 w-full z-50 px-4 h-16 md:px-6 py-3 md:py-4 flex items-center justify-between transition-colors duration-300 ${isMobile && mobileMenuOpen ? 'bg-black' : 'bg-transparent md:bg-transparent'}`}>
+    <nav className={`${position} top-0 left-0 w-full z-50 px-4 h-16 md:px-6 py-3 md:py-4 flex items-center justify-between transition-colors duration-300 ${isMobile && mobileMenuOpen ? 'bg-black' : 'bg-transparent md:bg-transparent'}`}>
       {/* Logo/Brand */}
       <Link to="/" className="text-yellow-500 font-serif font-bold text-lg md:text-xl tracking-tighter hover:opacity-80 transition-opacity">
         INVENTO <span className="text-xs align-top opacity-70">'26</span>
