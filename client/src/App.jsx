@@ -11,7 +11,6 @@ import BriefcasePage from './pages/Briefcase.jsx'
 import Pass from './pages/Pass.jsx'
 import Something from './pages/Something.jsx'
 import Newspaper from './pages/Newspaper.jsx'
-import ForgotPassword from './pages/ForgotPassword.jsx'
 import { useAdminAuth } from './admin/context/AuthContext'
 import { monitorLongTasks, isMobileDevice } from './utils/performanceOptimization'
 
