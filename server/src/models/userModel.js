@@ -6,6 +6,13 @@ const userSchema = new mongoose.Schema(
     _id: {
       type: String, // Custom Invento ID (inv00001, inv00002…)
     },
+    firebaseUid: {
+      type: String,
+      required: true,
+      unique: true,
+      index: true,
+      alias: "googleId", // Legacy/Alias support for googleId
+    },
     name: {
       type: String,
       required: true,
@@ -17,13 +24,17 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
     },
-    password: {
-      type: String,
-      required: true,
+    emailVerified: {
+      type: Boolean,
+      default: false,
     },
     phone: {
       type: String,
       required: true,
+    },
+    gender: {
+      type: String,
+      enum: ["Male", "Female", "Other"],
     },
     clgName: {
       type: String,
@@ -31,6 +42,14 @@ const userSchema = new mongoose.Schema(
     },
     profilePhoto: {
       type: String, // Relative path to the uploaded image file
+    },
+    onboardingCompleted: {
+      type: Boolean,
+      default: false,
+    },
+    isOfficial: {
+      type: Boolean,
+      default: false,
     },
     registeredEvents: {
       type: [String],
@@ -40,33 +59,11 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-
-    // 🔹 OTP for registration/verification
-    otp: {
-      type: String,
-    },
-    otpExpiresAt: {
-      type: Date,
-    },
-    isVerified: {
-      type: Boolean,
-      default: false,
-    },
-
-    // // 🔹 Password reset fields
-    resetOTP: {
-      type: String,
-    },
-    resetOTPExpires: { // ✅ updated name to match your controllers
-      type: Date,
-    },
-
     // Payment flag
     payment: {
       type: Boolean,
       default: false,
     },
-
     // Pass type (AAA, A, G, VIP)
     passType: {
       type: String,
@@ -77,10 +74,19 @@ const userSchema = new mongoose.Schema(
     present: {
       type: Boolean,
       default: false,
-    }
+    },
   },
   { timestamps: true }
 );
+
+/**
+ * MIGRATION NOTES:
+ * 1. Password-based auth has been replaced by Firebase Google OAuth.
+ * 2. fields `password`, `otp`, `otpExpiresAt`, `resetOTP`, `resetOTPExpires` are removed.
+ * 3. `isVerified` has been replaced by `emailVerified`.
+ * 4. Existing users from the previous system will need to be re-authenticated via Google 
+ *    to populate the `firebaseUid`.
+ */
 
 // ✅ Auto-generate custom Invento ID before saving
 userSchema.pre("save", async function (next) {

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { signInWithPopup } from 'firebase/auth'
+import { auth, googleProvider } from '../config/firebase'
 import paperTexture from '../assets/UI/paper-texture.jpg'
 import bgImage from '../assets/UI/Invento-bg.webp'
 import Navbar from '../components/Navbar'
@@ -11,64 +13,10 @@ const isMobileDevice = () => {
   return window.matchMedia('(max-width: 767px)').matches;
 };
 
-// SVG Icons
-const Icons = {
-  Email: () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-    </svg>
-  ),
-  Lock: () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-    </svg>
-  ),
-  Eye: () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-    </svg>
-  ),
-  EyeOff: () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.05 10.05 0 011.574-2.59M5.372 5.372a12.077 12.077 0 012.356-.872C8.742 4.198 10.366 4 12 4c4.478 0 8.268 2.943 9.542 7 .99 3.018 1.137 6.12.438 9.176M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3l18 18" />
-    </svg>
-  ),
-  Unlock: () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
-    </svg>
-  ),
-  Edit: () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-    </svg>
-  ),
-  Alert: () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-    </svg>
-  ),
-  Check: () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 inline-block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-    </svg>
-  )
-}
-
 const Login = () => {
   const navigate = useNavigate()
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [showForgotPassword, setShowForgotPassword] = useState(false)
-  const [resetEmail, setResetEmail] = useState('')
-  const [resetMessage, setResetMessage] = useState('')
   const [isMobile, setIsMobile] = useState(isMobileDevice())
 
   // Listen for mobile/desktop switches
@@ -79,86 +27,53 @@ const Login = () => {
     return () => mediaQuery.removeListener(handleChange);
   }, []);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
-    setError('')
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-
-    // Validate inputs
-    if (!formData.email || !formData.password) {
-      setError('Please fill in all fields')
-      setLoading(false)
-      return
+  // Check if already logged in
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('currentUser') || '{}');
+    if (token) {
+      if (user.onboardingCompleted) {
+        navigate('/profile');
+      } else {
+        navigate('/register');
+      }
     }
+  }, [navigate]);
 
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setError('');
     try {
-      // 1. Login to get token
-      const loginResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/users/login`, {
+      const result = await signInWithPopup(auth, googleProvider);
+      const idToken = await result.user.getIdToken();
+
+      const response = await fetch(`${import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || ''}/api/users/auth/google`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken })
+      });
 
-      const loginData = await loginResponse.json()
+      const data = await response.json();
 
-      if (!loginResponse.ok) {
-        throw new Error(loginData.message || 'Login failed')
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
       }
 
-      const token = loginData.token
-      localStorage.setItem('token', token)
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('currentUser', JSON.stringify(data.user));
 
-      // 2. Fetch user profile using the token
-      const profileResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-
-      const profileData = await profileResponse.json()
-
-      if (!profileResponse.ok) {
-        throw new Error(profileData.message || 'Failed to fetch profile')
+      if (data.user.onboardingCompleted) {
+        navigate('/profile');
+      } else {
+        navigate('/register');
       }
-
-      // Store user data
-      localStorage.setItem('currentUser', JSON.stringify(profileData.user))
-
-      // Success - Redirect
-      navigate('/profile')
     } catch (err) {
-      setError(err.message)
+      console.error('Google Auth Error:', err);
+      setError(err.message || 'Authentication failed. Please try again.');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
-
-  const handleForgotPassword = (e) => {
-    e.preventDefault()
-
-    if (!resetEmail) {
-      setResetMessage('Please enter your email')
-      return
-    }
-
-    setResetMessage('Password reset logic requires backend connection.')
-    setTimeout(() => {
-      setShowForgotPassword(false)
-      setResetEmail('')
-      setResetMessage('')
-    }, 3000)
-  }
+  };
 
   return (
     <div
@@ -173,24 +88,14 @@ const Login = () => {
         backgroundAttachment: 'fixed'
       }}
     >
+      <Navbar />
+      
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="relative z-10 flex items-center justify-center min-h-screen p-6"
       >
-        {/* Back Button Outside Card */}
-        <button 
-          onClick={() => navigate(-1)}
-          className="fixed top-8 left-8 z-50 flex items-center gap-2 px-4 py-2 bg-gray-900/80 hover:bg-gray-900 text-white font-mono text-xs uppercase tracking-widest border border-white/20 transition-all rounded shadow-lg backdrop-blur-sm"
-          title="Return to Previous Page"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          Back
-        </button>
-
         <div className="w-full max-w-md">
           {/* Document Style Card */}
           <div className="relative">
@@ -205,64 +110,52 @@ const Login = () => {
               <div className="absolute inset-0 bg-amber-50/20 mix-blend-multiply pointer-events-none" />
 
               {/* Header */}
-              <div className="mb-8 border-b-2 border-red-700/30 pb-6">
-                <div className="flex justify-between items-start mb-2">
+              <div className="mb-10 border-b-2 border-red-700/30 pb-6 text-center">
+                <div className="flex justify-between items-start mb-4">
                   <h1 className="text-3xl font-black text-gray-900 tracking-tighter uppercase leading-none">
                     Login
                   </h1>
-                  <span className="text-[10px] font-mono font-bold bg-red-600 text-white px-2 py-0.5">SECURE</span>
+                  <span className="text-[10px] font-mono font-bold bg-red-600 text-white px-2 py-0.5 uppercase">Identity</span>
                 </div>
                 <p className="text-gray-500 text-[10px] font-mono uppercase tracking-[0.2em] font-bold">
-                  Authentication Required
+                  Authentication Required to Proceed
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Email Field */}
-                <div className="space-y-2">
-                  <label className="text-xs font-mono font-black text-gray-700 uppercase tracking-widest flex items-center gap-2">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    placeholder="agent@gmail.com"
-                    className="w-full px-4 py-3 bg-white/50 border border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600/20 font-mono text-sm transition-all"
-                  />
-                </div>
-
-                {/* Password Field */}
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <label className="text-xs font-mono font-black text-gray-700 uppercase tracking-widest flex items-center gap-2">
-                      Password
-                    </label>
-                    <Link
-                      to="/forgot-password"
-                      className="text-[10px] text-red-700 hover:underline font-mono uppercase font-bold"
-                    >
-                      Forgot Password?
-                    </Link>
-                  </div>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      name="password"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      placeholder="••••••••"
-                      className="w-full px-4 py-3 bg-white/50 border border-gray-400 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600/20 font-mono text-sm pr-12 transition-all"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 opacity-50 hover:opacity-100 transition-opacity"
-                    >
-                      {showPassword ? <Icons.EyeOff /> : <Icons.Eye />}
-                    </button>
-                  </div>
+              <div className="space-y-8">
+                {/* Google Login Button */}
+                <div className="space-y-4">
+                  <p className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-widest text-center">
+                    Secure Single Sign-On
+                  </p>
+                  
+                  <motion.button
+                    whileHover={{ scale: 1.02, backgroundColor: '#000' }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleGoogleLogin}
+                    disabled={loading}
+                    className="w-full flex items-center justify-center gap-4 px-6 py-4 bg-gray-900 text-white font-black uppercase tracking-widest text-xs disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-[5px_5px_0px_rgba(0,0,0,0.3)]"
+                  >
+                    {loading ? (
+                      <span className="flex items-center gap-2">
+                        <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Verifying...
+                      </span>
+                    ) : (
+                      <>
+                        <svg className="w-5 h-5" viewBox="0 0 24 24">
+                          <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
+                          <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                          <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                          <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 12-4.53z" />
+                        </svg>
+                        Sign in with Google
+                      </>
+                    )}
+                  </motion.button>
                 </div>
 
                 {/* Error Message */}
@@ -276,35 +169,30 @@ const Login = () => {
                   </motion.div>
                 )}
 
-                {/* Submit Button */}
-                <motion.button
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                  type="submit"
-                  disabled={loading}
-                  className="w-full px-6 py-4 mt-2 bg-gray-900 text-white font-black uppercase tracking-widest text-xs hover:bg-red-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-[5px_5px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5"
-                >
-                  {loading ? 'VERIFYING...' : 'Login'}
-                </motion.button>
-
-                {/* Register Link */}
-                <div className="text-center pt-4">
-                  <p className="text-gray-500 text-[10px] font-mono uppercase mb-4 tracking-widest">
-                    Not registered yet?
+                {/* Info Text */}
+                <div className="text-center space-y-4 pt-4 border-t border-gray-300">
+                  <p className="text-gray-500 text-[10px] font-mono uppercase tracking-widest leading-relaxed">
+                    By logging in, you agree to the <br/>
+                    <span className="text-gray-900 font-bold">Terms of Service</span> and <span className="text-gray-900 font-bold">Privacy Protocol</span>
                   </p>
-                  <Link
-                    to="/register"
-                    className="text-sm text-gray-900 font-black uppercase tracking-widest border-b-2 border-gray-900 pb-1 hover:text-red-700 hover:border-red-700 transition-all"
-                  >
-                    Register Now!
-                  </Link>
+                  
+                  <div className="pt-2">
+                    <p className="text-gray-400 text-[10px] font-mono uppercase mb-2 tracking-widest">
+                      New Agent?
+                    </p>
+                    <Link
+                      to="/register"
+                      className="text-xs text-gray-900 font-black uppercase tracking-widest border-b-2 border-gray-900 pb-1 hover:text-red-700 hover:border-red-700 transition-all"
+                    >
+                      Initialize Account
+                    </Link>
+                  </div>
                 </div>
-              </form>
+              </div>
             </div>
           </div>
         </div>
       </motion.div>
-
     </div>
   )
 }

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { auth } from '../config/firebase'
+import { signOut } from 'firebase/auth'
 import paperTexture from '../assets/UI/paper-texture.jpg'
 import bgImage from '../assets/UI/Invento-bg.webp'
 import Navbar from '../components/Navbar'
@@ -112,7 +114,7 @@ const Profile = () => {
       }
 
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || ''}/api/users/profile`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -144,7 +146,12 @@ const Profile = () => {
     fetchProfile()
   }, [navigate])
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await signOut(auth)
+    } catch (err) {
+      console.error('Firebase sign out error:', err)
+    }
     localStorage.removeItem('currentUser')
     localStorage.removeItem('token')
     navigate('/login')

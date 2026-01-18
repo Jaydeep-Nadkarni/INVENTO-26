@@ -3,6 +3,8 @@ import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import Cropper from 'react-easy-crop'
 import * as faceapi from '@vladmandic/face-api'
+import { signInWithPopup } from 'firebase/auth'
+import { auth, googleProvider } from '../config/firebase'
 import getCroppedImg from '../utils/cropImage'
 import paperTexture from '../assets/UI/paper-texture.jpg'
 import bgImage from '../assets/UI/Invento-bg.webp'
@@ -77,8 +79,8 @@ const Register = () => {
   const [imageFile, setImageFile] = useState(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [step, setStep] = useState('auth') // 'auth' | 'onboarding'
+  const [firebaseUser, setFirebaseUser] = useState(null)
   const [isMobile, setIsMobile] = useState(isMobileDevice())
   const [modelsLoaded, setModelsLoaded] = useState(false)
   const [detecting, setDetecting] = useState(false)
@@ -120,11 +122,9 @@ const Register = () => {
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
-    email: '',
     clgName: '',
     otherCollege: '',
-    password: '',
-    confirmPassword: ''
+    gender: '' // Male | Female
   })
 
   // Cropper States
@@ -142,6 +142,49 @@ const Register = () => {
       [name]: value
     }))
     setError('')
+  }
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const result = await signInWithPopup(auth, googleProvider)
+      const idToken = await result.user.getIdToken()
+
+      // Send token to backend
+      const response = await fetch(`${import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || ''}/api/users/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Authentication failed')
+      }
+
+      setFirebaseUser(data.user)
+      
+      if (data.user.onboardingCompleted) {
+        // User already onboarded, store token and redirect
+        localStorage.setItem('token', data.token)
+        localStorage.setItem('currentUser', JSON.stringify(data.user))
+        navigate('/profile')
+      } else {
+        // Switch to onboarding step
+        setStep('onboarding')
+        setFormData(prev => ({
+          ...prev,
+          name: data.user.name || result.user.displayName || '',
+        }))
+      }
+    } catch (err) {
+      console.error(err)
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleImageUpload = (e) => {
@@ -239,7 +282,7 @@ const Register = () => {
     setError('')
 
     // Validate inputs
-    if (!formData.name || !formData.phone || !formData.email || (!formData.clgName && !formData.otherCollege) || !formData.password || !formData.confirmPassword) {
+    if (!formData.name || !formData.phone || (!formData.clgName && !formData.otherCollege) || !formData.gender) {
       setError('Please fill in all mandatory fields')
       setLoading(false)
       return
@@ -251,27 +294,8 @@ const Register = () => {
       return
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(formData.email)) {
-      setError('Please enter a valid email format')
-      setLoading(false)
-      return
-    }
-
     if (!/^\d{10}$/.test(formData.phone.replace(/\D/g, ''))) {
       setError('Please enter a valid 10-digit contact number')
-      setLoading(false)
-      return
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match')
-      setLoading(false)
-      return
-    }
-
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters')
       setLoading(false)
       return
     }
@@ -290,26 +314,24 @@ const Register = () => {
       };
 
       const formDataObj = new FormData();
+      formDataObj.append('firebaseUid', firebaseUser.firebaseUid);
       formDataObj.append('name', formData.name);
-      formDataObj.append('email', formData.email);
-      formDataObj.append('password', formData.password);
       formDataObj.append('phone', formData.phone);
+      formDataObj.append('gender', formData.gender);
       formDataObj.append('clgName', formData.clgName === 'Other' ? formData.otherCollege : formData.clgName);
       
       const imageBlob = dataURItoBlob(previewImage);
-      // Append file with filename
       formDataObj.append('profilePhoto', imageBlob, 'profile.jpg');
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/register`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || ''}/api/users/auth/onboarding`, {
         method: 'POST',
         body: formDataObj,
-        // No Content-Type header needed for FormData
       })
 
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.message || 'Registration failed')
+        throw new Error(data.message || 'Onboarding failed')
       }
 
       // Success - Store token and user data, then redirect to profile
@@ -408,283 +430,286 @@ const Register = () => {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-10">
-                {/* Main Content Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                  {/* Left Column - Photo Upload */}
-                  <div className="lg:col-span-1">
-                    <div className="sticky top-8">
-                      <div className="relative">
-                        <motion.div
-                          whileHover={{ scale: 1.02 }}
-                          onClick={() => fileInputRef.current?.click()}
-                          className="cursor-pointer group"
-                        >
-                          <div className="relative w-full aspect-3/4 max-w-xs mx-auto border-2 border-gray-400 bg-linear-to-br from-gray-100 to-gray-300 flex flex-col items-center justify-center overflow-hidden hover:border-red-600 transition-colors shadow-[8px_8px_0px_rgba(0,0,0,0.2)]">
-                            {previewImage ? (
-                              <img
-                                src={previewImage}
-                                alt="Profile"
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="text-center p-6">
-                                <div className="mb-4">
-                                  <Icons.Camera />
+                {step === 'auth' ? (
+                  <div className="flex flex-col items-center justify-center py-20 space-y-8">
+                    <div className="text-center space-y-4">
+                      <p className="font-mono text-[10px] text-gray-500 uppercase tracking-[0.3em]">
+                        Identity Verification Required
+                      </p>
+                      <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tighter">
+                        Authenticate with Google
+                      </h2>
+                    </div>
+                    
+                    <motion.button
+                      type="button"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleGoogleSignIn}
+                      disabled={loading}
+                      className="flex items-center gap-4 px-8 py-4 bg-white border-2 border-gray-900 shadow-[8px_8px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all group"
+                    >
+                      <svg className="w-6 h-6" viewBox="0 0 48 48">
+                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+                        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+                      </svg>
+                      <span className="font-mono text-sm font-black text-gray-900 uppercase tracking-widest">
+                        {loading ? 'Authenticating...' : 'Register with Google'}
+                      </span>
+                    </motion.button>
+
+                    <Link
+                      to="/login"
+                      className="text-[10px] text-gray-500 font-mono uppercase tracking-widest hover:text-red-700 transition-colors"
+                    >
+                      Already have an account? Log In
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                    {/* Left Column - Photo Upload */}
+                    <div className="lg:col-span-1">
+                      <div className="sticky top-8">
+                        <div className="relative">
+                          <motion.div
+                            whileHover={{ scale: 1.02 }}
+                            onClick={() => fileInputRef.current?.click()}
+                            className="cursor-pointer group"
+                          >
+                            <div className="relative w-full aspect-3/4 max-w-xs mx-auto border-2 border-gray-400 bg-linear-to-br from-gray-100 to-gray-300 flex flex-col items-center justify-center overflow-hidden hover:border-red-600 transition-colors shadow-[8px_8px_0px_rgba(0,0,0,0.2)]">
+                              {previewImage ? (
+                                <img
+                                  src={previewImage}
+                                  alt="Profile"
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="text-center p-6">
+                                  <div className="mb-4">
+                                    <Icons.Camera />
+                                  </div>
+                                  <p className="text-gray-400 text-[10px] uppercase tracking-widest font-mono font-bold">
+                                    UPLOAD IDENTIFICATION PHOTO
+                                  </p>
+                                  <p className="text-gray-500 text-[8px] uppercase tracking-wider font-mono mt-2">
+                                    5MB MAX • Face Must be clearly visible
+                                  </p>
                                 </div>
-                                <p className="text-gray-400 text-[10px] uppercase tracking-widest font-mono font-bold">
-                                  UPLOAD IDENTIFICATION PHOTO
+                              )}
+                              {/* Spy Camera Overlay Effect */}
+                              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-transparent via-gray-400/20 to-transparent"></div>
+                              <div className="absolute top-2 left-2 right-2 h-1 bg-red-600/10"></div>
+                            </div>
+                            {/* Photo Tape Effect */}
+                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-24 h-4 bg-gradient-to-r from-gray-300 to-gray-400/50 border border-gray-400/20 rotate-1 shadow-sm opacity-60"></div>
+                          </motion.div>
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="hidden"
+                          />
+                          
+                          {/* Spy Device Illustration */}
+                          <div className="mt-10 p-4 bg-gradient-to-r from-gray-900/10 to-gray-900/5 border border-gray-400/30">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="w-2 h-2 bg-red-600 animate-pulse"></div>
+                              <p className="text-[9px] font-mono text-gray-700 uppercase tracking-widest font-bold">
+                                SECURITY BRIEFING
+                              </p>
+                            </div>
+                            <ul className="space-y-2">
+                              <li className="flex items-start gap-2">
+                                <div className="w-1.5 h-1.5 bg-gray-600 mt-1 flex-shrink-0"></div>
+                                <p className="text-gray-600 text-[8px] font-mono uppercase tracking-wide leading-tight">
+                                  All fields are mandatory for registration
                                 </p>
-                                <p className="text-gray-500 text-[8px] uppercase tracking-wider font-mono mt-2">
-                                  5MB MAX • Face Must be clearly visible
+                              </li>
+                              <li className="flex items-start gap-2">
+                                <div className="w-1.5 h-1.5 bg-gray-600 mt-1 flex-shrink-0"></div>
+                                <p className="text-gray-600 text-[8px] font-mono uppercase tracking-wide leading-tight">
+                                  Uploaded images are secured 
                                 </p>
-                              </div>
-                            )}
-                            {/* Spy Camera Overlay Effect */}
-                            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-transparent via-gray-400/20 to-transparent"></div>
-                            <div className="absolute top-2 left-2 right-2 h-1 bg-red-600/10"></div>
+                              </li>
+                              <li className="flex items-start gap-2">
+                                <div className="w-1.5 h-1.5 bg-gray-600 mt-1 flex-shrink-0"></div>
+                                <p className="text-gray-600 text-[8px] font-mono uppercase tracking-wide leading-tight">
+                                  All the contact deatils must be valid and reachable
+                                </p>
+                              </li>
+                            </ul>
                           </div>
-                          {/* Photo Tape Effect */}
-                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-24 h-4 bg-gradient-to-r from-gray-300 to-gray-400/50 border border-gray-400/20 rotate-1 shadow-sm opacity-60"></div>
-                        </motion.div>
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageUpload}
-                          className="hidden"
-                        />
-                        
-                        {/* Spy Device Illustration */}
-                        <div className="mt-10 p-4 bg-gradient-to-r from-gray-900/10 to-gray-900/5 border border-gray-400/30">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="w-2 h-2 bg-red-600 animate-pulse"></div>
-                            <p className="text-[9px] font-mono text-gray-700 uppercase tracking-widest font-bold">
-                              SECURITY BRIEFING
-                            </p>
-                          </div>
-                          <ul className="space-y-2">
-                            <li className="flex items-start gap-2">
-                              <div className="w-1.5 h-1.5 bg-gray-600 mt-1 flex-shrink-0"></div>
-                              <p className="text-gray-600 text-[8px] font-mono uppercase tracking-wide leading-tight">
-                                All fields are mandatory for registration
-                              </p>
-                            </li>
-                            <li className="flex items-start gap-2">
-                              <div className="w-1.5 h-1.5 bg-gray-600 mt-1 flex-shrink-0"></div>
-                              <p className="text-gray-600 text-[8px] font-mono uppercase tracking-wide leading-tight">
-                                Uploaded images are secured 
-                              </p>
-                            </li>
-                            <li className="flex items-start gap-2">
-                              <div className="w-1.5 h-1.5 bg-gray-600 mt-1 flex-shrink-0"></div>
-                              <p className="text-gray-600 text-[8px] font-mono uppercase tracking-wide leading-tight">
-                                All the contact deatils must be valid and reachable
-                              </p>
-                            </li>
-                          </ul>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Right Column - Form Fields */}
-                  <div className="lg:col-span-2">
-                    <div className="space-y-8">
-                      {/* Full Name Field */}
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-[0.3em] flex items-center gap-2">
-                          <Icons.User />
-                          FULL NAME
-                        </label>
-                        <input
-                          type="text"
-                          name="name"
-                          value={formData.name}
-                          onChange={handleInputChange}
-                          placeholder="Name"
-                          className="w-full px-4 py-3 bg-white/60 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 font-mono text-sm transition-all"
-                        />
-                      </div>
+                    {/* Right Column - Form Fields */}
+                    <div className="lg:col-span-2">
+                      <div className="space-y-8">
+                        {/* Status Message */}
+                        <div className="p-3 bg-red-600/10 border-l-2 border-red-600 flex items-center justify-between">
+                          <p className="text-[10px] font-mono text-red-700 font-bold uppercase tracking-widest">
+                            Authenticated as: {firebaseUser?.email}
+                          </p>
+                          <button 
+                            type="button" 
+                            onClick={() => setStep('auth')}
+                            className="text-[8px] font-mono text-gray-500 underline hover:text-gray-900"
+                          >
+                            CHANGE ACCOUNT
+                          </button>
+                        </div>
 
-                      {/* Email & Contact Row */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Full Name Field */}
                         <div className="space-y-2">
                           <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-[0.3em] flex items-center gap-2">
-                            <Icons.Email />
-                            EMAIL
+                            <Icons.User />
+                            FULL NAME
                           </label>
                           <input
-                            type="email"
-                            name="email"
-                            value={formData.email}
+                            type="text"
+                            name="name"
+                            value={formData.name}
                             onChange={handleInputChange}
-                            placeholder="Email"
+                            placeholder="Name"
                             className="w-full px-4 py-3 bg-white/60 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 font-mono text-sm transition-all"
                           />
                         </div>
 
+                        {/* Gender & Contact Row */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-[0.3em] flex items-center gap-2">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                              </svg>
+                              GENDER
+                            </label>
+                            <div className="flex gap-4">
+                              {['Male', 'Female', 'Other'].map((g) => (
+                                <label key={g} className="flex-1 cursor-pointer group">
+                                  <input
+                                    type="radio"
+                                    name="gender"
+                                    value={g}
+                                    checked={formData.gender === g}
+                                    onChange={handleInputChange}
+                                    className="hidden"
+                                  />
+                                  <div className={`px-4 py-3 text-center border-2 font-mono text-[10px] sm:text-xs transition-all ${
+                                    formData.gender === g 
+                                    ? 'bg-gray-900 text-white border-gray-900' 
+                                    : 'bg-white/60 border-gray-300 text-gray-600 group-hover:border-red-600'
+                                  }`}>
+                                    {g.toUpperCase()}
+                                  </div>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-[0.3em] flex items-center gap-2">
+                              <Icons.Phone />
+                              CONTACT
+                            </label>
+                            <input
+                              type="tel"
+                              name="phone"
+                              value={formData.phone}
+                              onChange={handleInputChange}
+                              placeholder="Contact"
+                              className="w-full px-4 py-3 bg-white/60 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 font-mono text-sm transition-all"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Institution Field */}
                         <div className="space-y-2">
                           <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-[0.3em] flex items-center gap-2">
-                            <Icons.Phone />
-                            CONTACT
+                            <Icons.Briefcase />
+                            AFFILIATED INSTITUTION
                           </label>
-                          <input
-                            type="tel"
-                            name="phone"
-                            value={formData.phone}
+                          <select
+                            name="clgName"
+                            value={formData.clgName}
                             onChange={handleInputChange}
-                            placeholder="Contact"
-                            className="w-full px-4 py-3 bg-white/60 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 font-mono text-sm transition-all"
-                          />
+                            className="w-full px-4 py-3 bg-white/60 border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 font-mono text-sm cursor-pointer appearance-none"
+                          >
+                            <option value="">Select institution</option>
+                            {colleges.map((college, idx) => (
+                              <option key={idx} value={college}>
+                                {college}
+                              </option>
+                            ))}
+                            <option value="Other">Other</option>
+                          </select>
+
+                          {formData.clgName === 'Other' && (
+                            <motion.div
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="mt-4"
+                            >
+                              <input
+                                type="text"
+                                name="otherCollege"
+                                value={formData.otherCollege}
+                                onChange={handleInputChange}
+                                placeholder="Specify institution name"
+                                className="w-full px-4 py-3 bg-white/60 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 font-mono text-sm transition-all"
+                                autoFocus
+                              />
+                            </motion.div>
+                          )}
                         </div>
                       </div>
 
-                      {/* Institution Field */}
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-[0.3em] flex items-center gap-2">
-                          <Icons.Briefcase />
-                          AFFILIATED INSTITUTION
-                        </label>
-                        <select
-                          name="clgName"
-                          value={formData.clgName}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-3 bg-white/60 border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 font-mono text-sm cursor-pointer appearance-none"
-                        >
-                          <option value="">Select institution</option>
-                          {colleges.map((college, idx) => (
-                            <option key={idx} value={college}>
-                              {college}
-                            </option>
-                          ))}
-                          <option value="Other">Other</option>
-                        </select>
-
-                        {formData.clgName === 'Other' && (
+                      {/* Error Message */}
+                      <AnimatePresence>
+                        {error && (
                           <motion.div
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="mt-4"
+                            exit={{ opacity: 0 }}
+                            className="mt-8 p-4 bg-linear-to-r from-red-900/20 to-red-800/10 border-l-4 border-red-600"
                           >
-                            <input
-                              type="text"
-                              name="otherCollege"
-                              value={formData.otherCollege}
-                              onChange={handleInputChange}
-                              placeholder="Specify institution name"
-                              className="w-full px-4 py-3 bg-white/60 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 font-mono text-sm transition-all"
-                              autoFocus
-                            />
+                            <div className="flex items-center gap-3">
+                              <div className="w-3 h-3 bg-red-600 animate-pulse"></div>
+                              <div>
+                                <p className="text-[10px] font-mono font-black text-red-700 uppercase tracking-wider">
+                                  SECURITY ALERT
+                                </p>
+                                <p className="text-gray-700 text-[10px] font-mono mt-1">{error}</p>
+                              </div>
+                            </div>
                           </motion.div>
                         )}
-                      </div>
+                      </AnimatePresence>
 
-                      {/* Password Fields Row */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-[0.3em] flex items-center gap-2">
-                            <Icons.Lock />
-                            Password
-                          </label>
-                          <div className="relative">
-                            <input
-                              type={showPassword ? "text" : "password"}
-                              name="password"
-                              value={formData.password}
-                              onChange={handleInputChange}
-                              placeholder="••••••••••"
-                              className="w-full px-4 py-3 bg-white/60 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 font-mono text-sm transition-all pr-10"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                            >
-                              {showPassword ? <Icons.EyeOff className="h-5 w-5" /> : <Icons.Eye className="h-5 w-5" />}
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-[0.3em] flex items-center gap-2">
-                            <Icons.Fingerprint />
-                            Verify Password
-                          </label>
-                          <div className="relative">
-                            <input
-                              type={showConfirmPassword ? "text" : "password"}
-                              name="confirmPassword"
-                              value={formData.confirmPassword}
-                              onChange={handleInputChange}
-                              placeholder="•••••••••••"
-                              className="w-full px-4 py-3 bg-white/60 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 font-mono text-sm transition-all pr-10"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                            >
-                              {showConfirmPassword ? <Icons.EyeOff className="h-5 w-5" /> : <Icons.Eye className="h-5 w-5" />}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Error Message */}
-                    <AnimatePresence>
-                      {error && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0 }}
-                          className="mt-8 p-4 bg-linear-to-r from-red-900/20 to-red-800/10 border-l-4 border-red-600"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-3 h-3 bg-red-600 animate-pulse"></div>
-                            <div>
-                              <p className="text-[10px] font-mono font-black text-red-700 uppercase tracking-wider">
-                                SECURITY ALERT
-                              </p>
-                              <p className="text-gray-700 text-[10px] font-mono mt-1">{error}</p>
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-
-                    {/* Submit Button */}
-                    <div className="mt-12 pt-6 border-t border-gray-300">
-                      <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                        <div className="text-center md:text-left">
-                          <p className="text-[9px] font-mono text-gray-500 uppercase tracking-widest mb-2">
-                            Already registered?
-                          </p>
-                          <Link
-                            to="/login"
-                            className="text-xs text-gray-900 font-black uppercase tracking-widest border-b-2 border-gray-900 pb-1 hover:text-red-700 hover:border-red-700 transition-all inline-flex items-center gap-2"
+                      {/* Submit Button */}
+                      <div className="mt-12 pt-6 border-t border-gray-300">
+                        <div className="flex flex-col md:flex-row items-center justify-end gap-6">
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            type="submit"
+                            disabled={loading}
+                            className="px-10 py-4 bg-linear-to-r from-gray-900 to-gray-800 text-white font-black uppercase tracking-[0.2em] text-xs hover:from-red-800 hover:to-red-700 disabled:opacity-50 transition-all shadow-[8px_8px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 relative group"
                           >
-                            <span className="w-2 h-2 bg-red-600"></span>
-                            LOG IN
-                          </Link>
+                            <span className="relative z-10">
+                              {loading ? 'TRANSMITTING DOSSIER...' : 'COMPLETE ONBOARDING'}
+                            </span>
+                            <div className="absolute inset-0 bg-linear-to-r from-red-700/0 via-red-600/20 to-red-700/0 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                          </motion.button>
                         </div>
-
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          type="submit"
-                          disabled={loading}
-                          className="px-10 py-4 bg-linear-to-r from-gray-900 to-gray-800 text-white font-black uppercase tracking-[0.2em] text-xs hover:from-red-800 hover:to-red-700 disabled:opacity-50 transition-all shadow-[8px_8px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 relative group"
-                        >
-                          <span className="relative z-10">
-                            {loading ? 'INITIATING ENCRYPTION...' : 'SUBMIT'}
-                          </span>
-                          <div className="absolute inset-0 bg-linear-to-r from-red-700/0 via-red-600/20 to-red-700/0 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        </motion.button>
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
               </form>
             </div>
           </div>
