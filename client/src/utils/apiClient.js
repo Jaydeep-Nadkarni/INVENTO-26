@@ -80,21 +80,34 @@ export const apiCall = async (endpoint, options = {}, navigate = null) => {
       headers,
     });
 
-    // Handle authentication errors
+    // 1. Safe Response Parsing (Text first, then JSON)
+    const contentType = response.headers.get("content-type");
+    const text = await response.text();
+    let data;
+
+    try {
+      if (contentType && contentType.includes("application/json") && text) {
+        data = JSON.parse(text);
+      } else {
+        data = { message: text || `Non-JSON response received (${response.status})` };
+      }
+    } catch (e) {
+      console.warn("JSON Parse Failed:", e);
+      data = { message: "Invalid server response format" };
+    }
+
+    // 2. Handle specific HTTP statuses
     if (response.status === 401) {
       await handleAuthError(401, navigate);
-      throw new Error('Session expired. Please log in again.');
+      throw new Error(data.message || 'Session expired. Please log in again.');
     }
 
     if (response.status === 403) {
       await handleAuthError(403, navigate);
-      throw new Error('Profile setup incomplete. Please complete onboarding.');
+      throw new Error(data.message || 'Profile setup incomplete.');
     }
 
-    // Parse response data
-    const data = await response.json();
-
-    // Handle HTTP errors
+    // 3. Handle other errors
     if (!response.ok) {
       throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
     }
@@ -142,18 +155,32 @@ export const apiPostFormData = async (endpoint, formData, navigate = null) => {
       body: formData,
     });
 
+    // Safe Parsing and Error Handling (similar to apiCall)
+    const contentType = response.headers.get("content-type");
+    const text = await response.text();
+    let data;
+
+    try {
+      if (contentType && contentType.includes("application/json") && text) {
+        data = JSON.parse(text);
+      } else {
+        data = { message: text || `Non-JSON response received (${response.status})` };
+      }
+    } catch (e) {
+      console.warn("JSON Parse Failed:", e);
+      data = { message: "Invalid server response format" };
+    }
+
     // Handle authentication errors
     if (response.status === 401) {
       await handleAuthError(401, navigate);
-      throw new Error('Session expired. Please log in again.');
+      throw new Error(data.message || 'Session expired. Please log in again.');
     }
 
     if (response.status === 403) {
       await handleAuthError(403, navigate);
-      throw new Error('Profile setup incomplete. Please complete onboarding.');
+      throw new Error(data.message || 'Profile setup incomplete.');
     }
-
-    const data = await response.json();
 
     if (!response.ok) {
       throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);

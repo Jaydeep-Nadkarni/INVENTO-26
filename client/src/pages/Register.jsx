@@ -8,7 +8,6 @@ import { apiPost, apiPostFormData } from '../utils/apiClient'
 import getCroppedImg from '../utils/cropImage'
 import paperTexture from '../assets/UI/paper-texture.jpg'
 import bgImage from '../assets/UI/Invento-bg.webp'
-import Navbar from '../components/Navbar'
 
 // Mobile detection utility
 const isMobileDevice = () => {
@@ -18,6 +17,11 @@ const isMobileDevice = () => {
 
 // SVG Icons
 const Icons = {
+  ArrowLeft: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    </svg>
+  ),
   User: () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -78,6 +82,7 @@ const Register = () => {
   const [previewImage, setPreviewImage] = useState(null)
   const [imageFile, setImageFile] = useState(null)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState('auth') // 'auth' | 'onboarding'
   const [firebaseUser, setFirebaseUser] = useState(null)
@@ -308,6 +313,15 @@ const Register = () => {
         backgroundAttachment: 'fixed'
       }}
     >
+      {/* Back Button */}
+      <Link 
+        to="/" 
+        className="fixed top-4 left-4 sm:top-8 sm:left-8 z-50 flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-full hover:bg-white hover:text-gray-900 transition-all group shadow-lg"
+      >
+        <Icons.ArrowLeft />
+        <span className="font-mono text-[10px] sm:text-xs font-bold uppercase tracking-widest hidden sm:inline">Home</span>
+      </Link>
+
       {/* Spy-themed Illustration Elements */}
       <div className="absolute top-20 left-10 opacity-10">
         <svg width="200" height="200" viewBox="0 0 200 200">
@@ -332,18 +346,6 @@ const Register = () => {
         transition={{ duration: 0.6 }}
         className="relative z-10 flex items-center justify-center min-h-screen p-6"
       >
-        {/* Back Button Outside Card */}
-        <button 
-          onClick={() => navigate(-1)}
-          className="fixed top-4 left-4 sm:top-8 sm:left-8 z-50 flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-gray-900/80 hover:bg-gray-900 text-white font-mono text-[10px] sm:text-xs uppercase tracking-widest border border-white/20 transition-all rounded shadow-lg backdrop-blur-sm"
-          title="Return to Previous Page"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          <span className="hidden xs:inline">Back</span>
-        </button>
-
         <div className="w-full max-w-6xl mt-8 sm:mt-0">
           {/* Document Style Card */}
           <div className="relative">
@@ -370,7 +372,7 @@ const Register = () => {
                 </div>
                 <p className="text-red-700 text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.15em] sm:tracking-[0.2em] font-bold flex items-center gap-2">
                   <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-600 animate-pulse"></span>
-                  NEW AGENT ONBOARDING PROTOCOL
+                  NEW AGENT ONBOARDING
                 </p>
               </div>
 
@@ -405,13 +407,19 @@ const Register = () => {
                       </span>
                     </motion.button>
 
-                    <div className="w-full text-center mt-4">
-                      <Link
-                        to="/login"
-                        className="text-[9px] sm:text-[10px] text-gray-500 font-mono uppercase tracking-[0.2em] hover:text-red-700 transition-colors inline-block"
-                      >
-                        Already have an account? <span className="text-gray-900 font-black ml-1 border-b border-gray-900/30 hover:border-red-700">Log In</span>
-                      </Link>
+                    {/* Info Text */}
+                    <div className="text-center space-y-4 pt-4 border-t border-gray-300">
+                      <div className="pt-2">
+                        <p className="text-gray-600 text-[10px] font-mono uppercase mb-2 tracking-widest">
+                          Already have an account?
+                        </p>
+                        <Link
+                          to="/register"
+                          className="text-xs text-gray-900 font-black uppercase tracking-widest border-b-2 border-gray-900 pb-1 hover:text-red-700 hover:border-red-700 transition-all"
+                        >
+                          Login
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -595,7 +603,6 @@ const Register = () => {
                                 {college}
                               </option>
                             ))}
-                            <option value="Other">Other</option>
                           </select>
 
                           {formData.clgName === 'Other' && (
@@ -618,14 +625,14 @@ const Register = () => {
                         </div>
                       </div>
 
-                      {/* Error Message */}
+                      {/* Status Messages */}
                       <AnimatePresence>
                         {error && (
                           <motion.div
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0 }}
-                            className="mt-8 p-4 bg-linear-to-r from-red-900/20 to-red-800/10 border-l-4 border-red-600"
+                            className="mt-8 p-4 bg-red-900/10 border-l-4 border-red-600"
                           >
                             <div className="flex items-center gap-3">
                               <div className="w-3 h-3 bg-red-600 animate-pulse"></div>
@@ -634,6 +641,24 @@ const Register = () => {
                                   SECURITY ALERT
                                 </p>
                                 <p className="text-gray-700 text-[10px] font-mono mt-1">{error}</p>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                        {success && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0 }}
+                            className="mt-8 p-4 bg-green-900/10 border-l-4 border-green-600"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-3 h-3 bg-green-600 animate-pulse"></div>
+                              <div>
+                                <p className="text-[10px] font-mono font-black text-green-700 uppercase tracking-wider">
+                                  VERIFICATION CLEAR
+                                </p>
+                                <p className="text-gray-700 text-[10px] font-mono mt-1">{success}</p>
                               </div>
                             </div>
                           </motion.div>

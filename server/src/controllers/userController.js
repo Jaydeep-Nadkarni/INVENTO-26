@@ -105,15 +105,28 @@ export const googleAuth = async (req, res) => {
       }
     });
   } catch (error) {
+    console.error("❌ Google Auth Critical Failure:", error);
+
+    // Differentiate between known Auth errors and Server crashes
+    const isAuthError = error.message.includes('token') || error.message.includes('verification');
+    const statusCode = isAuthError ? 401 : 500;
+    const clientMessage = isAuthError ? error.message : "Internal Server Error during authentication.";
+
     logAuthAttempt({
-      eventType: 'GOOGLE_AUTH_FAILED',
+      eventType: isAuthError ? 'GOOGLE_AUTH_FAILED' : 'GOOGLE_AUTH_SERVER_ERROR',
       ip: clientIp,
       email: 'unknown',
       status: 'failure',
       message: error.message
     });
-    console.error("Google Auth Error:", error.message);
-    res.status(401).json({ message: "Verification failed: " + error.message });
+
+    // Make absolutely sure we return JSON
+    if (!res.headersSent) {
+      return res.status(statusCode).json({ 
+        message: clientMessage,
+        error: process.env.NODE_ENV === 'development' ? error.toString() : undefined
+      });
+    }
   }
 };
 
