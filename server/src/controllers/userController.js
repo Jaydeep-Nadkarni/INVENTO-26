@@ -1,335 +1,238 @@
-import nodemailer from "nodemailer";
-import crypto from "crypto";
-import otpGenerator from "otp-generator";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import User from "../models/userModel.js";
 import Event from "../models/eventModel.js";
 import dotenv from "dotenv";
-import { verifyOTPService } from "../services/userService.js";
+import { verifyGoogleIdToken } from "../services/authService.js";
 import { processProfilePhoto } from "../services/imageService.js";
+import { generateToken } from "../services/jwtService.js";
+import {
+  validateIdTokenFormat,
+  validateOnboardingData,
+  sanitizeOnboardingData,
+  logAuthAttempt,
+  validateFirebaseUid
+} from "../utils/securityUtils.js";
 
 dotenv.config();
 
-// 📧 Reusable transporter
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+// ================= GOOGLE AUTH =================
+/**
+ * @route   POST /api/users/auth/google
+ * @desc    Verify Firebase ID Token and handle user login/registration
+ * @access  Public
+ */
+export const googleAuth = async (req, res) => {
+  const { idToken } = req.body;
+  const clientIp = req.ip || req.get('x-forwarded-for') || req.connection.remoteAddress;
+  
+  if (!idToken) {
+    logAuthAttempt({
+      eventType: 'GOOGLE_AUTH_MISSING_TOKEN',
+      ip: clientIp,
+      email: 'unknown',
+      status: 'failure',
+      message: 'ID Token is required'
+    });
+    return res.status(400).json({ message: "ID Token is required." });
+  }
 
-// 📧 Space-themed email template generator
-const spaceMail = (title, message, otp, name, id) => `
-  <div style="
-    font-family: 'Courier New', monospace;
-    background: radial-gradient(circle at top, #0b1a12, #000000);
-    color: #c9fdd7;
-    padding: 45px 28px;
-    border-radius: 10px;
-    max-width: 620px;
-    margin: auto;
-    border: 1px solid rgba(0, 255, 128, 0.25);
-    box-shadow: 0 0 30px rgba(0, 255, 128, 0.15);
-  ">
+  // Validate token format
+  if (!validateIdTokenFormat(idToken)) {
+    logAuthAttempt({
+      eventType: 'GOOGLE_AUTH_INVALID_FORMAT',
+      ip: clientIp,
+      email: 'unknown',
+      status: 'failure',
+      message: 'Invalid token format'
+    });
+    return res.status(400).json({ message: "Invalid token format." });
+  }
 
-    <!-- Header -->
-    <div style="text-align: center; margin-bottom: 28px;">
-      <h1 style="
-        color: #00ff88;
-        font-size: 26px;
-        letter-spacing: 3px;
-        margin: 0;
-        text-transform: uppercase;
-      ">
-        ${title}
-      </h1>
-      <p style="
-        margin-top: 6px;
-        font-size: 13px;
-        color: #6affb2;
-        opacity: 0.8;
-      ">
-        🔒 Encrypted Secure Channel
-      </p>
-    </div>
-
-    <!-- Body -->
-    <div style="
-      background: rgba(0, 20, 10, 0.85);
-      border: 1px dashed rgba(0, 255, 128, 0.35);
-      border-radius: 8px;
-      padding: 26px;
-      text-align: center;
-    ">
-      <h2 style="
-        color: #9dffcb;
-        margin-bottom: 14px;
-        font-size: 18px;
-        font-weight: normal;
-      ">
-        Agent ${name}, with ID: ${id}
-      </h2>
-
-      <p style="
-        font-size: 14px;
-        line-height: 1.7;
-        color: #caffdd;
-        margin-bottom: 22px;
-      ">
-        ${message}
-      </p>
-
-      <!-- OTP Box -->
-      <div style="
-        margin: 24px auto;
-        background: #000;
-        border: 2px solid #00ff88;
-        border-radius: 6px;
-        padding: 16px 0;
-        width: 260px;
-      ">
-        <span style="
-          font-size: 30px;
-          color: #00ff88;
-          font-weight: bold;
-          letter-spacing: 10px;
-        ">
-          ${otp}
-        </span>
-      </div>
-
-      <p style="
-        font-size: 13px;
-        color: #ff6b6b;
-        margin-top: 10px;
-      ">
-        ⏱ Code expires in <b>5 minutes</b> • Classified access only
-      </p>
-    </div>
-
-    <!-- Footer -->
-    <div style="text-align: center; margin-top: 28px;">
-      <p style="
-        font-size: 12px;
-        color: #6affb2;
-        opacity: 0.7;
-      ">
-        If this transmission was not initiated by you, terminate immediately.<br/>
-        <span style="color:#00ff88;">Invento Technical Team</span> 🕶️
-      </p>
-    </div>
-
-  </div>
-`;
-
-
-// ================= REGISTER =================
-export const registerUser = async (req, res) => {
   try {
-    const { name, email, password, phone, clgName, profilePhoto } = req.body;
-
-    if (!name || !email || !password || !phone || !clgName) {
-      return res.status(400).json({ message: "All fields are required." });
-    }
-
-    const existingUser = await User.findOne({ email });
-    if (existingUser)
-      return res.status(400).json({ message: "User already exists." });
-
-    // Generate OTP
-    const otp = otpGenerator.generate(6, {
-      digits: true,
-      upperCaseAlphabets: false,
-      lowerCaseAlphabets: false,
-      specialChars: false,
-    });
-
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const otpExpiresAt = Date.now() + 5 * 60 * 1000; // 5 mins
-
-    // Save user
-    const newUser = new User({
-      name,
-      email,
-      password: hashedPassword,
-      phone,
-      clgName,
-      otp,
-      otpExpiresAt,
-      isVerified: true, // Auto-verify as requested
-      payment: false,
-      present: false,
-    });
-
-    // 📸 Handle Profile Photo if uploaded
-    if (req.file) {
-      // We need the ID first, so we save once to trigger the ID generation hook
-      await newUser.save();
-
-      try {
-        const photoPath = await processProfilePhoto(req.file.buffer, newUser._id);
-        newUser.profilePhoto = photoPath;
-        await newUser.save();
-      } catch (error) {
-        console.error("Error processing profile photo:", error);
+    const { uid, email, emailVerified } = await verifyGoogleIdToken(idToken, clientIp);
+    
+    let user = await User.findOne({ firebaseUid: uid });
+    
+    if (!user) {
+      // Check if user exists by email (legacy transition)
+      user = await User.findOne({ email });
+      if (user) {
+        // Link existing account to Firebase UID
+        user.firebaseUid = uid;
+        user.emailVerified = emailVerified;
+        await user.save();
+      } else {
+        // Create new minimal user for onboarding
+        // Using placeholders for required fields until onboarding is complete
+        user = new User({
+          firebaseUid: uid,
+          email,
+          emailVerified,
+          onboardingCompleted: false,
+          name: "New Agent", // Placeholder
+          phone: "0000000000", // Placeholder
+          clgName: "Invento Academy", // Placeholder
+          gender: "Other", // Placeholder
+        });
+        await user.save();
       }
-    } else {
-      await newUser.save();
     }
 
-    // Generate JWT for direct login
-    const token = jwt.sign({ id: newUser._id }, JWT_SECRET, {
-      expiresIn: JWT_EXPIRES_IN,
+    // Generate token only if onboarding is already completed
+    let token = null;
+    if (user.onboardingCompleted) {
+      token = generateToken(user);
+    }
+
+    // Log successful authentication
+    logAuthAttempt({
+      eventType: 'GOOGLE_AUTH_SUCCESS',
+      userId: user._id,
+      ip: clientIp,
+      email: email,
+      status: 'success',
+      message: 'Google authentication successful'
     });
 
-    // 📧 Send Welcome email
-    await transporter.sendMail({
-      from: `"Invento 2026" <temp.sandesh372@gmail.com>`,
-      to: email,
-      subject: "🚀 Welcome to Invento 2026!",
-      html: spaceMail(
-        "WELCOME AGENT",
-        "Your clearance has been granted. Your Invento account is now active. Access the command center to begin your mission.",
-        "ACCESS",
-        name,
-        newUser._id
-      ),
-    });
-
-    res.status(201).json({
-      message: "Registration successful. Welcome agent.",
+    res.status(200).json({
+      message: "Authentication successful",
       token,
       user: {
-        id: newUser._id,
-        name: newUser.name,
-        email: newUser.email,
-        profilePhoto: newUser.profilePhoto,
-        clgName: newUser.clgName
+        _id: user._id,
+        email: user.email,
+        onboardingCompleted: user.onboardingCompleted,
+        name: user.name,
+        clgName: user.clgName,
+        profilePhoto: user.profilePhoto,
+        firebaseUid: user.firebaseUid
       }
     });
   } catch (error) {
-    console.error("Error in registerUser:", error.message);
-    res.status(500).json({ message: "Server error." });
-  }
-};
-
-// ================= VERIFY OTP =================
-export const verifyOTP = async (req, res) => {
-  try {
-    const { email, otp } = req.body;
-    if (!email || !otp) {
-      return res.status(400).json({ message: "Email and OTP are required." });
-    }
-
-    const user = await verifyOTPService(email, otp);
-
-    return res.status(200).json({
-      message: "User verified successfully.",
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        isVerified: user.isVerified,
-        payment: user.payment,
-        present: user.present,
-      },
+    logAuthAttempt({
+      eventType: 'GOOGLE_AUTH_FAILED',
+      ip: clientIp,
+      email: 'unknown',
+      status: 'failure',
+      message: error.message
     });
-  } catch (error) {
-    console.error("Error in verifyOTP:", error.message);
-    return res.status(400).json({ message: error.message });
+    console.error("Google Auth Error:", error.message);
+    res.status(401).json({ message: "Verification failed: " + error.message });
   }
 };
 
-// ================= RESEND VERIFY OTP =================
-export const resendVerifyOTP = async (req, res) => {
-  try {
-    const { email } = req.body;
+// ================= COMPLETE ONBOARDING =================
+/**
+ * @route   POST /api/users/auth/onboarding
+ * @desc    Complete user profile after Google sign-in
+ * @access  Public (Validated via firebaseUid)
+ */
+export const completeOnboarding = async (req, res) => {
+  const { firebaseUid, name, phone, clgName, gender } = req.body;
+  const clientIp = req.ip || req.get('x-forwarded-for') || req.connection.remoteAddress;
 
-    if (!email) {
-      return res.status(400).json({ message: "Email is required." });
+  // Validate required fields
+  if (!firebaseUid || !name || !phone || !clgName || !gender) {
+    logAuthAttempt({
+      eventType: 'ONBOARDING_MISSING_FIELDS',
+      ip: clientIp,
+      email: 'unknown',
+      status: 'failure',
+      message: 'Missing required onboarding fields'
+    });
+    return res.status(400).json({ message: "All fields are required for onboarding." });
+  }
+
+  // Validate onboarding data
+  const validationResult = validateOnboardingData({ firebaseUid, name, phone, clgName, gender });
+  if (!validationResult.isValid) {
+    logAuthAttempt({
+      eventType: 'ONBOARDING_VALIDATION_FAILED',
+      ip: clientIp,
+      email: 'unknown',
+      status: 'failure',
+      message: `Validation failed: ${validationResult.errors.join(', ')}`
+    });
+    return res.status(400).json({
+      message: "Validation failed",
+      errors: validationResult.errors
+    });
+  }
+
+  try {
+    // Validate Firebase UID format
+    if (!validateFirebaseUid(firebaseUid)) {
+      throw new Error('Invalid Firebase UID format');
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ firebaseUid });
     if (!user) {
+      logAuthAttempt({
+        eventType: 'ONBOARDING_USER_NOT_FOUND',
+        ip: clientIp,
+        email: 'unknown',
+        status: 'failure',
+        message: 'User not found for given Firebase UID'
+      });
       return res.status(404).json({ message: "User not found." });
     }
 
-    if (user.isVerified) {
-      return res.status(400).json({ message: "User already verified." });
+    if (user.onboardingCompleted) {
+      logAuthAttempt({
+        eventType: 'ONBOARDING_ALREADY_COMPLETED',
+        userId: user._id,
+        ip: clientIp,
+        email: user.email,
+        status: 'failure',
+        message: 'Onboarding already completed for this user'
+      });
+      return res.status(400).json({ message: "Onboarding already completed." });
     }
 
-    // Generate new OTP
-    const otp = otpGenerator.generate(6, {
-      digits: true,
-      upperCaseAlphabets: false,
-      lowerCaseAlphabets: false,
-      specialChars: false,
-    });
+    // Sanitize input data
+    const sanitizedData = sanitizeOnboardingData({ firebaseUid, name, phone, clgName, gender });
 
-    user.otp = otp;
-    user.otpExpiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes
+    // Update profile photo if uploaded
+    if (req.file) {
+      try {
+        const photoPath = await processProfilePhoto(req.file.buffer, user._id);
+        user.profilePhoto = photoPath;
+      } catch (error) {
+        console.error("Error processing profile photo:", error);
+        logAuthAttempt({
+          eventType: 'ONBOARDING_PHOTO_PROCESSING_FAILED',
+          userId: user._id,
+          ip: clientIp,
+          email: user.email,
+          status: 'warning',
+          message: 'Profile photo processing failed, continuing without photo'
+        });
+      }
+    }
+
+    // Update user with sanitized data
+    user.name = sanitizedData.name;
+    user.phone = sanitizedData.phone;
+    user.clgName = sanitizedData.clgName;
+    user.gender = sanitizedData.gender;
+    user.onboardingCompleted = true;
+
     await user.save();
 
-    await transporter.sendMail({
-      from: `<temp.sandesh372@gmail.com>`,
-      to: email,
-      subject: "🔐 Invento 2026 – Verification Code",
-      html: spaceMail(
-        "ACCOUNT VERIFICATION",
-        "Verification retransmission approved. Use the one-time access code below to activate your Invento account.",
-        otp,
-        user.name,
-        user._id
-      ),
+    // Now generate the application JWT
+    const token = generateToken(user);
+
+    // Log successful onboarding
+    logAuthAttempt({
+      eventType: 'ONBOARDING_SUCCESS',
+      userId: user._id,
+      ip: clientIp,
+      email: user.email,
+      status: 'success',
+      message: 'User onboarding completed successfully'
     });
 
-    return res.status(200).json({
-      message: "Verification OTP resent successfully.",
-    });
-  } catch (error) {
-    console.error("Error in resendVerifyOTP:", error.message);
-    return res.status(500).json({ message: "Server error." });
-  }
-};
-
-
-//================LOGIN=========================
-const JWT_EXPIRES_IN = "1d";
-const JWT_SECRET = process.env.JWT_SECRET;
-
-export const loginUser = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res
-        .status(400)
-        .json({ message: "Email and password are required." });
-    }
-
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: "Invalid credentials." });
-    }
-
-    // Compare password
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials." });
-    }
-
-    // Generate JWT (encode only userId)
-    const token = jwt.sign({ id: user._id }, JWT_SECRET, {
-      expiresIn: JWT_EXPIRES_IN,
-    });
-
-    return res.status(200).json({
-      message: "Login successful.",
+    res.status(200).json({
+      message: "Onboarding completed successfully.",
       token,
-      payment: user.payment,
       user: {
         _id: user._id,
         name: user.name,
@@ -337,115 +240,41 @@ export const loginUser = async (req, res) => {
         clgName: user.clgName,
         phone: user.phone,
         profilePhoto: user.profilePhoto,
-        passType: user.passType,
-        registeredEvents: user.registeredEvents
+        onboardingCompleted: user.onboardingCompleted
       }
     });
   } catch (error) {
-    console.error("Error in loginUser:", error.message);
-    return res.status(500).json({ message: "Server error." });
-  }
-};
-
-// ================= REQUEST PASSWORD RESET =================
-export const requestPasswordReset = async (req, res) => {
-  try {
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ message: "Email is required." });
-
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: "User not found." });
-
-    const otp = otpGenerator.generate(6, {
-      digits: true,
-      upperCaseAlphabets: false,
-      lowerCaseAlphabets: false,
-      specialChars: false,
+    logAuthAttempt({
+      eventType: 'ONBOARDING_ERROR',
+      ip: clientIp,
+      email: 'unknown',
+      status: 'failure',
+      message: error.message
     });
-
-    user.resetOTP = otp;
-    user.resetOTPExpires = Date.now() + 5 * 60 * 1000; // 5 min
-    await user.save();
-
-    await transporter.sendMail({
-      from: `<temp.sandesh372@gmail.com>`,
-      to: email,
-      subject: "🔑 Invento 2026 - Password Reset Code",
-      html: spaceMail(
-        "RESET PASSWORD",
-        "We’ve received a request to reset your password. Use the OTP below to continue:",
-        otp,
-        user.name
-      ),
-    });
-
-    res.json({ message: "Password reset OTP sent to email." });
-  } catch (error) {
-    console.error("Error in requestPasswordReset:", error.message);
-    res.status(500).json({ message: "Server error." });
+    console.error("Onboarding Error:", error.message);
+    res.status(500).json({ message: "Onboarding failed: " + error.message });
   }
 };
 
-
-// ================= RESET PASSWORD =================
-export const resetPassword = async (req, res) => {
-  try {
-    const { email, otp, newPassword } = req.body;
-    if (!email || !otp || !newPassword) {
-      return res.status(400).json({ message: "All fields required." });
-    }
-
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: "User not found." });
-
-    if (user.resetOTP !== otp || user.resetOTPExpires < Date.now()) {
-      return res.status(400).json({ message: "Invalid or expired OTP." });
-    }
-
-    user.password = await bcrypt.hash(newPassword, 10);
-    user.resetOTP = null;
-    user.resetOTPExpires = null;
-    await user.save();
-
-    res.json({ message: "Password reset successful." });
-  } catch (error) {
-    console.error("Error in resetPassword:", error.message);
-    res.status(500).json({ message: "Server error." });
-  }
-};
-
-//===============GET USER================
+//===============GET USER PROFILE================
+/**
+ * @route   GET /api/users/profile
+ * @desc    Get current user profile
+ * @access  Private
+ */
 export const getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select("-password");
+    const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: "User not found." });
 
-    // Fetch details for registered events to get WhatsApp links
+    // Fetch details for registered events
     const events = await Event.find({ name: { $in: user.registeredEvents } });
 
-    // Map events to a simplified format with WhatsApp links
     const eventDetails = events.map(e => ({
       name: e.name,
       whatsappLink: e.whatsappLink,
       type: e.type
     }));
-
-    // Double check passType based on actual participation
-    let finalPassType = user.passType || "G";
-
-    // If not VIP and not AAA, check if they are registered for anything
-    if (finalPassType !== "VIP" && finalPassType !== "AAA") {
-      if (user.registeredEvents.length > 0) {
-        finalPassType = "A";
-      } else {
-        finalPassType = "G";
-      }
-    }
-
-    if (finalPassType !== user.passType) {
-      user.passType = finalPassType;
-      await user.save();
-    }
 
     return res.status(200).json({
       message: "User profile fetched successfully",
@@ -459,21 +288,20 @@ export const getProfile = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
-// 🎫 Validate user for event pass (public endpoint)
+
+// 🎫 Public validation endpoint for event pass verification
 export const validateUser = async (req, res) => {
   try {
     let { userId } = req.params;
 
-    // Extract digits and handle flexible formats (e.g., "2", "0108", "inv108")
+    // Handle ID formatting (e.g., inv00108)
     const digits = userId.match(/\d+/);
     if (digits) {
       const seqNum = parseInt(digits[0]).toString().padStart(5, "0");
       userId = `inv${seqNum}`;
     }
-    console.log(`[DEBUG] Validating User ID: ${userId}`);
 
-    // Find user by processed ID
-    const user = await User.findById(userId).select('name email clgName profilePhoto passType');
+    const user = await User.findById(userId).select('name email clgName profilePhoto passType onboardingCompleted');
 
     if (!user) {
       return res.status(404).json({
@@ -482,18 +310,10 @@ export const validateUser = async (req, res) => {
       });
     }
 
-    // Return user data for validation
     return res.status(200).json({
       verified: true,
       message: user.passType === 'VIP' ? 'VIP Guest Identified' : 'Agent identified',
-      data: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        college: user.clgName || 'Not specified',
-        profilePhoto: user.profilePhoto || null,
-        passType: user.passType,
-      },
+      data: user
     });
   } catch (error) {
     console.error('Error in validateUser:', error.message);
@@ -510,7 +330,7 @@ export const inviteVIP = async (req, res) => {
     const { name, email, clgName } = req.body;
 
     if (!name || !email) {
-      return res.status(400).json({ message: "Name and Email are required for VIP invitations." });
+      return res.status(400).json({ message: "Name and Email are required." });
     }
 
     let user = await User.findOne({ email });
@@ -519,121 +339,22 @@ export const inviteVIP = async (req, res) => {
       user.passType = "VIP";
       await user.save();
     } else {
-      // Create a dummy user for VIP
-      const dummyPassword = crypto.randomBytes(8).toString('hex');
-      const hashedPassword = await bcrypt.hash(dummyPassword, 10);
-
       user = new User({
         name,
         email,
-        password: hashedPassword,
         phone: "0000000000",
-        clgName: clgName || "Invited Guest",
-        isVerified: true,
+        clgName: clgName || "VIP Guest",
         passType: "VIP",
-        payment: true
+        onboardingCompleted: true,
+        emailVerified: true,
+        firebaseUid: `vip-${Date.now()}` // Bypass UID for manually invited VIPs
       });
       await user.save();
     }
 
-    // 📧 Send VIP Invitation email
-    await transporter.sendMail({
-      from: `"Invento 2026" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "🎟️ Exclusive Invitation: Invento 2026 VIP Access",
-      html: `
-        <div style="font-family: sans-serif; padding: 20px; color: #333;">
-          <h2>VIP Invitation</h2>
-          <p>Dear ${name},</p>
-          <p>We are honored to invite you to Invento 2026 as a VIP Guest.</p>
-          <p>Your digital pass is attached to your account. You can access it by logging in with your email.</p>
-          <p style="font-weight: bold;">Your Secret Entry ID: ${user._id}</p>
-          <p>See you at the Spyverse!</p>
-        </div>
-      `
-    });
-
-    res.json({ success: true, message: "VIP invitation sent.", id: user._id });
+    res.json({ success: true, message: "VIP designation granted.", id: user._id });
   } catch (error) {
     console.error("Error in inviteVIP:", error);
-    res.status(500).json({ message: "Error sending VIP invitation." });
-  }
-};
-
-// ==========================================
-// 🔑 Passwordless Login (OTP)
-// ==========================================
-
-export const sendLoginOTP = async (req, res) => {
-  try {
-    const { email } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ message: "No agent found with this email frequency." });
-
-    const otp = otpGenerator.generate(6, {
-      upperCaseAlphabets: false,
-      specialChars: false,
-      lowerCaseAlphabets: false,
-    });
-
-    const hashedOTP = await bcrypt.hash(otp, 10);
-    user.otp = hashedOTP;
-    user.otpExpiresAt = Date.now() + 10 * 60 * 1000; // 10 mins
-    await user.save();
-
-    await transporter.sendMail({
-      from: `"Invento 2026 Security" <${process.env.EMAIL_USER}>`,
-      to: user.email,
-      subject: "Priority Access Code - INVENTO 2026",
-      html: spaceMail("ACCESS CODE REQUESTED", "Use the following One-Time Password to access your dossier.", otp, user.name, user._id),
-    });
-
-    res.status(200).json({ message: "Access code transmitted to secure channel (Email)." });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Transmission failed." });
-  }
-};
-
-export const verifyLoginOTP = async (req, res) => {
-  try {
-    const { email, otp } = req.body;
-    const user = await User.findOne({ email });
-
-    if (!user) return res.status(404).json({ message: "Agent not found." });
-    if (!user.otp || !user.otpExpiresAt || Date.now() > user.otpExpiresAt) {
-      return res.status(400).json({ message: "Access code expired. Request a new one." });
-    }
-
-    const isMatch = await bcrypt.compare(otp, user.otp);
-    if (!isMatch) return res.status(400).json({ message: "Invalid access code." });
-
-    // Clear OTP and Verify User
-    user.otp = undefined;
-    user.otpExpiresAt = undefined;
-    user.isVerified = true;
-    await user.save();
-
-    const token = generateToken(user._id);
-
-    return res.status(200).json({
-      message: "Access Granted.",
-      token,
-      payment: user.payment,
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        clgName: user.clgName,
-        phone: user.phone,
-        profilePhoto: user.profilePhoto,
-        passType: user.passType,
-        registeredEvents: user.registeredEvents
-      }
-    });
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Login verification failed." });
+    res.status(500).json({ message: "Error granting VIP status." });
   }
 };

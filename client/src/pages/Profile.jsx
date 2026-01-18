@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { auth } from '../config/firebase'
+import { signOut } from 'firebase/auth'
+import { apiGet } from '../utils/apiClient'
 import paperTexture from '../assets/UI/paper-texture.jpg'
 import bgImage from '../assets/UI/Invento-bg.webp'
 import Navbar from '../components/Navbar'
@@ -112,23 +115,10 @@ const Profile = () => {
       }
 
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
-
-        const data = await response.json()
-
-        if (response.ok) {
-          const userData = data.user || data;
-          setUser(userData)
-          localStorage.setItem('currentUser', JSON.stringify(userData))
-        } else if (storedUser) {
-          setUser(JSON.parse(storedUser))
-        } else {
-          navigate('/login')
-        }
+        const { data } = await apiGet('/api/users/profile', navigate)
+        const userData = data.user || data;
+        setUser(userData)
+        localStorage.setItem('currentUser', JSON.stringify(userData))
       } catch (err) {
         console.error('Fetch profile error:', err)
         if (storedUser) {
@@ -144,7 +134,12 @@ const Profile = () => {
     fetchProfile()
   }, [navigate])
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await signOut(auth)
+    } catch (err) {
+      console.error('Firebase sign out error:', err)
+    }
     localStorage.removeItem('currentUser')
     localStorage.removeItem('token')
     navigate('/login')

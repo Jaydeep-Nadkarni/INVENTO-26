@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import { apiGet } from '../utils/apiClient';
 import paperTexture from '../assets/UI/paper-texture.jpg';
 import breakingLogo from '../assets/UI/BREAKING.png';
 import kleLogo from '../assets/UI/KLE-TECH.png';
@@ -14,9 +15,7 @@ const Newspaper = () => {
 
     const fetchNotices = async () => {
         try {
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-            const response = await fetch(`${apiUrl}/api/notices`);
-            const data = await response.json();
+            const { data } = await apiGet('/api/notices');
             if (data.success) {
                 setNotices(data.data);
             }

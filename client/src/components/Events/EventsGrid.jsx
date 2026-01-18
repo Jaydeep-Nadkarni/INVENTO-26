@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useParams, useNavigate } from 'react-router-dom'
+import { apiPost, apiGet } from '../../utils/apiClient'
 import paperTexture from '../../assets/UI/paper-texture.jpg'
 import logoLoader from '../../assets/UI/KLE-logo-small.png'
 import registerBtn from '../../assets/UI/register.png'
 import pageTurnSound from '../../assets/audios/page-turn.mp3'
 import closeSound from '../../assets/audios/briefcase-open.mp3'
-import { useParams, useNavigate } from 'react-router-dom'
 import { clubsData } from './clubsData'
 import CustomEventCard from './CustomEventCard'
 
@@ -185,13 +186,7 @@ const EventsGrid = () => {
 
         setFetchingMember(true)
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/validate/${newMemberId}`)
-            const data = await response.json()
-
-            if (!response.ok) {
-                const errorMsg = response.status === 404 ? 'Agent not found in the central directory.' : (data.message || 'Invalid Invento ID')
-                throw new Error(errorMsg)
-            }
+            const { data } = await apiGet(`/api/users/validate/${newMemberId}`, navigate)
 
             if (memberDetails.some(m => m._id === data.data._id)) {
                 showAlert('DUPLICATE AGENT', 'Agent already briefed (already in team)', 'error')
@@ -256,19 +251,7 @@ const EventsGrid = () => {
 
             // Validate key before proceeding
             try {
-                const keyCheck = await fetch(`${import.meta.env.VITE_API_URL}/api/events/validate-key`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ key: contingentKey })
-                })
-                const keyData = await keyCheck.json()
-                if (!keyCheck.ok) throw new Error(keyData.message || 'Invalid Contingent Key')
-
-                // Optional: Verify if user's college matches (if you want strictness)
-                // if (user.clgName !== keyData.clgName) {
-                //    showAlert('AUTH MISMATCH', `This key is for ${keyData.clgName}. You are registered as ${user.clgName}.`, 'error')
-                //    return
-                // }
+                await apiPost('/api/events/validate-key', { key: contingentKey }, navigate)
             } catch (err) {
                 showAlert('ACCESS DENIED', err.message, 'error')
                 return
@@ -277,14 +260,7 @@ const EventsGrid = () => {
 
         setRegLoading(true)
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/api/events/create-order`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ eventId: currentEvent.id })
-            })
-
-            const data = await response.json()
-            if (!response.ok) throw new Error(data.message || 'Failed to create order')
+            const { data } = await apiPost('/api/events/create-order', { eventId: currentEvent.id }, navigate)
 
             // Common registration payload
             const regPayload = {
@@ -297,14 +273,7 @@ const EventsGrid = () => {
 
             // Handle Free Events
             if (data.free) {
-                const regResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/events/register/${currentEvent.id}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(regPayload)
-                })
-
-                const regData = await regResponse.json()
-                if (!regResponse.ok) throw new Error(regData.message || 'Registration failed')
+                const regData = await apiPost(`/api/events/register/${currentEvent.id}`, regPayload, navigate).then(res => res.data);
 
                 setConfirmation({
                     show: true,
@@ -325,19 +294,12 @@ const EventsGrid = () => {
                 order_id: data.id,
                 handler: async (paymentResponse) => {
                     try {
-                        const regResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/events/register/${currentEvent.id}`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                ...regPayload,
-                                razorpay_order_id: paymentResponse.razorpay_order_id,
-                                razorpay_payment_id: paymentResponse.razorpay_payment_id,
-                                razorpay_signature: paymentResponse.razorpay_signature,
-                            })
-                        })
-
-                        const regData = await regResponse.json()
-                        if (!regResponse.ok) throw new Error(regData.message || 'Registration failed')
+                        const regData = await apiPost(`/api/events/register/${currentEvent.id}`, {
+                            ...regPayload,
+                            razorpay_order_id: paymentResponse.razorpay_order_id,
+                            razorpay_payment_id: paymentResponse.razorpay_payment_id,
+                            razorpay_signature: paymentResponse.razorpay_signature,
+                        }, navigate).then(res => res.data);
 
                         setConfirmation({
                             show: true,

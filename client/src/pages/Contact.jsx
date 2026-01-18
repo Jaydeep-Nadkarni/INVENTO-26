@@ -79,7 +79,7 @@ const teamsData = [
     id: 'sports',
     name: 'Sports',
     members: [
-      { name: 'Akhilesh Joshi', role: 'Athletics Captain', phone: '+91 66554 43322', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Virat', socials: { instagram: 'https://www.instagram.com/invento_jce/', linkedin: '#', whatsapp: '#' } },
+      { name: 'Monishya Kamble', role: 'Secretary', phone: '+91 80883 42240 ', img: 'https://i.postimg.cc/qMMXPvBY/Monishya-Kamble.jpg', socials: { instagram: 'https://www.instagram.com/monishyaa/', linkedin: '#', whatsapp: 'https://wa.me/8088342240' } },
     ]
   },
 ]

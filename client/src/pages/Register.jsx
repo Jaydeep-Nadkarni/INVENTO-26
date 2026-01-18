@@ -2,7 +2,9 @@ import React, { useState, useRef, useCallback, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import Cropper from 'react-easy-crop'
-import * as faceapi from '@vladmandic/face-api'
+import { signInWithPopup } from 'firebase/auth'
+import { auth, googleProvider } from '../config/firebase'
+import { apiPost, apiPostFormData } from '../utils/apiClient'
 import getCroppedImg from '../utils/cropImage'
 import paperTexture from '../assets/UI/paper-texture.jpg'
 import bgImage from '../assets/UI/Invento-bg.webp'
@@ -77,30 +79,9 @@ const Register = () => {
   const [imageFile, setImageFile] = useState(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [step, setStep] = useState('auth') // 'auth' | 'onboarding'
+  const [firebaseUser, setFirebaseUser] = useState(null)
   const [isMobile, setIsMobile] = useState(isMobileDevice())
-  const [modelsLoaded, setModelsLoaded] = useState(false)
-  const [detecting, setDetecting] = useState(false)
-
-  // Load face-api models
-  useEffect(() => {
-    const loadModels = async () => {
-      try {
-        const MODEL_URL = 'https://vladmandic.github.io/face-api/model/'
-        await Promise.all([
-          faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-          faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-          faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
-        ])
-        setModelsLoaded(true)
-        console.log('Face detection models loaded')
-      } catch (err) {
-        console.error('Failed to load face detection models:', err)
-      }
-    }
-    loadModels()
-  }, [])
 
   // Listen for mobile/desktop switches
   useEffect(() => {
@@ -109,6 +90,23 @@ const Register = () => {
     mediaQuery.addListener(handleChange);
     return () => mediaQuery.removeListener(handleChange);
   }, []);
+
+  // Auto-check session
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
+    if (user) {
+      if (user.onboardingCompleted) {
+        navigate('/profile');
+      } else {
+        setFirebaseUser(user);
+        setStep('onboarding');
+        setFormData(prev => ({
+          ...prev,
+          name: user.name || '',
+        }));
+      }
+    }
+  }, [navigate]);
 
   const colleges = [
     'KLE Dr. MS Sheshgiri College of Engineering and Technology',
@@ -120,11 +118,9 @@ const Register = () => {
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
-    email: '',
     clgName: '',
     otherCollege: '',
-    password: '',
-    confirmPassword: ''
+    gender: '' // Male | Female
   })
 
   // Cropper States
@@ -142,6 +138,39 @@ const Register = () => {
       [name]: value
     }))
     setError('')
+  }
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const result = await signInWithPopup(auth, googleProvider)
+      const idToken = await result.user.getIdToken()
+
+      // Send token to backend
+      const { data } = await apiPost('/api/users/auth/google', { idToken }, navigate)
+
+      setFirebaseUser(data.user)
+      
+      if (data.user.onboardingCompleted) {
+        // User already onboarded, store token and redirect
+        localStorage.setItem('token', data.token)
+        localStorage.setItem('currentUser', JSON.stringify(data.user))
+        navigate('/profile')
+      } else {
+        // Switch to onboarding step
+        setStep('onboarding')
+        setFormData(prev => ({
+          ...prev,
+          name: data.user.name || result.user.displayName || '',
+        }))
+      }
+    } catch (err) {
+      console.error(err)
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleImageUpload = (e) => {
@@ -171,7 +200,6 @@ const Register = () => {
 
   const handleDoneCropping = async () => {
     try {
-      setDetecting(true)
       setError('')
       const croppedImage = await getCroppedImg(
         tempImage,
@@ -179,57 +207,28 @@ const Register = () => {
         rotation
       )
       
-      // Face Detection
-      if (modelsLoaded) {
-        const img = new Image()
-        img.src = croppedImage
-        await new Promise((resolve) => {
-          img.onload = resolve
-          img.onerror = () => {
-            setError("FACE DETECTION: SCANNING FAILED. PLEASE TRY A DIFFERENT IMAGE.")
-            resolve() // Still resolve to exit the promise
-          }
-        })
-
-        if (img.complete && img.naturalWidth !== 0) {
-          const detections = await faceapi.detectAllFaces(img, new faceapi.TinyFaceDetectorOptions({
-            inputSize: 160,
-            scoreThreshold: 0.5
-          }))
-          
-          if (detections.length === 0) {
-            setError("FACE DETECTION: NO FACE DETECTED. ENSURE YOUR FACE IS CLEAR AND WELL-LIT.")
-            setDetecting(false)
-            return
-          }
-          
-          if (detections.length > 1) {
-            setError("FACE DETECTION: MULTIPLE SUBJECTS DETECTED. ONLY ONE AGENT ALLOWED PER PHOTO.")
-            setDetecting(false)
-            return
-          }
-
-          // Check face size (e.g. at least 25% of image width for better quality)
-          const face = detections[0].box
-          if (face.width < img.width * 0.15) {
-            setError("FACE DETECTION: SUBJECT TOO DISTANT. PLEASE ZOOM IN TO FILL THE FRAME.")
-            setDetecting(false)
-            return
-          }
+      // Simple image validation - just check it's a valid image
+      const img = new Image()
+      img.src = croppedImage
+      await new Promise((resolve) => {
+        img.onload = resolve
+        img.onerror = () => {
+          setError("Image upload failed. Please try another image.")
+          resolve()
         }
-      } else {
-        // Models not loaded yet
-        console.warn('Face detection models not yet loaded. Skipping verification.')
+      })
+
+      if (!img.complete || img.naturalWidth === 0) {
+        setError("Please select a valid image file.")
+        return
       }
 
       setPreviewImage(croppedImage)
       setImageFile(croppedImage)
       setIsCropping(false)
-      setDetecting(false)
     } catch (e) {
       console.error(e)
       setError('Failed to crop image')
-      setDetecting(false)
     }
   }
 
@@ -239,7 +238,7 @@ const Register = () => {
     setError('')
 
     // Validate inputs
-    if (!formData.name || !formData.phone || !formData.email || (!formData.clgName && !formData.otherCollege) || !formData.password || !formData.confirmPassword) {
+    if (!formData.name || !formData.phone || (!formData.clgName && !formData.otherCollege) || !formData.gender) {
       setError('Please fill in all mandatory fields')
       setLoading(false)
       return
@@ -251,27 +250,8 @@ const Register = () => {
       return
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(formData.email)) {
-      setError('Please enter a valid email format')
-      setLoading(false)
-      return
-    }
-
     if (!/^\d{10}$/.test(formData.phone.replace(/\D/g, ''))) {
       setError('Please enter a valid 10-digit contact number')
-      setLoading(false)
-      return
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match')
-      setLoading(false)
-      return
-    }
-
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters')
       setLoading(false)
       return
     }
@@ -290,27 +270,16 @@ const Register = () => {
       };
 
       const formDataObj = new FormData();
+      formDataObj.append('firebaseUid', firebaseUser.firebaseUid);
       formDataObj.append('name', formData.name);
-      formDataObj.append('email', formData.email);
-      formDataObj.append('password', formData.password);
       formDataObj.append('phone', formData.phone);
+      formDataObj.append('gender', formData.gender);
       formDataObj.append('clgName', formData.clgName === 'Other' ? formData.otherCollege : formData.clgName);
       
       const imageBlob = dataURItoBlob(previewImage);
-      // Append file with filename
       formDataObj.append('profilePhoto', imageBlob, 'profile.jpg');
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/register`, {
-        method: 'POST',
-        body: formDataObj,
-        // No Content-Type header needed for FormData
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Registration failed')
-      }
+      const { data } = await apiPostFormData('/api/users/auth/onboarding', formDataObj, navigate)
 
       // Success - Store token and user data, then redirect to profile
       if (data.token) {
@@ -368,20 +337,20 @@ const Register = () => {
         {/* Back Button Outside Card */}
         <button 
           onClick={() => navigate(-1)}
-          className="fixed top-8 left-8 z-50 flex items-center gap-2 px-4 py-2 bg-gray-900/80 hover:bg-gray-900 text-white font-mono text-xs uppercase tracking-widest border border-white/20 transition-all rounded shadow-lg backdrop-blur-sm"
+          className="fixed top-4 left-4 sm:top-8 sm:left-8 z-50 flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-gray-900/80 hover:bg-gray-900 text-white font-mono text-[10px] sm:text-xs uppercase tracking-widest border border-white/20 transition-all rounded shadow-lg backdrop-blur-sm"
           title="Return to Previous Page"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          Back
+          <span className="hidden xs:inline">Back</span>
         </button>
 
-        <div className="w-full max-w-6xl">
+        <div className="w-full max-w-6xl mt-8 sm:mt-0">
           {/* Document Style Card */}
           <div className="relative">
             <div
-              className="p-8 md:p-12 shadow-[20px_20px_60px_rgba(0,0,0,0.5)] relative overflow-hidden border-2 border-gray-800 rounded-sm"
+              className="p-5 sm:p-8 md:p-12 shadow-[20px_20px_60px_rgba(0,0,0,0.5)] relative overflow-hidden border-2 border-gray-800 rounded-sm"
               style={{
                 backgroundColor: '#f5f1e8',
                 backgroundImage: `url(${paperTexture})`,
@@ -391,300 +360,308 @@ const Register = () => {
               <div className="absolute inset-0 bg-amber-50/20 mix-blend-multiply pointer-events-none" />
 
               {/* Header */}
-              <div className="mb-10 pb-6 border-b-2 border-red-700/30">
-                <div className="flex justify-between items-start mb-2">
-                  <h1 className="text-4xl font-black text-gray-900 tracking-tighter uppercase leading-none">
+              <div className="mb-6 sm:mb-10 pb-4 sm:pb-6 border-b-2 border-red-700/30">
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-2">
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 tracking-tighter uppercase leading-none">
                     Agent Registration
                   </h1>
-                  <div className="flex flex-col items-end">
-                    <span className="text-[10px] font-mono font-bold bg-gray-900 text-white px-2 py-0.5 whitespace-nowrap">FORM: INV-2026</span>
-                    <span className="text-[8px] font-mono text-gray-500 uppercase tracking-widest mt-1">TOP SECRET</span>
+                  <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-2">
+                    <span className="text-[9px] sm:text-[10px] font-mono font-bold bg-gray-900 text-white px-2 py-0.5 whitespace-nowrap order-2 sm:order-1">FORM: INV-2026</span>
+                    <span className="text-[8px] font-mono text-gray-500 uppercase tracking-widest order-1 sm:order-2">TOP SECRET</span>
                   </div>
                 </div>
-                <p className="text-red-700 text-[10px] font-mono uppercase tracking-[0.2em] font-bold flex items-center gap-2">
-                  <span className="w-3 h-3 bg-red-600 animate-pulse"></span>
+                <p className="text-red-700 text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.15em] sm:tracking-[0.2em] font-bold flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-600 animate-pulse"></span>
                   NEW AGENT ONBOARDING PROTOCOL
                 </p>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-10">
-                {/* Main Content Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                  {/* Left Column - Photo Upload */}
-                  <div className="lg:col-span-1">
-                    <div className="sticky top-8">
-                      <div className="relative">
-                        <motion.div
-                          whileHover={{ scale: 1.02 }}
-                          onClick={() => fileInputRef.current?.click()}
-                          className="cursor-pointer group"
-                        >
-                          <div className="relative w-full aspect-3/4 max-w-xs mx-auto border-2 border-gray-400 bg-linear-to-br from-gray-100 to-gray-300 flex flex-col items-center justify-center overflow-hidden hover:border-red-600 transition-colors shadow-[8px_8px_0px_rgba(0,0,0,0.2)]">
-                            {previewImage ? (
-                              <img
-                                src={previewImage}
-                                alt="Profile"
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="text-center p-6">
-                                <div className="mb-4">
-                                  <Icons.Camera />
+                {step === 'auth' ? (
+                  <div className="flex flex-col items-center justify-center py-10 sm:py-20 space-y-6 sm:space-y-8">
+                    <div className="text-center space-y-3 sm:space-y-4">
+                      <p className="font-mono text-[9px] sm:text-[10px] text-gray-500 uppercase tracking-[0.2em] sm:tracking-[0.3em]">
+                        Identity Verification Required
+                      </p>
+                      <h2 className="text-xl sm:text-2xl font-black text-gray-900 uppercase tracking-tighter">
+                        Authenticate with Google
+                      </h2>
+                    </div>
+                    
+                    <motion.button
+                      type="button"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={handleGoogleSignIn}
+                      disabled={loading}
+                      className="flex items-center justify-center gap-3 sm:gap-4 px-6 sm:px-10 py-2 sm:py-3 bg-white border-2 border-gray-900 shadow-[2px_2px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 transition-all group w-full max-w-[260px] sm:max-w-[380px]"
+                    >
+                      <svg className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" viewBox="0 0 48 48">
+                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+                        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+                      </svg>
+                      <span className="font-mono text-[10px] sm:text-xs font-black text-gray-900 uppercase tracking-widest whitespace-nowrap">
+                        {loading ? 'Authenticating...' : 'Register with Google'}
+                      </span>
+                    </motion.button>
+
+                    <div className="w-full text-center mt-4">
+                      <Link
+                        to="/login"
+                        className="text-[9px] sm:text-[10px] text-gray-500 font-mono uppercase tracking-[0.2em] hover:text-red-700 transition-colors inline-block"
+                      >
+                        Already have an account? <span className="text-gray-900 font-black ml-1 border-b border-gray-900/30 hover:border-red-700">Log In</span>
+                      </Link>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
+                    {/* Left Column - Photo Upload */}
+                    <div className="lg:col-span-1">
+                      <div className="lg:sticky lg:top-8">
+                        <div className="relative">
+                          <motion.div
+                            whileHover={{ scale: 1.02 }}
+                            onClick={() => fileInputRef.current?.click()}
+                            className="cursor-pointer group"
+                          >
+                            <div className="relative w-full aspect-3/4 max-w-[240px] sm:max-w-xs mx-auto border-2 border-gray-400 bg-linear-to-br from-gray-100 to-gray-300 flex flex-col items-center justify-center overflow-hidden hover:border-red-600 transition-colors shadow-[8px_8px_0px_rgba(0,0,0,0.2)]">
+                              {previewImage ? (
+                                <img
+                                  src={previewImage}
+                                  alt="Profile"
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="text-center p-6">
+                                  <div className="mb-4">
+                                    <Icons.Camera />
+                                  </div>
+                                  <p className="text-gray-400 text-[10px] uppercase tracking-widest font-mono font-bold">
+                                    UPLOAD IDENTIFICATION PHOTO
+                                  </p>
+                                  <p className="text-gray-500 text-[8px] uppercase tracking-wider font-mono mt-2">
+                                    5MB MAX • Face Must be clearly visible
+                                  </p>
                                 </div>
-                                <p className="text-gray-400 text-[10px] uppercase tracking-widest font-mono font-bold">
-                                  UPLOAD IDENTIFICATION PHOTO
+                              )}
+                              {/* Spy Camera Overlay Effect */}
+                              <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-transparent via-gray-400/20 to-transparent"></div>
+                              <div className="absolute top-2 left-2 right-2 h-1 bg-red-600/10"></div>
+                            </div>
+                            {/* Photo Tape Effect */}
+                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-20 sm:w-24 h-4 bg-gradient-to-r from-gray-300 to-gray-400/50 border border-gray-400/20 rotate-1 shadow-sm opacity-60"></div>
+                          </motion.div>
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="hidden"
+                          />
+                          
+                          {/* Spy Device Illustration */}
+                          <div className="mt-6 sm:mt-10 p-4 bg-gradient-to-r from-gray-900/10 to-gray-900/5 border border-gray-400/30">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="w-2 h-2 bg-red-600 animate-pulse"></div>
+                              <p className="text-[9px] font-mono text-gray-700 uppercase tracking-widest font-bold">
+                                SECURITY BRIEFING
+                              </p>
+                            </div>
+                            <ul className="space-y-2">
+                              <li className="flex items-start gap-2">
+                                <div className="w-1.5 h-1.5 bg-gray-600 mt-1 flex-shrink-0"></div>
+                                <p className="text-gray-600 text-[8px] font-mono uppercase tracking-wide leading-tight">
+                                  All fields are mandatory for registration
                                 </p>
-                                <p className="text-gray-500 text-[8px] uppercase tracking-wider font-mono mt-2">
-                                  5MB MAX • Face Must be clearly visible
+                              </li>
+                              <li className="flex items-start gap-2">
+                                <div className="w-1.5 h-1.5 bg-gray-600 mt-1 flex-shrink-0"></div>
+                                <p className="text-gray-600 text-[8px] font-mono uppercase tracking-wide leading-tight">
+                                  Uploaded images are secured 
                                 </p>
-                              </div>
-                            )}
-                            {/* Spy Camera Overlay Effect */}
-                            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-transparent via-gray-400/20 to-transparent"></div>
-                            <div className="absolute top-2 left-2 right-2 h-1 bg-red-600/10"></div>
+                              </li>
+                              <li className="flex items-start gap-2">
+                                <div className="w-1.5 h-1.5 bg-gray-600 mt-1 flex-shrink-0"></div>
+                                <p className="text-gray-600 text-[8px] font-mono uppercase tracking-wide leading-tight">
+                                  All the contact deatils must be valid and reachable
+                                </p>
+                              </li>
+                            </ul>
                           </div>
-                          {/* Photo Tape Effect */}
-                          <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-24 h-4 bg-gradient-to-r from-gray-300 to-gray-400/50 border border-gray-400/20 rotate-1 shadow-sm opacity-60"></div>
-                        </motion.div>
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageUpload}
-                          className="hidden"
-                        />
-                        
-                        {/* Spy Device Illustration */}
-                        <div className="mt-10 p-4 bg-gradient-to-r from-gray-900/10 to-gray-900/5 border border-gray-400/30">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="w-2 h-2 bg-red-600 animate-pulse"></div>
-                            <p className="text-[9px] font-mono text-gray-700 uppercase tracking-widest font-bold">
-                              SECURITY BRIEFING
-                            </p>
-                          </div>
-                          <ul className="space-y-2">
-                            <li className="flex items-start gap-2">
-                              <div className="w-1.5 h-1.5 bg-gray-600 mt-1 flex-shrink-0"></div>
-                              <p className="text-gray-600 text-[8px] font-mono uppercase tracking-wide leading-tight">
-                                All fields are mandatory for registration
-                              </p>
-                            </li>
-                            <li className="flex items-start gap-2">
-                              <div className="w-1.5 h-1.5 bg-gray-600 mt-1 flex-shrink-0"></div>
-                              <p className="text-gray-600 text-[8px] font-mono uppercase tracking-wide leading-tight">
-                                Uploaded images are secured 
-                              </p>
-                            </li>
-                            <li className="flex items-start gap-2">
-                              <div className="w-1.5 h-1.5 bg-gray-600 mt-1 flex-shrink-0"></div>
-                              <p className="text-gray-600 text-[8px] font-mono uppercase tracking-wide leading-tight">
-                                All the contact deatils must be valid and reachable
-                              </p>
-                            </li>
-                          </ul>
                         </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Right Column - Form Fields */}
-                  <div className="lg:col-span-2">
-                    <div className="space-y-8">
-                      {/* Full Name Field */}
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-[0.3em] flex items-center gap-2">
-                          <Icons.User />
-                          FULL NAME
-                        </label>
-                        <input
-                          type="text"
-                          name="name"
-                          value={formData.name}
-                          onChange={handleInputChange}
-                          placeholder="Name"
-                          className="w-full px-4 py-3 bg-white/60 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 font-mono text-sm transition-all"
-                        />
-                      </div>
+                    {/* Right Column - Form Fields */}
+                    <div className="lg:col-span-2">
+                      <div className="space-y-6 sm:space-y-8">
+                        {/* Status Message */}
+                        <div className="p-3 bg-green-50 border border-green-200 flex flex-col sm:flex-row items-center sm:justify-between gap-3 rounded-sm">
+                          <div className="flex items-center gap-3 w-full sm:w-auto">
+                            <div className="w-2 h-2 bg-green-600 rounded-full shrink-0"></div>
+                            <p className="text-[9px] sm:text-[10px] font-mono text-green-700 font-bold uppercase tracking-widest break-all">
+                              ✓ Verified: {firebaseUser?.email}
+                            </p>
+                          </div>
+                          <button 
+                            type="button" 
+                            onClick={() => setStep('auth')}
+                            className="text-[9px] sm:text-[10px] font-mono text-gray-500 underline hover:text-gray-900 font-semibold w-full sm:w-auto text-left sm:text-right"
+                          >
+                            SWITCH ACCOUNT
+                          </button>
+                        </div>
 
-                      {/* Email & Contact Row */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Full Name Field */}
                         <div className="space-y-2">
                           <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-[0.3em] flex items-center gap-2">
-                            <Icons.Email />
-                            EMAIL
+                            <Icons.User />
+                            FULL NAME
                           </label>
                           <input
-                            type="email"
-                            name="email"
-                            value={formData.email}
+                            type="text"
+                            name="name"
+                            value={formData.name}
                             onChange={handleInputChange}
-                            placeholder="Email"
+                            placeholder="Name"
                             className="w-full px-4 py-3 bg-white/60 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 font-mono text-sm transition-all"
                           />
                         </div>
 
+                        {/* Gender & Contact Row */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-[0.3em] flex items-center gap-2">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 sm:h-5 w-4 sm:w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                              </svg>
+                              GENDER
+                            </label>
+                            <div className="flex gap-2 sm:gap-4">
+                              {['Male', 'Female', 'Other'].map((g) => (
+                                <label key={g} className="flex-1 cursor-pointer group">
+                                  <input
+                                    type="radio"
+                                    name="gender"
+                                    value={g}
+                                    checked={formData.gender === g}
+                                    onChange={handleInputChange}
+                                    className="hidden"
+                                  />
+                                  <div className={`px-2 py-3 sm:px-4 text-center border-2 font-mono text-[9px] sm:text-xs transition-all ${
+                                    formData.gender === g 
+                                    ? 'bg-gray-900 text-white border-gray-900' 
+                                    : 'bg-white/60 border-gray-300 text-gray-600 group-hover:border-red-600'
+                                  }`}>
+                                    {g.toUpperCase()}
+                                  </div>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-[0.3em] flex items-center gap-2">
+                              <Icons.Phone />
+                              CONTACT
+                            </label>
+                            <input
+                              type="tel"
+                              name="phone"
+                              value={formData.phone}
+                              onChange={handleInputChange}
+                              placeholder="Contact"
+                              className="w-full px-4 py-3 bg-white/60 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 font-mono text-sm transition-all"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Institution Field */}
                         <div className="space-y-2">
                           <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-[0.3em] flex items-center gap-2">
-                            <Icons.Phone />
-                            CONTACT
+                            <Icons.Briefcase />
+                            AFFILIATED INSTITUTION
                           </label>
-                          <input
-                            type="tel"
-                            name="phone"
-                            value={formData.phone}
+                          <select
+                            name="clgName"
+                            value={formData.clgName}
                             onChange={handleInputChange}
-                            placeholder="Contact"
-                            className="w-full px-4 py-3 bg-white/60 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 font-mono text-sm transition-all"
-                          />
+                            className="w-full px-4 py-3 bg-white/60 border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 font-mono text-sm cursor-pointer appearance-none"
+                          >
+                            <option value="">Select institution</option>
+                            {colleges.map((college, idx) => (
+                              <option key={idx} value={college}>
+                                {college}
+                              </option>
+                            ))}
+                            <option value="Other">Other</option>
+                          </select>
+
+                          {formData.clgName === 'Other' && (
+                            <motion.div
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="mt-4"
+                            >
+                              <input
+                                type="text"
+                                name="otherCollege"
+                                value={formData.otherCollege}
+                                onChange={handleInputChange}
+                                placeholder="Specify institution name"
+                                className="w-full px-4 py-3 bg-white/60 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 font-mono text-sm transition-all"
+                                autoFocus
+                              />
+                            </motion.div>
+                          )}
                         </div>
                       </div>
 
-                      {/* Institution Field */}
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-[0.3em] flex items-center gap-2">
-                          <Icons.Briefcase />
-                          AFFILIATED INSTITUTION
-                        </label>
-                        <select
-                          name="clgName"
-                          value={formData.clgName}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-3 bg-white/60 border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 font-mono text-sm cursor-pointer appearance-none"
-                        >
-                          <option value="">Select institution</option>
-                          {colleges.map((college, idx) => (
-                            <option key={idx} value={college}>
-                              {college}
-                            </option>
-                          ))}
-                          <option value="Other">Other</option>
-                        </select>
-
-                        {formData.clgName === 'Other' && (
+                      {/* Error Message */}
+                      <AnimatePresence>
+                        {error && (
                           <motion.div
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="mt-4"
+                            exit={{ opacity: 0 }}
+                            className="mt-8 p-4 bg-linear-to-r from-red-900/20 to-red-800/10 border-l-4 border-red-600"
                           >
-                            <input
-                              type="text"
-                              name="otherCollege"
-                              value={formData.otherCollege}
-                              onChange={handleInputChange}
-                              placeholder="Specify institution name"
-                              className="w-full px-4 py-3 bg-white/60 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 font-mono text-sm transition-all"
-                              autoFocus
-                            />
+                            <div className="flex items-center gap-3">
+                              <div className="w-3 h-3 bg-red-600 animate-pulse"></div>
+                              <div>
+                                <p className="text-[10px] font-mono font-black text-red-700 uppercase tracking-wider">
+                                  SECURITY ALERT
+                                </p>
+                                <p className="text-gray-700 text-[10px] font-mono mt-1">{error}</p>
+                              </div>
+                            </div>
                           </motion.div>
                         )}
-                      </div>
+                      </AnimatePresence>
 
-                      {/* Password Fields Row */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-[0.3em] flex items-center gap-2">
-                            <Icons.Lock />
-                            Password
-                          </label>
-                          <div className="relative">
-                            <input
-                              type={showPassword ? "text" : "password"}
-                              name="password"
-                              value={formData.password}
-                              onChange={handleInputChange}
-                              placeholder="••••••••••"
-                              className="w-full px-4 py-3 bg-white/60 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 font-mono text-sm transition-all pr-10"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                            >
-                              {showPassword ? <Icons.EyeOff className="h-5 w-5" /> : <Icons.Eye className="h-5 w-5" />}
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-[0.3em] flex items-center gap-2">
-                            <Icons.Fingerprint />
-                            Verify Password
-                          </label>
-                          <div className="relative">
-                            <input
-                              type={showConfirmPassword ? "text" : "password"}
-                              name="confirmPassword"
-                              value={formData.confirmPassword}
-                              onChange={handleInputChange}
-                              placeholder="•••••••••••"
-                              className="w-full px-4 py-3 bg-white/60 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 font-mono text-sm transition-all pr-10"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                            >
-                              {showConfirmPassword ? <Icons.EyeOff className="h-5 w-5" /> : <Icons.Eye className="h-5 w-5" />}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Error Message */}
-                    <AnimatePresence>
-                      {error && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0 }}
-                          className="mt-8 p-4 bg-linear-to-r from-red-900/20 to-red-800/10 border-l-4 border-red-600"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-3 h-3 bg-red-600 animate-pulse"></div>
-                            <div>
-                              <p className="text-[10px] font-mono font-black text-red-700 uppercase tracking-wider">
-                                SECURITY ALERT
-                              </p>
-                              <p className="text-gray-700 text-[10px] font-mono mt-1">{error}</p>
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-
-                    {/* Submit Button */}
-                    <div className="mt-12 pt-6 border-t border-gray-300">
-                      <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                        <div className="text-center md:text-left">
-                          <p className="text-[9px] font-mono text-gray-500 uppercase tracking-widest mb-2">
-                            Already registered?
-                          </p>
-                          <Link
-                            to="/login"
-                            className="text-xs text-gray-900 font-black uppercase tracking-widest border-b-2 border-gray-900 pb-1 hover:text-red-700 hover:border-red-700 transition-all inline-flex items-center gap-2"
+                      {/* Submit Button */}
+                      <div className="mt-8 sm:mt-12 pt-6 border-t border-gray-300">
+                        <div className="flex flex-col md:flex-row items-center justify-end gap-6">
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            type="submit"
+                            disabled={loading}
+                            className="w-full sm:w-auto px-10 py-4 bg-linear-to-r from-gray-900 to-gray-800 text-white font-black uppercase tracking-[0.2em] text-[10px] sm:text-xs hover:from-red-800 hover:to-red-700 disabled:opacity-50 transition-all shadow-[8px_8px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 relative group"
                           >
-                            <span className="w-2 h-2 bg-red-600"></span>
-                            LOG IN
-                          </Link>
+                            <span className="relative z-10">
+                              {loading ? 'TRANSMITTING DOSSIER...' : 'COMPLETE ONBOARDING'}
+                            </span>
+                            <div className="absolute inset-0 bg-linear-to-r from-red-700/0 via-red-600/20 to-red-700/0 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                          </motion.button>
                         </div>
-
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          type="submit"
-                          disabled={loading}
-                          className="px-10 py-4 bg-linear-to-r from-gray-900 to-gray-800 text-white font-black uppercase tracking-[0.2em] text-xs hover:from-red-800 hover:to-red-700 disabled:opacity-50 transition-all shadow-[8px_8px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 relative group"
-                        >
-                          <span className="relative z-10">
-                            {loading ? 'INITIATING ENCRYPTION...' : 'SUBMIT'}
-                          </span>
-                          <div className="absolute inset-0 bg-linear-to-r from-red-700/0 via-red-600/20 to-red-700/0 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        </motion.button>
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
               </form>
             </div>
           </div>
@@ -699,7 +676,7 @@ const Register = () => {
                 className="fixed inset-0 z-[100] flex flex-col bg-black"
               >
                 {/* Header bar */}
-                <div className="flex justify-between items-center py-6 px-8 bg-black/80 border-b border-white/10 backdrop-blur-md z-20">
+                <div className="flex justify-between items-center py-4 sm:py-6 px-4 sm:px-8 bg-black/80 border-b border-white/10 backdrop-blur-md z-20">
                   <button 
                     type="button"
                     onClick={() => {
@@ -721,10 +698,9 @@ const Register = () => {
                   <button
                     type="button"
                     onClick={handleDoneCropping}
-                    disabled={detecting}
-                    className="px-8 py-2 bg-red-600 text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-red-700 transition-all rounded-sm disabled:opacity-50 shadow-[0_0_15px_rgba(220,38,38,0.3)]"
+                    className="px-6 sm:px-8 py-2 bg-red-600 text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-red-700 transition-all rounded-sm shadow-[0_0_15px_rgba(220,38,38,0.3)]"
                   >
-                    {detecting ? 'SCANNING...' : 'CONFIRM'}
+                    CONFIRM
                   </button>
                 </div>
 
@@ -749,10 +725,10 @@ const Register = () => {
                 </div>
 
                 {/* Controls area */}
-                <div className="p-12 bg-black/90 backdrop-blur-md z-20 flex flex-col items-center gap-6 border-t border-white/5">
+                <div className="p-6 sm:p-12 bg-black/90 backdrop-blur-md z-20 flex flex-col items-center gap-6 border-t border-white/5">
                   <div className="w-full max-w-md">
                     <AnimatePresence mode="wait">
-                      {error && error.includes("FACE DETECTION") ? (
+                      {error ? (
                         <motion.div
                           key="error"
                           initial={{ opacity: 0, y: 10 }}
@@ -771,7 +747,6 @@ const Register = () => {
                           </p>
                         </motion.div>
                       ) : (
-                        modelsLoaded && (
                           <motion.div
                             key="status"
                             initial={{ opacity: 0 }}
@@ -780,11 +755,10 @@ const Register = () => {
                           >
                             <div className="flex items-center justify-center gap-2">
                               <p className="text-green-500 text-[8px] font-black uppercase tracking-[0.4em] font-mono whitespace-nowrap">
-                                FACE DETEACTION ACTIVE
+                                IMAGE READY
                               </p>
                             </div>
                           </motion.div>
-                        )
                       )}
                     </AnimatePresence>
                   </div>

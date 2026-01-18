@@ -1,42 +1,29 @@
 import express from "express";
 import {
-  registerUser,
-  verifyOTP,
-  resendVerifyOTP,
-  loginUser,
-  requestPasswordReset,
-  resetPassword,
+  googleAuth,
+  completeOnboarding,
   getProfile,
   validateUser,
-  inviteVIP,
-  sendLoginOTP,
-  verifyLoginOTP
+  inviteVIP
 } from "../controllers/userController.js";
-import { protect } from "../middlewares/authMiddleware.js";
+import { protect, requireOnboarding } from "../middlewares/authMiddleware.js";
 import upload from "../middlewares/uploadMiddleware.js";
 
 const router = express.Router();
 
-router.post("/register", upload.single("profilePhoto"), registerUser);
-router.post("/login", loginUser);
-router.post("/verify-otp", verifyOTP);
-router.post("/resend-verify-otp", resendVerifyOTP);
+// 🔑 Google OAuth Flow (Public)
+router.post("/auth/google", googleAuth);
 
-// 🔑 Password Reset
-router.post("/request-password-reset", requestPasswordReset);
-router.post("/reset-password", resetPassword);
+// 👤 Profile Setup (Public - validates firebaseUid internally)
+router.post("/auth/onboarding", upload.single("profilePhoto"), completeOnboarding);
 
-// 🔑 Passwordless / OTP Login
-router.post("/send-login-otp", sendLoginOTP);
-router.post("/verify-login-otp", verifyLoginOTP);
-
-// 🔐 Profile
-router.get("/profile", protect, getProfile);
+// 🔐 Private Profile (Requires Auth + Onboarding)
+router.get("/profile", protect, requireOnboarding, getProfile);
 
 // 🎫 Public validation endpoint for event pass verification
 router.get("/validate/:userId", validateUser);
 
-// 🌟 VIP
+// 🌟 VIP Designation (Public/Internal)
 router.post("/invite-vip", inviteVIP);
 
 export default router;

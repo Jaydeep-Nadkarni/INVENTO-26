@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { isMobileDevice } from '../utils/performanceOptimization';
+import { apiGet } from '../utils/apiClient';
 
 const Pass = () => {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,13 +28,13 @@ const Pass = () => {
   useEffect(() => {
     const fetchLatestProfile = async () => {
       const token = localStorage.getItem('token');
-      if (!token) return;
+      if (!token) {
+        navigate('/login');
+        return;
+      }
 
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
+        const { data } = await apiGet('/api/users/profile', navigate);
         if (data.user) {
           setUser(data.user);
           localStorage.setItem('currentUser', JSON.stringify(data.user));
@@ -49,9 +52,11 @@ const Pass = () => {
       } catch (error) {
         console.error("Error parsing user data:", error);
       }
+    } else {
+      navigate('/login');
     }
     setLoading(false);
-  }, []);
+  }, [navigate]);
 
   if (loading) {
     return (
