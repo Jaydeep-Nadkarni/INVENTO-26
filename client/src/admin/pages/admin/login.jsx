@@ -35,7 +35,16 @@ const AdminLogin = () => {
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6 text-gray-900">
             <div className="w-full max-w-md">
                 <div className="bg-white border border-gray-200 rounded-lg shadow-xl overflow-hidden">
-                    <div className="p-8 border-b border-gray-100 bg-gray-50/50 text-center">
+                    <div className="p-8 border-b border-gray-100 bg-gray-50/50 text-center relative">
+                        <button 
+                            onClick={() => navigate('/')}
+                            className="absolute top-6 left-6 p-2 text-gray-400 hover:text-gray-900 transition-colors"
+                            title="Return to Home"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                        </button>
                         <div className="w-16 h-16 bg-white border border-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
                             <LogIn className="w-8 h-8 text-gray-900" />
                         </div>
@@ -104,10 +113,6 @@ const AdminLogin = () => {
                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Authorized Access Only</span>
                     </div>
                 </div>
-                
-                <p className="text-center mt-8 text-[11px] text-gray-400 font-medium uppercase tracking-[0.2em] px-8 leading-relaxed">
-                    By logging in, you agree to the internal security protocols of the Invento technical committee. All sessions are logged and monitored.
-                </p>
             </div>
         </div>
     );

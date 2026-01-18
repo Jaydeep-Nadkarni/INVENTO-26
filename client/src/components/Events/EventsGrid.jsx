@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import paperTexture from '../../assets/UI/paper-texture.jpg'
 import logoLoader from '../../assets/UI/KLE-logo-small.png'
+import registerBtn from '../../assets/UI/register.png'
 import pageTurnSound from '../../assets/audios/page-turn.mp3'
 import closeSound from '../../assets/audios/briefcase-open.mp3'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -629,10 +630,13 @@ const EventsGrid = () => {
                                     <button
                                         onClick={handleRegisterClick}
                                         disabled={regLoading}
-                                        className="w-full md:w-auto px-10 py-4 bg-red-700 text-white font-black text-lg uppercase tracking-widest hover:bg-black transition-all duration-300 shadow-xl rounded-sm flex items-center justify-center gap-4 group disabled:opacity-50"
+                                        className="w-full md:w-auto transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:opacity-50 flex items-center justify-center p-0"
                                     >
-                                        <span>{regLoading ? 'PROCESSING...' : 'Register Now'}</span>
-                                        {!regLoading && <span className="group-hover:translate-x-1 transition-transform">→</span>}
+                                        <img 
+                                            src={registerBtn} 
+                                            alt={regLoading ? 'PROCESSING...' : 'Register Now'} 
+                                            className="w-48 md:w-56 h-auto object-contain drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]"
+                                        />
                                     </button>
                                 </section>
                             </div>
@@ -808,9 +812,13 @@ const EventsGrid = () => {
                                                     type="button"
                                                     disabled={regLoading}
                                                     onClick={initiatePayment}
-                                                    className="flex-1 py-3 bg-red-700 text-white font-bold uppercase tracking-widest hover:bg-red-800 transition-all shadow-[4px_4px_0px_#000] font-mono text-xs disabled:opacity-50"
+                                                    className="flex-1 transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:opacity-50 flex items-center justify-center p-0"
                                                 >
-                                                    {regLoading ? 'PROCESSING...' : 'Register'}
+                                                    <img 
+                                                        src={registerBtn} 
+                                                        alt={regLoading ? 'PROCESSING...' : 'Register'} 
+                                                        className="h-10 w-auto object-contain drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]"
+                                                    />
                                                 </button>
                                             </div>
                                         </div>
