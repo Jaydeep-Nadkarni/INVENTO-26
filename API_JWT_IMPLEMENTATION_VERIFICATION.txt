@@ -1,0 +1,133 @@
+FRONTEND JWT AUTHENTICATION IMPLEMENTATION - VERIFICATION REPORT
+=================================================================
+
+CREATED FILES:
+✅ client/src/utils/apiClient.js
+   - Centralized API client with automatic JWT handling
+   - 401 error handling (token expiration)
+   - 403 error handling (onboarding incomplete)
+   - Helper functions: apiCall, apiGet, apiPost, apiPostFormData, apiPut, apiDelete
+
+MODIFIED FILES:
+
+✅ client/src/pages/Profile.jsx
+   Changes:
+   - Added import: import { apiGet } from '../utils/apiClient'
+   - Updated fetchProfile(): Uses apiGet() instead of raw fetch
+   - Added: Firebase signOut() on logout
+   - Automatic handling of 401/403 responses
+
+✅ client/src/pages/Pass.jsx
+   Changes:
+   - Added import: import { useNavigate } from 'react-router-dom'
+   - Added import: import { apiGet } from '../utils/apiClient'
+   - Updated fetchLatestProfile(): Uses apiGet() instead of raw fetch
+   - Added navigation handling for auth errors
+
+✅ client/src/pages/Newspaper.jsx
+   Changes:
+   - Added import: import { apiGet } from '../utils/apiClient'
+   - Updated fetchNotices(): Uses apiGet() instead of raw fetch
+   - Consistent API client usage
+
+✅ client/src/pages/Login.jsx
+   Changes:
+   - Added import: import { apiPost } from '../utils/apiClient'
+   - Updated handleGoogleLogin(): Uses apiPost() instead of raw fetch
+   - Removed manual error checking (handled by apiClient)
+   - Proper 401/403 handling
+
+✅ client/src/pages/Register.jsx
+   Changes:
+   - Added import: import { apiPost, apiPostFormData } from '../utils/apiClient'
+   - Updated handleGoogleSignIn(): Uses apiPost() instead of raw fetch
+   - Updated onboarding submission: Uses apiPostFormData() for file uploads
+   - Automatic JWT injection in auth header
+
+✅ client/src/components/Events/EventsGrid.jsx
+   Changes:
+   - Added import: import { apiPost, apiGet } from '../../utils/apiClient'
+   - Updated handleFetchMember(): Uses apiGet() instead of raw fetch
+   - Updated initiatePayment(): Uses apiPost() for all endpoints
+     - Key validation endpoint
+     - Order creation endpoint
+     - Event registration endpoint
+   - Consistent error handling across all API calls
+
+AUTHENTICATION FLOW IMPROVEMENTS:
+
+1. REQUEST HEADERS:
+   Before: Only included Authorization header in Profile.jsx
+   After:  ALL requests automatically include "Authorization: Bearer <token>"
+
+2. ERROR HANDLING:
+   Before: Manual status checking in each component
+   After:  Centralized error handling in apiClient.js
+   - 401: Auto-logout and redirect to /login
+   - 403: Auto-logout and redirect to /register
+   - Others: Pass to caller with descriptive message
+
+3. TOKEN MANAGEMENT:
+   Before: Direct localStorage access in multiple places
+   After:  Centralized in apiClient.js
+   - Single source of truth for token storage
+   - Consistent Firebase sign-out on logout
+   - Automatic fallback to stored user data
+
+4. FIREBASE INTEGRATION:
+   Before: Firebase signOut only in Profile.jsx
+   After:  Firebase signOut called in apiClient.js on auth errors
+   - Ensures Firebase session cleared on token expiration
+   - Consistent across all error scenarios
+
+BACKWARD COMPATIBILITY:
+
+✅ Supports both VITE_API_URL and VITE_API_BASE_URL
+✅ Works with missing API URL (empty string fallback)
+✅ Handles old token format
+✅ Graceful fallback to stored user data
+
+ERROR SCENARIOS HANDLED:
+
+✅ Expired token (401) → redirect to login with message
+✅ Incomplete onboarding (403) → redirect to register with message
+✅ Network errors → console error + throw to caller
+✅ Malformed JSON → proper error handling
+✅ API errors (4xx/5xx) → extract message from response
+✅ Missing token → allow request without header (for public endpoints)
+
+TESTING RECOMMENDATIONS:
+
+1. Token Expiration Test:
+   - Use apiGet('/api/users/profile') with expired token
+   - Verify automatic redirect to /login
+   - Check localStorage is cleared
+
+2. Onboarding Incomplete Test:
+   - Use apiPost() with non-onboarded user (403 response)
+   - Verify automatic redirect to /register
+   - Check token is cleared
+
+3. Event Registration Test:
+   - Register for event through EventsGrid
+   - Verify JWT included in all API calls
+   - Check payment flow works with auth
+
+4. Profile Access Test:
+   - Load profile page
+   - Verify apiGet() called with Authorization header
+   - Check fallback to stored user data on error
+
+5. Logout Test:
+   - Click logout on Profile
+   - Verify Firebase signed out
+   - Verify token cleared from localStorage
+   - Verify redirect to login
+
+NEXT STEPS:
+
+1. Test complete auth flow end-to-end
+2. Monitor API error responses in console
+3. Verify 401/403 handling works correctly
+4. Test with network throttling
+5. Monitor token expiration scenario

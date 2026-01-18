@@ -2,9 +2,9 @@ import React, { useState, useRef, useCallback, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import Cropper from 'react-easy-crop'
-import * as faceapi from '@vladmandic/face-api'
 import { signInWithPopup } from 'firebase/auth'
 import { auth, googleProvider } from '../config/firebase'
+import { apiPost, apiPostFormData } from '../utils/apiClient'
 import getCroppedImg from '../utils/cropImage'
 import paperTexture from '../assets/UI/paper-texture.jpg'
 import bgImage from '../assets/UI/Invento-bg.webp'
@@ -82,27 +82,6 @@ const Register = () => {
   const [step, setStep] = useState('auth') // 'auth' | 'onboarding'
   const [firebaseUser, setFirebaseUser] = useState(null)
   const [isMobile, setIsMobile] = useState(isMobileDevice())
-  const [modelsLoaded, setModelsLoaded] = useState(false)
-  const [detecting, setDetecting] = useState(false)
-
-  // Load face-api models
-  useEffect(() => {
-    const loadModels = async () => {
-      try {
-        const MODEL_URL = 'https://vladmandic.github.io/face-api/model/'
-        await Promise.all([
-          faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-          faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-          faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
-        ])
-        setModelsLoaded(true)
-        console.log('Face detection models loaded')
-      } catch (err) {
-        console.error('Failed to load face detection models:', err)
-      }
-    }
-    loadModels()
-  }, [])
 
   // Listen for mobile/desktop switches
   useEffect(() => {
@@ -152,17 +131,7 @@ const Register = () => {
       const idToken = await result.user.getIdToken()
 
       // Send token to backend
-      const response = await fetch(`${import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || ''}/api/users/auth/google`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken })
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Authentication failed')
-      }
+      const { data } = await apiPost('/api/users/auth/google', { idToken }, navigate)
 
       setFirebaseUser(data.user)
       
@@ -214,7 +183,6 @@ const Register = () => {
 
   const handleDoneCropping = async () => {
     try {
-      setDetecting(true)
       setError('')
       const croppedImage = await getCroppedImg(
         tempImage,
@@ -222,57 +190,28 @@ const Register = () => {
         rotation
       )
       
-      // Face Detection
-      if (modelsLoaded) {
-        const img = new Image()
-        img.src = croppedImage
-        await new Promise((resolve) => {
-          img.onload = resolve
-          img.onerror = () => {
-            setError("FACE DETECTION: SCANNING FAILED. PLEASE TRY A DIFFERENT IMAGE.")
-            resolve() // Still resolve to exit the promise
-          }
-        })
-
-        if (img.complete && img.naturalWidth !== 0) {
-          const detections = await faceapi.detectAllFaces(img, new faceapi.TinyFaceDetectorOptions({
-            inputSize: 160,
-            scoreThreshold: 0.5
-          }))
-          
-          if (detections.length === 0) {
-            setError("FACE DETECTION: NO FACE DETECTED. ENSURE YOUR FACE IS CLEAR AND WELL-LIT.")
-            setDetecting(false)
-            return
-          }
-          
-          if (detections.length > 1) {
-            setError("FACE DETECTION: MULTIPLE SUBJECTS DETECTED. ONLY ONE AGENT ALLOWED PER PHOTO.")
-            setDetecting(false)
-            return
-          }
-
-          // Check face size (e.g. at least 25% of image width for better quality)
-          const face = detections[0].box
-          if (face.width < img.width * 0.15) {
-            setError("FACE DETECTION: SUBJECT TOO DISTANT. PLEASE ZOOM IN TO FILL THE FRAME.")
-            setDetecting(false)
-            return
-          }
+      // Simple image validation - just check it's a valid image
+      const img = new Image()
+      img.src = croppedImage
+      await new Promise((resolve) => {
+        img.onload = resolve
+        img.onerror = () => {
+          setError("Image upload failed. Please try another image.")
+          resolve()
         }
-      } else {
-        // Models not loaded yet
-        console.warn('Face detection models not yet loaded. Skipping verification.')
+      })
+
+      if (!img.complete || img.naturalWidth === 0) {
+        setError("Please select a valid image file.")
+        return
       }
 
       setPreviewImage(croppedImage)
       setImageFile(croppedImage)
       setIsCropping(false)
-      setDetecting(false)
     } catch (e) {
       console.error(e)
       setError('Failed to crop image')
-      setDetecting(false)
     }
   }
 
@@ -323,16 +262,7 @@ const Register = () => {
       const imageBlob = dataURItoBlob(previewImage);
       formDataObj.append('profilePhoto', imageBlob, 'profile.jpg');
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || ''}/api/users/auth/onboarding`, {
-        method: 'POST',
-        body: formDataObj,
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Onboarding failed')
-      }
+      const { data } = await apiPostFormData('/api/users/auth/onboarding', formDataObj, navigate)
 
       // Success - Store token and user data, then redirect to profile
       if (data.token) {
@@ -746,10 +676,9 @@ const Register = () => {
                   <button
                     type="button"
                     onClick={handleDoneCropping}
-                    disabled={detecting}
-                    className="px-8 py-2 bg-red-600 text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-red-700 transition-all rounded-sm disabled:opacity-50 shadow-[0_0_15px_rgba(220,38,38,0.3)]"
+                    className="px-8 py-2 bg-red-600 text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-red-700 transition-all rounded-sm shadow-[0_0_15px_rgba(220,38,38,0.3)]"
                   >
-                    {detecting ? 'SCANNING...' : 'CONFIRM'}
+                    CONFIRM
                   </button>
                 </div>
 
@@ -777,7 +706,7 @@ const Register = () => {
                 <div className="p-12 bg-black/90 backdrop-blur-md z-20 flex flex-col items-center gap-6 border-t border-white/5">
                   <div className="w-full max-w-md">
                     <AnimatePresence mode="wait">
-                      {error && error.includes("FACE DETECTION") ? (
+                      {error ? (
                         <motion.div
                           key="error"
                           initial={{ opacity: 0, y: 10 }}
@@ -796,7 +725,6 @@ const Register = () => {
                           </p>
                         </motion.div>
                       ) : (
-                        modelsLoaded && (
                           <motion.div
                             key="status"
                             initial={{ opacity: 0 }}
@@ -805,11 +733,10 @@ const Register = () => {
                           >
                             <div className="flex items-center justify-center gap-2">
                               <p className="text-green-500 text-[8px] font-black uppercase tracking-[0.4em] font-mono whitespace-nowrap">
-                                FACE DETEACTION ACTIVE
+                                IMAGE READY
                               </p>
                             </div>
                           </motion.div>
-                        )
                       )}
                     </AnimatePresence>
                   </div>
