@@ -77,11 +77,9 @@ export const googleAuth = async (req, res) => {
       }
     }
 
-    // Generate token only if onboarding is already completed
-    let token = null;
-    if (user.onboardingCompleted) {
-      token = generateToken(user);
-    }
+    // Always generate a token to allow access to the Profile page, 
+    // regardless of onboarding status.
+    const token = generateToken(user);
 
     // Log successful authentication
     logAuthAttempt({

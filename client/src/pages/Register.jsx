@@ -158,12 +158,10 @@ const Register = () => {
         localStorage.setItem('currentUser', JSON.stringify(data.user))
         navigate('/profile')
       } else {
-        // Switch to onboarding step
-        setStep('onboarding')
-        setFormData(prev => ({
-          ...prev,
-          name: data.user.name || result.user.displayName || '',
-        }))
+        // Store session and redirect to profile instead of showing onboarding step here
+        localStorage.setItem('token', data.token)
+        localStorage.setItem('currentUser', JSON.stringify(data.user))
+        navigate('/profile')
       }
     } catch (err) {
       console.error(err)

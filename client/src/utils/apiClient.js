@@ -6,7 +6,17 @@
 import { signOut } from 'firebase/auth'
 import { auth } from '../config/firebase'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '';
+const getApiBaseUrl = () => {
+  // In development, always use relative paths so Vite proxy handles the connection.
+  // This avoids Mixed Content errors and most CORS issues.
+  if (import.meta.env.DEV) {
+    return '';
+  }
+  
+  return import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 /**
  * Handle authentication errors and redirect appropriately
@@ -49,6 +59,10 @@ const handleAuthError = async (status, navigate) => {
 export const apiCall = async (endpoint, options = {}, navigate = null) => {
   const token = localStorage.getItem('token');
   const url = `${API_BASE_URL}${endpoint}`;
+
+  if (import.meta.env.DEV) {
+    console.debug(`[API] ${options.method || 'GET'} ${url}`);
+  }
 
   const headers = {
     'Content-Type': 'application/json',

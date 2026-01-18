@@ -40,11 +40,8 @@ const Login = () => {
       localStorage.setItem('token', data.token);
       localStorage.setItem('currentUser', JSON.stringify(data.user));
 
-      if (data.user.onboardingCompleted) {
-        navigate('/profile');
-      } else {
-        navigate('/register');
-      }
+      // Redirect directly to profile page as requested
+      navigate('/profile');
     } catch (err) {
       console.error('Google Auth Error:', err);
       setError(err.message || 'Authentication failed. Please try again.');
