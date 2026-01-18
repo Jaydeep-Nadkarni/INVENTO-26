@@ -96,20 +96,30 @@ const Register = () => {
     return () => mediaQuery.removeListener(handleChange);
   }, []);
 
-  // Auto-check session
+  // Auto-check session or redirected incomplete user
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
-    if (user) {
-      if (user.onboardingCompleted) {
-        navigate('/profile');
-      } else {
-        setFirebaseUser(user);
-        setStep('onboarding');
-        setFormData(prev => ({
-          ...prev,
-          name: user.name || '',
-        }));
-      }
+    const incompleteUser = JSON.parse(localStorage.getItem('incompleteUser') || 'null');
+
+    if (user && user.onboardingCompleted) {
+      navigate('/profile');
+    } else if (incompleteUser) {
+      // Detected a redirect from Login page with incomplete user data
+      setFirebaseUser(incompleteUser);
+      setStep('onboarding');
+      setFormData(prev => ({
+        ...prev,
+        name: incompleteUser.name || '',
+      }));
+      // Clear the temporary storage so it doesn't persist
+      localStorage.removeItem('incompleteUser');
+    } else if (user && !user.onboardingCompleted) {
+      setFirebaseUser(user);
+      setStep('onboarding');
+      setFormData(prev => ({
+        ...prev,
+        name: user.name || '',
+      }));
     }
   }, [navigate]);
 
@@ -155,18 +165,20 @@ const Register = () => {
       // Send token to backend
       const { data } = await apiPost('/api/users/auth/google', { idToken }, navigate)
 
-      setFirebaseUser(data.user)
-      
-      if (data.user.onboardingCompleted) {
-        // User already onboarded, store token and redirect
+      if (data.status === 'AUTHENTICATED') {
         localStorage.setItem('token', data.token)
         localStorage.setItem('currentUser', JSON.stringify(data.user))
         navigate('/profile')
-      } else {
-        // Store session and redirect to profile instead of showing onboarding step here
-        localStorage.setItem('token', data.token)
-        localStorage.setItem('currentUser', JSON.stringify(data.user))
-        navigate('/profile')
+      } else if (data.status === 'NEW_USER' || data.status === 'ONBOARDING_REQUIRED') {
+        setFirebaseUser(data.user)
+        setFormData(prev => ({
+          ...prev,
+          name: data.user.name || result.user.displayName || '',
+        }))
+        setStep('onboarding')
+        
+        // Auto-scroll to top
+        window.scrollTo(0, 0);
       }
     } catch (err) {
       console.error(err)
@@ -274,6 +286,10 @@ const Register = () => {
 
       const formDataObj = new FormData();
       formDataObj.append('firebaseUid', firebaseUser.firebaseUid);
+      // Pass email if available from temporary storage or firebase object
+      if (firebaseUser.email) {
+        formDataObj.append('email', firebaseUser.email); 
+      }
       formDataObj.append('name', formData.name);
       formDataObj.append('phone', formData.phone);
       formDataObj.append('gender', formData.gender);
@@ -316,7 +332,7 @@ const Register = () => {
       {/* Back Button */}
       <Link 
         to="/" 
-        className="fixed top-4 left-4 sm:top-8 sm:left-8 z-50 flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-full hover:bg-white hover:text-gray-900 transition-all group shadow-lg"
+        className="absolute top-4 left-4 sm:top-8 sm:left-8 z-50 flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-full hover:bg-white hover:text-gray-900 transition-all group shadow-lg"
       >
         <Icons.ArrowLeft />
         <span className="font-mono text-[10px] sm:text-xs font-bold uppercase tracking-widest hidden sm:inline">Home</span>
@@ -505,11 +521,10 @@ const Register = () => {
                     <div className="lg:col-span-2">
                       <div className="space-y-6 sm:space-y-8">
                         {/* Status Message */}
-                        <div className="p-3 bg-green-50 border border-green-200 flex flex-col sm:flex-row items-center sm:justify-between gap-3 rounded-sm">
+                        <div className="p- flex flex-col sm:flex-row items-center sm:justify-between gap-3 rounded-sm">
                           <div className="flex items-center gap-3 w-full sm:w-auto">
-                            <div className="w-2 h-2 bg-green-600 rounded-full shrink-0"></div>
-                            <p className="text-[9px] sm:text-[10px] font-mono text-green-700 font-bold uppercase tracking-widest break-all">
-                              ✓ Verified: {firebaseUser?.email}
+                            <p className="text-[9px] sm:text-[10px] font-mono text-green-700 font-bold tracking-widest break-all">
+                              ✓ VERIFIED: {firebaseUser?.email}
                             </p>
                           </div>
                           <button 
@@ -547,7 +562,7 @@ const Register = () => {
                               GENDER
                             </label>
                             <div className="flex gap-2 sm:gap-4">
-                              {['Male', 'Female', 'Other'].map((g) => (
+                              {['Male', 'Female'].map((g) => (
                                 <label key={g} className="flex-1 cursor-pointer group">
                                   <input
                                     type="radio"

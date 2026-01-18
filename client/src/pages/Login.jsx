@@ -46,11 +46,19 @@ const Login = () => {
 
       const { data } = await apiPost('/api/users/auth/google', { idToken }, navigate);
 
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('currentUser', JSON.stringify(data.user));
-
-      // Redirect directly to profile page as requested
-      navigate('/profile');
+      if (data.status === 'AUTHENTICATED') {
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('currentUser', JSON.stringify(data.user));
+        setSuccess('Authentication verified. Accessing secure profile...');
+        setTimeout(() => navigate('/profile'), 1000);
+      } else if (data.status === 'NEW_USER' || data.status === 'ONBOARDING_REQUIRED') {
+        // Prepare user date for transfer to register page
+        localStorage.setItem('incompleteUser', JSON.stringify(data.user)); // Store temporary user data
+        setError('Agent not recognized. Redirection to registration dossier...');
+        setTimeout(() => navigate('/register'), 1500);
+      } else {
+        throw new Error('Unknown authentication state.');
+      }
     } catch (err) {
       console.error('Google Auth Error:', err);
       setError(err.message || 'Authentication failed. Please try again.');

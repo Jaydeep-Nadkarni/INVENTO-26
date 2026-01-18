@@ -50,35 +50,67 @@ export const googleAuth = async (req, res) => {
   try {
     const { uid, email, emailVerified } = await verifyGoogleIdToken(idToken, clientIp);
     
+    // 1. Check if user exists (by UID or Email)
     let user = await User.findOne({ firebaseUid: uid });
-    
     if (!user) {
-      // Check if user exists by email (legacy transition)
       user = await User.findOne({ email });
       if (user) {
-        // Link existing account to Firebase UID
+        // Link existing email account to Firebase UID (Migration scenario)
         user.firebaseUid = uid;
         user.emailVerified = emailVerified;
-        await user.save();
-      } else {
-        // Create new minimal user for onboarding
-        // Using placeholders for required fields until onboarding is complete
-        user = new User({
-          firebaseUid: uid,
-          email,
-          emailVerified,
-          onboardingCompleted: false,
-          name: "New Agent", // Placeholder
-          phone: "0000000000", // Placeholder
-          clgName: "Invento Academy", // Placeholder
-          gender: "Other", // Placeholder
-        });
         await user.save();
       }
     }
 
-    // Always generate a token to allow access to the Profile page, 
-    // regardless of onboarding status.
+    // 2. Case: New User (Not Registered)
+    // 👉 DO NOT issue JWT.
+    if (!user) {
+      logAuthAttempt({
+        eventType: 'GOOGLE_AUTH_NEW_USER',
+        ip: clientIp,
+        email: email,
+        status: 'success',
+        message: 'New user identified, redirection to registration required'
+      });
+      
+      return res.status(200).json({
+        status: "NEW_USER",
+        message: "User not registered",
+        user: { 
+          email, 
+          firebaseUid: uid,
+          emailVerified
+        }
+      });
+    }
+
+    // 3. Case: User Exists but Onboarding Incomplete
+    // 👉 Issue minimal info, no full access token yet (or specialized onboarding token if needed)
+    // For now, we return ONBOARDING_REQUIRED status.
+    if (!user.onboardingCompleted) {
+       logAuthAttempt({
+        eventType: 'GOOGLE_AUTH_ONBOARDING_REQUIRED',
+        userId: user._id,
+        ip: clientIp,
+        email: email,
+        status: 'success',
+        message: 'User requires onboarding'
+      });
+
+      return res.status(200).json({
+        status: "ONBOARDING_REQUIRED",
+        message: "Onboarding required",
+        user: {
+          _id: user._id,
+          email: user.email,
+          firebaseUid: user.firebaseUid,
+          name: user.name
+        }
+      });
+    }
+
+    // 4. Case: Authenticated & Complete
+    // 👉 Issue JWT + Allow Access
     const token = generateToken(user);
 
     // Log successful authentication
@@ -92,6 +124,7 @@ export const googleAuth = async (req, res) => {
     });
 
     res.status(200).json({
+      status: "AUTHENTICATED",
       message: "Authentication successful",
       token,
       user: {
@@ -174,19 +207,64 @@ export const completeOnboarding = async (req, res) => {
       throw new Error('Invalid Firebase UID format');
     }
 
-    const user = await User.findOne({ firebaseUid });
-    if (!user) {
-      logAuthAttempt({
-        eventType: 'ONBOARDING_USER_NOT_FOUND',
-        ip: clientIp,
-        email: 'unknown',
-        status: 'failure',
-        message: 'User not found for given Firebase UID'
-      });
-      return res.status(404).json({ message: "User not found." });
-    }
+      // 1. Check if user exists by firebaseUid
+      let user = await User.findOne({ firebaseUid });
+      
+      // If user is null, it might be a brand new registration (NEW_USER status from auth/google)
+      // In this case, we create the user here.
+      if (!user) {
+         // Create new user for First-Time Registration
+         const newUser = new User({
+          firebaseUid,
+          // Note: Email should ideally be passed secureley. For this implementation, 
+          // we rely on the client passing the email matching the one from the earlier auth/google step.
+          // OR we fetch it from Firebase Admin SDK using firebaseUid if possible (but we don't have that helper here yet)
+          // We will use a placeholder or req.body.email if provided.
+          email: req.body.email || "pending_verification", 
+          emailVerified: true, 
+          onboardingCompleted: true,
+          name: sanitizedData.name,
+          phone: sanitizedData.phone,
+          clgName: sanitizedData.clgName,
+          gender: sanitizedData.gender,
+        });
 
-    if (user.onboardingCompleted) {
+        if (req.file) {
+          try {
+            const photoPath = await processProfilePhoto(req.file.buffer, newUser._id);
+            newUser.profilePhoto = photoPath;
+          } catch (error) {
+            console.error("Error processing profile photo:", error);
+          }
+        }
+  
+        await newUser.save();
+        
+        const token = generateToken(newUser);
+        
+        logAuthAttempt({
+          eventType: 'ONBOARDING_CREATED_NEW_USER',
+          userId: newUser._id,
+          ip: clientIp,
+          email: newUser.email,
+          status: 'success',
+          message: 'New user created and onboarded'
+        });
+  
+        return res.status(200).json({
+          message: "Registration completed successfully.",
+          token,
+          user: {
+             _id: newUser._id,
+             name: newUser.name,
+             email: newUser.email,
+             onboardingCompleted: true,
+             profilePhoto: newUser.profilePhoto
+          }
+        });
+      }
+
+      if (user.onboardingCompleted) {
       logAuthAttempt({
         eventType: 'ONBOARDING_ALREADY_COMPLETED',
         userId: user._id,
