@@ -35,16 +35,16 @@ const teamsData = [
     name: 'HR & Literary',
     members: [
       { name: 'Akhilesh Joshi', role: 'Secretary', phone: '+91 88618 14369', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sneha', socials: { instagram: null, linkedin: null, whatsapp: 'https://wa.me/8861814369' } },
-      { name: 'Ananya Banahatti', role: 'Secretary', phone: '+91 54321 09876', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Vikram', socials: { instagram: 'https://www.instagram.com/invento_jce/', linkedin: '#', whatsapp: '#' } },
-      { name: 'Saniya Kadarbhai', role: 'Secretary', phone: '+91 54321 09876', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Vikram', socials: { instagram: 'https://www.instagram.com/invento_jce/', linkedin: '#', whatsapp: '#' } },
+      { name: 'Saniya Kadarbhai', role: 'Secretary', phone: '+91 54321 09876', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Vikram', socials: { instagram: 'https://www.instagram.com/invento_jce/', linkedin: '#', whatsapp: 'https://wa.me/5432109876' } },
+      { name: 'Ananya Banahatti', role: 'Secretary', phone: '+91 54321 09876', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Vikram', socials: { instagram: 'https://www.instagram.com/invento_jce/', linkedin: '#', whatsapp: 'https://wa.me/5432109876' } },
     ]
   },
   {
     id: 'media',
     name: 'Media',
     members: [
-      { name: 'Goureesh Hiremath', role: 'Secretary', phone: '+91 43210 98765', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Anjali', socials: { instagram: 'https://www.instagram.com/invento_jce/', linkedin: '#', whatsapp: '#' } },
-      { name: 'Vedant Kangralkar', role: 'Secretary', phone: '+91 32109 87654', img: 'https://iili.io/fg5XXPs.th.jpg', socials: { instagram: 'https://www.instagram.com/invento_jce/', linkedin: '#', whatsapp: '#' } },
+      { name: 'Goureesh Hiremath', role: 'Secretary', phone: '+91 43210 98765', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Anjali', socials: { instagram: 'https://www.instagram.com/invento_jce/', linkedin: '#', whatsapp: 'https://wa.me/4321098765' } },
+      { name: 'Vedant Kangralkar', role: 'Secretary', phone: '+91 32109 87654', img: 'https://iili.io/fg5XXPs.th.jpg', socials: { instagram: 'https://www.instagram.com/invento_jce/', linkedin: '#', whatsapp: 'https://wa.me/3210987654' } },
       { name: 'Akash Patil', role: 'Secretary', phone: '+91 32109 87654', img: 'https://iili.io/fg5XXPs.th.jpg', socials: { instagram: 'https://www.instagram.com/invento_jce/', linkedin: '#', whatsapp: '#' } },
       { name: 'Ganesh Tudvekar', role: 'Secretary', phone: '+91 32109 87654', img: 'https://iili.io/fg5XXPs.th.jpg', socials: { instagram: 'https://www.instagram.com/invento_jce/', linkedin: '#', whatsapp: '#' } },
     ]
