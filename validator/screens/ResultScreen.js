@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { CheckCircle2, XCircle, User, Mail, School, IdCard, ArrowRight, Home } from 'lucide-react-native';
 
-const API_URL = 'http://192.168.1.6:5000'; // Update to your server
+const API_URL = 'http://10.11.1.48:5000'; // Update to your server
 
 export default function ResultScreen({ scanData, onNextParticipant, onReturnHome }) {
   const [validationResult, setValidationResult] = useState(null);
