@@ -9,19 +9,30 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, "../../.env") });
 
 const EVENTS_FILE_PATH = path.join(__dirname, "../../../client/src/components/Events/events.js");
+const CLUBS_FILE_PATH = path.join(__dirname, "../../../client/src/components/Events/clubsData.js");
 
-// Function to safely load the events data from the client-side JS file
-const loadEventsData = () => {
-    const fileContent = fs.readFileSync(EVENTS_FILE_PATH, "utf-8");
-    // Simple extraction of the array from 'const eventsData = [...];'
-    // This is safer than eval for this specific structure
-    const startIdx = fileContent.indexOf("[");
-    const endIdx = fileContent.lastIndexOf("]");
-    const arrayStr = fileContent.substring(startIdx, endIdx + 1);
+// Function to safely load data from the client-side JS file
+const loadData = (filePath, isClubs = false) => {
+    try {
+        const fileContent = fs.readFileSync(filePath, "utf-8");
+        const startIdx = fileContent.indexOf("[");
+        const endIdx = fileContent.lastIndexOf("]");
+        if (startIdx === -1 || endIdx === -1) return [];
+        const arrayStr = fileContent.substring(startIdx, endIdx + 1);
 
-    // We need to handle the fact that it's a JS object literal, not strictly JSON
-    // But since it's being used in a script, we can use Function constructor for a bit more safety than eval
-    return new Function(`return ${arrayStr}`)();
+        if (isClubs) {
+            // Mock common illustration imports that would cause ReferenceErrors in clubsData.js
+            const mocks = ["melodia", "dance", "media", "hr", "literary", "cdc", "wec", "sports", "finearts", "titleEvents", "fashion", "specials", "gaming"];
+            const mockDecls = mocks.map(m => `const ${m}Illustration = "";`).join("\n") +
+                "\n" + mocks.map(m => `const ${m}Illustartion = "";`).join("\n");
+            return new Function(`${mockDecls}\nreturn ${arrayStr}`)();
+        }
+
+        return new Function(`return ${arrayStr}`)();
+    } catch (error) {
+        console.warn(`Warning: Could not fully parse ${path.basename(filePath)}. Error: ${error.message}`);
+        return [];
+    }
 };
 
 const seed = async () => {
@@ -34,19 +45,18 @@ const seed = async () => {
         await mongoose.connect(process.env.MONGO_URI);
         console.log("Connected ✅");
 
-        const staticEvents = loadEventsData();
-        console.log(`Loaded ${staticEvents.length} events from static file.`);
+        const staticEvents = loadData(EVENTS_FILE_PATH);
+        const staticClubs = loadData(CLUBS_FILE_PATH, true);
+        console.log(`Loaded ${staticEvents.length} events and ${staticClubs.length} clubs from static files.`);
 
         console.log("Clearing existing events...");
         await Event.deleteMany({});
 
         const transformedEvents = staticEvents.map(event => {
-            const isSolo = event.type.toLowerCase() === "solo";
+            const isSolo = (event.type || "Solo").toLowerCase() === "solo";
             const eventType = isSolo ? "SOLO" : "TEAM";
 
             // Initialize registrations based on event type
-            // Both are initialized as empty arrays, but the BSON validator
-            // will enforce maxItems: 0 for the non-applicable one.
             const registrations = {
                 participants: [],
                 teams: []
@@ -60,34 +70,39 @@ const seed = async () => {
                 whatsappLink: event.whatsapplink || ""
             };
 
-            // Attempt to parse date "26-02-2026" or "Day 0"
+            // Parse date "26-02-2026" or "Day 0"
             if (event.date && event.date.includes("-")) {
-                const [day, month, year] = event.date.split("-");
-                logistics.date = new Date(`${year}-${month}-${day}T00:00:00Z`);
+                const parts = event.date.split("-");
+                if (parts.length === 3) {
+                    const [day, month, year] = parts;
+                    logistics.date = new Date(`${year}-${month}-${day}T00:00:00Z`);
+                }
             }
 
             // Specific slots for Master/Miss events
             let specificSlots = {};
-            const isMasterMiss = event.title.toLowerCase().includes("mr.") ||
-                event.title.toLowerCase().includes("ms.") ||
-                event.title.toLowerCase().includes("miss");
+            const title = (event.title || "").toLowerCase();
+            const isMasterMiss = title.includes("mr.") ||
+                title.includes("ms.") ||
+                title.includes("miss") ||
+                title.includes("master");
 
             if (isMasterMiss) {
                 specificSlots = {
-                    male: 20, // Default allocation
+                    male: 20,
                     female: 20
                 };
             }
 
             return {
-                _id: event.slug, // Use slug as _id for clean URLs
-                id: event.id.toString(),
+                _id: event.slug,
+                id: (event.id || "").toString(),
                 name: event.title,
                 eventType,
-                club: [event.club],
+                club: event.club ? [event.club] : [],
                 price: event.registartionfee || 0,
                 slots: {
-                    totalSlots: event.slots?.total || 100, // Fallback to 100 if null
+                    totalSlots: event.slots?.total || 100,
                     availableSlots: event.slots?.available || 100
                 },
                 specificSlots,

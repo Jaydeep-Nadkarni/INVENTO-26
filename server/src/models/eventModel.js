@@ -7,6 +7,8 @@ const eventSchema = new mongoose.Schema({
   id: { type: String, unique: true, sparse: true },
   name: { type: String, required: true },
   eventType: { type: String, enum: ["SOLO", "TEAM"], required: true },
+  minTeamSize: { type: Number, default: 1 },
+  maxTeamSize: { type: Number, default: 1 },
   club: [{ type: String }],
   price: { type: Number, required: true },
   slots: {
@@ -34,7 +36,8 @@ const eventSchema = new mongoose.Schema({
           default: "PENDING"
         },
         isOfficial: { type: Boolean, default: false },
-        contingentKey: { type: String }
+        contingentKey: { type: String },
+        isPresent: { type: Boolean, default: false }
       }
     ],
     teams: [
@@ -55,7 +58,8 @@ const eventSchema = new mongoose.Schema({
             name: String,
             email: String,
             phone: String,
-            clgName: String
+            clgName: String,
+            isPresent: { type: Boolean, default: false }
           }
         ]
       }

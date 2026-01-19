@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Event from "../models/eventModel.js";
 import User from "../models/userModel.js";
 import Payment from "../models/paymentModel.js";
@@ -145,237 +146,214 @@ export const registerForEvent = async (req, res) => {
   const reqId = Date.now();
   console.log(`[registerForEvent:${reqId}] HIT. Params ID: ${req.params.id}`);
 
+  const session = await mongoose.startSession();
   try {
-    let { inventoId, // leader for team | participant for solo
-      teamName, members, razorpay_order_id, razorpay_payment_id, razorpay_signature,
-      isOfficial, contingentKey } = req.body;
+    const result = await session.withTransaction(async () => {
+      let {
+        inventoId, teamName, members, razorpay_order_id, razorpay_payment_id, razorpay_signature,
+        isOfficial, contingentKey
+      } = req.body;
 
-    const eventIdParam = req.params.id.trim();
+      const eventIdParam = req.params.id.trim();
+      const event = await Event.findOne({ $or: [{ _id: eventIdParam }, { id: eventIdParam }] }).session(session);
 
-    // Robust find
-    let event = await Event.findOne({ $or: [{ _id: eventIdParam }, { id: eventIdParam }] });
+      if (!event) throw new Error("Event not found");
+      if (event.registration?.isOpen === false) throw new Error("Registration is closed for this event");
 
-    if (!event) {
-      console.warn(`[registerForEvent:${reqId}] Event not found in DB: ${eventIdParam}`);
-      return res.status(404).json({ message: "Event not found" });
-    }
-
-    /* ================= PAYMENT VERIFICATION ================= */
-    if (isOfficial) {
-      if (!contingentKey) {
-        console.warn(`[registerForEvent:${reqId}] Missing Contingent Key`);
-        return res.status(400).json({ message: "Contingent Key required for official registration." });
-      }
-
-      const keyDoc = await ContingentKey.findOne({ key: contingentKey });
-      if (!keyDoc) {
-        console.warn(`[registerForEvent:${reqId}] Invalid Contingent Key: ${contingentKey}`);
-        return res.status(400).json({ message: "Invalid Contingent Key. Official authorization denied." });
-      }
-    } else if (event.price > 0) {
-      if (!verifyRazorpayPayment(razorpay_order_id, razorpay_payment_id, razorpay_signature)) {
-        console.warn(`[registerForEvent:${reqId}] Payment Verification Failed (BYPASSED by Request)`);
-        // return res.status(400).json({
-        //   message: "Payment verification failed",
-        // });
-      }
-
-      /* ---------- PREVENT PAYMENT REUSE ---------- */
-      const usedPayment = await Payment.findOne({ paymentId: razorpay_payment_id, eventId: event._id });
-      if (usedPayment) {
-        console.warn(`[registerForEvent:${reqId}] Payment Reused: ${razorpay_payment_id}`);
-        return res.status(400).json({ message: "Payment already used" });
-      }
-
-
-      /* ---------- AMOUNT VERIFICATION ---------- */
-      const razorpay = getRazorpayInstance();
-      const order = await razorpay.orders.fetch(razorpay_order_id);
-      if (order.status !== "paid" || order.currency !== "INR") {
-        console.warn(`[registerForEvent:${reqId}] Payment status invalid: ${order.status}`);
-        return res.status(400).json({
-          message: "Payment not completed",
-        });
-      }
-      const expectedAmount = event.price * 100; // Razorpay uses paise
-
-      if (order.amount !== expectedAmount) {
-        console.warn(`[registerForEvent:${reqId}] Amount Mismatch. Expected: ${expectedAmount}, Got: ${order.amount}`);
-        return res.status(400).json({
-          message: "Payment amount mismatch for this event",
-        });
-      }
-    }
-
-    // SOLO
-    if (event.eventType === "SOLO" || (event.maxTeamSize === 1)) {
-      if (!inventoId) {
-        console.warn(`[registerForEvent:${reqId}] Missing InventoId`);
-        return res.status(400).json({ message: "Invento ID required" });
-      }
-
-      const user = await User.findById(inventoId);
-      if (!user) {
-        console.warn(`[registerForEvent:${reqId}] Invalid User: ${inventoId}`);
-        return res.status(400).json({ message: "Invalid Invento ID" });
-      }
-
-      const already = event.registrations.participants.some(p => p.inventoId === user._id.toString());
-      if (already) {
-        console.warn(`[registerForEvent:${reqId}] User already registered: ${user.name}`);
-        return res.status(400).json({ message: "Already registered" });
-      }
-
-      event.registrations.participants.push({
-        inventoId: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        clgName: user.clgName,
-        paid: true,
-        status: "CONFIRMED",
-        isOfficial: !!isOfficial,
-        contingentKey: contingentKey
-      });
-      await event.save();
-
-      // Update User Profile
-      user.registeredEvents.push(event.name);
-      user.payment = true;
-
-      // Update passType logic
-      if (isOfficial) {
-        user.passType = "AAA";
-      } else if (user.passType !== "AAA") {
-        user.passType = "A";
-      }
-
-      await user.save();
-
-      if (event.price > 0) {
-        await Payment.create({
-          paymentId: razorpay_payment_id,
-          orderId: razorpay_order_id,
-          eventId: event._id
-        });
-      }
-
-      await transporter.sendMail({
-        from: `"Invento 2026" <${process.env.EMAIL_USER}>`,
-        to: user.email,
-        subject: `Registered for ${event.name}`,
-        html: spaceMail("REGISTRATION CONFIRMED", "You are successfully registered!", event.name, user.name, user._id)
-      });
-
-      return res.status(200).json({
-        message: "Solo registration successful",
-        eventId: event._id,
-        whatsappLink: event.whatsappLink
-      });
-    }
-
-    // TEAM
-    else {
-      // Parse members safely (important)
-      try {
-        members = Array.isArray(members) ? members : JSON.parse(members);
-      } catch {
-        console.warn(`[registerForEvent:${reqId}] Invalid members JSON`);
-        return res.status(400).json({ message: "Invalid members format" });
-      }
-
-      if (!teamName || !members || members.length < event.minTeamSize || members.length > event.maxTeamSize) {
-        console.warn(`[registerForEvent:${reqId}] Invalid team size/format. Size: ${members ? members.length : 0}`);
-        return res.status(400).json({ message: `Team must have ${event.minTeamSize}-${event.maxTeamSize} members` });
-      }
-
-      // Leader must be part of team
-      if (!members.includes(inventoId)) {
-        console.warn(`[registerForEvent:${reqId}] Leader not in members list`);
-        return res.status(400).json({
-          message: "Leader must be included in members list",
-        });
-      }
-
-      const memberData = await Promise.all(members.map(id => User.findById(id)));
-      const missingMembers = memberData.filter(u => !u);
-      if (missingMembers.length > 0) {
-        console.warn(`[registerForEvent:${reqId}] Missing members in DB. Count: ${missingMembers.length}`);
-        return res.status(400).json({
-          message: `Registration Denied: One or more IDs were not found in the directory.`
-        });
-      }
-
-      // Check for already registered members in any team of this event
-      const alreadyRegistered = event.registrations.teams.some(team =>
-        team.members.some(m => members.includes(m.inventoId))
-      );
-      if (alreadyRegistered) {
-        console.warn(`[registerForEvent:${reqId}] Members already registered`);
-        return res.status(400).json({ message: "One or more members are already registered for this event." });
-      }
-
-      const teamMembers = memberData.map(u => ({
-        inventoId: u._id,
-        name: u.name,
-        email: u.email,
-        phone: u.phone,
-        clgName: u.clgName
-      }));
-
-      event.registrations.teams.push({
-        teamName,
-        leaderId: inventoId,
-        paid: true,
-        status: "CONFIRMED",
-        isOfficial: !!isOfficial,
-        contingentKey: contingentKey,
-        members: teamMembers
-      });
-      await event.save();
-
-      // Update all members users
-      for (const u of memberData) {
-        u.registeredEvents.push(event.name);
-        // If official, upgrade ALL members to AAA
-        if (isOfficial) {
-          u.passType = "AAA";
-        } else if (u.passType !== "AAA") {
-          u.passType = "A";
+      // SOLO/TEAM constraint enforcement
+      if (event.eventType === "SOLO") {
+        if (event.registrations.teams && event.registrations.teams.length > 0) {
+          throw new Error("Integrity Error: SOLO event already contains team registrations.");
         }
-        await u.save();
+      } else if (event.eventType === "TEAM") {
+        if (event.registrations.participants && event.registrations.participants.length > 0) {
+          throw new Error("Integrity Error: TEAM event already contains solo registrations.");
+        }
       }
 
-      if (event.price > 0) {
-        await Payment.create({
-          paymentId: razorpay_payment_id,
-          orderId: razorpay_order_id,
-          eventId: event._id
-        });
+      // Payment/Official Verification
+      if (isOfficial) {
+        if (!contingentKey) throw new Error("Contingent Key required for official registration.");
+        const keyDoc = await ContingentKey.findOne({ key: contingentKey }).session(session);
+        if (!keyDoc) throw new Error("Invalid Contingent Key.");
+
+        // Official teams limit enforcement (per college using contingentKey)
+        const currentOfficialCount = [
+          ...event.registrations.participants,
+          ...event.registrations.teams
+        ].filter(r => r.isOfficial && r.contingentKey === contingentKey).length;
+
+        const limit = event.registration?.officialTeamsPerCollege || 1;
+        if (currentOfficialCount >= limit) {
+          throw new Error(`Limit reached: Maximum ${limit} official registration(s) allowed per college for this event.`);
+        }
+      } else if (event.price > 0) {
+        if (!verifyRazorpayPayment(razorpay_order_id, razorpay_payment_id, razorpay_signature)) {
+          throw new Error("Payment verification failed");
+        }
+        const usedPayment = await Payment.findOne({ paymentId: razorpay_payment_id, eventId: event._id }).session(session);
+        if (usedPayment) throw new Error("Payment already used for this event.");
+
+        const razorpay = getRazorpayInstance();
+        const order = await razorpay.orders.fetch(razorpay_order_id);
+        if (order.status !== "paid") throw new Error("Payment not completed or verified by Razorpay.");
+        if (order.amount !== event.price * 100) throw new Error("Payment amount mismatch for this event.");
       }
 
-      // Email Leader
-      const leader = memberData.find(u => u._id.toString() === inventoId);
-      await transporter.sendMail({
-        from: `"Invento 2026" <${process.env.EMAIL_USER}>`,
-        to: leader.email,
-        subject: `Team Registered for ${event.name}`,
-        html: spaceMail("TEAM REGISTRATION CONFIRMED", `Team ${teamName} is successfully registered!`, event.name, leader.name, leader._id)
-      });
+      const isMasterMiss = /master|miss/i.test(event.name);
+      // "Update status to 'CONFIRMED' after successful payment, 'PENDING' for free events"
+      let status = (event.price > 0 && !isOfficial) ? "CONFIRMED" : "PENDING";
 
+      // SOLO Logic
+      if (event.eventType === "SOLO") {
+        if (!inventoId) throw new Error("Invento ID required for solo registration.");
+        const user = await User.findById(inventoId).session(session);
+        if (!user) throw new Error("Invalid Invento ID.");
 
-      return res.status(200).json({
-        message: "Team registration successful",
-        eventId: event._id,
-        whatsappLink: event.whatsappLink
-      });
-    }
+        if (event.registrations.participants.some(p => p.inventoId === user._id)) {
+          throw new Error("You are already registered for this event.");
+        }
+
+        // Gender check for Master/Miss events
+        let slotKey = null;
+        if (isMasterMiss) {
+          if (user.gender === "Male") slotKey = "availableBoysSlots";
+          else if (user.gender === "Female") slotKey = "availableGirlsSlots";
+          else throw new Error("Gender must be specified as Male or Female for Master/Miss events.");
+        }
+
+        // Atomic update for slots and registration
+        const updateQuery = { _id: event._id, "slots.availableSlots": { $gt: 0 } };
+        if (slotKey) updateQuery[`specificSlots.${slotKey}`] = { $gt: 0 };
+
+        const participantData = {
+          inventoId: user._id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          clgName: user.clgName,
+          paid: (event.price > 0 && !isOfficial),
+          status,
+          isOfficial: !!isOfficial,
+          contingentKey
+        };
+
+        const pushUpdate = {
+          $push: { "registrations.participants": participantData },
+          $inc: { "slots.availableSlots": -1 }
+        };
+        if (slotKey) pushUpdate.$inc[`specificSlots.${slotKey}`] = -1;
+
+        const updatedEvent = await Event.findOneAndUpdate(updateQuery, pushUpdate, { session, new: true });
+        if (!updatedEvent) throw new Error("No slots available or reservation failed (possible gender limit reached).");
+
+        // Update User Profile
+        if (!user.registeredEvents.includes(event.name)) {
+          user.registeredEvents.push(event.name);
+        }
+        user.payment = true; // User has participated in a transaction/registration
+        user.passType = isOfficial ? "AAA" : (user.passType === "G" ? "A" : user.passType);
+        await user.save({ session });
+
+        if (event.price > 0 && !isOfficial) {
+          await Payment.create([{ paymentId: razorpay_payment_id, orderId: razorpay_order_id, eventId: event._id }], { session });
+        }
+
+        return { type: "Solo", user, eventName: event.name, whatsappLink: event.whatsappLink };
+      }
+
+      // TEAM Logic
+      else {
+        try {
+          members = Array.isArray(members) ? members : JSON.parse(members);
+        } catch {
+          throw new Error("Invalid members format. Must be an array of IDs.");
+        }
+
+        if (!teamName || !members || members.length < (event.minTeamSize || 1) || members.length > (event.maxTeamSize || 10)) {
+          throw new Error(`Team must have between ${event.minTeamSize || 1} and ${event.maxTeamSize || 10} members.`);
+        }
+        if (!members.includes(inventoId)) throw new Error("Leader must be included in the members list.");
+
+        const memberData = await User.find({ _id: { $in: members } }).session(session);
+        if (memberData.length !== members.length) throw new Error("One or more team members were not found in the directory.");
+
+        const alreadyRegisteredMember = event.registrations.teams.some(team =>
+          team.members.some(m => members.includes(m.inventoId))
+        );
+        if (alreadyRegisteredMember) throw new Error("One or more of your team members are already registered for this event.");
+
+        // Atomic update for slots and registration
+        const updatedEvent = await Event.findOneAndUpdate(
+          { _id: event._id, "slots.availableSlots": { $gt: 0 } },
+          {
+            $push: {
+              "registrations.teams": {
+                teamName,
+                leaderId: inventoId,
+                status,
+                isOfficial: !!isOfficial,
+                contingentKey,
+                paid: (event.price > 0 && !isOfficial),
+                members: memberData.map(u => ({
+                  inventoId: u._id,
+                  name: u.name,
+                  email: u.email,
+                  phone: u.phone,
+                  clgName: u.clgName
+                }))
+              }
+            },
+            $inc: { "slots.availableSlots": -1 }
+          },
+          { session, new: true }
+        );
+
+        if (!updatedEvent) throw new Error("No slots available for this event.");
+
+        for (const u of memberData) {
+          if (!u.registeredEvents.includes(event.name)) {
+            u.registeredEvents.push(event.name);
+          }
+          u.passType = isOfficial ? "AAA" : (u.passType === "G" ? "A" : u.passType);
+          await u.save({ session });
+        }
+
+        if (event.price > 0 && !isOfficial) {
+          await Payment.create([{ paymentId: razorpay_payment_id, orderId: razorpay_order_id, eventId: event._id }], { session });
+        }
+
+        const leader = memberData.find(u => u._id === inventoId);
+        return { type: "Team", user: leader, teamName, eventName: event.name, whatsappLink: event.whatsappLink };
+      }
+    }, { readPreference: 'primary' }); // Ensure strong consistency for registration
+
+    // Email logic outside of transaction (best practice)
+    await transporter.sendMail({
+      from: `"Invento 2026" <${process.env.EMAIL_USER}>`,
+      to: result.user.email,
+      subject: `Registration Success: ${result.eventName}`,
+      html: spaceMail(
+        result.type === "Solo" ? "REGISTRATION CONFIRMED" : "TEAM REGISTRATION CONFIRMED",
+        result.type === "Solo" ? "You are successfully registered!" : `Team ${result.teamName} is successfully registered!`,
+        result.eventName, result.user.name, result.user._id
+      )
+    }).catch(err => console.error("Mail Error (Registration preserved):", err));
+
+    return res.status(200).json({
+      message: `${result.type} registration successful`,
+      eventId: req.params.id,
+      whatsappLink: result.whatsappLink
+    });
 
   } catch (error) {
-    console.error("Error in registerForEvent:", error);
-    return res.status(500).json({ message: error.message });
+    console.error(`[registerForEvent:${reqId}] Transaction Aborted:`, error.message);
+    return res.status(400).json({ message: error.message });
+  } finally {
+    session.endSession();
   }
 };
+
 
 // Validate Contingent Key
 export const validateKey = async (req, res) => {
@@ -401,5 +379,163 @@ export const addContingentKey = async (req, res) => {
     res.status(201).json({ success: true, data: newKey });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+/* ================= STATUS & ATTENDANCE ================= */
+
+// Update individual participant status
+export const updateParticipantStatus = async (req, res) => {
+  const { eventId, inventoId } = req.params;
+  const { status } = req.body;
+
+  const validStatuses = ["PENDING", "CONFIRMED", "WAITLIST", "CANCELLED", "DISQUALIFIED"];
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({ message: "Invalid status value" });
+  }
+
+  const session = await mongoose.startSession();
+  try {
+    await session.withTransaction(async () => {
+      const event = await Event.findOne({
+        $or: [{ _id: eventId }, { id: eventId }]
+      }).session(session);
+
+      if (!event) throw new Error("Event not found");
+
+      const participant = event.registrations.participants.find(p => p.inventoId === inventoId);
+      if (!participant) throw new Error("Participant not found");
+
+      const oldStatus = participant.status;
+      const isActive = (s) => ["CONFIRMED", "PENDING"].includes(s);
+
+      const wasActive = isActive(oldStatus);
+      const nowActive = isActive(status);
+
+      // Handle slot logic
+      if (nowActive && !wasActive) {
+        if (event.slots.availableSlots <= 0) {
+          throw new Error("No slots available to activate this participant");
+        }
+        event.slots.availableSlots -= 1;
+      } else if (!nowActive && wasActive) {
+        event.slots.availableSlots += 1;
+      }
+
+      participant.status = status;
+      // Mark modified to ensure updatedAt is bumped even if only subdocs changed
+      event.markModified('registrations.participants');
+      await event.save({ session });
+    });
+
+    res.status(200).json({ message: `Participant status updated to ${status}` });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  } finally {
+    session.endSession();
+  }
+};
+
+// Update individual participant attendance
+export const updateParticipantAttendance = async (req, res) => {
+  const { eventId, inventoId } = req.params;
+  const { isPresent } = req.body;
+
+  try {
+    const event = await Event.findOne({
+      $or: [{ _id: eventId }, { id: eventId }]
+    });
+
+    if (!event) return res.status(404).json({ message: "Event not found" });
+
+    const participant = event.registrations.participants.find(p => p.inventoId === inventoId);
+    if (!participant) return res.status(404).json({ message: "Participant not found" });
+
+    participant.isPresent = isPresent;
+    event.markModified('registrations.participants');
+    await event.save();
+
+    res.status(200).json({ message: `Participant attendance updated to ${isPresent}` });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Update team status
+export const updateTeamStatus = async (req, res) => {
+  const { eventId, teamName } = req.params;
+  const { status } = req.body;
+
+  const validStatuses = ["PENDING", "CONFIRMED", "WAITLIST", "CANCELLED", "DISQUALIFIED"];
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({ message: "Invalid status value" });
+  }
+
+  const session = await mongoose.startSession();
+  try {
+    await session.withTransaction(async () => {
+      const event = await Event.findOne({
+        $or: [{ _id: eventId }, { id: eventId }]
+      }).session(session);
+
+      if (!event) throw new Error("Event not found");
+
+      const team = event.registrations.teams.find(t => t.teamName === teamName);
+      if (!team) throw new Error("Team not found");
+
+      const oldStatus = team.status;
+      const isActive = (s) => ["CONFIRMED", "PENDING"].includes(s);
+
+      const wasActive = isActive(oldStatus);
+      const nowActive = isActive(status);
+
+      // Handle slot logic
+      if (nowActive && !wasActive) {
+        if (event.slots.availableSlots <= 0) {
+          throw new Error("No slots available to activate this team");
+        }
+        event.slots.availableSlots -= 1;
+      } else if (!nowActive && wasActive) {
+        event.slots.availableSlots += 1;
+      }
+
+      team.status = status;
+      event.markModified('registrations.teams');
+      await event.save({ session });
+    });
+
+    res.status(200).json({ message: `Team status updated to ${status}` });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  } finally {
+    session.endSession();
+  }
+};
+
+// Update team member attendance
+export const updateMemberAttendance = async (req, res) => {
+  const { eventId, teamName, inventoId } = req.params;
+  const { isPresent } = req.body;
+
+  try {
+    const event = await Event.findOne({
+      $or: [{ _id: eventId }, { id: eventId }]
+    });
+
+    if (!event) return res.status(404).json({ message: "Event not found" });
+
+    const team = event.registrations.teams.find(t => t.teamName === teamName);
+    if (!team) return res.status(404).json({ message: "Team not found" });
+
+    const member = team.members.find(m => m.inventoId === inventoId);
+    if (!member) return res.status(404).json({ message: "Member not found" });
+
+    member.isPresent = isPresent;
+    event.markModified('registrations.teams');
+    await event.save();
+
+    res.status(200).json({ message: `Member attendance updated to ${isPresent}` });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };

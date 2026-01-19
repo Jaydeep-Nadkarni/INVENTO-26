@@ -18,6 +18,7 @@ export const generateToken = (user) => {
       firebaseUid: user.firebaseUid,
       email: user.email,
       isOfficial: user.isOfficial || false,
+      role: user.role || "USER",
       passType: user.passType,
       onboardingCompleted: user.onboardingCompleted,
     },

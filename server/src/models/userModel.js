@@ -75,6 +75,12 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    // Role for authorization
+    role: {
+      type: String,
+      enum: ["USER", "ADMIN", "COORDINATOR"],
+      default: "USER",
+    },
   },
   { timestamps: true }
 );
