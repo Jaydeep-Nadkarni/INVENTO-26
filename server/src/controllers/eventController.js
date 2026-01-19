@@ -208,7 +208,7 @@ export const registerForEvent = async (req, res) => {
     }
 
     // SOLO
-    if (event.type === "solo" || (event.maxTeamSize === 1)) {
+    if (event.eventType === "SOLO" || (event.maxTeamSize === 1)) {
       if (!inventoId) {
         console.warn(`[registerForEvent:${reqId}] Missing InventoId`);
         return res.status(400).json({ message: "Invento ID required" });
@@ -220,19 +220,20 @@ export const registerForEvent = async (req, res) => {
         return res.status(400).json({ message: "Invalid Invento ID" });
       }
 
-      const already = event.participants.some(p => p.inventoId === user._id.toString());
+      const already = event.registrations.participants.some(p => p.inventoId === user._id.toString());
       if (already) {
         console.warn(`[registerForEvent:${reqId}] User already registered: ${user.name}`);
         return res.status(400).json({ message: "Already registered" });
       }
 
-      event.participants.push({
+      event.registrations.participants.push({
         inventoId: user._id,
         name: user.name,
         email: user.email,
         phone: user.phone,
         clgName: user.clgName,
         paid: true,
+        status: "CONFIRMED",
         isOfficial: !!isOfficial,
         contingentKey: contingentKey
       });
@@ -306,7 +307,7 @@ export const registerForEvent = async (req, res) => {
       }
 
       // Check for already registered members in any team of this event
-      const alreadyRegistered = event.teams.some(team =>
+      const alreadyRegistered = event.registrations.teams.some(team =>
         team.members.some(m => members.includes(m.inventoId))
       );
       if (alreadyRegistered) {
@@ -322,10 +323,11 @@ export const registerForEvent = async (req, res) => {
         clgName: u.clgName
       }));
 
-      event.teams.push({
+      event.registrations.teams.push({
         teamName,
         leaderId: inventoId,
         paid: true,
+        status: "CONFIRMED",
         isOfficial: !!isOfficial,
         contingentKey: contingentKey,
         members: teamMembers
