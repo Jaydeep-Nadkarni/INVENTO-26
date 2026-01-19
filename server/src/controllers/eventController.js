@@ -683,7 +683,10 @@ export const getEvents = async (req, res) => {
       subtitle: 1,
       description: 1,
       eventType: 1,
+      minTeamSize: 1,
+      maxTeamSize: 1,
       club: 1,
+
       price: 1,
       rounds: 1,
       rounddetails: 1,

@@ -23,11 +23,11 @@ export const mapEventFromDb = (event) => ({
     description: event.description,
     fee: (event.price ?? event.registartionfee) === 0 ? 'FREE' : `Rs. ${event.price ?? event.registartionfee}`,
     teamSize: (() => {
-        const min = event.team?.min ?? 1;
-        const max = event.team?.max ?? 1;
+        const min = event.minTeamSize ?? event.team?.min ?? 1;
+        const max = event.maxTeamSize ?? event.team?.max ?? 1;
         return min === max ? `${max}` : `${min}-${max}`;
-
     })(),
+
 
     slotsAvailable: event.slots?.availableSlots ?? event.slots?.available ?? 'TBD',
     rounds: (event.rounds || "").toString(),
