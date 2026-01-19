@@ -566,9 +566,8 @@ const EventsGrid = () => {
 
                                 if (isMasterMiss) {
                                     if (!user) return "SLOTS AVAILABLE : Master + Miss Available";
-                                    const boys = currentEvent.specificSlots?.availableBoysSlots ?? currentEvent.specificSlots?.male ?? 0;
-                                    const girls = currentEvent.specificSlots?.availableGirlsSlots ?? currentEvent.specificSlots?.female ?? 0;
-
+                                    const boys = currentEvent.specificSlots?.availableBoysSlots ?? 0;
+                                    const girls = currentEvent.specificSlots?.availableGirlsSlots ?? 0;
                                     if (user.gender === "Male") return `SLOTS AVAILABLE : ${boys} (Master)`;
                                     if (user.gender === "Female") return `SLOTS AVAILABLE : ${girls} (Miss)`;
                                     return "SLOTS AVAILABLE : Master + Miss Available";
