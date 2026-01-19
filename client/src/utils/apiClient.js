@@ -34,23 +34,22 @@ const handleAuthError = async (status, navigate) => {
     }
     if (navigate) navigate('/login');
   } else if (status === 403) {
-    // Onboarding not completed
-    console.warn('Onboarding incomplete (403). Redirecting to onboarding...');
-    localStorage.removeItem('token');
+    // Permission denied or Onboarding not completed
+    console.warn('Access forbidden or onboarding incomplete (403).');
+    // NOTE: We do NOT remove the token here because the user may still be authenticated
+    // but just lacking permissions for a specific action (or needs to finish registration).
+
+    // Check if it's an onboarding redirect or just a forbidden action
     const userStr = localStorage.getItem('currentUser');
     if (userStr) {
       const user = JSON.parse(userStr);
-      user.onboardingCompleted = false;
-      localStorage.setItem('currentUser', JSON.stringify(user));
+      if (user.onboardingCompleted === false && navigate) {
+        navigate('/register');
+      }
     }
-    try {
-      await signOut(auth);
-    } catch (err) {
-      console.error('Firebase sign out error:', err);
-    }
-    if (navigate) navigate('/register');
   }
 };
+
 
 /**
  * Fetch with JWT authentication

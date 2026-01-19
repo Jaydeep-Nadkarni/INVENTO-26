@@ -390,27 +390,28 @@ const EventsGrid = () => {
                             <h1 className="text-4xl font-serif md:text-5xl font-black text-white uppercase tracking-tighter">Competitions</h1>
                         </div>
                         <div className="hidden md:block text-xs font-mono text-gray-500">
-                            {eventsLoading ? 'SYNCING DATABASE...' : 'LIVE REPOSITORY'}
+                            {eventsLoading ? (
+                                <span className="flex items-center gap-2">
+                                    <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></span>
+                                    SYNCING DATABASE...
+                                </span>
+                            ) : (
+                                'LIVE REPOSITORY'
+                            )}
                         </div>
                     </div>
 
-                    {eventsLoading ? (
-                        <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                            <div className="w-12 h-12 border-4 border-red-600/30 border-t-red-600 rounded-full animate-spin"></div>
-                            <p className="font-mono text-[10px] text-gray-500 uppercase tracking-widest animate-pulse">Establishing Secure Connection...</p>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
-                            {liveClubs.map((club, index) => (
-                                <EventGridCard
-                                    key={club.id}
-                                    club={club}
-                                    index={index}
-                                    onSelect={() => handleClubClick(club.slug)}
-                                />
-                            ))}
-                        </div>
-                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+                        {liveClubs.map((club, index) => (
+                            <EventGridCard
+                                key={club.id}
+                                club={club}
+                                index={index}
+                                onSelect={() => handleClubClick(club.slug)}
+                            />
+                        ))}
+                    </div>
+
 
 
                 </motion.div>

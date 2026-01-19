@@ -69,14 +69,28 @@ export const DataProvider = ({ children }) => {
         localStorage.setItem('adminData', JSON.stringify(data));
     }, [data]);
 
-    // Fetch on initial load if we have a token
+    // Fetch on initial load if we have a token and proper role
     useEffect(() => {
         const token = localStorage.getItem('token');
+        const userStr = localStorage.getItem('currentUser');
+
         if (token) {
-            refreshEvents();
-            refreshStats();
+            refreshEvents(); // Events list is now public, so safe to fetch for everyone
+
+            // Only fetch admin specific stats if user is admin/coordinator
+            if (userStr) {
+                try {
+                    const user = JSON.parse(userStr);
+                    if (user.role === 'ADMIN' || user.role === 'COORDINATOR') {
+                        refreshStats();
+                    }
+                } catch (e) {
+                    console.error("Error parsing user for stats fetch:", e);
+                }
+            }
         }
     }, []);
+
 
 
     // Computed Stats (Re-calculated when participants/events/admins/teams change)
