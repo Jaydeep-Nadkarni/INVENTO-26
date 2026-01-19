@@ -1,62 +1,32 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Sidebar from '../../components/sidebar';
 import { useData } from '../../context/DataContext';
-import { 
-    PieChart, TrendingUp, Info, Users, 
-    Wallet, Filter, BarChart3, 
-    Target, Download
+import {
+    PieChart, TrendingUp, Info, Users,
+    Wallet, Filter, BarChart3,
+    Target, Download, RefreshCcw,
+    ShieldCheck, School, Flag
 } from 'lucide-react';
 
 const MasterStats = () => {
-    const { data: { participants, events, teams } } = useData();
+    const { data: { overviewStats, events, teams }, loading, refreshStats } = useData();
     const [selectedTeam, setSelectedTeam] = useState('all');
-    const [selectedEvent, setSelectedEvent] = useState('all');
 
-    // 1. Filtered Data
-    const filteredParticipants = useMemo(() => {
-        return participants.filter(p => {
-            const matchTeam = selectedTeam === 'all' || p.team === selectedTeam;
-            const matchEvent = selectedEvent === 'all' || p.event === selectedEvent;
-            return matchTeam && matchEvent;
-        });
-    }, [participants, selectedTeam, selectedEvent]);
+    useEffect(() => {
+        refreshStats();
+    }, []);
 
-    // 2. Calculations for filtered data
-    const stats = useMemo(() => {
-        const total = filteredParticipants.length;
-        const verified = filteredParticipants.filter(p => p.verified).length;
-        const totalPaid = filteredParticipants.reduce((acc, p) => acc + (p.payment_status === 'paid' ? p.payment_amount : 0), 0);
-        
-        // Payment methods breakdown
-        const payments = {};
-        // Participants distribution (by event if team selected, or by team if all)
-        const distribution = {};
+    // College participation data for the tracking table
+    const collegeParticipation = useMemo(() => {
+        if (!overviewStats || !overviewStats.collegeParticipation) return [];
+        return overviewStats.collegeParticipation;
+    }, [overviewStats]);
 
-        filteredParticipants.forEach(p => {
-            // Payment method (mocked as 'Direct' if not present since we don't have it in data currently)
-            const method = 'Direct'; 
-            payments[method] = (payments[method] || 0) + 1;
+    const eventLeaderboard = useMemo(() => {
+        if (!overviewStats || !overviewStats.eventLeaderboard) return [];
+        return overviewStats.eventLeaderboard;
+    }, [overviewStats]);
 
-            // Distribution
-            const key = selectedTeam === 'all' 
-                ? (p.team || 'N/A')
-                : (p.event || 'N/A');
-            
-            if (key?.toLowerCase() !== 'registration') {
-                distribution[key] = (distribution[key] || 0) + 1;
-            }
-        });
-
-        return {
-            total,
-            verified,
-            totalPaid,
-            payments: Object.entries(payments).map(([name, count]) => ({ name, count })),
-            distribution: Object.entries(distribution)
-                .map(([name, count]) => ({ name, count }))
-                .sort((a, b) => b.count - a.count)
-        };
-    }, [filteredParticipants, selectedTeam]);
     return (
         <div className="flex h-screen bg-black text-white border-gray-800">
             <Sidebar panelType="master" />
@@ -67,133 +37,126 @@ const MasterStats = () => {
                         <div>
                             <div className="flex items-center gap-2 mb-2">
                                 <PieChart className="w-5 h-5 text-gray-500" />
-                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Analytical Node</span>
+                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Operational Analytics</span>
                             </div>
-                            <h1 className="text-3xl font-black tracking-tight text-white">SYSTEM STATS</h1>
+                            <h1 className="text-3xl font-black tracking-tight text-white uppercase italic">Fest Command Center</h1>
                         </div>
 
                         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                            <div className="flex items-center gap-2 bg-gray-950 border border-gray-800 px-3 py-1.5 rounded">
-                                <Filter className="w-3 h-3 text-gray-500" />
-                                <select 
-                                    className="bg-transparent text-[10px] font-bold uppercase tracking-wider outline-none cursor-pointer text-gray-300"
-                                    value={selectedTeam}
-                                    onChange={(e) => {
-                                        setSelectedTeam(e.target.value);
-                                        setSelectedEvent('all');
-                                    }}
-                                >
-                                    <option value="all">ALL TEAMS</option>
-                                    {teams
-                                        .filter(t => t.name?.toLowerCase() !== 'registration')
-                                        .map(t => (
-                                            <option key={t.id} value={t.name}>
-                                                {(t.name || 'Unnamed').toUpperCase()}
-                                            </option>
-                                        ))}
-                                </select>
-                            </div>
-
-                            <div className="flex items-center gap-2 bg-gray-950 border border-gray-800 px-3 py-1.5 rounded">
-                                <select 
-                                    className="bg-transparent text-[10px] font-bold uppercase tracking-wider outline-none cursor-pointer text-gray-300"
-                                    value={selectedEvent}
-                                    onChange={(e) => setSelectedEvent(e.target.value)}
-                                >
-                                    <option value="all">ALL EVENTS</option>
-                                    {events
-                                        .filter(e => selectedTeam === 'all' || e.team === selectedTeam)
-                                        .map(e => (
-                                            <option key={e.id} value={e.name}>
-                                                {(e.name || 'Unnamed').toUpperCase()}
-                                            </option>
-                                        ))}
-                                </select>
-                            </div>
+                            <button
+                                onClick={refreshStats}
+                                className="flex items-center gap-2 bg-gray-900 border border-gray-800 px-4 py-2 rounded text-[10px] font-bold uppercase tracking-widest hover:bg-gray-800 transition-all"
+                            >
+                                <RefreshCcw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
+                                Sync Metrics
+                            </button>
+                            <button className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-all">
+                                <Download className="w-3 h-3" />
+                                Export Ledger
+                            </button>
                         </div>
                     </header>
 
-                    {/* Filtered KPIs */}
+                    {/* Global KPIs */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
                         {[
-                            { label: "Filtered Sample", value: stats.total, icon: Users, color: "text-blue-400" },
-                            { label: "Verified Data", value: stats.verified, icon: Target, color: "text-green-400" },
-                            { label: "Local Revenue", value: `₹${stats.totalPaid.toLocaleString()}`, icon: Wallet, color: "text-amber-400" },
-                            { label: "Verification %", value: stats.total > 0 ? `${Math.round((stats.verified/stats.total)*100)}%` : '0%', icon: BarChart3, color: "text-purple-400" }
+                            { label: "Total Registrations", value: overviewStats?.totals[0]?.totalSoloRegistrations + overviewStats?.totals[0]?.totalTeamRegistrations || 0, icon: Users, color: "text-blue-400" },
+                            { label: "Revenue Manifested", value: `₹${(overviewStats?.totals[0]?.totalRevenue || 0).toLocaleString()}`, icon: Wallet, color: "text-amber-400" },
+                            { label: "Active Events", value: events.length, icon: Target, color: "text-green-400" },
+                            { label: "Total Schools", value: collegeParticipation.length, icon: School, color: "text-purple-400" }
                         ].map((stat, idx) => (
-                            <div key={idx} className="bg-gray-950 border border-gray-800 p-5 rounded hover:border-white transition-all shadow-sm">
+                            <div key={idx} className="bg-gray-950 border border-gray-800 p-5 rounded hover:border-white transition-all shadow-sm group">
                                 <div className="flex justify-between items-center mb-4">
                                     <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{stat.label}</span>
-                                    <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                                    <stat.icon className={`w-4 h-4 ${stat.color} group-hover:scale-110 transition-transform`} />
                                 </div>
-                                <div className="text-2xl font-black text-white">{stat.value}</div>
+                                <div className="text-2xl font-black text-white italic">{stat.value}</div>
                             </div>
                         ))}
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        {/* Domain Distribution Chart */}
+                        {/* Contingent Key Usage tracking per college */}
                         <section className="lg:col-span-2 bg-gray-950 border border-gray-800 rounded p-6 shadow-sm">
-                            <h2 className="text-xs font-black uppercase tracking-[0.15em] mb-8 flex items-center justify-between">
-                                <span className="text-white">Volume Distribution</span>
-                                <span className="text-[10px] font-medium text-gray-500 uppercase">BY {selectedTeam === 'all' ? 'TEAMS' : 'EVENTS'}</span>
+                            <h2 className="text-xs font-black uppercase tracking-[0.2em] mb-8 flex items-center gap-3 text-white">
+                                <Flag className="w-4 h-4 text-amber-500" />
+                                Contingent Power Rankings
                             </h2>
-                            <div className="space-y-6">
-                                {stats.distribution.length > 0 ? stats.distribution.map((item, idx) => {
-                                    const percentage = stats.total > 0 ? (item.count / stats.total) * 100 : 0;
-                                    return (
-                                        <div key={idx} className="space-y-2">
-                                            <div className="flex justify-between items-end">
-                                                <span className="text-[10px] font-bold uppercase tracking-tight text-gray-400">{item.name}</span>
-                                                <span className="text-[10px] font-black text-white">{item.count}</span>
-                                            </div>
-                                            <div className="h-4 w-full bg-gray-900 overflow-hidden border border-gray-800 rounded-full">
-                                                <div 
-                                                    className="h-full bg-white transition-all duration-1000"
-                                                    style={{ width: `${percentage}%` }}
-                                                ></div>
-                                            </div>
-                                        </div>
-                                    );
-                                }) : (
-                                    <div className="text-center py-12 text-gray-800">
-                                        <p className="text-[10px] font-bold uppercase">No distribution data</p>
-                                    </div>
-                                )}
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead className="border-b border-gray-900">
+                                        <tr>
+                                            <th className="px-4 py-3 text-[9px] font-black text-gray-500 uppercase tracking-[0.2em]">Rank</th>
+                                            <th className="px-4 py-3 text-[9px] font-black text-gray-500 uppercase tracking-[0.2em]">Institutional Hub</th>
+                                            <th className="px-4 py-3 text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] text-right">Intel Density</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-900/50">
+                                        {collegeParticipation.length > 0 ? collegeParticipation.map((clg, idx) => (
+                                            <tr key={clg._id} className="hover:bg-gray-900/30 transition-colors">
+                                                <td className="px-4 py-4 text-xs font-mono text-gray-600">#{(idx + 1).toString().padStart(2, '0')}</td>
+                                                <td className="px-4 py-4">
+                                                    <span className="text-xs font-black uppercase tracking-tight text-gray-200">{clg._id}</span>
+                                                </td>
+                                                <td className="px-4 py-4 text-right">
+                                                    <div className="flex items-center justify-end gap-3">
+                                                        <span className="text-sm font-black text-white">{clg.count}</span>
+                                                        <div className="w-24 h-1.5 bg-gray-900 rounded-full overflow-hidden">
+                                                            <div
+                                                                className="h-full bg-indigo-500"
+                                                                style={{ width: `${(clg.count / (collegeParticipation[0]?.count || 1)) * 100}%` }}
+                                                            ></div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )) : (
+                                            <tr>
+                                                <td colSpan="3" className="px-4 py-20 text-center text-[10px] font-bold text-gray-700 uppercase tracking-[0.3em]">
+                                                    Awaiting Deployment Data
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
                             </div>
                         </section>
 
-                        {/* Payments Breakdown */}
-                        <section className="bg-gray-950 border border-gray-800 rounded p-6 flex flex-col shadow-sm">
-                            <h2 className="text-xs font-black uppercase tracking-[0.15em] mb-8 text-white">Asset Breakdown</h2>
+                        {/* Top Events Leaders */}
+                        <section className="bg-gray-950 border border-gray-800 rounded p-6 shadow-sm flex flex-col">
+                            <h2 className="text-xs font-black uppercase tracking-[0.2em] mb-8 text-white flex items-center gap-3">
+                                <TrendingUp className="w-4 h-4 text-green-500" />
+                                Protocol Hotspots
+                            </h2>
                             <div className="space-y-6 flex-1">
-                                {stats.payments.length > 0 ? stats.payments.map((p, idx) => (
-                                    <div key={idx} className="p-4 bg-gray-900 border-l-2 border-white flex justify-between items-center">
-                                        <div>
-                                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest leading-none mb-1">MODE</p>
-                                            <p className="text-xs font-black uppercase text-white">{p.name}</p>
+                                {eventLeaderboard.length > 0 ? eventLeaderboard.map((event, idx) => (
+                                    <div key={idx} className="flex flex-col gap-2">
+                                        <div className="flex justify-between items-end">
+                                            <span className="text-[10px] font-bold uppercase tracking-tight text-gray-400">{event.name}</span>
+                                            <span className="text-[10px] font-black text-white">{event.registrationCount}</span>
                                         </div>
-                                        <div className="text-right">
-                                            <p className="text-lg font-black text-white">{p.count}</p>
-                                            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-tight">NODES</p>
+                                        <div className="h-1.5 w-full bg-gray-900 overflow-hidden rounded-full">
+                                            <div
+                                                className="h-full bg-white transition-all duration-1000"
+                                                style={{ width: `${(event.registrationCount / (eventLeaderboard[0]?.registrationCount || 1)) * 100}%` }}
+                                            ></div>
                                         </div>
                                     </div>
                                 )) : (
                                     <div className="text-center py-12 text-gray-800">
-                                        <BarChart3 className="w-12 h-12 mx-auto mb-2 opacity-20" />
-                                        <p className="text-[10px] font-bold uppercase">No records found</p>
+                                        <p className="text-[10px] font-bold uppercase">No distribution data</p>
                                     </div>
                                 )}
-                                
-                                <div className="mt-auto pt-6 border-t border-dotted border-gray-800">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <span className="text-[10px] font-bold text-gray-500 uppercase">System Integrity</span>
-                                        <span className="text-[10px] font-bold text-green-500">VERIFIED</span>
+
+                                <div className="mt-auto pt-6 border-t border-dotted border-gray-800 space-y-4">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Network Integrity</span>
+                                        <span className="text-[9px] font-bold text-green-500 tracking-widest">ENCRYPTED</span>
                                     </div>
-                                    <button className="w-full py-3 bg-gray-900 hover:bg-gray-800 border border-gray-800 text-white text-[10px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-2 transition-all rounded shadow-sm">
-                                        <Download className="w-3 h-3" />
-                                        EXPORT DATAFRAME
-                                    </button>
+                                    <div className="p-3 bg-gray-900 border border-gray-800 rounded text-center">
+                                        <p className="text-[9px] text-gray-500 font-bold uppercase mb-1 tracking-widest">System Load</p>
+                                        <p className="text-sm font-black text-white italic">OPTIMAL_0.2ms</p>
+                                    </div>
                                 </div>
                             </div>
                         </section>
@@ -201,8 +164,8 @@ const MasterStats = () => {
 
                     <footer className="mt-12 py-6 border-t border-gray-800">
                         <p className="text-[9px] font-bold text-gray-500 uppercase tracking-[0.3em] flex items-center gap-4">
-                            METRIC_AUTO_PULL: COMPLETED <span className="w-1 h-1 rounded-full bg-gray-800"></span> 
-                            LATENCY: 0.04 MS <span className="w-1 h-1 rounded-full bg-gray-800"></span> 
+                            METRIC_AUTO_PULL: COMPLETED <span className="w-1 h-1 rounded-full bg-gray-800"></span>
+                            LATENCY: 0.04 MS <span className="w-1 h-1 rounded-full bg-gray-800"></span>
                             ENCRYPTION: AES-256
                         </p>
                     </footer>

@@ -6,6 +6,15 @@ import ContingentKey from "../models/contingentKeyModel.js";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
 import Razorpay from "razorpay";
+import {
+  SlotFullError,
+  InvalidGenderError,
+  DuplicateRegistrationError,
+  ContingentLimitError,
+  EventNotFoundError,
+  RegistrationClosedError,
+  TeamSizeError
+} from "../utils/customErrors.js";
 
 /* ================= RAZORPAY ================= */
 const getRazorpayInstance = () => {
@@ -157,8 +166,8 @@ export const registerForEvent = async (req, res) => {
       const eventIdParam = req.params.id.trim();
       const event = await Event.findOne({ $or: [{ _id: eventIdParam }, { id: eventIdParam }] }).session(session);
 
-      if (!event) throw new Error("Event not found");
-      if (event.registration?.isOpen === false) throw new Error("Registration is closed for this event");
+      if (!event) throw new EventNotFoundError();
+      if (event.registration?.isOpen === false) throw new RegistrationClosedError();
 
       // SOLO/TEAM constraint enforcement
       if (event.eventType === "SOLO") {
@@ -185,7 +194,7 @@ export const registerForEvent = async (req, res) => {
 
         const limit = event.registration?.officialTeamsPerCollege || 1;
         if (currentOfficialCount >= limit) {
-          throw new Error(`Limit reached: Maximum ${limit} official registration(s) allowed per college for this event.`);
+          throw new ContingentLimitError(`Limit reached: Maximum ${limit} official registration(s) allowed per college for this event.`);
         }
       } else if (event.price > 0) {
         if (!verifyRazorpayPayment(razorpay_order_id, razorpay_payment_id, razorpay_signature)) {
@@ -211,7 +220,7 @@ export const registerForEvent = async (req, res) => {
         if (!user) throw new Error("Invalid Invento ID.");
 
         if (event.registrations.participants.some(p => p.inventoId === user._id)) {
-          throw new Error("You are already registered for this event.");
+          throw new DuplicateRegistrationError();
         }
 
         // Gender check for Master/Miss events
@@ -219,7 +228,7 @@ export const registerForEvent = async (req, res) => {
         if (isMasterMiss) {
           if (user.gender === "Male") slotKey = "availableBoysSlots";
           else if (user.gender === "Female") slotKey = "availableGirlsSlots";
-          else throw new Error("Gender must be specified as Male or Female for Master/Miss events.");
+          else throw new InvalidGenderError("Gender must be specified as Male or Female for Master/Miss events.");
         }
 
         // Atomic update for slots and registration
@@ -245,7 +254,7 @@ export const registerForEvent = async (req, res) => {
         if (slotKey) pushUpdate.$inc[`specificSlots.${slotKey}`] = -1;
 
         const updatedEvent = await Event.findOneAndUpdate(updateQuery, pushUpdate, { session, new: true });
-        if (!updatedEvent) throw new Error("No slots available or reservation failed (possible gender limit reached).");
+        if (!updatedEvent) throw new SlotFullError("No slots available or reservation failed (possible gender limit reached).");
 
         // Update User Profile
         if (!user.registeredEvents.includes(event.name)) {
@@ -271,7 +280,7 @@ export const registerForEvent = async (req, res) => {
         }
 
         if (!teamName || !members || members.length < (event.minTeamSize || 1) || members.length > (event.maxTeamSize || 10)) {
-          throw new Error(`Team must have between ${event.minTeamSize || 1} and ${event.maxTeamSize || 10} members.`);
+          throw new TeamSizeError(`Team must have between ${event.minTeamSize || 1} and ${event.maxTeamSize || 10} members.`);
         }
         if (!members.includes(inventoId)) throw new Error("Leader must be included in the members list.");
 
@@ -281,7 +290,7 @@ export const registerForEvent = async (req, res) => {
         const alreadyRegisteredMember = event.registrations.teams.some(team =>
           team.members.some(m => members.includes(m.inventoId))
         );
-        if (alreadyRegisteredMember) throw new Error("One or more of your team members are already registered for this event.");
+        if (alreadyRegisteredMember) throw new DuplicateRegistrationError("One or more of your team members are already registered for this event.");
 
         // Atomic update for slots and registration
         const updatedEvent = await Event.findOneAndUpdate(
@@ -309,7 +318,7 @@ export const registerForEvent = async (req, res) => {
           { session, new: true }
         );
 
-        if (!updatedEvent) throw new Error("No slots available for this event.");
+        if (!updatedEvent) throw new SlotFullError();
 
         for (const u of memberData) {
           if (!u.registeredEvents.includes(event.name)) {
@@ -348,7 +357,8 @@ export const registerForEvent = async (req, res) => {
 
   } catch (error) {
     console.error(`[registerForEvent:${reqId}] Transaction Aborted:`, error.message);
-    return res.status(400).json({ message: error.message });
+    const statusCode = error.statusCode || 400;
+    return res.status(statusCode).json({ error: error.name, message: error.message });
   } finally {
     session.endSession();
   }
@@ -539,3 +549,265 @@ export const updateMemberAttendance = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+/* ================= ANALYTICS ================= */
+
+// GET /api/events/:eventId/stats
+export const getEventStats = async (req, res) => {
+  const { eventId } = req.params;
+  try {
+    const results = await Event.aggregate([
+      { $match: { $or: [{ _id: eventId }, { id: eventId }] } },
+      {
+        $facet: {
+          basicInfo: [{ $project: { name: 1, eventType: 1, slots: 1 } }],
+          participation: [
+            {
+              $project: {
+                regs: {
+                  $cond: [
+                    { $eq: ["$eventType", "SOLO"] },
+                    "$registrations.participants",
+                    "$registrations.teams"
+                  ]
+                }
+              }
+            },
+            { $unwind: "$regs" },
+            {
+              $group: {
+                _id: null,
+                total: { $sum: 1 },
+                official: { $sum: { $cond: ["$regs.isOfficial", 1, 0] } },
+                nonOfficial: { $sum: { $cond: ["$regs.isOfficial", 0, 1] } },
+                collegeWise: {
+                  $push: {
+                    clg: {
+                      $cond: [
+                        { $eq: ["$eventType", "SOLO"] },
+                        "$regs.clgName",
+                        { $arrayElemAt: ["$regs.members.clgName", 0] }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]);
+
+    if (!results[0].basicInfo.length) return res.status(404).json({ message: "Event not found" });
+
+    const event = results[0].basicInfo[0];
+    const participation = results[0].participation[0] || { total: 0, official: 0, nonOfficial: 0, collegeWise: [] };
+
+    const collegeCounts = participation.collegeWise.reduce((acc, curr) => {
+      const clg = curr.clg || "Unknown";
+      acc[clg] = (acc[clg] || 0) + 1;
+      return acc;
+    }, {});
+
+    res.json({
+      name: event.name,
+      totalSlots: event.slots.totalSlots,
+      availableSlots: event.slots.availableSlots,
+      usedSlots: event.slots.totalSlots - event.slots.availableSlots,
+      totalRegistrations: participation.total,
+      officialCount: participation.official,
+      nonOfficialCount: participation.nonOfficial,
+      collegeWise: collegeCounts
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// GET /api/events/:eventId/participants (For SOLO)
+export const getEventParticipants = async (req, res) => {
+  const { eventId } = req.params;
+  const { status, college, isOfficial, isPresent } = req.query;
+
+  try {
+    const matchStage = {};
+    if (status) matchStage["status"] = status;
+    if (college) matchStage["clgName"] = college;
+    if (isOfficial !== undefined) matchStage["isOfficial"] = isOfficial === "true";
+    if (isPresent !== undefined) matchStage["isPresent"] = isPresent === "true";
+
+    const results = await Event.aggregate([
+      { $match: { $or: [{ _id: eventId }, { id: eventId }] } },
+      { $unwind: "$registrations.participants" },
+      { $replaceRoot: { newRoot: "$registrations.participants" } },
+      { $match: matchStage }
+    ]);
+
+    res.json(results);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// GET /api/events/:eventId/teams (For TEAM)
+export const getEventTeams = async (req, res) => {
+  const { eventId } = req.params;
+  const { status, college, isOfficial } = req.query;
+
+  try {
+    const matchStage = {};
+    if (status) matchStage["status"] = status;
+    if (isOfficial !== undefined) matchStage["isOfficial"] = isOfficial === "true";
+    if (college) matchStage["members.clgName"] = college;
+
+    const results = await Event.aggregate([
+      { $match: { $or: [{ _id: eventId }, { id: eventId }] } },
+      { $unwind: "$registrations.teams" },
+      { $replaceRoot: { newRoot: "$registrations.teams" } },
+      { $match: matchStage }
+    ]);
+
+    res.json(results);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// GET /api/events/
+export const getEvents = async (req, res) => {
+  try {
+    const events = await Event.find({}, {
+      _id: 1,
+      id: 1,
+      name: 1,
+      eventType: 1,
+      club: 1,
+      slots: 1,
+      specificSlots: 1,
+      price: 1,
+      registration: 1,
+      logistics: 1
+    });
+    res.json(events);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// GET /api/events/analytics/overview
+export const getFestOverview = async (req, res) => {
+  try {
+    const stats = await Event.aggregate([
+      {
+        $facet: {
+          totals: [
+            {
+              $project: {
+                price: 1,
+                participants: "$registrations.participants",
+                teams: "$registrations.teams"
+              }
+            },
+            {
+              $project: {
+                soloCount: { $size: "$participants" },
+                teamCount: { $size: "$teams" },
+                soloRevenue: {
+                  $multiply: [
+                    { $size: { $filter: { input: "$participants", as: "p", cond: { $eq: ["$$p.paid", true] } } } },
+                    "$price"
+                  ]
+                },
+                teamRevenue: {
+                  $multiply: [
+                    { $size: { $filter: { input: "$teams", as: "t", cond: { $eq: ["$$t.paid", true] } } } },
+                    "$price"
+                  ]
+                }
+              }
+            },
+            {
+              $group: {
+                _id: null,
+                totalSoloRegistrations: { $sum: "$soloCount" },
+                totalTeamRegistrations: { $sum: "$teamCount" },
+                totalRevenue: { $sum: { $add: ["$soloRevenue", "$teamRevenue"] } }
+              }
+            }
+          ],
+          eventLeaderboard: [
+            {
+              $project: {
+                name: 1,
+                registrationCount: { $add: [{ $size: "$registrations.participants" }, { $size: "$registrations.teams" }] }
+              }
+            },
+            { $sort: { registrationCount: -1 } },
+            { $limit: 10 }
+          ],
+          collegeParticipation: [
+            {
+              $project: {
+                clgs: {
+                  $concatArrays: [
+                    "$registrations.participants.clgName",
+                    {
+                      $reduce: {
+                        input: "$registrations.teams",
+                        initialValue: [],
+                        in: { $concatArrays: ["$$value", "$$this.members.clgName"] }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            { $unwind: "$clgs" },
+            { $group: { _id: "$clgs", count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 10 }
+          ]
+        }
+      }
+    ]);
+
+    res.json(stats[0]);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+// GET /api/events/registrations/all
+export const getFestRegistrations = async (req, res) => {
+  try {
+    const events = await Event.find({}, { name: 1, eventType: 1, club: 1, registrations: 1 });
+    let allParticipants = [];
+
+    events.forEach(event => {
+      const participants = event.registrations.participants.map(p => ({
+        ...p.toObject(),
+        eventName: event.name,
+        eventId: event._id,
+        eventType: event.eventType,
+        team: Array.isArray(event.club) ? event.club[0] : event.club
+      }));
+
+      const teams = event.registrations.teams.map(t => ({
+        ...t.toObject(),
+        eventName: event.name,
+        eventId: event._id,
+        eventType: event.eventType,
+        team: Array.isArray(event.club) ? event.club[0] : event.club,
+        isTeam: true
+      }));
+
+      allParticipants = [...allParticipants, ...participants, ...teams];
+    });
+
+    res.json(allParticipants);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+

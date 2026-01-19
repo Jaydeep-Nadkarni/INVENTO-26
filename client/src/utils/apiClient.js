@@ -12,7 +12,7 @@ const getApiBaseUrl = () => {
   if (import.meta.env.DEV) {
     return '';
   }
-  
+
   return import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || '';
 };
 
@@ -209,3 +209,14 @@ export const apiPut = async (endpoint, body = {}, navigate = null) => {
 export const apiDelete = async (endpoint, navigate = null) => {
   return apiCall(endpoint, { method: 'DELETE' }, navigate);
 };
+
+/**
+ * PATCH request helper
+ */
+export const apiPatch = async (endpoint, body = {}, navigate = null) => {
+  return apiCall(endpoint, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+  }, navigate);
+};
+

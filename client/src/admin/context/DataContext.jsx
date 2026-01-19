@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import defaultData from '../data/masterData';
+import { apiGet } from '../../utils/apiClient';
 
 const DataContext = createContext(null);
 
 export const DataProvider = ({ children }) => {
-    // Initialize state from localStorage or defaultData
+    // Initialize state from localData or local storage (as fallback/cache)
     const [data, setData] = useState(() => {
         const saved = localStorage.getItem('adminData');
         if (saved) {
@@ -18,16 +19,71 @@ export const DataProvider = ({ children }) => {
         return defaultData;
     });
 
+    const [loading, setLoading] = useState(false);
+
+    // Fetch fresh events list
+    const refreshEvents = async () => {
+        try {
+            setLoading(true);
+            const { data: events } = await apiGet('/api/events');
+
+            // Map backend fields to frontend expected fields if necessary
+            const formattedEvents = events.map(e => ({
+                id: e._id || e.id,
+                name: e.name,
+                team: Array.isArray(e.club) ? e.club[0] : (e.club || 'General'),
+                total_slots: e.slots.totalSlots,
+                available_slots: e.slots.availableSlots,
+                reserved_slots: e.slots.totalSlots - e.slots.availableSlots,
+                status: e.registration?.isOpen ? "Live" : "Closed",
+                eventType: e.eventType,
+                specificSlots: e.specificSlots
+            }));
+
+            setData(prev => ({
+                ...prev,
+                events: formattedEvents
+            }));
+        } catch (error) {
+            console.error("Failed to fetch events:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Fetch fest-wide overview
+    const refreshStats = async () => {
+        try {
+            const { data: overview } = await apiGet('/api/events/analytics/overview');
+            setData(prev => ({
+                ...prev,
+                overviewStats: overview
+            }));
+        } catch (error) {
+            console.error("Failed to fetch overview stats:", error);
+        }
+    };
+
     // Auto-persist on every update
     useEffect(() => {
         localStorage.setItem('adminData', JSON.stringify(data));
     }, [data]);
 
+    // Fetch on initial load if we have a token
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            refreshEvents();
+            refreshStats();
+        }
+    }, []);
+
+
     // Computed Stats (Re-calculated when participants/events/admins/teams change)
     const stats = useMemo(() => {
         // Filter out any lingering registration events from statistics
         const filteredEvents = data.events.filter(e => e.team !== 'Registration');
-        
+
         const totalParticipants = data.participants.length;
         const totalEvents = filteredEvents.length;
         const totalAdmins = data.admins.length;
@@ -90,13 +146,18 @@ export const DataProvider = ({ children }) => {
             // Decisively exclude Registration events and stats from the entire application (case-insensitive)
             events: data.events.filter(e => e.team?.toLowerCase() !== 'registration'),
             masterStats: stats.masterStats,
-            adminDistribution: stats.adminDistribution
+            adminDistribution: stats.adminDistribution,
+            overviewStats: data.overviewStats
         },
+        loading,
+        refreshEvents,
+        refreshStats,
         updateParticipant,
         updateEvent,
         addAdmin,
         updateTeam
     };
+
 
     return (
         <DataContext.Provider value={value}>
