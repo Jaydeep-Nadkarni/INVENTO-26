@@ -29,10 +29,15 @@ export const mapEventFromDb = (event) => ({
     })(),
 
 
-    slotsAvailable: event.slots?.availableSlots ?? event.slots?.available ?? 'TBD',
+    slotsAvailable: (/master|miss|mr\./i.test(event.name || event.title))
+        ? null
+        : (event.slots?.availableSlots ?? event.slots?.available ?? 'TBD'),
+
+    specificSlots: event.specificSlots || {},
     rounds: (event.rounds || "").toString(),
     date: event.logistics?.date || event.date || 'TBD',
     venue: event.logistics?.venue || event.venue || 'TBD',
+
 
     rules: event.rules || [],
     whatsapplink: event.whatsapplink || "",

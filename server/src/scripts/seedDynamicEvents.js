@@ -81,10 +81,11 @@ const seed = async () => {
 
             if (isMasterMiss) {
                 specificSlots = {
-                    male: 20,
-                    female: 20
+                    availableBoysSlots: 20,
+                    availableGirlsSlots: 20
                 };
             }
+
 
             return {
                 _id: event.slug,

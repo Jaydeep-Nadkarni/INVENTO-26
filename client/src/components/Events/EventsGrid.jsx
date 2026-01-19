@@ -559,8 +559,24 @@ const EventsGrid = () => {
                     <div className="relative z-30 flex-1 flex flex-col h-full overflow-hidden bg-[#fdfbf7]">
                         {/* Slots Badge */}
                         <div className="absolute top-0 right-0 bg-yellow-500 text-black font-bold font-mono text-xs px-6 py-2 z-40 shadow-md">
-                            SLOTS AVAILABLE : {currentEvent.slotsAvailable || 'Unlimited'}
+                            {(() => {
+                                const userStr = localStorage.getItem('currentUser');
+                                const user = userStr ? JSON.parse(userStr) : null;
+                                const isMasterMiss = /master|miss|mr\./i.test(currentEvent.themeName || currentEvent.name);
+
+                                if (isMasterMiss) {
+                                    if (!user) return "SLOTS AVAILABLE : Master + Miss Available";
+                                    const boys = currentEvent.specificSlots?.availableBoysSlots ?? currentEvent.specificSlots?.male ?? 0;
+                                    const girls = currentEvent.specificSlots?.availableGirlsSlots ?? currentEvent.specificSlots?.female ?? 0;
+
+                                    if (user.gender === "Male") return `SLOTS AVAILABLE : ${boys} (Master)`;
+                                    if (user.gender === "Female") return `SLOTS AVAILABLE : ${girls} (Miss)`;
+                                    return "SLOTS AVAILABLE : Master + Miss Available";
+                                }
+                                return `SLOTS AVAILABLE : ${currentEvent.slotsAvailable || 'Unlimited'}`;
+                            })()}
                         </div>
+
 
                         <div className="flex-1 overflow-y-auto p-8 md:p-12 hide-scrollbar">
                             <div className="max-w-4xl mx-auto space-y-10">

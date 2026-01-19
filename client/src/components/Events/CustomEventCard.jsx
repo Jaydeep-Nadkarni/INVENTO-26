@@ -3,6 +3,26 @@ import { motion } from 'framer-motion';
 import paperTexture from '../../assets/UI/paper-texture.jpg';
 
 const CustomEventCard = ({ event, onClick }) => {
+    const userStr = localStorage.getItem('currentUser');
+    const user = userStr ? JSON.parse(userStr) : null;
+    const isMasterMiss = /master|miss|mr\./i.test(event.themeName || event.realName);
+
+    const renderSlots = () => {
+        if (isMasterMiss) {
+            if (!user) return "Master + Miss Available";
+
+            const boys = event.specificSlots?.availableBoysSlots ?? event.specificSlots?.male ?? 0;
+            const girls = event.specificSlots?.availableGirlsSlots ?? event.specificSlots?.female ?? 0;
+
+
+            if (user.gender === "Male") return `${boys} Slots (Master)`;
+            if (user.gender === "Female") return `${girls} Slots (Miss)`;
+            return "Master + Miss Available";
+        }
+
+        return event.slotsAvailable === 'TBD' ? 'OPEN' : event.slotsAvailable;
+    };
+
     return (
         <motion.div
             whileHover={{
@@ -55,10 +75,11 @@ const CustomEventCard = ({ event, onClick }) => {
                     <div className="flex flex-col items-end">
                         <span className="text-[8px] font-mono text-gray-400 uppercase tracking-tighter">Capacity</span>
                         <div className="px-2 py-0.5 border border-red-700 text-red-700 text-[10px] font-black uppercase tracking-tighter mt-1">
-                            {event.slotsAvailable === 'TBD' ? 'OPEN' : event.slotsAvailable}
+                            {renderSlots()}
                         </div>
                     </div>
                 </div>
+
 
                 {/* Main Graphic Area with Background Letter */}
                 <div className="relative flex-1 flex items-center justify-center overflow-hidden">

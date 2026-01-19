@@ -29,9 +29,10 @@ const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    pass: process.env.EMAIL_PASSWORD,
   },
 });
+
 
 /* ================= HTML MAIL ================= */
 const spaceMail = (title, message, eventName, userName, id) => `
@@ -347,7 +348,9 @@ export const registerForEvent = async (req, res) => {
         result.type === "Solo" ? "You are successfully registered!" : `Team ${result.teamName} is successfully registered!`,
         result.eventName, result.user.name, result.user._id
       )
-    }).catch(err => console.error("Mail Error (Registration preserved):", err));
+    }).then(() => console.log(`[Email] Success: Registration email sent to ${result.user.email}`))
+      .catch(err => console.error("Mail Error (Registration preserved):", err));
+
 
     return res.status(200).json({
       message: `${result.type} registration successful`,
