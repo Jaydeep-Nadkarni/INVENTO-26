@@ -434,7 +434,7 @@ const Register = () => {
                           Already have an account?
                         </p>
                         <Link
-                          to="/register"
+                          to="/login"
                           className="text-xs text-gray-900 font-black uppercase tracking-widest border-b-2 border-gray-900 pb-1 hover:text-red-700 hover:border-red-700 transition-all"
                         >
                           Login

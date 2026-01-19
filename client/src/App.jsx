@@ -11,6 +11,7 @@ import BriefcasePage from './pages/Briefcase.jsx'
 import Pass from './pages/Pass.jsx'
 import Something from './pages/Something.jsx'
 import Newspaper from './pages/Newspaper.jsx'
+import ScrollToTop from './components/ScrollToTop.jsx'
 import { useAdminAuth } from './admin/context/AuthContext'
 import { monitorLongTasks, isMobileDevice } from './utils/performanceOptimization'
 
@@ -74,6 +75,7 @@ function App() {
 
   return (
     <Router>
+      <ScrollToTop />
       <NavigationManager />
       <Routes>
         <Route path="/" element={<Home />} />
