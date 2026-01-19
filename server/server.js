@@ -61,7 +61,8 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
       'http://localhost:5174',
       'http://127.0.0.1:3000', 
       'http://127.0.0.1:5173',
-      'http://127.0.0.1:5174'
+      'http://127.0.0.1:5174',
+      'https://achieving-moral-varieties-sql.trycloudflare.com'
     ];
 
 app.use(cors({
@@ -72,13 +73,20 @@ app.use(cors({
     // Check if origin is in the allowed list or is a local address
     const isAllowed = allowedOrigins.includes(origin) || 
                      origin.startsWith('http://localhost:') || 
-                     origin.startsWith('http://127.0.0.1:');
+                     origin.startsWith('http://127.0.0.1:') ||
+                     origin.startsWith('http://10.') ||
+                     origin.startsWith('https://10.') ||
+                     origin.startsWith('http://192.168.') ||
+                     origin.startsWith('https://192.168.') ||
+                     origin.startsWith('http://172.') ||
+                     origin.startsWith('https://172.')||
+                     origin.startsWith('https://achieving-moral-varieties-sql.trycloudflare.com');
 
     if (isAllowed) {
       callback(null, true);
     } else {
       console.warn(`[CORS] Blocked request from origin: ${origin}`);
-      callback(new Error('CORS policy violation: Origin not allowed'));
+      callback(new Error(`CORS policy violation: Origin ${origin} not allowed`));
     }
   },
   credentials: true,
@@ -130,6 +138,7 @@ app.use(generalLimiter);
 app.use("/uploads", express.static(path.join(__dirname, "uploads"), {
   setHeaders: (res, path) => {
     res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.setHeader('Access-Control-Allow-Origin', '*');
   }
 }));
 

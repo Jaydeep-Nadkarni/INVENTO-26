@@ -17,7 +17,8 @@ export default defineConfig({
       'localhost',
       '127.0.0.1',
       '*.trycloudflare.com',
-      'father-april-nursery-mouth.trycloudflare.com'
+      'father-april-nursery-mouth.trycloudflare.com',
+      'achieving-moral-varieties-sql.trycloudflare.com'
     ],
     // Proxy for Cloudflare tunneling and API routes
     proxy: {

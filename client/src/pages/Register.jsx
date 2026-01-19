@@ -330,16 +330,18 @@ const Register = () => {
         backgroundAttachment: 'fixed'
       }}
     >
-      {isMobile ? (
-        <Navbar position="absolute" isMobile={isMobile} />
-      ) : (
-        <Link 
-          to="/" 
-          className="absolute top-4 left-4 sm:top-8 sm:left-8 z-50 flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-full hover:bg-white hover:text-gray-900 transition-all group shadow-lg"
-        >
-          <Icons.ArrowLeft />
-          <span className="font-mono text-[10px] sm:text-xs font-bold uppercase tracking-widest hidden sm:inline">Home</span>
-        </Link>
+      {!isCropping && (
+        isMobile ? (
+          <Navbar position="absolute" isMobile={isMobile} />
+        ) : (
+          <Link 
+            to="/" 
+            className="absolute top-4 left-4 sm:top-8 sm:left-8 z-50 flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-full hover:bg-white hover:text-gray-900 transition-all group shadow-lg"
+          >
+            <Icons.ArrowLeft />
+            <span className="font-mono text-[10px] sm:text-xs font-bold uppercase tracking-widest hidden sm:inline">Home</span>
+          </Link>
+        )
       )}
 
       {/* Spy-themed Illustration Elements */}
@@ -434,7 +436,7 @@ const Register = () => {
                           Already have an account?
                         </p>
                         <Link
-                          to="/register"
+                          to="/login"
                           className="text-xs text-gray-900 font-black uppercase tracking-widest border-b-2 border-gray-900 pb-1 hover:text-red-700 hover:border-red-700 transition-all"
                         >
                           Login

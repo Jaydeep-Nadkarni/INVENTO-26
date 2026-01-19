@@ -4,7 +4,6 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { apiPost, apiGet } from '../../utils/apiClient'
 import paperTexture from '../../assets/UI/paper-texture.jpg'
 import logoLoader from '../../assets/UI/KLE-logo-small.png'
-import registerBtn from '../../assets/UI/register.png'
 import pageTurnSound from '../../assets/audios/page-turn.mp3'
 import closeSound from '../../assets/audios/briefcase-open.mp3'
 import { clubsData } from './clubsData'
@@ -592,13 +591,17 @@ const EventsGrid = () => {
                                     <button
                                         onClick={handleRegisterClick}
                                         disabled={regLoading}
-                                        className="w-full md:w-auto transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:opacity-50 flex items-center justify-center p-0"
+                                        className="w-full md:w-auto px-10 py-5 bg-gray-900 border-2 border-gray-900 text-white font-black uppercase tracking-[0.3em] text-xs hover:bg-black hover:border-black transition-all shadow-[8px_8px_0px_rgba(0,0,0,0.2)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 disabled:opacity-50 flex items-center justify-center gap-3 group"
                                     >
-                                        <img 
-                                            src={registerBtn} 
-                                            alt={regLoading ? 'PROCESSING...' : 'Register Now'} 
-                                            className="w-48 md:w-56 h-auto object-contain drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]"
-                                        />
+                                        <span className="relative">
+                                            {regLoading ? 'PROCESSING...' : 'Register Now'}
+                                            <div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-600 transition-all group-hover:w-full"></div>
+                                        </span>
+                                        {!regLoading && (
+                                            <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                            </svg>
+                                        )}
                                     </button>
                                 </section>
                             </div>
@@ -624,37 +627,6 @@ const EventsGrid = () => {
                                         </h2>
 
                                         <div className="space-y-6">
-                                            {/* Official Registration Checkbox */}
-                                            <div className="flex items-center gap-3 bg-black/5 p-4 rounded border border-black/10">
-                                                <input
-                                                    type="checkbox"
-                                                    id="officialReg"
-                                                    checked={isOfficial}
-                                                    onChange={(e) => setIsOfficial(e.target.checked)}
-                                                    className="w-5 h-5 accent-red-700 cursor-pointer"
-                                                />
-                                                <label htmlFor="officialReg" className="text-sm font-bold uppercase tracking-tight text-gray-800 cursor-pointer select-none">
-                                                    Official Registration?
-                                                </label>
-                                            </div>
-
-                                            {isOfficial && (
-                                                <motion.div
-                                                    initial={{ height: 0, opacity: 0 }}
-                                                    animate={{ height: 'auto', opacity: 1 }}
-                                                    className="space-y-2"
-                                                >
-                                                    <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-gray-500">INVENTO Contingent Key</label>
-                                                    <input
-                                                        type="text"
-                                                        value={contingentKey}
-                                                        onChange={(e) => setContingentKey(e.target.value.toUpperCase())}
-                                                        placeholder="ENTER CONTINGENT KEY"
-                                                        className="w-full bg-white/50 border-2 border-gray-300 px-4 py-3 font-mono text-gray-900 focus:border-red-700 outline-none transition-all"
-                                                    />
-                                                </motion.div>
-                                            )}
-
                                             {currentEvent.type?.toLowerCase() !== 'solo' && (currentEvent.teamSize?.toString().includes('-') || parseInt(currentEvent.teamSize) > 1) ? (
                                                 (() => {
                                                     const sizeParts = currentEvent.teamSize?.toString().split('-') || ["1"]
@@ -762,6 +734,39 @@ const EventsGrid = () => {
                                                 </div>
                                             )}
 
+                                            {/* Official Registration Checkbox (Minimalist) */}
+                                            <div className="pt-2 border-t border-black/5 mt-4">
+                                                <div className="flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity">
+                                                    <input
+                                                        type="checkbox"
+                                                        id="officialReg"
+                                                        checked={isOfficial}
+                                                        onChange={(e) => setIsOfficial(e.target.checked)}
+                                                        className="w-3.5 h-3.5 accent-red-700 cursor-pointer"
+                                                    />
+                                                    <label htmlFor="officialReg" className="text-[10px] font-bold uppercase tracking-widest text-gray-500 cursor-pointer select-none">
+                                                        Official Registration?
+                                                    </label>
+                                                </div>
+
+                                                {isOfficial && (
+                                                    <motion.div
+                                                        initial={{ height: 0, opacity: 0 }}
+                                                        animate={{ height: 'auto', opacity: 1 }}
+                                                        className="mt-3 space-y-1"
+                                                    >
+                                                        <label className="text-[9px] font-mono font-bold uppercase tracking-[0.2em] text-gray-400">Invento Contingent Key</label>
+                                                        <input
+                                                            type="text"
+                                                            value={contingentKey}
+                                                            onChange={(e) => setContingentKey(e.target.value.toUpperCase())}
+                                                            placeholder="ENTER KEY"
+                                                            className="w-full bg-black/5 border border-black/10 px-3 py-2 font-mono text-xs text-gray-900 focus:border-red-700 outline-none transition-all"
+                                                        />
+                                                    </motion.div>
+                                                )}
+                                            </div>
+
                                             <div className="flex gap-4 pt-4">
                                                 <button
                                                     type="button"
@@ -774,13 +779,9 @@ const EventsGrid = () => {
                                                     type="button"
                                                     disabled={regLoading}
                                                     onClick={initiatePayment}
-                                                    className="flex-1 transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:opacity-50 flex items-center justify-center p-0"
+                                                    className="flex-1 py-3 bg-gray-900 text-white font-bold uppercase tracking-widest hover:bg-red-700 transition-all shadow-[4px_4px_0px_rgba(0,0,0,0.2)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 disabled:opacity-50 font-mono text-xs"
                                                 >
-                                                    <img 
-                                                        src={registerBtn} 
-                                                        alt={regLoading ? 'PROCESSING...' : 'Register'} 
-                                                        className="h-10 w-auto object-contain drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]"
-                                                    />
+                                                    {regLoading ? 'PROCESSING...' : 'PROCEED'}
                                                 </button>
                                             </div>
                                         </div>

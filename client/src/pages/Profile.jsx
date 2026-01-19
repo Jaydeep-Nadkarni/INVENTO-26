@@ -214,7 +214,13 @@ const Profile = () => {
                   {/* Paperclip */}
                   <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-10 h-16 border-2 border-gray-400 rounded-full bg-gray-200/50 z-20"></div>
                   <img
-                    src={user.profilePhoto || "https://api.dicebear.com/7.x/avataaars/svg?seed=" + user.name}
+                    src={
+                      user.profilePhoto?.startsWith('data:') || user.profilePhoto?.startsWith('http')
+                        ? user.profilePhoto
+                        : user.profilePhoto 
+                          ? `${import.meta.env.DEV ? '' : (import.meta.env.VITE_API_URL || '')}${user.profilePhoto}`
+                          : "https://api.dicebear.com/7.x/avataaars/svg?seed=" + user.name
+                    }
                     alt="Agent"
                     className="w-full h-full object-cover"
                   />
