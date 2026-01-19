@@ -680,14 +680,21 @@ export const getEvents = async (req, res) => {
       _id: 1,
       id: 1,
       name: 1,
+      subtitle: 1,
+      description: 1,
       eventType: 1,
       club: 1,
+      price: 1,
+      rounds: 1,
+      rounddetails: 1,
+      rules: 1,
+      contact: 1,
       slots: 1,
       specificSlots: 1,
-      price: 1,
       registration: 1,
       logistics: 1
     });
+
     res.json(events);
   } catch (error) {
     res.status(500).json({ message: error.message });

@@ -20,7 +20,7 @@ const CustomEventCard = ({ event, onClick }) => {
             }}
         >
             <div className="absolute inset-0 bg-amber-50/80 mix-blend-multiply transition-colors group-hover:bg-red-50/40" />
-            
+
             {/* Texture Overlay */}
             <div
                 className="absolute inset-0 z-20 pointer-events-none"
@@ -39,13 +39,14 @@ const CustomEventCard = ({ event, onClick }) => {
 
             {/* Content Container */}
             <div className="relative z-30 h-full p-8 flex flex-col">
-                
+
                 {/* Top Meta Info & Slots */}
                 <div className="flex justify-between items-start mb-8">
                     <div className="space-y-1">
                         <span className="block text-[8px] font-mono text-gray-400 uppercase tracking-[0.3em]">
-                            Event #{event.id?.slice(0, 4).toUpperCase()}
+                            Event #{(event.id || "").toString().slice(0, 4).toUpperCase()}
                         </span>
+
                         <span className="block text-[8px] font-mono text-red-800 font-bold uppercase tracking-widest">
                             Classified Briefing
                         </span>
@@ -69,7 +70,7 @@ const CustomEventCard = ({ event, onClick }) => {
                             {(event.themeName || event.realName).charAt(0)}
                         </h3>
                     </div>
-                    
+
                     {/* Hover Stamp */}
                     <div className="absolute z-40 transform rotate-[-15deg] opacity-0 group-hover:opacity-100 transition-all duration-500 translate-x-10 group-hover:translate-x-0">
                         <div className="px-3 py-1 border-2 border-red-700 text-red-700 text-[10px] font-black uppercase tracking-tighter bg-red-50/50 backdrop-blur-sm">
@@ -81,7 +82,7 @@ const CustomEventCard = ({ event, onClick }) => {
                 {/* Event Name & Fee Section */}
                 <div className="space-y-4">
                     <div className="h-px w-full bg-black/20" />
-                    
+
                     <div className="flex flex-col gap-1">
                         <h3
                             className="text-3xl font-black text-gray-900 uppercase tracking-tighter leading-none group-hover:text-red-700 transition-colors"

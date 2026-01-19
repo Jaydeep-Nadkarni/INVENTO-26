@@ -65,8 +65,9 @@ router.patch("/:eventId/teams/:teamName/members/:inventoId/attendance", protect,
 
 /* ================= ANALYTICS & REPORTING ================= */
 
-// List all events (basic info)
-router.get("/", protect, isAdminOrCoordinator, getEvents);
+// List all events (basic info) - PUBLIC
+router.get("/", getEvents);
+
 
 // Fest-wide overview (Put this BEFORE /:eventId routes to avoid conflict)
 router.get("/analytics/overview", protect, isAdminOrCoordinator, getFestOverview);

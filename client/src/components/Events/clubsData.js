@@ -13,33 +13,44 @@ import specialsIllustration from '../../assets/UI/Events/specials.png'
 import gamingIllustration from '../../assets/UI/Events/gaming.png'
 import eventsData from './events.js'
 
+// Helper to map DB event to frontend format used in Event Cards/Details
+export const mapEventFromDb = (event) => ({
+    id: (event._id || event.id || "").toString(),
+
+    themeName: event.name || event.title,
+    realName: event.subtitle,
+    type: event.eventType || event.type,
+    description: event.description,
+    fee: (event.price ?? event.registartionfee) === 0 ? 'FREE' : `Rs. ${event.price ?? event.registartionfee}`,
+    teamSize: (() => {
+        const min = event.minTeamSize ?? event.team?.min ?? 1;
+        const max = event.maxTeamSize ?? event.team?.max ?? 1;
+        return min === max ? `${max}` : `${min}-${max}`;
+    })(),
+
+    slotsAvailable: event.slots?.availableSlots ?? event.slots?.available ?? 'TBD',
+    rounds: (event.rounds || "").toString(),
+    date: event.logistics?.date || event.date || 'TBD',
+    venue: event.logistics?.venue || event.venue || 'TBD',
+
+    rules: event.rules || [],
+    whatsapplink: event.whatsapplink || "",
+    roundDetails: (event.rounddetails || []).map(r => ({
+        title: `Round ${r.round}`,
+        details: [r.description]
+    })),
+    contacts: (event.contact || []).filter(c => c && c.name).map(c => ({
+        name: c.name,
+        phone: c.phone
+    }))
+});
+
 const getEventsByClub = (clubName) => {
     return eventsData
         .filter(event => (event.club || "").toLowerCase() === clubName.toLowerCase())
-        .map(event => ({
-            id: event.slug, // Using event's slug for routing
-            themeName: event.title,
-            realName: event.subtitle,
-            type: event.type,
-            description: event.description,
-            fee: event.registartionfee === 0 ? 'FREE' : `Rs. ${event.registartionfee}`,
-            teamSize: event.team.max === 1 ? '1' : `${event.team.min}-${event.team.max}`,
-            slotsAvailable: event.slots.available || 'TBD',
-            rounds: event.rounds.toString(),
-            date: `${event.date}, ${event.time}`,
-            venue: event.venue,
-            rules: event.rules,
-            whatsapplink: event.whatsapplink || "", // Use for participant outreach
-            roundDetails: (event.rounddetails || []).map(r => ({
-                title: `Round ${r.round}`,
-                details: [r.description]
-            })),
-            contacts: (event.contact || []).filter(c => c && c.name).map(c => ({
-                name: c.name,
-                phone: c.phone
-            }))
-        }))
+        .map(mapEventFromDb);
 }
+
 
 export const clubsData = [
     {

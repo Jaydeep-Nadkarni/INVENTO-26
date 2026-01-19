@@ -5,12 +5,28 @@ const eventSchema = new mongoose.Schema({
     type: String, // ✅ allow custom string IDs like evt0001
   },
   id: { type: String, unique: true, sparse: true },
-  name: { type: String, required: true },
+  name: { type: String, required: true }, // maps to title
+  subtitle: { type: String },
+  description: { type: String },
   eventType: { type: String, enum: ["SOLO", "TEAM"], required: true },
   minTeamSize: { type: Number, default: 1 },
   maxTeamSize: { type: Number, default: 1 },
   club: [{ type: String }],
-  price: { type: Number, required: true },
+  price: { type: Number, required: true }, // maps to registrationfee
+  rounds: { type: Number, default: 1 },
+  rounddetails: [
+    {
+      round: Number,
+      description: String
+    }
+  ],
+  rules: [String],
+  contact: [
+    {
+      name: String,
+      phone: String
+    }
+  ],
   slots: {
     totalSlots: { type: Number, default: 0 },
     availableSlots: { type: Number, default: 0 }
@@ -21,6 +37,7 @@ const eventSchema = new mongoose.Schema({
     deadline: { type: Date },
     officialTeamsPerCollege: { type: Number, default: 1 }
   },
+
   registrations: {
     participants: [
       {
@@ -67,10 +84,11 @@ const eventSchema = new mongoose.Schema({
   },
   logistics: {
     venue: String,
-    date: Date,
+    date: String,
     time: String,
     whatsappLink: String
   },
+
   whatsappLink: { type: String } // Keeping for backward compatibility
 }, { timestamps: true });
 

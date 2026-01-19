@@ -6,10 +6,11 @@ import paperTexture from '../../assets/UI/paper-texture.jpg'
 import logoLoader from '../../assets/UI/KLE-logo-small.png'
 import pageTurnSound from '../../assets/audios/page-turn.mp3'
 import closeSound from '../../assets/audios/briefcase-open.mp3'
-import { clubsData } from './clubsData'
+import { clubsData, mapEventFromDb } from './clubsData'
 import CustomEventCard from './CustomEventCard'
 
 const TextureOverlay = ({ opacity = 0.4 }) => (
+
     <div
         className="absolute inset-0 z-20 pointer-events-none"
         style={{
@@ -61,14 +62,47 @@ const CustomAlert = ({ show, title, message, type, onClose }) => (
 const EventsGrid = () => {
     const { clubSlug, eventSlug } = useParams()
     const navigate = useNavigate()
+    const [liveClubs, setLiveClubs] = useState(clubsData)
+    const [eventsLoading, setEventsLoading] = useState(true)
+
+    useEffect(() => {
+        const fetchLiveEvents = async () => {
+            try {
+                const { data } = await apiGet('/api/events');
+                if (data && Array.isArray(data)) {
+                    // Map DB events to frontend format
+                    const mappedEvents = data.map(mapEventFromDb);
+
+                    // Group events by club and update liveClubs
+                    const updatedClubs = clubsData.map(club => {
+                        const clubEvents = mappedEvents.filter(e => {
+                            // Find the original event in static data to get its club property if not in DB
+                            // Actually, DB events now have a 'club' array
+                            const dbEvent = data.find(de => de._id === e.id);
+                            return dbEvent?.club?.some(c => c.toLowerCase() === club.name.toLowerCase());
+                        });
+                        return { ...club, events: clubEvents.length > 0 ? clubEvents : club.events };
+                    });
+                    setLiveClubs(updatedClubs);
+                }
+            } catch (error) {
+                console.error("Failed to sync live events:", error);
+            } finally {
+                setEventsLoading(false);
+            }
+        };
+
+        fetchLiveEvents();
+    }, []);
 
     const playSound = (audioFile) => {
         const audio = new Audio(audioFile)
         audio.play().catch(e => console.log("Audio play failed:", e))
     }
 
-    const currentClub = clubsData.find(c => c.slug === clubSlug)
+    const currentClub = liveClubs.find(c => c.slug === clubSlug)
     const currentEvent = currentClub?.events?.find(e => e.id === eventSlug)
+
 
     const handleClubClick = (slug) => {
         playSound(pageTurnSound)
@@ -93,21 +127,21 @@ const EventsGrid = () => {
     }
 
     // Navigation Logic
-    const currentClubIndex = clubsData.findIndex(c => c.slug === clubSlug)
+    const currentClubIndex = liveClubs.findIndex(c => c.slug === clubSlug)
     const currentEventIndex = currentClub?.events?.findIndex(e => e.id === eventSlug)
 
     const goToNextClub = (e) => {
         e?.stopPropagation()
         playSound(pageTurnSound)
-        const nextIndex = (currentClubIndex + 1) % clubsData.length
-        navigate(`/${clubsData[nextIndex].slug}`)
+        const nextIndex = (currentClubIndex + 1) % liveClubs.length
+        navigate(`/${liveClubs[nextIndex].slug}`)
     }
 
     const goToPrevClub = (e) => {
         e?.stopPropagation()
         playSound(pageTurnSound)
-        const prevIndex = (currentClubIndex - 1 + clubsData.length) % clubsData.length
-        navigate(`/${clubsData[prevIndex].slug}`)
+        const prevIndex = (currentClubIndex - 1 + liveClubs.length) % liveClubs.length
+        navigate(`/${liveClubs[prevIndex].slug}`)
     }
 
     const goToNextEvent = (e) => {
@@ -117,8 +151,8 @@ const EventsGrid = () => {
             navigate(`/${clubSlug}/${currentClub.events[currentEventIndex + 1].id}`)
         } else {
             // Go to next club's first event
-            const nextIndex = (currentClubIndex + 1) % clubsData.length
-            const nextClub = clubsData[nextIndex]
+            const nextIndex = (currentClubIndex + 1) % liveClubs.length
+            const nextClub = liveClubs[nextIndex]
             if (nextClub.events.length > 0) {
                 navigate(`/${nextClub.slug}/${nextClub.events[0].id}`)
             } else {
@@ -134,8 +168,8 @@ const EventsGrid = () => {
             navigate(`/${clubSlug}/${currentClub.events[currentEventIndex - 1].id}`)
         } else {
             // Go to prev club's last event
-            const prevIndex = (currentClubIndex - 1 + clubsData.length) % clubsData.length
-            const prevClub = clubsData[prevIndex]
+            const prevIndex = (currentClubIndex - 1 + liveClubs.length) % liveClubs.length
+            const prevClub = liveClubs[prevIndex]
             if (prevClub.events.length > 0) {
                 navigate(`/${prevClub.slug}/${prevClub.events[prevClub.events.length - 1].id}`)
             } else {
@@ -143,6 +177,7 @@ const EventsGrid = () => {
             }
         }
     }
+
 
     // Registration States
     const [regLoading, setRegLoading] = useState(false)
@@ -355,20 +390,29 @@ const EventsGrid = () => {
                             <h1 className="text-4xl font-serif md:text-5xl font-black text-white uppercase tracking-tighter">Competitions</h1>
                         </div>
                         <div className="hidden md:block text-xs font-mono text-gray-500">
-                            Events List
+                            {eventsLoading ? 'SYNCING DATABASE...' : 'LIVE REPOSITORY'}
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
-                        {clubsData.map((club, index) => (
-                            <EventGridCard
-                                key={club.id}
-                                club={club}
-                                index={index}
-                                onSelect={() => handleClubClick(club.slug)}
-                            />
-                        ))}
-                    </div>
+                    {eventsLoading ? (
+                        <div className="flex flex-col items-center justify-center py-20 space-y-4">
+                            <div className="w-12 h-12 border-4 border-red-600/30 border-t-red-600 rounded-full animate-spin"></div>
+                            <p className="font-mono text-[10px] text-gray-500 uppercase tracking-widest animate-pulse">Establishing Secure Connection...</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+                            {liveClubs.map((club, index) => (
+                                <EventGridCard
+                                    key={club.id}
+                                    club={club}
+                                    index={index}
+                                    onSelect={() => handleClubClick(club.slug)}
+                                />
+                            ))}
+                        </div>
+                    )}
+
+
                 </motion.div>
             </div>
         )
@@ -415,25 +459,37 @@ const EventsGrid = () => {
 
                     {/* Events Grid */}
                     <div className="flex flex-wrap justify-center gap-10 w-full max-w-7xl mx-auto px-4">
-                        {currentClub?.events?.map((event, index) => (
-                            <motion.div
-                                key={event.id}
-                                initial={{ opacity: 0, y: 30 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.1 }}
-                                className="w-full sm:w-[calc(50%-2.5rem)] lg:w-[calc(33.33%-2.5rem)]"
-                            >
-                                <CustomEventCard 
-                                    event={event} 
-                                    onClick={() => handleEventClick(event.id)}
-                                />
-                            </motion.div>
-                        ))}
+                        {eventsLoading ? (
+                            <div className="flex flex-col items-center justify-center py-20 space-y-4 w-full">
+                                <div className="w-12 h-12 border-4 border-red-600/30 border-t-red-600 rounded-full animate-spin"></div>
+                                <p className="font-mono text-[10px] text-gray-500 uppercase tracking-widest animate-pulse">Syncing Classified Files...</p>
+                            </div>
+                        ) : currentClub?.events?.length > 0 ? (
+                            currentClub.events.map((event, index) => (
+                                <motion.div
+                                    key={event.id}
+                                    initial={{ opacity: 0, y: 30 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.1 }}
+                                    className="w-full sm:w-[calc(50%-2.5rem)] lg:w-[calc(33.33%-2.5rem)]"
+                                >
+                                    <CustomEventCard
+                                        event={event}
+                                        onClick={() => handleEventClick(event.id)}
+                                    />
+                                </motion.div>
+                            ))
+                        ) : (
+                            <div className="text-center py-20 w-full">
+                                <p className="font-mono text-[10px] text-gray-500 uppercase tracking-widest">No intelligence found in this sector yet.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
         )
     }
+
 
     // Render Event Details (Horizontal View)
     if (eventSlug && currentEvent) {
@@ -918,7 +974,7 @@ const EventGridCard = ({ club, index, onSelect }) => {
                     {/* Main Image/Graphic Placeholder */}
                     <div className={`relative ${club.illustration ? 'mb-0' : 'mb-8'} flex-1 group-hover:scale-105 transition-transform duration-700 overflow-hidden`}>
                         <div className="absolute inset-0 border-2 border-black/5 m-2" />
-                        
+
                         {/* Background Letter */}
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                             <h3

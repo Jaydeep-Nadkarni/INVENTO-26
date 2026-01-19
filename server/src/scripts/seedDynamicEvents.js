@@ -65,19 +65,11 @@ const seed = async () => {
             // Logistics mapping
             const logistics = {
                 venue: event.venue || "TBD",
-                date: null,
+                date: event.date || "TBD",
                 time: event.time || "TBD",
                 whatsappLink: event.whatsapplink || ""
             };
 
-            // Parse date "26-02-2026" or "Day 0"
-            if (event.date && event.date.includes("-")) {
-                const parts = event.date.split("-");
-                if (parts.length === 3) {
-                    const [day, month, year] = parts;
-                    logistics.date = new Date(`${year}-${month}-${day}T00:00:00Z`);
-                }
-            }
 
             // Specific slots for Master/Miss events
             let specificSlots = {};
@@ -98,9 +90,17 @@ const seed = async () => {
                 _id: event.slug,
                 id: (event.id || "").toString(),
                 name: event.title,
+                subtitle: event.subtitle || "",
+                description: event.description || "",
                 eventType,
+                minTeamSize: event.team?.min || 1,
+                maxTeamSize: event.team?.max || 1,
                 club: event.club ? [event.club] : [],
                 price: event.registartionfee || 0,
+                rounds: event.rounds || 0,
+                rounddetails: event.rounddetails || [],
+                rules: event.rules || [],
+                contact: event.contact || [],
                 slots: {
                     totalSlots: event.slots?.total || 100,
                     availableSlots: event.slots?.available || 100
@@ -114,6 +114,7 @@ const seed = async () => {
                 logistics,
                 whatsappLink: event.whatsapplink || ""
             };
+
         });
 
         console.log("Inserting new events...");
