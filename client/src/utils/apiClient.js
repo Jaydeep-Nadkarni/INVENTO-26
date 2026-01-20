@@ -88,10 +88,12 @@ export const apiCall = async (endpoint, options = {}, navigate = null) => {
       if (contentType && contentType.includes("application/json") && text) {
         data = JSON.parse(text);
       } else {
+        console.error(`[apiClient] Non-JSON response from ${endpoint}:`, text.substring(0, 500));
         data = { message: text || `Non-JSON response received (${response.status})` };
       }
     } catch (e) {
       console.warn("JSON Parse Failed:", e);
+      console.error("[apiClient] Raw response was:", text.substring(0, 500));
       data = { message: "Invalid server response format" };
     }
 

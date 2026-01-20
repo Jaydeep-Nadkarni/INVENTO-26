@@ -43,7 +43,7 @@ const spaceMail = (title, message, eventName, userName, id) => `
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>INVENTO 2026 – Spyverse Email</title>
 </head>
-<body style="margin:0; padding:40px; background:#020617; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+<body style="margin:0; padding:0; background:#020617; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
 
   <div style="background:#0b1220; color:#e5e7eb; padding:32px; border-radius:14px; max-width:600px; margin:auto; border:1px solid #1e293b">
 
@@ -127,17 +127,27 @@ export const createOrder = async (req, res) => {
 
     // Robust find: Match either custom string _id OR the 'id' field
     const eventIdStr = eventId.toString();
-    const event = await Event.findOne({ 
-      $or: [
-        { _id: eventIdStr }, 
-        { id: eventIdStr }
-      ] 
-    });
+    console.log(`[createOrder] Fetching event from DB for ID: ${eventIdStr}`);
+    
+    let event;
+    try {
+      event = await Event.findOne({ 
+        $or: [
+          { _id: eventIdStr }, 
+          { id: eventIdStr }
+        ] 
+      }).lean();
+    } catch (dbError) {
+      console.error(`[createOrder] Database Error when fetching event:`, dbError);
+      return res.status(500).json({ message: "Database error while fetching event", details: dbError.message });
+    }
 
     if (!event) {
       console.error(`[createOrder] Event not found for ID: ${eventIdStr}`);
       return res.status(404).json({ message: "Event not found in directory" });
     }
+
+    console.log(`[createOrder] Found event: ${event.name}, Price: ${event.price}`);
 
     if (event.price === 0) {
       return res.json({ free: true });
@@ -156,19 +166,31 @@ export const createOrder = async (req, res) => {
       return res.status(500).json({ message: "Payment gateway is not configured on server" });
     }
 
-    const razorpay = new Razorpay({ key_id, key_secret });
+    console.log(`[createOrder] Initializing Razorpay with key: ${key_id.substring(0, 7)}...`);
+    
+    let razorpay;
+    try {
+      razorpay = new Razorpay({ key_id, key_secret });
+    } catch (razorInitError) {
+      console.error("[createOrder] Failed to initialize Razorpay SDK:", razorInitError);
+      return res.status(500).json({ message: "Payment gateway initialization failed", details: razorInitError.message });
+    }
     
     const options = {
       amount: Math.round(event.price * 100), // amount in paise, must be integer
       currency: "INR",
-      receipt: `receipt_order_${Date.now()}_${eventIdStr.substring(eventIdStr.length - 4)}`,
+      receipt: `receipt_order_${Date.now()}_${eventIdStr.substring(Math.max(0, eventIdStr.length - 4))}`,
     };
+
+    console.log(`[createOrder] Creating Razorpay order with options:`, JSON.stringify(options));
 
     try {
       const order = await razorpay.orders.create(options);
       if (!order) {
         throw new Error("Razorpay returned empty order object");
       }
+
+      console.log(`[createOrder] Order created successfully: ${order.id}`);
 
       // Return order details + public keyId
       res.json({
@@ -177,14 +199,18 @@ export const createOrder = async (req, res) => {
       });
     } catch (rzpError) {
       console.error("[createOrder] Razorpay SDK Error:", rzpError);
-      return res.status(502).json({ 
+      return res.status(rzpError.statusCode || 502).json({ 
         message: "Payment gateway communication error", 
-        details: rzpError.message 
+        details: rzpError.message,
+        code: rzpError.code
       });
     }
   } catch (error) {
     console.error("Error in createOrder global catch:", error);
-    res.status(500).json({ message: "Critical order processing error: " + error.message });
+    return res.status(500).json({ 
+      message: "Failed to create order", 
+      error: error.message 
+    });
   }
 };
 
@@ -738,10 +764,12 @@ export const getEvents = async (req, res) => {
       specificSlots: 1,
       registration: 1,
       logistics: 1
-    });
+    }).lean();
 
+    console.log(`[getEvents] Successfully fetched ${events.length} events. sending JSON...`);
     res.json(events);
   } catch (error) {
+    console.error("[getEvents] Error:", error);
     res.status(500).json({ message: error.message });
   }
 };

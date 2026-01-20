@@ -199,6 +199,20 @@ const EventDetails = ({
                         background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
                         opacity: 0.05;
                     }
+                    ::-webkit-scrollbar {
+                        width: 4px;
+                        height: 4px;
+                    }
+                    ::-webkit-scrollbar-track {
+                        background: transparent;
+                    }
+                    ::-webkit-scrollbar-thumb {
+                        background: #444;
+                        border-radius: 10px;
+                    }
+                    ::-webkit-scrollbar-thumb:hover {
+                        background: #666;
+                    }
                 `}</style>
                 <div className="absolute inset-0 grain-overlay pointer-events-none z-0" />
                 
@@ -511,24 +525,26 @@ const EventDetails = ({
                                             </motion.div>
                                         )}
                                     </div>
+                                </div>
+                            </div>
 
-                                    <div className="flex gap-4 pt-4 sticky bottom-0 py-4 border-t border-stone-200">
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowRegModal(false)}
-                                            className="flex-1 bg-stone-200 py-4 border-4 border-stone-900 text-stone-900 font-serif font-black uppercase tracking-tighter hover:bg-stone-200 transition-all text-sm"
-                                        >
-                                            Cancel
-                                        </button>
-                                        <button
-                                            type="button"
-                                            disabled={regLoading}
-                                            onClick={initiatePayment}
-                                            className="flex-1 py-4 bg-stone-900 text-white font-serif font-black uppercase tracking-tighter hover:bg-red-600 transition-all shadow-[8px_8px_0px_rgba(0,0,0,0.1)] active:shadow-none active:translate-x-1 active:translate-y-1 disabled:opacity-50 text-sm"
-                                        >
-                                            {regLoading ? 'PROCESSING...' : 'REGISTER & PAY'}
-                                        </button>
-                                    </div>
+                            <div className="relative z-20 p-6 md:p-10 pt-0">
+                                <div className="flex gap-4 pt-4 border-t-4 border-stone-900">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowRegModal(false)}
+                                        className="flex-1 bg-stone-200 py-4 border-4 border-stone-900 text-stone-900 font-serif font-black uppercase tracking-tighter hover:bg-stone-200 transition-all text-sm"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        disabled={regLoading}
+                                        onClick={initiatePayment}
+                                        className="flex-1 py-4 bg-stone-900 text-white font-serif font-black uppercase tracking-tighter hover:bg-red-600 transition-all shadow-[8px_8px_0px_rgba(0,0,0,0.1)] active:shadow-none active:translate-x-1 active:translate-y-1 disabled:opacity-50 text-sm"
+                                    >
+                                        {regLoading ? 'PROCESSING...' : 'REGISTER & PAY'}
+                                    </button>
                                 </div>
                             </div>
                         </motion.div>
