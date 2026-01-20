@@ -45,8 +45,12 @@ export const validateRegistrationLogic = async (req, res, next) => {
             throw new RegistrationClosedError();
         }
 
+        // 5. Check Gender-based Event Type (Master/Miss/Mr/Ms)
+        const isMasterMiss = /master|miss|mr\.|ms\./i.test(event.name);
+
         // 3. Check slots availability (Soft check)
-        if (event.slots.availableSlots <= 0) {
+        // For gender-based events, we skip this and check specific slots later
+        if (!isMasterMiss && event.slots.availableSlots <= 0) {
             throw new SlotFullError();
         }
 
@@ -67,18 +71,21 @@ export const validateRegistrationLogic = async (req, res, next) => {
                 throw new DuplicateRegistrationError();
             }
 
-            // 5. Gender Check (Master/Miss)
-            const isMasterMiss = /master|miss/i.test(event.name);
+            // 5b. Gender Check (Master/Miss)
             if (isMasterMiss) {
                 let slotKey = null;
-                if (user.gender === "Male") slotKey = "availableBoysSlots";
-                else if (user.gender === "Female") slotKey = "availableGirlsSlots";
+                const gender = user.gender?.toLowerCase();
+                if (gender === "male") slotKey = "male";
+                else if (gender === "female") slotKey = "female";
 
                 if (!slotKey) {
-                    throw new InvalidGenderError("Gender must be specified as Male or Female for Master/Miss events");
+                    throw new InvalidGenderError("Gender must be Male or Female for this event");
                 }
 
-                const availableGenderSlots = event.specificSlots?.get(slotKey) || 0;
+                const availableGenderSlots = (typeof event.specificSlots?.get === "function" 
+                    ? event.specificSlots.get(slotKey) 
+                    : event.specificSlots?.[slotKey]) || 0;
+
                 if (availableGenderSlots <= 0) {
                     throw new SlotFullError(`No slots available for ${user.gender} participants`);
                 }

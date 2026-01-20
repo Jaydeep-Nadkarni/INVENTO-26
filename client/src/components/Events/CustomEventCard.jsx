@@ -5,7 +5,7 @@ import paperTexture from '../../assets/UI/paper-texture.jpg';
 const CustomEventCard = ({ event, onClick }) => {
     const userStr = localStorage.getItem('currentUser');
     const user = userStr ? JSON.parse(userStr) : null;
-    const isMasterMiss = /master|miss|mr\./i.test(event.themeName || event.realName);
+    const isMasterMiss = /master|miss|mr\.|ms\./i.test(event.themeName || event.realName);
 
     const renderSlots = () => {
         if (isMasterMiss) {

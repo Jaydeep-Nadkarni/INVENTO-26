@@ -274,7 +274,7 @@ export const registerForEvent = async (req, res) => {
         if (order.amount !== event.price * 100) throw new Error("Payment amount mismatch for this event.");
       }
 
-      const isMasterMiss = /master|miss/i.test(event.name);
+      const isMasterMiss = /master|miss|mr\.|ms\./i.test(event.name);
       // "Update status to 'CONFIRMED' after successful payment, 'PENDING' for free events"
       let status = (event.price > 0 && !isOfficial) ? "CONFIRMED" : "PENDING";
 
@@ -291,9 +291,10 @@ export const registerForEvent = async (req, res) => {
         // Gender check for Master/Miss events
         let slotKey = null;
         if (isMasterMiss) {
-          if (user.gender === "Male") slotKey = "male";
-          else if (user.gender === "Female") slotKey = "female";
-          else throw new InvalidGenderError("Gender must be specified as Male or Female for Master/Miss events.");
+          const gender = user.gender?.toLowerCase();
+          if (gender === "male") slotKey = "male";
+          else if (gender === "female") slotKey = "female";
+          else throw new InvalidGenderError("Gender must be specified as Male or Female for this event.");
         }
 
         const participantData = {
@@ -310,8 +311,15 @@ export const registerForEvent = async (req, res) => {
 
         // Atomic update for slots and registration
         if (slotKey) {
-            // Log for debugging
-            const currentGenderSlots = event.specificSlots?.get(slotKey);
+            // For gender based events, ensure general slots are null if not already
+            if (event.slots.availableSlots !== null) {
+              event.slots.availableSlots = null;
+            }
+
+            const currentGenderSlots = (typeof event.specificSlots?.get === "function" 
+                ? event.specificSlots.get(slotKey) 
+                : event.specificSlots?.[slotKey]);
+
             console.log(`[registerForEvent] Gender Slot Check: ${slotKey} count is ${currentGenderSlots}`);
 
             if (currentGenderSlots === undefined || currentGenderSlots <= 0) {
@@ -319,7 +327,11 @@ export const registerForEvent = async (req, res) => {
             }
             
             // Map updates must use .set()
-            event.specificSlots.set(slotKey, currentGenderSlots - 1);
+            if (typeof event.specificSlots?.set === "function") {
+              event.specificSlots.set(slotKey, currentGenderSlots - 1);
+            } else {
+              event.specificSlots[slotKey] = currentGenderSlots - 1;
+            }
             event.markModified('specificSlots');
         } else {
             if (event.slots.availableSlots <= 0) {
@@ -500,8 +512,9 @@ export const updateParticipantStatus = async (req, res) => {
         // Fetch user to check gender
         const user = await User.findById(inventoId).session(session);
         if (user) {
-          if (user.gender === "Male") slotKey = "male";
-          else if (user.gender === "Female") slotKey = "female";
+          const gender = user.gender?.toLowerCase();
+          if (gender === "male") slotKey = "male";
+          else if (gender === "female") slotKey = "female";
         }
       }
 
@@ -514,11 +527,19 @@ export const updateParticipantStatus = async (req, res) => {
       // Handle slot logic (Exclusive: Gender vs General)
       if (nowActive && !wasActive) {
         if (slotKey) {
-            const currentGenderSlots = event.specificSlots.get(slotKey) || 0;
+            const currentGenderSlots = (typeof event.specificSlots?.get === "function" 
+                ? event.specificSlots.get(slotKey) 
+                : event.specificSlots?.[slotKey]) || 0;
+
             if (currentGenderSlots <= 0) {
                 throw new Error(`No ${slotKey} slots available in ${event.name}`);
             }
-            event.specificSlots.set(slotKey, currentGenderSlots - 1);
+
+            if (typeof event.specificSlots?.set === "function") {
+              event.specificSlots.set(slotKey, currentGenderSlots - 1);
+            } else {
+              event.specificSlots[slotKey] = currentGenderSlots - 1;
+            }
         } else {
             if (event.slots.availableSlots <= 0) {
               throw new Error("No slots available to activate this participant");
@@ -527,8 +548,15 @@ export const updateParticipantStatus = async (req, res) => {
         }
       } else if (!nowActive && wasActive) {
         if (slotKey) {
-            const currentGenderSlots = event.specificSlots.get(slotKey) || 0;
-            event.specificSlots.set(slotKey, currentGenderSlots + 1);
+            const currentGenderSlots = (typeof event.specificSlots?.get === "function" 
+                ? event.specificSlots.get(slotKey) 
+                : event.specificSlots?.[slotKey]) || 0;
+
+            if (typeof event.specificSlots?.set === "function") {
+              event.specificSlots.set(slotKey, currentGenderSlots + 1);
+            } else {
+              event.specificSlots[slotKey] = currentGenderSlots + 1;
+            }
         } else {
             event.slots.availableSlots += 1;
         }
@@ -784,8 +812,20 @@ export const getEvents = async (req, res) => {
     // This ensures any live updates to slots, venues, or rules are sent to the frontend.
     const events = await Event.find({}, { "registrations": 0 }).lean();
     
-    console.log(`[getEvents] Sending ${events.length} events to client.`);
-    res.json(events);
+    // Process events to nullify general slots for gender-based events as per request
+    const processedEvents = events.map(event => {
+      const isMasterMiss = /master|miss|mr\.|ms\./i.test(event.name);
+      if (isMasterMiss) {
+        return {
+          ...event,
+          slots: { ...event.slots, availableSlots: null }
+        };
+      }
+      return event;
+    });
+
+    console.log(`[getEvents] Sending ${processedEvents.length} events to client.`);
+    res.json(processedEvents);
   } catch (error) {
     console.error("[getEvents] CRITICAL ERROR:", error);
     res.status(500).json({ 
