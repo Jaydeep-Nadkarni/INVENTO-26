@@ -8,10 +8,12 @@ const EVENTS_FILE_PATH = path.join(__dirname, "../../../client/src/components/Ev
 let cachedEvents = null;
 
 export const getStaticEvents = () => {
-    if (cachedEvents) return cachedEvents;
+    // Disable caching for dev/debug to ensure file changes are picked up
+    // if (cachedEvents) return cachedEvents;
 
     try {
         if (!fs.existsSync(EVENTS_FILE_PATH)) {
+
             console.warn(`[StaticData] Warning: ${EVENTS_FILE_PATH} not found.`);
             return [];
         }

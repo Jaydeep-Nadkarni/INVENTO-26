@@ -118,13 +118,22 @@ const verifyRazorpayPayment = (orderId, paymentId, signature) => {
 
 
 // Shared validation for registration and order creation
-const validateEventRegistration = async (event, { inventoId, members, teamName, isOfficial, contingentKey }, session = null) => {
+
+
+// Extracted Helper for validation to be reused or cleaner
+const validateHelper = async (event, inventoId, members, teamName, isOfficial, contingentKey, session) => {
   const staticEvent = getStaticEvent(event._id || event.id);
-  const eventType = (staticEvent?.type || "Solo").toUpperCase();
+  const rawType = staticEvent?.type ? String(staticEvent.type) : "Solo";
+  let eventType = rawType.trim().toUpperCase();
+
   const minTeamSize = staticEvent?.team?.min || 1;
   const maxTeamSize = staticEvent?.team?.max || 1;
 
-  if (event.registration?.isOpen === false) throw new RegistrationClosedError();
+  if (minTeamSize === 1 && maxTeamSize === 1) {
+    eventType = "SOLO";
+  }
+
+
 
   if (event.registration?.officialOnly && !isOfficial) {
     throw new Error("Registration for this event is restricted to official entries only.");
@@ -150,8 +159,15 @@ const validateEventRegistration = async (event, { inventoId, members, teamName, 
     }
   }
 
+  const isSoloEvent = eventType === "SOLO" || !members || (Array.isArray(members) && members.length === 0);
+
   // SOLO Logic
-  if (eventType === "SOLO") {
+  if (isSoloEvent) {
+    // Solo event logic
+    if (!user) {
+      throw new Error("Participant data missing for solo event");
+    }
+
     if (event.registrations.participants.some(p => p.inventoId === inventoId)) {
       throw new DuplicateRegistrationError();
     }
@@ -169,29 +185,56 @@ const validateEventRegistration = async (event, { inventoId, members, teamName, 
     } else {
       if (event.slots.availableSlots <= 0) throw new SlotFullError();
     }
+
+    return { user, staticEvent, eventType, minTeamSize, maxTeamSize, members: [user._id] };
   }
   // TEAM Logic
-  else {
+  else if (Array.isArray(members) && members.length > 0) {
+    let parsedMembers = [];
     try {
-      members = Array.isArray(members) ? (members) : JSON.parse(members);
+      parsedMembers = Array.isArray(members) ? (members) : JSON.parse(members);
     } catch {
-      throw new Error("Invalid members format.");
+      // If parsing fails, we assume it's invalid
     }
 
-    if (!teamName || !members || members.length < minTeamSize || members.length > maxTeamSize) {
-      throw new TeamSizeError(`Team must have between ${minTeamSize} and ${maxTeamSize} members.`);
+    if (!teamName || teamName.trim() === "") {
+      throw new Error("Team Name is required.");
     }
-    if (!members.includes(inventoId)) throw new Error("Leader must be included in members.");
+
+    if (!parsedMembers || !Array.isArray(parsedMembers)) {
+      throw new Error("Members list is required.");
+    }
+
+    const uniqueMembers = [...new Set(parsedMembers)];
+    const memberCount = uniqueMembers.length;
+
+    if (memberCount < minTeamSize || memberCount > maxTeamSize) {
+      throw new TeamSizeError(
+        `Team must have between ${minTeamSize} and ${maxTeamSize} members.`
+      );
+    }
+
+    if (!uniqueMembers.includes(inventoId)) throw new Error("Leader must be included in members.");
 
     const alreadyRegistered = event.registrations.teams.some(team =>
-      team.members.some(m => members.includes(m.inventoId))
+      team.members.some(m => uniqueMembers.includes(m.inventoId))
     );
     if (alreadyRegistered) throw new DuplicateRegistrationError("One or more members already registered.");
 
     if (event.slots.availableSlots <= 0) throw new SlotFullError();
-  }
 
-  return { user, staticEvent, eventType, minTeamSize, maxTeamSize, members };
+    return { user, staticEvent, eventType, minTeamSize, maxTeamSize, members: uniqueMembers };
+  }
+  else {
+    // Fallback for unknown type, treat as SOLO mostly to avoid crashes but warn
+    console.warn(`Unknown event type: ${eventType}. Defaulting to SOLO logic.`);
+    return { user, staticEvent, eventType: "SOLO", minTeamSize, maxTeamSize, members: [user._id] };
+  }
+};
+
+// Wrapper for existing function signature compatibility
+const validateEventRegistration = async (event, { inventoId, members, teamName, isOfficial, contingentKey }, session = null) => {
+  return validateHelper(event, inventoId, members, teamName, isOfficial, contingentKey, session);
 };
 
 export const createOrder = async (req, res) => {
@@ -873,6 +916,7 @@ export const updateEventDetails = async (req, res) => {
       const newAvailable = event.slots.availableSlots + slotsChange;
 
       if (newTotal < 0) return res.status(400).json({ message: "Total slots cannot be negative" });
+      if (newAvailable < 0) return res.status(400).json({ message: "Cannot reduce capacity below the number of currently occupied slots." });
 
       event.slots.totalSlots = newTotal;
       event.slots.availableSlots = newAvailable; // Adjust available by the same delta

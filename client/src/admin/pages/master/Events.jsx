@@ -43,16 +43,53 @@ const MasterEvents = () => {
 
     const handleSave = async () => {
         if (!editingEvent) return;
+
+        // Validation
+        const price = Number(formData.price);
+        const slotsChange = Number(formData.slotsChange);
+
+        if (isNaN(price) || price < 0) {
+            alert("Please enter a valid non-negative price.");
+            return;
+        }
+
+        if (isNaN(slotsChange)) {
+            alert("Please enter a valid number for slots adjustment.");
+            return;
+        }
+
+        // Check constraints
+        const newTotal = editingEvent.total_slots + slotsChange;
+        const newAvailable = editingEvent.available_slots + slotsChange;
+
+        if (newTotal < 0) {
+            alert("Total slots cannot be negative. Please adjust the value.");
+            return;
+        }
+        if (newAvailable < 0) {
+            alert("Cannot reduce capacity below the number of currently occupied slots.");
+            return;
+        }
+
+        const isGenderSpecific = GENDER_SPECIFIC_EVENT_IDS.includes(String(editingEvent.id));
+        if (isGenderSpecific) {
+            const mSlots = Number(formData.maleSlots);
+            const fSlots = Number(formData.femaleSlots);
+            if (isNaN(mSlots) || mSlots < 0 || isNaN(fSlots) || fSlots < 0) {
+                alert("Please enter valid non-negative numbers for gender specific slots.");
+                return;
+            }
+        }
+
         setSaving(true);
         try {
             const payload = {
-                price: Number(formData.price),
-                slotsChange: Number(formData.slotsChange),
+                price: price,
+                slotsChange: slotsChange,
                 isOpen: formData.isOpen,
                 officialOnly: formData.officialOnly,
             };
 
-            const isGenderSpecific = GENDER_SPECIFIC_EVENT_IDS.includes(String(editingEvent.id));
             if (isGenderSpecific) {
                 payload.specificSlotsUpdate = {
                     male: Number(formData.maleSlots),
@@ -268,23 +305,27 @@ const MasterEvents = () => {
 
                             {/* Toggles */}
                             <div className="grid grid-cols-2 gap-4">
-                                <div
+                                <button
+                                    type="button"
                                     onClick={() => setFormData({ ...formData, isOpen: !formData.isOpen })}
-                                    className={`cursor-pointer p-4 rounded border flex flex-col items-center justify-center gap-2 transition-all ${formData.isOpen ? 'bg-green-950/20 border-green-900 text-green-400' : 'bg-red-950/20 border-red-900 text-red-400'
+                                    aria-pressed={formData.isOpen}
+                                    className={`cursor-pointer p-4 rounded border flex flex-col items-center justify-center gap-2 transition-all focus:outline-none focus:ring-2 focus:ring-white/20 ${formData.isOpen ? 'bg-green-950/20 border-green-900 text-green-400' : 'bg-red-950/20 border-red-900 text-red-400'
                                         }`}
                                 >
                                     {formData.isOpen ? <Unlock className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
                                     <span className="text-[10px] font-black uppercase tracking-widest">{formData.isOpen ? 'Reg. Open' : 'Reg. Closed'}</span>
-                                </div>
+                                </button>
 
-                                <div
+                                <button
+                                    type="button"
                                     onClick={() => setFormData({ ...formData, officialOnly: !formData.officialOnly })}
-                                    className={`cursor-pointer p-4 rounded border flex flex-col items-center justify-center gap-2 transition-all ${formData.officialOnly ? 'bg-blue-950/20 border-blue-900 text-blue-400' : 'bg-gray-900 border-gray-800 text-gray-500'
+                                    aria-pressed={formData.officialOnly}
+                                    className={`cursor-pointer p-4 rounded border flex flex-col items-center justify-center gap-2 transition-all focus:outline-none focus:ring-2 focus:ring-white/20 ${formData.officialOnly ? 'bg-blue-950/20 border-blue-900 text-blue-400' : 'bg-gray-900 border-gray-800 text-gray-500'
                                         }`}
                                 >
                                     <ShieldAlert className="w-5 h-5" />
                                     <span className="text-[10px] font-black uppercase tracking-widest">Official Only</span>
-                                </div>
+                                </button>
                             </div>
                         </div>
 
