@@ -56,10 +56,10 @@ export const mapEventFromDb = (event, isDb = false) => ({
     })) : (isDb ? undefined : []),
     contacts: (event.contact || []).filter(c => c && c.name).map(c => ({
         name: c.name,
-        phone: c.phone
+        phone: c.phone || c.contact
     })).length > 0 ? (event.contact || []).filter(c => c && c.name).map(c => ({
         name: c.name,
-        phone: c.phone
+        phone: c.phone || c.contact
     })) : (isDb ? undefined : [])
 });
 

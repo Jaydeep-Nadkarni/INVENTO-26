@@ -109,7 +109,7 @@ const EventDetails = ({
     const eventTierColor = {
         'Silver': 'text-stone-400',
         'Gold': 'text-yellow-500',
-        'Platinum': 'text-purple-500',
+        'Platinum': 'text-slate-300',
     }
 
     const tierClass = eventTierColor[currentEvent.tier] || 'text-white';
