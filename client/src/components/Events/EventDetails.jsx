@@ -1,12 +1,63 @@
-import React from 'react'
+import React, { useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { 
+    Shield, MapPin, AlertTriangle, Users, Zap, Clock, 
+    Target, ChevronLeft, ChevronRight, Phone, User,
+    FileText, List, Info, AlertCircle, Terminal,
+    Lock, Eye, ArrowLeft, ArrowRight
+} from 'lucide-react'
 import { TextureOverlay } from './EventUIComponents'
 import paperTexture from '../../assets/UI/paper-texture.jpg'
+
+// Custom Hooks for Navigation
+const useKeyboardNavigation = (onNext, onPrev) => {
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'ArrowRight' && onNext) onNext();
+            if (e.key === 'ArrowLeft' && onPrev) onPrev();
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [onNext, onPrev]);
+};
+
+const useSwipeGesture = (onNext, onPrev) => {
+    const touchStartX = useRef(null);
+    const touchStartY = useRef(null);
+    const touchEndX = useRef(null);
+    const minSwipeDistance = 80;
+
+    const onTouchStart = (e) => {
+        touchEndX.current = null;
+        touchStartX.current = e.targetTouches[0].clientX;
+        touchStartY.current = e.targetTouches[0].clientY;
+    };
+
+    const onTouchMove = (e) => {
+        touchEndX.current = e.targetTouches[0].clientX;
+    };
+
+    const onTouchEnd = () => {
+        if (!touchStartX.current || !touchEndX.current || !touchStartY.current) return;
+        
+        const horizontalDistance = touchStartX.current - touchEndX.current;
+        const verticalDistance = Math.abs(touchStartY.current - (touchEndX.current || touchStartY.current));
+        
+        // Only trigger swipe if horizontal movement is dominant
+        if (Math.abs(horizontalDistance) > minSwipeDistance && Math.abs(horizontalDistance) > verticalDistance * 2) {
+            const isLeftSwipe = horizontalDistance > minSwipeDistance;
+            const isRightSwipe = horizontalDistance < -minSwipeDistance;
+            if (isLeftSwipe && onNext) onNext();
+            if (isRightSwipe && onPrev) onPrev();
+        }
+    };
+
+    return { onTouchStart, onTouchMove, onTouchEnd };
+};
 
 const EventDetails = ({
     currentEvent,
     currentClub,
-    clubSlug,
     handleBackToEvents,
     goToPrevEvent,
     goToNextEvent,
@@ -32,458 +83,520 @@ const EventDetails = ({
 }) => {
     if (!currentEvent) return null;
 
+    // Navigation and Swipe Hooks
+    useKeyboardNavigation(goToNextEvent, goToPrevEvent);
+    const swipeHandlers = useSwipeGesture(goToNextEvent, goToPrevEvent);
+
     const userStr = localStorage.getItem('currentUser');
     const user = userStr ? JSON.parse(userStr) : null;
     const isMasterMiss = /master|miss|mr\.|ms\./i.test(currentEvent.themeName || currentEvent.name);
 
     const renderSlots = () => {
         if (isMasterMiss) {
-            const boys = currentEvent.specificSlots?.availableBoysSlots ?? currentEvent.specificSlots?.male ?? 0;
-            const girls = currentEvent.specificSlots?.availableGirlsSlots ?? currentEvent.specificSlots?.female ?? 0;
-
-            if (!user) {
-                return `${boys + girls}`;
-            }
-
+            // Support multiple key formats for compatibility (availableBoysSlots, male, etc)
+            const slots = currentEvent.specificSlots || {};
+            const boys = slots.availableBoysSlots ?? slots.male ?? 0;
+            const girls = slots.availableGirlsSlots ?? slots.female ?? 0;
+            
+            if (!user) return `${boys + girls}`;
             if (user.gender === "Male") return `${boys} (Master)`;
             if (user.gender === "Female") return `${girls} (Miss)`;
-            return `${boys + girls}`;
+            return boys + girls;
         }
-
-        return currentEvent.slotsAvailable === 'TBD' ? 'OPEN' : (currentEvent.slotsAvailable || 'Unlimited');
+        return currentEvent.slotsAvailable === 'TBD' ? 'OPEN' : (currentEvent.slotsAvailable || '∞');
     };
 
+    const eventTierColor = {
+        'Silver': 'text-stone-400',
+        'Gold': 'text-yellow-500',
+        'Platinum': 'text-slate-300',
+    }
+
+    const tierClass = eventTierColor[currentEvent.tier] || 'text-white';
+
     return (
-        <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/95 backdrop-blur-md p-4 md:p-8 pt-24 md:pt-32">
+        <div 
+            className="fixed inset-0 z-100 bg-stone-950 flex flex-col md:flex-row overflow-hidden selection:bg-red-600 selection:text-white"
+        >
+            <TextureOverlay opacity={0.3} className="pointer-events-none fixed inset-0" />
 
-            {/* Event Navigation Arrows */}
-            <button onClick={goToPrevEvent} className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-110 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-red-600 text-white transition-all backdrop-blur-sm group border border-white/20">
-                <span className="text-2xl group-hover:-translate-x-1 transition-transform">←</span>
-            </button>
-            <button onClick={goToNextEvent} className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-110 w-12 h-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-red-600 text-white transition-all backdrop-blur-sm group border border-white/20">
-                <span className="text-2xl group-hover:translate-x-1 transition-transform">→</span>
-            </button>
-
-            <motion.div
-                initial={{ opacity: 0, scale: 0.9, x: 100 }}
-                animate={{ opacity: 1, scale: 1, x: 0 }}
-                transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className="relative w-full max-w-7xl h-[85vh] md:aspect-video flex flex-col md:flex-row bg-[#fdfbf7] rounded-sm shadow-2xl overflow-hidden"
-                style={{ backgroundImage: `url(${paperTexture})`, backgroundSize: 'cover' }}
-            >
-                <TextureOverlay opacity={0.3} />
-
-                {/* Left Panel: Visual / Title */}
-                <div className="relative z-30 w-full md:w-[35%] bg-[#1a1a1a] text-white p-8 md:p-10 flex flex-col justify-between overflow-hidden shrink-0">
-                    {/* Decorative Circle */}
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-red-600/20 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
-
-                    <div className="relative z-10 flex flex-col h-full">
-                        <button
+            {/* --- LEFT PANEL: EVENT OVERVIEW (Desktop: 40%) --- */}
+            <div className="md:w-[40%] w-full bg-stone-900 text-stone-100 p-6 md:p-10 flex flex-col justify-between md:h-full border-r border-stone-800 z-10 shrink-0 md:overflow-y-auto">
+                <div className="flex flex-col h-full">
+                    {/* Header Nav */}
+                    <div className="flex justify-between items-center mb-6 md:mb-8">
+                        <button 
                             onClick={handleBackToEvents}
-                            className="flex items-center gap-2 text-[10px] font-mono text-gray-400 uppercase tracking-widest hover:text-white transition-colors mb-8"
+                            className="flex items-center gap-2 font-mono text-[10px] tracking-widest text-stone-500 hover:text-red-500 transition-colors group"
                         >
-                            ← Back to {currentClub?.name || 'Sector'} dossier
+                            <ArrowLeft size={12} className="group-hover:-translate-x-1 transition-transform" />
+                            BACK TO EVENTS
                         </button>
-
-                        <div className="mt-auto mb-auto">
-                            <div className="flex items-center gap-2 mb-4">
-                                <div className="w-8 h-[2px] bg-red-600"></div>
-                                <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-400">{currentClub?.name} // Archive File</span>
-                                {currentEvent.tier && (
-                                    <span className={`text-[9px] font-mono px-2 py-0.5 rounded border ${
-                                        currentEvent.tier.toLowerCase() === 'gold' || currentEvent.tier.toLowerCase() === 'platinum' ? 'border-yellow-500 text-yellow-500' :
-                                        currentEvent.tier.toLowerCase() === 'silver' ? 'border-gray-400 text-gray-400' :
-                                        'border-orange-700 text-orange-700'
-                                    }`}>
-                                        {currentEvent.tier.toUpperCase()} TIER
-                                    </span>
-                                )}
-                            </div>
-                            <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight leading-none font-serif mb-2 text-yellow-500">
-                                {currentEvent.themeName}
-                            </h2>
-                            {currentEvent.realName && (
-                                <h3 className="text-xl md:text-2xl font-serif italic text-gray-400 mb-6">
-                                    ( {currentEvent.realName} )
-                                </h3>
-                            )}
-
-                            <div className="space-y-4 font-mono text-sm text-gray-300">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-1 h-8" style={{ backgroundColor: currentClub?.color || '#dc2626' }}></div>
-                                    <div>
-                                        <p className="text-[10px] uppercase tracking-widest text-gray-500">Registration Fee</p>
-                                        <p className="text-xl font-bold text-white">{currentEvent.fee || 'Free'}</p>
-                                    </div>
-                                </div>
-                            </div>
+                        <div className="flex gap-2">
+                             <button onClick={goToPrevEvent} className="p-2 border border-stone-700 hover:bg-stone-800 text-stone-400 transition-all"><ChevronLeft size={16}/></button>
+                             <button onClick={goToNextEvent} className="p-2 border border-stone-700 hover:bg-stone-800 text-stone-400 transition-all"><ChevronRight size={16}/></button>
                         </div>
+                    </div>
 
-                        {/* Big decorative letter */}
-                        <div className="absolute -bottom-10 -left-4 opacity-10 select-none pointer-events-none">
-                            <h4 className="text-[12rem] font-black tracking-tighter leading-none">
-                                {(currentEvent.themeName || currentEvent.name).charAt(0)}
-                            </h4>
+                    {/* Event Identity */}
+                    <div className="space-y-3 md:space-y-4 mb-6 md:mb-8">
+                        <p>
+                            <span className={`font-serif font-black text-lg uppercase ${tierClass}`}>
+                                {currentEvent.tier}
+                            </span>
+                        </p>
+                        <h1 className="text-3xl md:text-5xl font-serif font-black leading-tight tracking-tight text-white uppercase wrap-break-word">
+                            {currentEvent.themeName}
+                        </h1>
+                        <p className="font-mono text-[11px] text-stone-500 uppercase tracking-widest flex items-center gap-2 italic">
+                            {currentEvent.realName || currentEvent.name}
+                        </p>
+                    </div>
+
+                    {/* Event Stats Box */}
+                    <div className="grid grid-cols-2 gap-px bg-stone-800/50 border border-stone-800 mb-6 md:mb-8">
+                        <div className="p-4 md:p-5 bg-stone-900">
+                             <p className="font-mono text-[9px] text-stone-500 uppercase mb-1">Registration Fee</p>
+                             <p className="text-xl md:text-2xl font-mono font-bold text-white">{currentEvent.fee || 'TBD'}</p>
                         </div>
+                        <div className="p-4 md:p-5 bg-stone-900 border-l border-stone-800">
+                             <p className="font-mono text-[9px] text-stone-500 uppercase mb-1 flex items-center gap-2">
+                                 Slots Available
+                             </p>
+                             <p className="text-xl md:text-2xl font-mono font-bold text-white leading-none tracking-tighter">
+                                 {renderSlots()} <span className="text-[12px] text-stone-500 font-normal">SLOTS</span>
+                             </p>
+                        </div>
+                    </div>
+
+                    {/* Event Coordinators - Hidden on mobile, shown on right panel for mobile */}
+                    <div className="hidden md:block space-y-4 mb-8">
+                         <h4 className="font-mono text-[10px] text-stone-500 uppercase tracking-widest border-b border-stone-800 pb-2">Event Coordinators</h4>
+                         <div className="space-y-3">
+                             {currentEvent.contacts?.map((contact, idx) => (
+                                 <div key={idx} className="flex justify-between items-center group">
+                                     <div className="flex items-center gap-3">
+                                         <div className="w-8 h-8 rounded bg-stone-800 flex items-center justify-center text-stone-500 group-hover:text-red-500 transition-colors">
+                                             <User size={14} />
+                                         </div>
+                                         <span className="font-serif italic text-white text-sm">{contact.name}</span>
+                                     </div>
+                                     <a href={`tel:${contact.phone}`} className="font-mono text-[10px] text-stone-400 hover:text-white transition-colors flex items-center gap-2">
+                                         {contact.phone} <Phone size={10} />
+                                     </a>
+                                 </div>
+                             ))}
+                         </div>
                     </div>
                 </div>
+            </div>
 
-                {/* Right Panel: Data - Scrollable */}
-                <div className="relative z-30 flex-1 flex flex-col h-full overflow-hidden bg-[#fdfbf7]">
-                    {/* Slots Badge */}
-                    <div className="absolute top-0 right-0 bg-yellow-500 text-black font-bold font-mono text-xs px-6 py-2 z-40 shadow-md">
-                        SLOTS AVAILABLE : {renderSlots()}
-                    </div>
+            {/* --- RIGHT PANEL: DETAILS (Desktop: 60%) --- */}
+            <div 
+                className="md:w-[60%] w-full bg-stone-100 flex-1 relative scroll-smooth selection:bg-stone-900 selection:text-white overflow-y-auto"
+                {...swipeHandlers}
+            >
+                <style>{`
+                    .grain-overlay {
+                        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+                        opacity: 0.05;
+                    }
+                    ::-webkit-scrollbar {
+                        width: 4px;
+                        height: 4px;
+                    }
+                    ::-webkit-scrollbar-track {
+                        background: transparent;
+                    }
+                    ::-webkit-scrollbar-thumb {
+                        background: #444;
+                        border-radius: 10px;
+                    }
+                    ::-webkit-scrollbar-thumb:hover {
+                        background: #666;
+                    }
+                `}</style>
+                <div className="absolute inset-0 grain-overlay pointer-events-none z-0" />
+                
 
+                <div className="p-8 md:p-12 md:pb-24 max-w-4xl mx-auto space-y-16 md:space-y-24 relative z-10">
+                    
+                    {/* Section 1: Event Description */}
+                    <section id="overview" className="scroll-mt-24">
+                        <div className="relative">
+                            <blockquote className="text-lg md:text-xl font-serif italic text-stone-800 leading-relaxed relative z-10">
+                                {currentEvent.description || "The nature of this event remains confidential until the day of."}
+                            </blockquote>
+                            <div className="mt-6 flex items-center gap-4">
+                                <div className="h-0.5 w-10 bg-red-600" />
+                                <span className="font-mono text-[9px] text-stone-400 uppercase tracking-[0.3em]">Brief Overview</span>
+                            </div>
+                        </div>
+                    </section>
 
-                    <div className="flex-1 overflow-y-auto p-8 md:p-12 hide-scrollbar">
-                        <div className="max-w-4xl mx-auto space-y-10">
-
-                            {/* Description */}
-                            <section>
-                                <p className="text-lg md:text-xl font-serif text-gray-800 leading-relaxed italic border-l-4 border-yellow-500 pl-6 py-2 bg-yellow-500/5 rounded-r-lg">
-                                    {currentEvent.description ? `"${currentEvent.description}"` : '"No description available for this classified operation."'}
-                                </p>
-                            </section>
-
-                            {/* Quick Stats Grid */}
-                            <section className="grid grid-cols-2 md:grid-cols-4 gap-6 py-6 border-y border-black/5">
-                                <div className="space-y-1">
-                                    <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">Team Size</p>
-                                    <p className="font-bold text-gray-900 text-lg">{currentEvent.teamSize || 1}</p>
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">Rounds</p>
-                                    <p className="font-bold text-gray-900 text-lg">
-                                        {Math.max(parseInt(currentEvent.rounds || 0), (currentEvent.roundDetails?.length || 0)) || 'TBD'}
+                    {/* Section 2: Key Information Grid */}
+                    <section id="stats" className="py-8 border-t border-stone-200">
+                        <div className="flex flex-wrap md:flex-nowrap justify-between gap-y-8">
+                            {[
+                                { label: 'Team Size', value: currentEvent.teamSize || '1 Member' },
+                                { label: 'Rounds', value: currentEvent.rounds || 'TBD' },
+                                { label: 'Date', value: currentEvent.date || 'TBD' },
+                                { label: 'Venue', value: currentEvent.venue || 'TBD' },
+                            ].map((stat, i) => (
+                                <div 
+                                    key={i} 
+                                    className={`flex-1 min-w-[50%] md:min-w-0 ${
+                                        i !== 0 ? 'md:border-l md:border-stone-200 md:pl-10' : ''
+                                    }`}
+                                >
+                                    <p className="font-mono text-[12px] text-stone-400 uppercase tracking-widest mb-3">
+                                        {stat.label}
+                                    </p>
+                                    <p className="font-bold text-xl md:text-2xl text-stone-900 leading-none"> 
+                                        {stat.value}
                                     </p>
                                 </div>
-                                <div className="space-y-1">
-                                    <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">Date</p>
-                                    <p className="font-bold text-gray-900 text-lg">{currentEvent.date}</p>
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">Venue</p>
-                                    <p className="font-bold text-gray-900 text-lg">{currentEvent.venue}</p>
-                                </div>
-                            </section>
-
-                            {/* Rules */}
-                            {currentEvent.rules && (
-                                <section>
-                                    <h3 className="font-bold text-xl uppercase tracking-tight mb-4 flex items-center gap-3">
-                                        <span className="w-2 h-2 bg-black rounded-full"></span> Rules & Regulations
-                                    </h3>
-                                    <ul className="space-y-3 ml-2">
-                                        {currentEvent.rules.map((rule, idx) => (
-                                            <li key={idx} className="flex items-start gap-3 text-sm md:text-base text-gray-700 font-medium">
-                                                <span className="mt-1.5 w-1.5 h-1.5 bg-red-600 rounded-full shrink-0" />
-                                                {rule}
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </section>
-                            )}
-
-                            {/* Round Details */}
-                            {currentEvent.roundDetails && (
-                                <section className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
-                                    <h3 className="font-bold text-xl uppercase tracking-tight mb-6">Round Details</h3>
-                                    <div className="grid gap-8">
-                                        {currentEvent.roundDetails.map((round, idx) => (
-                                            <div key={idx} className="space-y-2">
-                                                <h4 className="font-bold text-red-700 text-lg border-b border-gray-100 pb-2">{round.title}</h4>
-                                                <ul className="space-y-1">
-                                                    {round.details.map((detail, dIdx) => (
-                                                        <li key={dIdx} className="text-sm text-gray-600 pl-4 border-l-2 border-gray-300">
-                                                            {detail}
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </section>
-                            )}
-
-                            {/* Contact & Register Action */}
-                            <section className="pt-8 flex flex-col md:flex-row items-end justify-between gap-8 border-t border-black/10">
-                                <div className="w-full md:w-auto">
-                                    <h4 className="font-bold text-sm uppercase tracking-widest mb-3 text-gray-500">Event Heads</h4>
-                                    <div className="space-y-2">
-                                        {currentEvent.contacts && currentEvent.contacts.map((contact, idx) => (
-                                            <div key={idx} className="flex items-center gap-3 bg-white px-4 py-2 rounded border border-gray-200 shadow-sm">
-                                                <span className="font-bold text-gray-900 text-sm">{contact.name}</span>
-                                                <div className="h-4 w-px bg-gray-300"></div>
-                                                <span className="font-mono text-red-600 text-sm">{contact.phone}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <button
-                                    onClick={handleRegisterClick}
-                                    disabled={regLoading}
-                                    className="w-full md:w-auto px-10 py-5 bg-gray-900 border-2 border-gray-900 text-white font-black uppercase tracking-[0.3em] text-xs hover:bg-black hover:border-black transition-all shadow-[8px_8px_0px_rgba(0,0,0,0.2)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 disabled:opacity-50 flex items-center justify-center gap-3 group"
-                                >
-                                    <span className="relative">
-                                        {regLoading ? 'PROCESSING...' : 'Register Now'}
-                                        <div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-600 transition-all group-hover:w-full"></div>
-                                    </span>
-                                    {!regLoading && (
-                                        <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                        </svg>
-                                    )}
-                                </button>
-                            </section>
+                            ))}
                         </div>
-                    </div>
+                    </section>
+
+                    {/* Section 3: Event Timeline */}
+                    <section id="logistics" className="scroll-mt-24">
+                        <h3 className="font-mono text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-8 border-b border-stone-200 pb-3 flex justify-between items-center">
+                            <span>Timeline & Rounds</span>
+                            <Terminal size={12} />
+                        </h3>
+                        
+                        <div className="relative pl-6 border-l border-stone-300 space-y-10 py-2">
+                            {currentEvent.roundDetails?.length > 0 ? (
+                                currentEvent.roundDetails.map((round, idx) => (
+                                    <div key={idx} className="relative group">
+                                        <div className="absolute -left-8 top-0 w-3.5 h-3.5 rounded-full bg-stone-100 border-2 border-stone-300 group-hover:border-red-600 transition-colors z-10" />
+                                        <div className="space-y-2">
+                                            <div className="flex items-center gap-3">
+                                                <h4 className="font-serif font-bold text-lg uppercase text-stone-900" style={{fontFamily: '"DM Serif Text", serif',fontVariantNumeric: 'tabular-nums'}}>
+                                                    {round.title}</h4>
+                                            </div>
+                                            <ul className="space-y-1.5">
+                                                {round.details?.map((detail, dIdx) => (
+                                                    <li key={dIdx} className="flex gap-2.5 text-xs md:text-sm text-stone-600 leading-relaxed font-serif">
+                                                        <span className="mt-2 w-1.5 h-px bg-stone-400 shrink-0" />
+                                                        {detail}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="text-stone-400 font-serif italic py-2 text-sm"></div>
+                            )}
+                        </div>
+                    </section>
+
+                    {/* Section 4: Rules & Regulations */}
+                    <section id="protocol" className="scroll-mt-24">
+                        <div className="p-6 md:p-10 text-stone-900 relative overflow-hidden">
+                            <h3 className="font-serif text-[18px] font-bold uppercase tracking-[0em] mb-8 flex items-center gap-2">
+                                GENERAL RULES & GUIDELINES
+                            </h3>
+
+                            <div className="grid gap-5">
+                                {currentEvent.rules?.map((rule, idx) => (
+                                    <div key={idx} className="flex gap-4 items-start group">
+                                        <span className="font-mono text-stone-600 text-[9px] pt-1 tracking-tighter">
+                                            [{(idx + 1).toString().padStart(2, '0')}]
+                                        </span>
+                                        <p className="flex gap-2.5 text-xs md:text-sm text-stone-600 leading-relaxed font-serif">
+                                            {rule}
+                                        </p>
+                                    </div>
+                                ))}
+                                {(!currentEvent.rules || currentEvent.rules.length === 0) && (
+                                    <p className="text-stone-500 italic font-mono text-[10px] uppercase">Standard Inter-college event protocols apply.</p>
+                                )}
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Section 5: Mobile Contact Details */}
+                    <section className="md:hidden space-y-6 pt-12 border-t border-stone-200">
+                        <h4 className="font-mono text-[12px] text-stone-400 uppercase tracking-widest border-b border-stone-200 pb-2">Event Coordinators</h4>
+                         <div className="grid gap-4">
+                             {currentEvent.contacts?.map((contact, idx) => (
+                                 <div key={idx} className="flex justify-between items-center bg-white p-4 border border-stone-200 shadow-sm">
+                                     <div className="flex items-center gap-3">
+                                         <div className="w-10 h-10 rounded bg-stone-100 flex items-center justify-center text-stone-500">
+                                             <User size={16} />
+                                         </div>
+                                         <span className="font-serif italic text-stone-900 font-bold">{contact.name}</span>
+                                     </div>
+                                     <a href={`tel:${contact.phone}`} className="font-mono text-sm text-red-600 flex items-center justify-center">
+                                         {contact.phone}
+                                     </a>
+                                 </div>
+                             ))}
+                         </div>
+                    </section>
+
+                    {/* Registration CTA for Right Panel */}
+                    <section className="pt-12 pb-8">
+                        <button
+                            onClick={handleRegisterClick}
+                            disabled={regLoading}
+                            className="w-full py-5 bg-black text-white font-serif font-black text-lg uppercase tracking-wider hover:bg-red-600 transition-all transform active:scale-[0.98] shadow-xl group relative overflow-hidden"
+                        >
+                            <span className="relative z-10 flex items-center justify-center gap-3">
+                                {regLoading ? 'PROCESSING...' : 'REGISTER FOR EVENT'}
+                                {!regLoading && <Zap size={18} className="fill-current" />}
+                            </span>
+                            <div className="absolute inset-0 bg-red-600 translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none" />
+                        </button>
+                    </section>
                 </div>
+            </div>
 
-                {/* Registration Modal */}
-                <AnimatePresence>
-                    {showRegModal && (
-                        <div className="fixed inset-0 z-200 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                                className="w-full max-w-lg md:max-w-2xl bg-[#fdfbf7] md:p-10 p-6 border-4 border-gray-900 shadow-2xl relative overflow-hidden flex flex-col max-h-[95vh] rounded-sm"
-                                style={{ backgroundImage: `url(${paperTexture})`, backgroundSize: 'cover' }}
-                            >
-                                <TextureOverlay opacity={0.3} />
-                                <div className="relative z-10 flex-1 overflow-y-auto hide-scrollbar">
-                                    <h2 className="text-2xl font-black uppercase text-gray-900 mb-6 border-b-2 border-red-700 pb-2 flex justify-between items-center">
-                                        <span>{currentEvent.type?.toLowerCase() === 'solo' ? 'Individual Clearance' : 'Team Assembly'}</span>
-                                        <span className="text-[10px] font-mono text-gray-400">Classified</span>
-                                    </h2>
+            {/* --- CLOSE BUTTON --- */}
+            <button
+                onClick={handleBackToEvents}
+                className="fixed top-6 right-6 md:top-8 md:right-8 w-12 h-12 bg-stone-900 border border-stone-800 text-white flex items-center justify-center hover:bg-red-600 transition-all z-110 group"
+                title="ESC to exit"
+            >
+                <span className="text-xl font-mono group-hover:rotate-90 transition-transform">✕</span>
+            </button>
 
-                                    <div className="space-y-6">
-                                        {currentEvent.type?.toLowerCase() !== 'solo' && (currentEvent.teamSize?.toString().includes('-') || parseInt(currentEvent.teamSize) > 1) ? (
-                                            (() => {
-                                                const sizeParts = currentEvent.teamSize?.toString().split('-') || ["1"]
-                                                const minSize = parseInt(sizeParts[0])
-                                                const maxSize = parseInt(sizeParts.pop())
-                                                const currentCount = memberDetails.length + 1
-                                                const isMinMet = currentCount >= minSize
-                                                const isTeamFull = currentCount >= maxSize
+            {/* --- REGISTRATION MODAL (PRESERVED FUNCTIONALITY) --- */}
+            <AnimatePresence>
+                {showRegModal && (
+                    <div className="fixed inset-0 z-200 flex items-center justify-center bg-stone-950/90 backdrop-blur-xl p-4">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9, y: 30 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 30 }}
+                            className="w-full max-w-2xl bg-stone-50 border-[6px] border-stone-900 shadow-[20px_20px_0px_rgba(0,0,0,1)] relative overflow-hidden flex flex-col max-h-[92vh]"
+                            style={{ backgroundImage: `url(${paperTexture})`, backgroundSize: 'cover' }}
+                        >
+                            <TextureOverlay opacity={0.3} className="pointer-events-none" />
+                            <div className="relative z-10 flex-1 overflow-y-auto no-scrollbar p-6 md:p-10">
+                                <h2 className="text-2xl md:text-3xl font-serif font-black uppercase text-stone-900 mb-8 border-b-4 border-stone-900 pb-4 flex justify-between items-end">
+                                    <span>{currentEvent.type?.toLowerCase() === 'solo' ? 'Registration' : 'Team Registration'}</span>
+                                    <span className="text-[10px] font-mono text-red-600 animate-pulse">Confirmation Required</span>
+                                </h2>
 
-                                                return (
-                                                    <div className="space-y-6">
-                                                        <div className="space-y-2">
-                                                            <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-gray-500">Team Name</label>
+                                <div className="space-y-8">
+                                    {currentEvent.type?.toLowerCase() !== 'solo' && (currentEvent.teamSize?.toString().includes('-') || parseInt(currentEvent.teamSize) > 1) ? (
+                                        (() => {
+                                            const sizeParts = currentEvent.teamSize?.toString().split('-') || ["1"]
+                                            const minSize = parseInt(sizeParts[0])
+                                            const maxSize = parseInt(sizeParts.pop())
+                                            const currentCount = memberDetails.length + 1
+                                            const isMinMet = currentCount >= minSize
+                                            const isTeamFull = currentCount >= maxSize
+
+                                            return (
+                                                <div className="space-y-8">
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-stone-500">Team Name</label>
+                                                        <input
+                                                            type="text"
+                                                            value={teamInfo.teamName}
+                                                            onChange={(e) => setTeamInfo({ ...teamInfo, teamName: e.target.value.toUpperCase() })}
+                                                            placeholder="ENTER TEAM NAME"
+                                                            className="w-full bg-white border-2 border-stone-900 px-5 py-4 font-mono text-sm text-stone-900 focus:bg-stone-50 outline-none transition-all placeholder:text-stone-300"
+                                                        />
+                                                    </div>
+
+                                                    <div className="space-y-4">
+                                                        <label className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-stone-500">Add Team Members (ID: inv0001)</label>
+                                                        <div className="flex gap-3">
                                                             <input
                                                                 type="text"
-                                                                value={teamInfo.teamName}
-                                                                onChange={(e) => setTeamInfo({ ...teamInfo, teamName: e.target.value.toUpperCase() })}
-                                                                placeholder="ENTER TEAM NAME"
-                                                                className="w-full bg-white/50 border-2 border-gray-300 px-4 py-3 font-mono text-gray-900 focus:border-red-700 outline-none transition-all"
+                                                                value={newMemberId}
+                                                                onChange={(e) => setNewMemberId(e.target.value)}
+                                                                placeholder="ENTER INVENTO ID"
+                                                                className="flex-1 bg-white border-2 border-stone-900 px-5 py-4 font-mono text-sm text-stone-900 focus:bg-stone-50 outline-none disabled:opacity-50 cursor-not-allowed"
+                                                                disabled={isTeamFull}
                                                             />
+                                                            <button
+                                                                onClick={handleFetchMember} disabled={fetchingMember || isTeamFull}
+                                                                className="px-8 bg-stone-900 text-white font-serif font-black text-sm uppercase hover:bg-red-600 transition-all disabled:bg-stone-300"
+                                                            >
+                                                                {fetchingMember ? '...' : 'ADD'}
+                                                            </button>
                                                         </div>
 
-                                                        <div className="space-y-4">
-                                                            <label className="text-[10px] font-mono font-bold uppercase tracking-widest text-gray-500">Add Team Members (Invento ID)</label>
-                                                            <div className="flex gap-2">
-                                                                <input
-                                                                    type="text"
-                                                                    value={newMemberId}
-                                                                    onChange={(e) => setNewMemberId(e.target.value)}
-                                                                    placeholder="ID: inv0001"
-                                                                    className="flex-1 bg-white/50 border-2 border-gray-300 px-4 py-2 font-mono text-gray-900 focus:border-red-700 outline-none disabled:opacity-50"
-                                                                    disabled={isTeamFull}
-                                                                    onKeyDown={(e) => e.key === 'Enter' && handleFetchMember()}
+                                                        {/* Member Counter */}
+                                                        <div className="flex justify-between items-center  p-3">
+                                                            <p className="text-[9px] font-mono text-stone-500 uppercase tracking-widest">Team Composition</p>
+                                                            <p className={`text-xs font-mono font-black ${isMinMet ? 'text-green-600' : 'text-red-600'}`}>
+                                                                {currentCount} / {maxSize} ADDED {isMinMet ? '✓' : ''}
+                                                            </p>
+                                                        </div>
+
+                                                        {/* Team Members List */}
+                                                        <div className="space-y-2 max-h-[25vh] overflow-y-auto pr-2">
+                                                            <div className="flex items-center gap-3 bg-white p-4 border-2 border-stone-900 group">
+                                                                <img 
+                                                                    src={user?.profilePhoto?.startsWith('data:') || user?.profilePhoto?.startsWith('http') 
+                                                                        ? user.profilePhoto 
+                                                                        : user?.profilePhoto 
+                                                                            ? `${import.meta.env.DEV ? '' : (import.meta.env.VITE_API_URL || '')}${user.profilePhoto}` 
+                                                                            : "https://api.dicebear.com/7.x/avataaars/svg?seed=" + user.name
+                                                                    } 
+                                                                    alt="Leader Avatar" 
+                                                                    className="w-10 h-10 bg-stone-200 flex items-center justify-center text-stone-500 shrink-0 object-cover rounded-full" 
                                                                 />
-                                                                <button
-                                                                    onClick={handleFetchMember} disabled={fetchingMember || isTeamFull}
-                                                                    className="px-4 py-2 bg-gray-900 text-white font-bold text-xs uppercase hover:bg-black transition-all disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                                                <div className="flex-1 overflow-hidden">
+                                                                    <p className="font-serif font-black text-xs uppercase text-stone-900 truncate">{JSON.parse(localStorage.getItem('currentUser'))?.name} (Leader)</p>
+                                                                    <p className="text-[9px] font-mono text-stone-400 uppercase truncate">{JSON.parse(localStorage.getItem('currentUser'))?.email}</p>
+                                                                </div>
+                                                                <span className="text-[9px] font-mono bg-stone-900 text-white px-2 py-0.5 uppercase tracking-tighter self-center">LDR</span>
+                                                            </div>
+
+                                                            {memberDetails.map((member) => (
+                                                                <motion.div
+                                                                    key={member._id}
+                                                                    initial={{ x: -10, opacity: 0 }}
+                                                                    animate={{ x: 0, opacity: 1 }}
+                                                                    className="flex items-center gap-3 bg-white p-4 border-2 border-stone-900 group"
                                                                 >
-                                                                    {fetchingMember ? '...' : isTeamFull ? 'FULL' : 'ADD'}
-                                                                </button>
-                                                            </div>
-
-                                                            {/* Team Instructions */}
-                                                            <div className="bg-yellow-500/10 border-l-4 border-yellow-500 p-4 space-y-2">
-                                                                <p className="text-[10px] font-mono font-bold text-yellow-800 uppercase tracking-widest">Event Registration Steps:</p>
-                                                                <ul className="text-[10px] font-mono text-yellow-900 space-y-1">
-                                                                    <li>1. Tell members to register on this site first.</li>
-                                                                    <li>2. Enter their Invento ID above to verify clearance.</li>
-                                                                    <li>3. Once all members are added, proceed to payment.</li>
-                                                                </ul>
-                                                            </div>
-
-                                                            {/* Member List */}
-                                                            <div className="space-y-3 max-h-[30vh] overflow-y-auto pr-2 custom-scrollbar">
-                                                                <div className="flex justify-between items-center mb-1">
-                                                                    <p className="text-[10px] font-mono font-bold text-gray-400 uppercase tracking-widest">Team Members</p>
-                                                                    <p className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${isMinMet ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'}`}>
-                                                                        {currentCount} / {maxSize}
-                                                                    </p>
-                                                                </div>
-                                                                {/* Leader (Current User) */}
-                                                                <div className="flex items-center gap-3 bg-white p-3 border border-gray-200 shadow-sm relative overflow-hidden group">
-                                                                    <div className="w-10 h-10 bg-gray-200 shrink-0 overflow-hidden border border-gray-300">
-                                                                        <img src={JSON.parse(localStorage.getItem('currentUser'))?.profilePhoto || `https://api.dicebear.com/7.x/pixel-art/svg?seed=leader`} className="w-full h-full object-cover" alt="leader" />
-                                                                    </div>
+                                                                    <img 
+                                                                        src={member?.profilePhoto?.startsWith('data:') || member?.profilePhoto?.startsWith('http') 
+                                                                            ? member.profilePhoto 
+                                                                            : member?.profilePhoto 
+                                                                                ? `${import.meta.env.DEV ? '' : (import.meta.env.VITE_API_URL || '')}${member.profilePhoto}` 
+                                                                                : "https://api.dicebear.com/7.x/avataaars/svg?seed=" + member.name
+                                                                        } 
+                                                                        alt={`${member.name} Avatar`} 
+                                                                        className="w-10 h-10 bg-stone-200 flex items-center justify-center text-stone-500 shrink-0 object-cover rounded-full" 
+                                                                    />
                                                                     <div className="flex-1 overflow-hidden">
-                                                                        <p className="font-bold text-xs uppercase text-gray-900 truncate">You (Squad Leader)</p>
-                                                                        <p className="text-[10px] font-mono text-gray-500 truncate">{JSON.parse(localStorage.getItem('currentUser'))?.email}</p>
+                                                                        <p className="font-serif font-bold text-xs uppercase text-stone-900 truncate">{member.name}</p>
+                                                                        <p className="text-[9px] font-mono text-stone-400 uppercase truncate">{member.email}</p>
                                                                     </div>
-                                                                    <span className="text-[10px] bg-red-700 text-white px-2 py-0.5 font-bold uppercase">LEADER</span>
-                                                                </div>
-
-                                                                {memberDetails.map((member) => (
-                                                                    <motion.div
-                                                                        key={member._id}
-                                                                        initial={{ x: -20, opacity: 0 }}
-                                                                        animate={{ x: 0, opacity: 1 }}
-                                                                        className="flex items-center gap-3 bg-white p-3 border border-gray-200 shadow-sm relative overflow-hidden group"
+                                                                    <button
+                                                                        onClick={() => removeMember(member._id)}
+                                                                        className="text-stone-300 hover:text-red-600 transition-colors p-1"
                                                                     >
-                                                                        <div className="w-10 h-10 bg-gray-200 shrink-0 overflow-hidden border border-gray-200">
-                                                                            <img src={member.profilePhoto || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${member._id}`} className="w-full h-full object-cover" alt="member" />
-                                                                        </div>
-                                                                        <div className="flex-1 overflow-hidden">
-                                                                            <p className="font-bold text-xs uppercase text-gray-900 truncate">{member.name}</p>
-                                                                            <p className="text-[10px] font-mono text-gray-500 truncate">{member.email}</p>
-                                                                        </div>
-                                                                        <button
-                                                                            onClick={() => removeMember(member._id)}
-                                                                            className="text-gray-400 hover:text-red-700 transition-colors px-2"
-                                                                        >
-                                                                            ✕
-                                                                        </button>
-                                                                    </motion.div>
-                                                                ))}
-                                                            </div>
+                                                                        ✕
+                                                                    </button>
+                                                                </motion.div>
+                                                            ))}
                                                         </div>
                                                     </div>
-                                                )
-                                            })()
-                                        ) : (
-                                            <div className="bg-red-700/5 p-4 border border-red-700/10 rounded">
-                                                <p className="text-gray-600 font-serif italic text-sm">
-                                                    "By registering, you confirm your individual participation in this event.Once your payment is confirmed, you will receive a confirmation message"
-                                                </p>
-                                            </div>
-                                        )}
-
-                                        {/* Official Registration Checkbox (Minimalist) */}
-                                        <div className="pt-2 border-t border-black/5 mt-4">
-                                            <div className="flex items-center gap-2 opacity-50 hover:opacity-100 transition-opacity">
-                                                <input
-                                                    type="checkbox"
-                                                    id="officialReg"
-                                                    checked={isOfficial}
-                                                    onChange={(e) => setIsOfficial(e.target.checked)}
-                                                    className="w-3.5 h-3.5 accent-red-700 cursor-pointer"
-                                                />
-                                                <label htmlFor="officialReg" className="text-[10px] font-bold uppercase tracking-widest text-gray-500 cursor-pointer select-none">
-                                                    Official Registration?
-                                                </label>
-                                            </div>
-
-                                            {isOfficial && (
-                                                <motion.div
-                                                    initial={{ height: 0, opacity: 0 }}
-                                                    animate={{ height: 'auto', opacity: 1 }}
-                                                    className="mt-3 space-y-1"
-                                                >
-                                                    <label className="text-[9px] font-mono font-bold uppercase tracking-[0.2em] text-gray-400">Invento Contingent Key</label>
-                                                    <input
-                                                        type="text"
-                                                        value={contingentKey}
-                                                        onChange={(e) => setContingentKey(e.target.value.toUpperCase())}
-                                                        placeholder="ENTER KEY"
-                                                        className="w-full bg-black/5 border border-black/10 px-3 py-2 font-mono text-xs text-gray-900 focus:border-red-700 outline-none transition-all"
-                                                    />
-                                                </motion.div>
-                                            )}
-                                        </div>
-
-                                        <div className="flex gap-4 pt-4">
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowRegModal(false)}
-                                                className="flex-1 py-3 border-2 border-gray-900 text-gray-900 font-bold uppercase tracking-widest hover:bg-gray-100 transition-all font-mono text-xs"
-                                            >
-                                                Cancel
-                                            </button>
-                                            <button
-                                                type="button"
-                                                disabled={regLoading}
-                                                onClick={initiatePayment}
-                                                className="flex-1 py-3 bg-gray-900 text-white font-bold uppercase tracking-widest hover:bg-red-700 transition-all shadow-[4px_4px_0px_rgba(0,0,0,0.2)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 disabled:opacity-50 font-mono text-xs"
-                                            >
-                                                {regLoading ? 'PROCESSING...' : 'PROCEED'}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        </div>
-                    )}
-                </AnimatePresence>
-
-                {/* Confirmation Modal */}
-                <AnimatePresence>
-                    {confirmation.show && (
-                        <div className="fixed inset-0 z-250 flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="w-full max-w-md bg-[#fdfbf7] p-8 border-4 border-gray-900 shadow-2xl text-center relative overflow-hidden"
-                                style={{ backgroundImage: `url(${paperTexture})`, backgroundSize: 'cover' }}
-                            >
-                                <TextureOverlay opacity={0.3} />
-                                <div className="relative z-10 space-y-6">
-                                    <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto shadow-lg border-4 border-white">
-                                        <span className="text-4xl text-white">✓</span>
-                                    </div>
-                                    <div>
-                                        <h2 className="text-3xl font-black uppercase text-gray-900 mb-2 leading-none">Access Granted</h2>
-                                        <p className="font-mono text-[10px] text-red-700 uppercase tracking-widest">Operation Successfully Registered</p>
-                                    </div>
-
-                                    <div className="p-4 bg-black/5 border border-black/10 text-sm font-serif italic text-gray-700 leading-relaxed">
-                                        {confirmation.message}
-                                    </div>
-
-                                    {confirmation.whatsappLink && (
-                                        <div className="space-y-3">
-                                            <p className="text-[10px] font-mono font-bold text-gray-500 uppercase">Join The Command Center (WhatsApp)</p>
-                                            <a
-                                                href={confirmation.whatsappLink}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="w-full py-4 bg-[#25D366] text-white font-black uppercase tracking-widest hover:scale-105 transition-all shadow-xl rounded flex items-center justify-center gap-3"
-                                            >
-                                                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.017-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" /></svg>
-                                                JOIN GROUP
-                                            </a>
+                                                </div>
+                                            )
+                                        })()
+                                    ) : (
+                                        <div className=" text-stone-600 p-2">
+                                            <p className="font-serif italic text-sm md:text-md leading-relaxed">
+                                                "By registering for this event, you confirm individual participation for <span className="text-stone-900 font-bold uppercase">{currentEvent.themeName}</span>. Your registration details will be confirmed upon payment. Attendance is mandatory after registration."
+                                            </p>
                                         </div>
                                     )}
 
+                                    {/* Official Registration - Brutalist Toggle */}
+                                    <div className="pt-6 border-t-2 border-stone-200 mt-8">
+                                        <label className="flex items-center gap-4 cursor-pointer group">
+                                            <div className={`w-4 h-4 border-2 border-stone-900 flex items-center justify-center transition-all ${isOfficial ? 'bg-stone-900' : 'bg-white'}`}>
+                                                {isOfficial && <span className="text-white text-xs">✓</span>}
+                                            </div>
+                                            <input
+                                                type="checkbox"
+                                                className="hidden"
+                                                checked={isOfficial}
+                                                onChange={(e) => setIsOfficial(e.target.checked)}
+                                            />
+                                            <span className="text-xs font-mono font-black uppercase text-stone-900 group-hover:text-red-500">Register under College Contingent?</span>
+                                        </label>
+
+                                        {isOfficial && (
+                                            <motion.div
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: 'auto', opacity: 1 }}
+                                                className="mt-6 space-y-2 overflow-hidden"
+                                            >
+                                                <label className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-stone-600">Contingent Code</label>
+                                                <input
+                                                    type="text"
+                                                    value={contingentKey}
+                                                    onChange={(e) => setContingentKey(e.target.value.toUpperCase())}
+                                                    placeholder="ENTER CODE"
+                                                    className="w-full bg-white border-2 border-stone-900 px-4 py-3 font-mono text-sm text-stone-900 outline-none"
+                                                />
+                                            </motion.div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="relative z-20 p-6 md:p-10 pt-0">
+                                <div className="flex gap-4 pt-4 border-t-4 border-stone-900">
                                     <button
-                                        onClick={() => navigate('/profile')}
-                                        className="text-[10px] font-mono font-bold uppercase text-gray-400 hover:text-red-700 transition-colors"
+                                        type="button"
+                                        onClick={() => setShowRegModal(false)}
+                                        className="flex-1 bg-stone-200 py-4 border-4 border-stone-900 text-stone-900 font-serif font-black uppercase tracking-tighter hover:bg-stone-200 transition-all text-sm"
                                     >
-                                        View Assignments (Profile)
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        disabled={regLoading}
+                                        onClick={initiatePayment}
+                                        className="flex-1 py-4 bg-stone-900 text-white font-serif font-black uppercase tracking-tighter hover:bg-red-600 transition-all shadow-[8px_8px_0px_rgba(0,0,0,0.1)] active:shadow-none active:translate-x-1 active:translate-y-1 disabled:opacity-50 text-sm"
+                                    >
+                                        {regLoading ? 'PROCESSING...' : 'REGISTER & PAY'}
                                     </button>
                                 </div>
-                            </motion.div>
-                        </div>
-                    )}
-                </AnimatePresence>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
-                {/* Close button */}
-                <button
-                    onClick={handleBackToEvents}
-                    className="absolute top-4 right-4 md:top-6 md:right-8 w-8 h-8 md:w-10 md:h-10 bg-black/10 hover:bg-black text-black hover:text-white flex items-center justify-center transition-all z-50 rounded-full"
-                >
-                    <span className="text-lg font-bold">✕</span>
-                </button>
-            </motion.div>
+            {/* --- CONFIRMATION MODAL (PRESERVED) --- */}
+            <AnimatePresence>
+                {confirmation.show && (
+                    <div className="fixed inset-0 z-250 flex items-center justify-center bg-stone-950 p-4">
+                        <motion.div
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="bg-stone-900 w-full max-w-lg p-8 md:p-12 border-8 border-green-600 text-center space-y-6 md:space-y-8 shadow-[0_40px_100px_rgba(22,163,74,0.3)]"
+                        >
+                             <div className="w-20 h-20 md:w-24 md:h-24 bg-green-600 rounded-full flex items-center justify-center mx-auto text-white shadow-lg shadow-green-600/40">
+                                 <Zap size={40} className="fill-current" />
+                             </div>
+                             <div>
+                                 <h2 className="text-3xl md:text-5xl font-serif font-black text-white uppercase tracking-tighter mb-2">REGISTRATION SUCCESSFUL</h2>
+                                 <p className="font-mono text-[9px] text-green-500 uppercase tracking-[0.4em]">Event registration details confirmed</p>
+                             </div>
+
+                             <div className="p-4 md:p-6 bg-stone-950 border-l-4 border-green-600 text-left">
+                                 <p className="text-stone-300 font-mono text-[10px] md:text-xs leading-relaxed uppercase">Log: {confirmation.message}</p>
+                             </div>
+
+                             <div className="space-y-4">
+                                 {confirmation.whatsappLink && (
+                                     <a
+                                         href={confirmation.whatsappLink}
+                                         target="_blank"
+                                         rel="noopener noreferrer"
+                                         className="w-full py-4 bg-white text-stone-900 font-serif font-black uppercase tracking-tighter hover:bg-green-600 hover:text-white transition-all flex items-center justify-center gap-4 text-lg md:text-xl"
+                                     >
+                                         <Eye size={20} /> JOIN WHATSAPP GROUP
+                                     </a>
+                                 )}
+                                 <button
+                                     onClick={() => navigate('/profile')}
+                                     className="text-[10px] font-mono font-bold uppercase text-stone-500 hover:text-white transition-all tracking-[0.3em]"
+                                 >
+                                     View My Registrations (Profile)
+                                 </button>
+                             </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     )
 }

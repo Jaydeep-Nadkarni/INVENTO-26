@@ -96,13 +96,16 @@ app.use(cors({
 // Rate limiting middleware for general API
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.',
+  max: 1000, // Increased for development
+  message: {
+    success: false,
+    message: 'Too many requests from this IP, please try again later.'
+  },
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => {
-    // Skip rate limiting for health checks
-    return req.path === '/';
+    // Skip rate limiting for health checks and in certain dev scenarios
+    return req.path === '/' || process.env.NODE_ENV !== 'production';
   }
 });
 
@@ -170,14 +173,34 @@ app.use((req, res, next) => {
 
 // ---------- Global Error Handler (ONE place, no repetition) ----------
 app.use((err, req, res, next) => {
-  const statusCode = err.statusCode || 500;
+  // Log the full error for debugging
+  if (err.name === 'Error' || err.stack) {
+    console.error(`[Global Error] ${req.method} ${req.url}:`, err);
+  } else {
+    console.error(`[Global Error] ${req.method} ${req.url}:`, JSON.stringify(err));
+  }
 
+  const statusCode = err.status || err.statusCode || 500;
+  
+  // Always return JSON
+  res.setHeader('Content-Type', 'application/json');
   res.status(statusCode).json({
     success: false,
-    message: err.message || "Internal Server Error",
-    // expose stack only in dev
-    stack: process.env.NODE_ENV === "production" ? null : err.stack,
+    message: err.message || (typeof err === 'string' ? err : "Internal Server Error"),
+    // expose error details only in dev
+    error: process.env.NODE_ENV === "production" ? undefined : (err.stack || err.toString()),
   });
+});
+
+// ---------- Process Error Handling ----------
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  // In production, you might want to exit gracefully
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  // In production, you might want to exit gracefully
 });
 
 // ---------- Start Server ----------

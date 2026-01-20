@@ -15,6 +15,7 @@ import {
   RegistrationClosedError,
   TeamSizeError
 } from "../utils/customErrors.js";
+import { getStaticEvent } from "../utils/staticData.js";
 
 /* ================= RAZORPAY ================= */
 const getRazorpayInstance = () => {
@@ -43,7 +44,7 @@ const spaceMail = (title, message, eventName, userName, id) => `
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>INVENTO 2026 – Spyverse Email</title>
 </head>
-<body style="margin:0; padding:40px; background:#020617; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+<body style="margin:0; padding:0; background:#020617; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
 
   <div style="background:#0b1220; color:#e5e7eb; padding:32px; border-radius:14px; max-width:600px; margin:auto; border:1px solid #1e293b">
 
@@ -127,17 +128,27 @@ export const createOrder = async (req, res) => {
 
     // Robust find: Match either custom string _id OR the 'id' field
     const eventIdStr = eventId.toString();
-    const event = await Event.findOne({ 
-      $or: [
-        { _id: eventIdStr }, 
-        { id: eventIdStr }
-      ] 
-    });
+    console.log(`[createOrder] Fetching event from DB for ID: ${eventIdStr}`);
+
+    let event;
+    try {
+      event = await Event.findOne({
+        $or: [
+          { _id: eventIdStr },
+          { id: eventIdStr }
+        ]
+      }).lean();
+    } catch (dbError) {
+      console.error(`[createOrder] Database Error when fetching event:`, dbError);
+      return res.status(500).json({ message: "Database error while fetching event", details: dbError.message });
+    }
 
     if (!event) {
       console.error(`[createOrder] Event not found for ID: ${eventIdStr}`);
       return res.status(404).json({ message: "Event not found in directory" });
     }
+
+    console.log(`[createOrder] Found event: ${event.name}, Price: ${event.price}`);
 
     if (event.price === 0) {
       return res.json({ free: true });
@@ -156,19 +167,31 @@ export const createOrder = async (req, res) => {
       return res.status(500).json({ message: "Payment gateway is not configured on server" });
     }
 
-    const razorpay = new Razorpay({ key_id, key_secret });
-    
+    console.log(`[createOrder] Initializing Razorpay with key: ${key_id.substring(0, 7)}...`);
+
+    let razorpay;
+    try {
+      razorpay = new Razorpay({ key_id, key_secret });
+    } catch (razorInitError) {
+      console.error("[createOrder] Failed to initialize Razorpay SDK:", razorInitError);
+      return res.status(500).json({ message: "Payment gateway initialization failed", details: razorInitError.message });
+    }
+
     const options = {
       amount: Math.round(event.price * 100), // amount in paise, must be integer
       currency: "INR",
-      receipt: `receipt_order_${Date.now()}_${eventIdStr.substring(eventIdStr.length - 4)}`,
+      receipt: `receipt_order_${Date.now()}_${eventIdStr.substring(Math.max(0, eventIdStr.length - 4))}`,
     };
+
+    console.log(`[createOrder] Creating Razorpay order with options:`, JSON.stringify(options));
 
     try {
       const order = await razorpay.orders.create(options);
       if (!order) {
         throw new Error("Razorpay returned empty order object");
       }
+
+      console.log(`[createOrder] Order created successfully: ${order.id}`);
 
       // Return order details + public keyId
       res.json({
@@ -177,14 +200,18 @@ export const createOrder = async (req, res) => {
       });
     } catch (rzpError) {
       console.error("[createOrder] Razorpay SDK Error:", rzpError);
-      return res.status(502).json({ 
-        message: "Payment gateway communication error", 
-        details: rzpError.message 
+      return res.status(rzpError.statusCode || 502).json({
+        message: "Payment gateway communication error",
+        details: rzpError.message,
+        code: rzpError.code
       });
     }
   } catch (error) {
     console.error("Error in createOrder global catch:", error);
-    res.status(500).json({ message: "Critical order processing error: " + error.message });
+    return res.status(500).json({
+      message: "Failed to create order",
+      error: error.message
+    });
   }
 };
 
@@ -206,14 +233,22 @@ export const registerForEvent = async (req, res) => {
       const event = await Event.findOne({ $or: [{ _id: eventIdParam }, { id: eventIdParam }] }).session(session);
 
       if (!event) throw new EventNotFoundError();
+
+      // Fetch static data
+      const staticEvent = getStaticEvent(event._id || event.id);
+      const eventType = (staticEvent?.type || "Solo").toUpperCase(); // Convert "Solo"/"Team" to "SOLO"/"TEAM"
+      const minTeamSize = staticEvent?.team?.min || 1;
+      const maxTeamSize = staticEvent?.team?.max || 1;
+      const whatsappLink = staticEvent?.whatsapplink || "";
+
       if (event.registration?.isOpen === false) throw new RegistrationClosedError();
 
       // SOLO/TEAM constraint enforcement
-      if (event.eventType === "SOLO") {
+      if (eventType === "SOLO") {
         if (event.registrations.teams && event.registrations.teams.length > 0) {
           throw new Error("Integrity Error: SOLO event already contains team registrations.");
         }
-      } else if (event.eventType === "TEAM") {
+      } else if (eventType === "TEAM") {
         if (event.registrations.participants && event.registrations.participants.length > 0) {
           throw new Error("Integrity Error: TEAM event already contains solo registrations.");
         }
@@ -248,7 +283,7 @@ export const registerForEvent = async (req, res) => {
         if (order.amount !== event.price * 100) throw new Error("Payment amount mismatch for this event.");
       }
 
-      const isMasterMiss = /master|miss/i.test(event.name);
+      const isMasterMiss = /master|miss|mr\.|ms\./i.test(event.name);
       // "Update status to 'CONFIRMED' after successful payment, 'PENDING' for free events"
       let status = (event.price > 0 && !isOfficial) ? "CONFIRMED" : "PENDING";
 
@@ -265,14 +300,11 @@ export const registerForEvent = async (req, res) => {
         // Gender check for Master/Miss events
         let slotKey = null;
         if (isMasterMiss) {
-          if (user.gender === "Male") slotKey = "availableBoysSlots";
-          else if (user.gender === "Female") slotKey = "availableGirlsSlots";
-          else throw new InvalidGenderError("Gender must be specified as Male or Female for Master/Miss events.");
+          const gender = user.gender?.toLowerCase();
+          if (gender === "male") slotKey = "male";
+          else if (gender === "female") slotKey = "female";
+          else throw new InvalidGenderError("Gender must be specified as Male or Female for this event.");
         }
-
-        // Atomic update for slots and registration
-        const updateQuery = { _id: event._id, "slots.availableSlots": { $gt: 0 } };
-        if (slotKey) updateQuery[`specificSlots.${slotKey}`] = { $gt: 0 };
 
         const participantData = {
           inventoId: user._id,
@@ -286,14 +318,40 @@ export const registerForEvent = async (req, res) => {
           contingentKey
         };
 
-        const pushUpdate = {
-          $push: { "registrations.participants": participantData },
-          $inc: { "slots.availableSlots": -1 }
-        };
-        if (slotKey) pushUpdate.$inc[`specificSlots.${slotKey}`] = -1;
+        // Atomic update for slots and registration
+        if (slotKey) {
+          // For gender based events, ensure general slots are null if not already
+          if (event.slots.availableSlots !== null) {
+            event.slots.availableSlots = null;
+          }
 
-        const updatedEvent = await Event.findOneAndUpdate(updateQuery, pushUpdate, { session, new: true });
-        if (!updatedEvent) throw new SlotFullError("No slots available or reservation failed (possible gender limit reached).");
+          const currentGenderSlots = (typeof event.specificSlots?.get === "function"
+            ? event.specificSlots.get(slotKey)
+            : event.specificSlots?.[slotKey]);
+
+          console.log(`[registerForEvent] Gender Slot Check: ${slotKey} count is ${currentGenderSlots}`);
+
+          if (currentGenderSlots === undefined || currentGenderSlots <= 0) {
+            throw new SlotFullError(`No more slots for ${user.gender} participants in this event.`);
+          }
+
+          // Map updates must use .set()
+          if (typeof event.specificSlots?.set === "function") {
+            event.specificSlots.set(slotKey, currentGenderSlots - 1);
+          } else {
+            event.specificSlots[slotKey] = currentGenderSlots - 1;
+          }
+          event.markModified('specificSlots');
+        } else {
+          if (event.slots.availableSlots <= 0) {
+            throw new SlotFullError("No more slots available for this event.");
+          }
+          event.slots.availableSlots -= 1;
+        }
+
+        // Add participant and save the whole document (safer for Maps inside transactions)
+        event.registrations.participants.push(participantData);
+        await event.save({ session });
 
         // Update User Profile
         if (!user.registeredEvents.includes(event.name)) {
@@ -307,7 +365,7 @@ export const registerForEvent = async (req, res) => {
           await Payment.create([{ paymentId: razorpay_payment_id, orderId: razorpay_order_id, eventId: event._id }], { session });
         }
 
-        return { type: "Solo", user, eventName: event.name, whatsappLink: event.whatsappLink };
+        return { type: "Solo", user, eventName: event.name, whatsappLink: whatsappLink };
       }
 
       // TEAM Logic
@@ -318,8 +376,8 @@ export const registerForEvent = async (req, res) => {
           throw new Error("Invalid members format. Must be an array of IDs.");
         }
 
-        if (!teamName || !members || members.length < (event.minTeamSize || 1) || members.length > (event.maxTeamSize || 10)) {
-          throw new TeamSizeError(`Team must have between ${event.minTeamSize || 1} and ${event.maxTeamSize || 10} members.`);
+        if (!teamName || !members || members.length < minTeamSize || members.length > maxTeamSize) {
+          throw new TeamSizeError(`Team must have between ${minTeamSize} and ${maxTeamSize} members.`);
         }
         if (!members.includes(inventoId)) throw new Error("Leader must be included in the members list.");
 
@@ -372,7 +430,7 @@ export const registerForEvent = async (req, res) => {
         }
 
         const leader = memberData.find(u => u._id === inventoId);
-        return { type: "Team", user: leader, teamName, eventName: event.name, whatsappLink: event.whatsappLink };
+        return { type: "Team", user: leader, teamName, eventName: event.name, whatsappLink: whatsappLink };
       }
     }, { readPreference: 'primary' }); // Ensure strong consistency for registration
 
@@ -457,25 +515,66 @@ export const updateParticipantStatus = async (req, res) => {
       const participant = event.registrations.participants.find(p => p.inventoId === inventoId);
       if (!participant) throw new Error("Participant not found");
 
+      const isMasterMiss = /master|miss|mr\.|ms\./i.test(event.name);
+      let slotKey = null;
+      if (isMasterMiss) {
+        // Fetch user to check gender
+        const user = await User.findById(inventoId).session(session);
+        if (user) {
+          const gender = user.gender?.toLowerCase();
+          if (gender === "male") slotKey = "male";
+          else if (gender === "female") slotKey = "female";
+        }
+      }
+
       const oldStatus = participant.status;
       const isActive = (s) => ["CONFIRMED", "PENDING"].includes(s);
 
       const wasActive = isActive(oldStatus);
       const nowActive = isActive(status);
 
-      // Handle slot logic
+      // Handle slot logic (Exclusive: Gender vs General)
       if (nowActive && !wasActive) {
-        if (event.slots.availableSlots <= 0) {
-          throw new Error("No slots available to activate this participant");
+        if (slotKey) {
+          const currentGenderSlots = (typeof event.specificSlots?.get === "function"
+            ? event.specificSlots.get(slotKey)
+            : event.specificSlots?.[slotKey]) || 0;
+
+          if (currentGenderSlots <= 0) {
+            throw new Error(`No ${slotKey} slots available in ${event.name}`);
+          }
+
+          if (typeof event.specificSlots?.set === "function") {
+            event.specificSlots.set(slotKey, currentGenderSlots - 1);
+          } else {
+            event.specificSlots[slotKey] = currentGenderSlots - 1;
+          }
+        } else {
+          if (event.slots.availableSlots <= 0) {
+            throw new Error("No slots available to activate this participant");
+          }
+          event.slots.availableSlots -= 1;
         }
-        event.slots.availableSlots -= 1;
       } else if (!nowActive && wasActive) {
-        event.slots.availableSlots += 1;
+        if (slotKey) {
+          const currentGenderSlots = (typeof event.specificSlots?.get === "function"
+            ? event.specificSlots.get(slotKey)
+            : event.specificSlots?.[slotKey]) || 0;
+
+          if (typeof event.specificSlots?.set === "function") {
+            event.specificSlots.set(slotKey, currentGenderSlots + 1);
+          } else {
+            event.specificSlots[slotKey] = currentGenderSlots + 1;
+          }
+        } else {
+          event.slots.availableSlots += 1;
+        }
       }
 
       participant.status = status;
       // Mark modified to ensure updatedAt is bumped even if only subdocs changed
       event.markModified('registrations.participants');
+      event.markModified('specificSlots');
       await event.save({ session });
     });
 
@@ -597,17 +696,22 @@ export const updateMemberAttendance = async (req, res) => {
 export const getEventStats = async (req, res) => {
   const { eventId } = req.params;
   try {
+    const eventDoc = await Event.findOne({ $or: [{ _id: eventId }, { id: eventId }] }).lean();
+    if (!eventDoc) return res.status(404).json({ message: "Event not found" });
+
+    const staticEvent = getStaticEvent(eventDoc._id || eventDoc.id);
+    const eventType = (staticEvent?.type || "Solo").toUpperCase();
+
     const results = await Event.aggregate([
-      { $match: { $or: [{ _id: eventId }, { id: eventId }] } },
+      { $match: { _id: eventDoc._id } },
       {
         $facet: {
-          basicInfo: [{ $project: { name: 1, eventType: 1, slots: 1 } }],
           participation: [
             {
               $project: {
                 regs: {
                   $cond: [
-                    { $eq: ["$eventType", "SOLO"] },
+                    { $eq: [eventType, "SOLO"] },
                     "$registrations.participants",
                     "$registrations.teams"
                   ]
@@ -625,7 +729,7 @@ export const getEventStats = async (req, res) => {
                   $push: {
                     clg: {
                       $cond: [
-                        { $eq: ["$eventType", "SOLO"] },
+                        { $eq: [eventType, "SOLO"] },
                         "$regs.clgName",
                         { $arrayElemAt: ["$regs.members.clgName", 0] }
                       ]
@@ -639,9 +743,6 @@ export const getEventStats = async (req, res) => {
       }
     ]);
 
-    if (!results[0].basicInfo.length) return res.status(404).json({ message: "Event not found" });
-
-    const event = results[0].basicInfo[0];
     const participation = results[0].participation[0] || { total: 0, official: 0, nonOfficial: 0, collegeWise: [] };
 
     const collegeCounts = participation.collegeWise.reduce((acc, curr) => {
@@ -651,10 +752,10 @@ export const getEventStats = async (req, res) => {
     }, {});
 
     res.json({
-      name: event.name,
-      totalSlots: event.slots.totalSlots,
-      availableSlots: event.slots.availableSlots,
-      usedSlots: event.slots.totalSlots - event.slots.availableSlots,
+      name: eventDoc.name,
+      totalSlots: eventDoc.slots.totalSlots,
+      availableSlots: eventDoc.slots.availableSlots,
+      usedSlots: eventDoc.slots.totalSlots - eventDoc.slots.availableSlots,
       totalRegistrations: participation.total,
       officialCount: participation.official,
       nonOfficialCount: participation.nonOfficial,
@@ -716,33 +817,33 @@ export const getEventTeams = async (req, res) => {
 
 // GET /api/events/
 export const getEvents = async (req, res) => {
-  console.log("[getEvents] Fetching all events...");
+  console.log("[getEvents] Requested - Fetching full event directory...");
   try {
-    const events = await Event.find({}, {
-      _id: 1,
-      id: 1,
-      name: 1,
-      subtitle: 1,
-      description: 1,
-      eventType: 1,
-      minTeamSize: 1,
-      maxTeamSize: 1,
-      club: 1,
+    // We return all fields EXCEPT the registrations list (to keep it lightweight and private)
+    // This ensures any live updates to slots, venues, or rules are sent to the frontend.
+    const events = await Event.find({}, { "registrations": 0 }).lean();
 
-      price: 1,
-      rounds: 1,
-      rounddetails: 1,
-      rules: 1,
-      contact: 1,
-      slots: 1,
-      specificSlots: 1,
-      registration: 1,
-      logistics: 1
+    // Process events to nullify general slots for gender-based events as per request
+    const processedEvents = events.map(event => {
+      const isMasterMiss = /master|miss|mr\.|ms\./i.test(event.name);
+      if (isMasterMiss) {
+        return {
+          ...event,
+          slots: { ...event.slots, availableSlots: null }
+        };
+      }
+      return event;
     });
 
-    res.json(events);
+    console.log(`[getEvents] Sending ${processedEvents.length} events to client.`);
+    res.json(processedEvents);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("[getEvents] CRITICAL ERROR:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch event data accurately",
+      error: error.message
+    });
   }
 };
 
