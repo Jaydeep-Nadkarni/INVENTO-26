@@ -13,33 +13,60 @@ import specialsIllustration from '../../assets/UI/Events/specials.png'
 import gamingIllustration from '../../assets/UI/Events/gaming.png'
 import eventsData from './events.js'
 
+// Helper to map DB event to frontend format used in Event Cards/Details
+export const mapEventFromDb = (event, isDb = false) => ({
+    id: (event._id || event.id || "").toString(),
+
+    themeName: event.name || event.title,
+    realName: event.subtitle || (isDb ? null : ''),
+    category: event.club,
+    tier: event.tier,
+    type: event.eventType || event.type,
+    description: event.description || (isDb ? null : ''),
+    fee: (event.price ?? event.registartionfee) === 0 ? 'FREE' : (event.price || event.registartionfee ? `Rs. ${event.price ?? event.registartionfee}` : (isDb ? null : 'FREE')),
+    teamSize: (() => {
+        const min = event.minTeamSize ?? event.team?.min ?? (isDb ? null : 1);
+        const max = event.maxTeamSize ?? event.team?.max ?? (isDb ? null : 1);
+        if (min === null && max === null) return null;
+        return min === max ? `${max}` : `${min}-${max}`;
+    })(),
+
+
+    slotsAvailable: (/master|miss|mr\.|ms\./i.test(event.name || event.title))
+        ? null
+        : (event.slots?.availableSlots ?? event.slots?.available ?? (isDb ? null : 'TBD')),
+
+    specificSlots: event.specificSlots || (isDb ? null : {}),
+    rounds: (() => {
+        const r = event.rounds || event.rounddetails?.length;
+        if (r) return r.toString();
+        return isDb ? null : "1";
+    })(),
+    date: event.logistics?.date || event.date || (isDb ? null : 'TBD'),
+    venue: event.logistics?.venue || event.venue || (isDb ? null : 'TBD'),
+
+
+    rules: event.rules?.length > 0 ? event.rules : (isDb ? null : []),
+    whatsapplink: event.whatsapplink || (isDb ? null : ""),
+    roundDetails: (event.rounddetails || []).length > 0 ? (event.rounddetails || []).map(r => ({
+        title: `Round ${r.round}`,
+        details: [r.description]
+    })) : (isDb ? null : []),
+    contacts: (event.contact || []).filter(c => c && c.name).map(c => ({
+        name: c.name,
+        phone: c.phone
+    })).length > 0 ? (event.contact || []).filter(c => c && c.name).map(c => ({
+        name: c.name,
+        phone: c.phone
+    })) : (isDb ? null : [])
+});
+
 const getEventsByClub = (clubName) => {
     return eventsData
         .filter(event => (event.club || "").toLowerCase() === clubName.toLowerCase())
-        .map(event => ({
-            id: event.slug, // Using event's slug for routing
-            themeName: event.title,
-            realName: event.subtitle,
-            type: event.type,
-            description: event.description,
-            fee: event.registartionfee === 0 ? 'FREE' : `Rs. ${event.registartionfee}`,
-            teamSize: event.team.max === 1 ? '1' : `${event.team.min}-${event.team.max}`,
-            slotsAvailable: event.slots.available || 'TBD',
-            rounds: event.rounds.toString(),
-            date: `${event.date}, ${event.time}`,
-            venue: event.venue,
-            rules: event.rules,
-            whatsapplink: event.whatsapplink || "", // Use for participant outreach
-            roundDetails: (event.rounddetails || []).map(r => ({
-                title: `Round ${r.round}`,
-                details: [r.description]
-            })),
-            contacts: (event.contact || []).filter(c => c && c.name).map(c => ({
-                name: c.name,
-                phone: c.phone
-            }))
-        }))
+        .map(mapEventFromDb);
 }
+
 
 export const clubsData = [
     {

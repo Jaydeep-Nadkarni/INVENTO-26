@@ -6,7 +6,11 @@ const connectDB = async () => {
     console.log("MongoDB connected ✅");
   } catch (error) {
     console.error("MongoDB connection failed ❌", error.message);
-    process.exit(1);
+    if (process.env.NODE_ENV === 'production') {
+      process.exit(1);
+    } else {
+      console.error("[DEV] Please check your .env file and ensure MONGO_URI is set. API routes will fail until connected.");
+    }
   }
 };
 

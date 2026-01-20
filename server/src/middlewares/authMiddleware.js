@@ -39,9 +39,27 @@ export const requireOnboarding = (req, res, next) => {
   }
 
   if (req.user.onboardingCompleted !== true) {
-    return res.status(403).json({ 
+    return res.status(403).json({
       message: "Access forbidden. Please complete your profile onboarding.",
-      onboardingCompleted: false 
+      onboardingCompleted: false
+    });
+  }
+
+  next();
+};
+
+/**
+ * Middleware to restrict access to Admins or Coordinators.
+ * Should be used AFTER 'protect' middleware.
+ */
+export const isAdminOrCoordinator = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ message: "Authentication required." });
+  }
+
+  if (req.user.role !== "ADMIN" && req.user.role !== "COORDINATOR") {
+    return res.status(403).json({
+      message: "Access forbidden. Admin or Coordinator privileges required."
     });
   }
 

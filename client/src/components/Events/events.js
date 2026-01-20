@@ -30,7 +30,7 @@ const eventsData = [
       }
     ],
     venue: "Saptarishi Hall",
-    date: "26-02-2026",
+    date: "Day 0",
     time: "10:00 AM",
     rules: [
       "Karaoke tracks must be submitted in Pen Drives (mp3 format strictly) in ready-to-play condition",
@@ -1215,6 +1215,10 @@ const eventsData = [
         {
         name: "Shreyash Savant",
         phone: "7019864016"
+        },
+        {
+        name: "Aryan Patil",
+        phone: "8495940101"
         }
     ],
     resgitartions: [

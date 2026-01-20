@@ -2,23 +2,24 @@ import React, { useState, useMemo } from 'react';
 import Sidebar from '../../components/sidebar';
 import { useAdminAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
-import { 
-    Users, 
-    Calendar, 
-    CheckCircle, 
-    TrendingUp, 
-    Activity, 
-    Layers, 
+import {
+    Users,
+    Calendar,
+    CheckCircle,
+    TrendingUp,
+    Activity,
+    Layers,
     ArrowUpRight,
     Filter,
-    Search
+    Search,
+    Download
 } from 'lucide-react';
 
 const AdminDashboard = () => {
     const { adminUser } = useAdminAuth();
     const { data } = useData();
     const { participants, events } = data;
-    
+
     const [selectedTeam, setSelectedTeam] = useState('All');
     const [selectedEvent, setSelectedEvent] = useState('All');
 
@@ -27,10 +28,10 @@ const AdminDashboard = () => {
     // Calculation Logic
     const stats = useMemo(() => {
         // Filter based on team/event logic
-        const teamParticipants = isRegistration 
+        const teamParticipants = isRegistration
             ? (selectedTeam === 'All' ? participants : participants.filter(p => p.team === selectedTeam))
             : participants.filter(p => p.team === adminUser?.team);
-            
+
         const finalParticipants = isRegistration && selectedEvent !== 'All'
             ? teamParticipants.filter(p => p.event === selectedEvent)
             : teamParticipants;
@@ -41,7 +42,7 @@ const AdminDashboard = () => {
 
         const totalSlots = teamEvents.reduce((acc, e) => acc + (e.total_slots || 0), 0);
         const verifiedCount = finalParticipants.filter(p => p.status === 'Verified').length;
-        
+
         return {
             participantsCount: finalParticipants.length,
             eventsCount: teamEvents.length,
@@ -52,12 +53,55 @@ const AdminDashboard = () => {
         };
     }, [participants, events, adminUser?.team, isRegistration, selectedTeam, selectedEvent]);
 
+    const handleExport = (format) => {
+        const filename = `Invento_Report_${adminUser?.team || 'Admin'}_${new Date().toISOString().split('T')[0]}`;
+
+        // Prepare data - either summary or full list based on context
+        let exportData = [];
+        if (selectedEvent !== 'All') {
+            exportData = participants.filter(p => p.event === selectedEvent);
+        } else {
+            exportData = stats.relevantEvents.map(e => ({
+                eventName: e.name,
+                status: e.status,
+                occupancy: Math.round((participants.filter(p => p.event === e.name).length / (e.total_slots || 1)) * 100) + '%'
+            }));
+        }
+
+        if (format === 'json') {
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${filename}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+        } else {
+            if (exportData.length === 0) return;
+            const headers = Object.keys(exportData[0]).join(',');
+            const rows = exportData.map(obj => {
+                return Object.values(obj).map(val => {
+                    const str = String(val).replace(/"/g, '""');
+                    return `"${str}"`;
+                }).join(',');
+            });
+            const csvContent = [headers, ...rows].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${filename}.csv`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+    };
+
     const teams = ["Dance", "Music", "Media", "Coding", "Gaming", "HR", "Art"];
 
     return (
         <div className="flex h-screen bg-white text-gray-900 border-gray-200">
             <Sidebar />
-            
+
             <main className="flex-1 overflow-y-auto p-8 lg:ml-64">
                 <div className="max-w-6xl mx-auto">
                     {/* Header Section */}
@@ -73,7 +117,7 @@ const AdminDashboard = () => {
 
                         {isRegistration && (
                             <div className="flex gap-2">
-                                <select 
+                                <select
                                     className="text-xs font-semibold px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-900"
                                     value={selectedTeam}
                                     onChange={(e) => {
@@ -84,7 +128,7 @@ const AdminDashboard = () => {
                                     <option value="All">All Teams</option>
                                     {teams.map(t => <option key={t} value={t}>{t}</option>)}
                                 </select>
-                                <select 
+                                <select
                                     className="text-xs font-semibold px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-900"
                                     value={selectedEvent}
                                     onChange={(e) => setSelectedEvent(e.target.value)}
@@ -153,7 +197,7 @@ const AdminDashboard = () => {
 
                     {/* Secondary Metrics */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-                         <section className="lg:col-span-2 bg-gray-50/50 border border-gray-200 rounded-xl p-6">
+                        <section className="lg:col-span-2 bg-gray-50/50 border border-gray-200 rounded-xl p-6">
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-sm font-bold text-gray-900 uppercase tracking-widest flex items-center gap-2">
                                     <div className="w-2 h-2 bg-gray-900 rounded-full"></div>
@@ -179,9 +223,9 @@ const AdminDashboard = () => {
                                     );
                                 })}
                             </div>
-                         </section>
+                        </section>
 
-                         <section className="bg-white border border-gray-200 rounded-xl p-6 flex flex-col justify-between">
+                        <section className="bg-white border border-gray-200 rounded-xl p-6 flex flex-col justify-between">
                             <div>
                                 <h2 className="text-sm font-bold text-gray-900 uppercase tracking-widest mb-6 border-b border-gray-100 pb-4">
                                     Global Status
@@ -196,7 +240,7 @@ const AdminDashboard = () => {
                                             <div className="h-full bg-gray-900" style={{ width: `${stats.globalVerifiedPercentage}%` }}></div>
                                         </div>
                                     </div>
-                                    
+
                                     <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
                                         <Activity className="w-5 h-5 text-gray-400 mt-1" />
                                         <div>
@@ -206,10 +250,23 @@ const AdminDashboard = () => {
                                     </div>
                                 </div>
                             </div>
-                            <button className="w-full mt-8 py-3 bg-gray-900 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg hover:bg-black transition-all">
-                                Generate Report
-                            </button>
-                         </section>
+                            <div className="mt-8 flex gap-3">
+                                <button
+                                    onClick={() => handleExport('json')}
+                                    className="flex-1 py-3 bg-gray-900 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg hover:bg-black transition-all flex items-center justify-center gap-2"
+                                >
+                                    <Download className="w-3 h-3" />
+                                    Export JSON
+                                </button>
+                                <button
+                                    onClick={() => handleExport('csv')}
+                                    className="flex-1 py-3 border border-gray-900 text-gray-900 text-[10px] font-bold uppercase tracking-widest rounded-lg hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+                                >
+                                    <Download className="w-3 h-3" />
+                                    Export CSV
+                                </button>
+                            </div>
+                        </section>
                     </div>
 
                     {/* Footer */}

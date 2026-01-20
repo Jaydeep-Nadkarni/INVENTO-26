@@ -61,10 +61,8 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
       'http://localhost:5174',
       'http://127.0.0.1:3000', 
       'http://127.0.0.1:5173',
-      'http://127.0.0.1:5174',
-      'https://achieving-moral-varieties-sql.trycloudflare.com'
-    ];
-
+      'http://127.0.0.1:5174']
+      
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
@@ -79,8 +77,7 @@ app.use(cors({
                      origin.startsWith('http://192.168.') ||
                      origin.startsWith('https://192.168.') ||
                      origin.startsWith('http://172.') ||
-                     origin.startsWith('https://172.')||
-                     origin.startsWith('https://achieving-moral-varieties-sql.trycloudflare.com');
+                     origin.startsWith('https://172.');
 
     if (isAllowed) {
       callback(null, true);
