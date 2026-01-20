@@ -9,7 +9,11 @@ const CustomEventCard = ({ event, onClick }) => {
 
     const renderSlots = () => {
         if (isMasterMiss) {
-            if (!user) return "Master + Miss Available";
+            if (!user) {
+                const boys = event.specificSlots?.availableBoysSlots ?? event.specificSlots?.male ?? 0;
+                const girls = event.specificSlots?.availableGirlsSlots ?? event.specificSlots?.female ?? 0;
+                return `${boys+girls} Slots`;
+            }
 
             const boys = event.specificSlots?.availableBoysSlots ?? event.specificSlots?.male ?? 0;
             const girls = event.specificSlots?.availableGirlsSlots ?? event.specificSlots?.female ?? 0;
@@ -17,7 +21,7 @@ const CustomEventCard = ({ event, onClick }) => {
 
             if (user.gender === "Male") return `${boys} Slots (Master)`;
             if (user.gender === "Female") return `${girls} Slots (Miss)`;
-            return "Master + Miss Available";
+            return `${boys+girls} Slots`;
         }
 
         return event.slotsAvailable === 'TBD' ? 'OPEN' : event.slotsAvailable;

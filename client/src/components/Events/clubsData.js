@@ -29,7 +29,7 @@ export const mapEventFromDb = (event) => ({
     })(),
 
 
-    slotsAvailable: (/master|miss|mr\./i.test(event.name || event.title))
+    slotsAvailable: (/master|miss|mr\.|ms\./i.test(event.name || event.title))
         ? null
         : (event.slots?.availableSlots ?? event.slots?.available ?? 'TBD'),
 
