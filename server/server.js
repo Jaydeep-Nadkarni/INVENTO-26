@@ -173,15 +173,22 @@ app.use((req, res, next) => {
 
 // ---------- Global Error Handler (ONE place, no repetition) ----------
 app.use((err, req, res, next) => {
-  console.error("Unhandled error:", err);
+  // Log the full error for debugging
+  if (err.name === 'Error' || err.stack) {
+    console.error(`[Global Error] ${req.method} ${req.url}:`, err);
+  } else {
+    console.error(`[Global Error] ${req.method} ${req.url}:`, JSON.stringify(err));
+  }
 
   const statusCode = err.status || err.statusCode || 500;
   
+  // Always return JSON
+  res.setHeader('Content-Type', 'application/json');
   res.status(statusCode).json({
     success: false,
-    message: err.message || "Internal Server Error",
+    message: err.message || (typeof err === 'string' ? err : "Internal Server Error"),
     // expose error details only in dev
-    error: process.env.NODE_ENV === "production" ? undefined : err.stack || err.toString(),
+    error: process.env.NODE_ENV === "production" ? undefined : (err.stack || err.toString()),
   });
 });
 

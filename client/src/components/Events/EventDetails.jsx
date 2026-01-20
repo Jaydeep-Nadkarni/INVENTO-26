@@ -93,8 +93,11 @@ const EventDetails = ({
 
     const renderSlots = () => {
         if (isMasterMiss) {
-            const boys = currentEvent.specificSlots?.availableBoysSlots ?? currentEvent.specificSlots?.male ?? 0;
-            const girls = currentEvent.specificSlots?.availableGirlsSlots ?? currentEvent.specificSlots?.female ?? 0;
+            // Support multiple key formats for compatibility (availableBoysSlots, male, etc)
+            const slots = currentEvent.specificSlots || {};
+            const boys = slots.availableBoysSlots ?? slots.male ?? 0;
+            const girls = slots.availableGirlsSlots ?? slots.female ?? 0;
+            
             if (!user) return `${boys + girls}`;
             if (user.gender === "Male") return `${boys} (Master)`;
             if (user.gender === "Female") return `${girls} (Miss)`;

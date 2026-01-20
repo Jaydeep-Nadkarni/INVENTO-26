@@ -291,14 +291,10 @@ export const registerForEvent = async (req, res) => {
         // Gender check for Master/Miss events
         let slotKey = null;
         if (isMasterMiss) {
-          if (user.gender === "Male") slotKey = "availableBoysSlots";
-          else if (user.gender === "Female") slotKey = "availableGirlsSlots";
+          if (user.gender === "Male") slotKey = "male";
+          else if (user.gender === "Female") slotKey = "female";
           else throw new InvalidGenderError("Gender must be specified as Male or Female for Master/Miss events.");
         }
-
-        // Atomic update for slots and registration
-        const updateQuery = { _id: event._id, "slots.availableSlots": { $gt: 0 } };
-        if (slotKey) updateQuery[`specificSlots.${slotKey}`] = { $gt: 0 };
 
         const participantData = {
           inventoId: user._id,
@@ -312,14 +308,29 @@ export const registerForEvent = async (req, res) => {
           contingentKey
         };
 
-        const pushUpdate = {
-          $push: { "registrations.participants": participantData },
-          $inc: { "slots.availableSlots": -1 }
-        };
-        if (slotKey) pushUpdate.$inc[`specificSlots.${slotKey}`] = -1;
+        // Atomic update for slots and registration
+        if (slotKey) {
+            // Log for debugging
+            const currentGenderSlots = event.specificSlots?.get(slotKey);
+            console.log(`[registerForEvent] Gender Slot Check: ${slotKey} count is ${currentGenderSlots}`);
 
-        const updatedEvent = await Event.findOneAndUpdate(updateQuery, pushUpdate, { session, new: true });
-        if (!updatedEvent) throw new SlotFullError("No slots available or reservation failed (possible gender limit reached).");
+            if (currentGenderSlots === undefined || currentGenderSlots <= 0) {
+              throw new SlotFullError(`No more slots for ${user.gender} participants in this event.`);
+            }
+            
+            // Map updates must use .set()
+            event.specificSlots.set(slotKey, currentGenderSlots - 1);
+            event.markModified('specificSlots');
+        } else {
+            if (event.slots.availableSlots <= 0) {
+              throw new SlotFullError("No more slots available for this event.");
+            }
+            event.slots.availableSlots -= 1;
+        }
+
+        // Add participant and save the whole document (safer for Maps inside transactions)
+        event.registrations.participants.push(participantData);
+        await event.save({ session });
 
         // Update User Profile
         if (!user.registeredEvents.includes(event.name)) {
@@ -483,25 +494,50 @@ export const updateParticipantStatus = async (req, res) => {
       const participant = event.registrations.participants.find(p => p.inventoId === inventoId);
       if (!participant) throw new Error("Participant not found");
 
+      const isMasterMiss = /master|miss|mr\.|ms\./i.test(event.name);
+      let slotKey = null;
+      if (isMasterMiss) {
+        // Fetch user to check gender
+        const user = await User.findById(inventoId).session(session);
+        if (user) {
+          if (user.gender === "Male") slotKey = "male";
+          else if (user.gender === "Female") slotKey = "female";
+        }
+      }
+
       const oldStatus = participant.status;
       const isActive = (s) => ["CONFIRMED", "PENDING"].includes(s);
 
       const wasActive = isActive(oldStatus);
       const nowActive = isActive(status);
 
-      // Handle slot logic
+      // Handle slot logic (Exclusive: Gender vs General)
       if (nowActive && !wasActive) {
-        if (event.slots.availableSlots <= 0) {
-          throw new Error("No slots available to activate this participant");
+        if (slotKey) {
+            const currentGenderSlots = event.specificSlots.get(slotKey) || 0;
+            if (currentGenderSlots <= 0) {
+                throw new Error(`No ${slotKey} slots available in ${event.name}`);
+            }
+            event.specificSlots.set(slotKey, currentGenderSlots - 1);
+        } else {
+            if (event.slots.availableSlots <= 0) {
+              throw new Error("No slots available to activate this participant");
+            }
+            event.slots.availableSlots -= 1;
         }
-        event.slots.availableSlots -= 1;
       } else if (!nowActive && wasActive) {
-        event.slots.availableSlots += 1;
+        if (slotKey) {
+            const currentGenderSlots = event.specificSlots.get(slotKey) || 0;
+            event.specificSlots.set(slotKey, currentGenderSlots + 1);
+        } else {
+            event.slots.availableSlots += 1;
+        }
       }
 
       participant.status = status;
       // Mark modified to ensure updatedAt is bumped even if only subdocs changed
       event.markModified('registrations.participants');
+      event.markModified('specificSlots');
       await event.save({ session });
     });
 
@@ -742,35 +778,21 @@ export const getEventTeams = async (req, res) => {
 
 // GET /api/events/
 export const getEvents = async (req, res) => {
-  console.log("[getEvents] Fetching all events...");
+  console.log("[getEvents] Requested - Fetching full event directory...");
   try {
-    const events = await Event.find({}, {
-      _id: 1,
-      id: 1,
-      name: 1,
-      subtitle: 1,
-      description: 1,
-      eventType: 1,
-      minTeamSize: 1,
-      maxTeamSize: 1,
-      club: 1,
-
-      price: 1,
-      rounds: 1,
-      rounddetails: 1,
-      rules: 1,
-      contact: 1,
-      slots: 1,
-      specificSlots: 1,
-      registration: 1,
-      logistics: 1
-    }).lean();
-
-    console.log(`[getEvents] Successfully fetched ${events.length} events. sending JSON...`);
+    // We return all fields EXCEPT the registrations list (to keep it lightweight and private)
+    // This ensures any live updates to slots, venues, or rules are sent to the frontend.
+    const events = await Event.find({}, { "registrations": 0 }).lean();
+    
+    console.log(`[getEvents] Sending ${events.length} events to client.`);
     res.json(events);
   } catch (error) {
-    console.error("[getEvents] Error:", error);
-    res.status(500).json({ message: error.message });
+    console.error("[getEvents] CRITICAL ERROR:", error);
+    res.status(500).json({ 
+      success: false, 
+      message: "Failed to fetch event data accurately", 
+      error: error.message 
+    });
   }
 };
 
