@@ -107,8 +107,8 @@ const MasterEvents = () => {
             await apiPatch(`/api/events/${editingEvent._id || editingEvent.id}`, payload);
             await refreshEvents();
             setEditingEvent(null);
-        } catch (error) {
-            setError(`Failed to update event: ${error.message}`);
+        } catch (err) {
+            setError(`Failed to update event: ${err.message}`);
         } finally {
             setSaving(false);
         }
