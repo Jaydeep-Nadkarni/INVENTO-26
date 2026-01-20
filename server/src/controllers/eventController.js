@@ -17,6 +17,8 @@ import {
 } from "../utils/customErrors.js";
 import { getStaticEvent } from "../utils/staticData.js";
 
+const GENDER_SPECIFIC_EVENT_IDS = ["22", "23"];
+
 /* ================= RAZORPAY ================= */
 const getRazorpayInstance = () => {
   return new Razorpay({
@@ -124,6 +126,10 @@ const validateEventRegistration = async (event, { inventoId, members, teamName, 
 
   if (event.registration?.isOpen === false) throw new RegistrationClosedError();
 
+  if (event.registration?.officialOnly && !isOfficial) {
+    throw new Error("Registration for this event is restricted to official entries only.");
+  }
+
   const user = await User.findById(inventoId).session(session);
   if (!user) throw new Error("Invalid Invento ID.");
 
@@ -150,7 +156,7 @@ const validateEventRegistration = async (event, { inventoId, members, teamName, 
       throw new DuplicateRegistrationError();
     }
 
-    const isMasterMiss = /master|miss|mr\.|ms\./i.test(event.name);
+    const isMasterMiss = GENDER_SPECIFIC_EVENT_IDS.includes(String(event.id));
     if (isMasterMiss) {
       const gender = user.gender?.toLowerCase();
       let slotKey = (gender === "male") ? "male" : (gender === "female" ? "female" : null);
@@ -260,7 +266,7 @@ export const registerForEvent = async (req, res) => {
       }
 
       const status = (event.price > 0 && !isOfficial) ? "CONFIRMED" : "PENDING";
-      const isMasterMiss = /master|miss|mr\.|ms\./i.test(event.name);
+      const isMasterMiss = GENDER_SPECIFIC_EVENT_IDS.includes(String(event.id));
 
       if (eventType === "SOLO") {
         let slotKey = null;
@@ -396,7 +402,7 @@ export const updateParticipantStatus = async (req, res) => {
       const participant = event.registrations.participants.find(p => p.inventoId === inventoId);
       if (!participant) throw new Error("Participant not found");
 
-      const isMasterMiss = /master|miss|mr\.|ms\./i.test(event.name);
+      const isMasterMiss = GENDER_SPECIFIC_EVENT_IDS.includes(String(event.id));
       let slotKey = null;
       if (isMasterMiss) {
         // Fetch user to check gender
@@ -706,7 +712,7 @@ export const getEvents = async (req, res) => {
 
     // Process events to nullify general slots for gender-based events as per request
     const processedEvents = events.map(event => {
-      const isMasterMiss = /master|miss|mr\.|ms\./i.test(event.name);
+      const isMasterMiss = GENDER_SPECIFIC_EVENT_IDS.includes(String(event.id));
       if (isMasterMiss) {
         return {
           ...event,
@@ -842,6 +848,60 @@ export const getFestRegistrations = async (req, res) => {
     });
 
     res.json(allParticipants);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Update event details (Admin)
+export const updateEventDetails = async (req, res) => {
+  const { eventId } = req.params;
+  const { price, slotsChange, isOpen, officialOnly, specificSlotsUpdate } = req.body;
+
+  try {
+    const event = await Event.findOne({ $or: [{ _id: eventId }, { id: eventId }] });
+    if (!event) return res.status(404).json({ message: "Event not found" });
+
+    // Update Price
+    if (price !== undefined) event.price = price;
+
+    // Update Slots
+    if (slotsChange !== undefined && slotsChange !== 0) {
+      if (typeof slotsChange !== 'number') return res.status(400).json({ message: "Invalid slotsChange value" });
+
+      const newTotal = event.slots.totalSlots + slotsChange;
+      const newAvailable = event.slots.availableSlots + slotsChange;
+
+      if (newTotal < 0) return res.status(400).json({ message: "Total slots cannot be negative" });
+
+      event.slots.totalSlots = newTotal;
+      event.slots.availableSlots = newAvailable; // Adjust available by the same delta
+    }
+
+    // Update Registration Status
+    if (isOpen !== undefined) event.registration.isOpen = isOpen;
+    if (officialOnly !== undefined) event.registration.officialOnly = officialOnly;
+
+    // Update Specific Slots (Gender Based)
+    if (specificSlotsUpdate) {
+      for (const [key, value] of Object.entries(specificSlotsUpdate)) {
+        if (event.specificSlots) {
+          // If Map
+          if (typeof event.specificSlots.set === 'function') {
+            event.specificSlots.set(key, value);
+          } else {
+            event.specificSlots[key] = value;
+          }
+        }
+      }
+    }
+
+    event.markModified('registration');
+    event.markModified('specificSlots');
+    await event.save();
+
+    res.json({ success: true, message: "Event updated successfully", event });
+
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

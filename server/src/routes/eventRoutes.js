@@ -13,7 +13,8 @@ import {
     getEventTeams,
     getFestOverview,
     getEvents,
-    getFestRegistrations
+    getFestRegistrations,
+    updateEventDetails
 } from "../controllers/eventController.js";
 
 
@@ -62,6 +63,9 @@ router.patch("/:eventId/teams/:teamName/status", protect, isAdminOrCoordinator, 
 
 // Update team member attendance
 router.patch("/:eventId/teams/:teamName/members/:inventoId/attendance", protect, isAdminOrCoordinator, updateMemberAttendance);
+
+// Update event details (slots, status, etc.)
+router.patch("/:eventId", protect, isAdminOrCoordinator, updateEventDetails);
 
 /* ================= ANALYTICS & REPORTING ================= */
 
