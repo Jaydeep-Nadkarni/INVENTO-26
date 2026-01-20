@@ -139,6 +139,10 @@ const validateHelper = async (event, inventoId, members, teamName, isOfficial, c
     throw new Error("Registration for this event is restricted to official entries only.");
   }
 
+  if (!mongoose.Types.ObjectId.isValid(inventoId)) {
+    throw new Error("Invalid Invento ID format.");
+  }
+
   const user = await User.findById(inventoId).session(session);
   if (!user) throw new Error("Invalid Invento ID.");
 
@@ -159,8 +163,7 @@ const validateHelper = async (event, inventoId, members, teamName, isOfficial, c
     }
   }
 
-  const isSoloEvent = eventType === "SOLO" || !members || (Array.isArray(members) && members.length === 0);
-
+ const isSoloEvent = eventType === "SOLO" || !members || (Array.isArray(members) && members.length === 0);
   // SOLO Logic
   if (isSoloEvent) {
     // Solo event logic
@@ -185,46 +188,71 @@ const validateHelper = async (event, inventoId, members, teamName, isOfficial, c
     return { user, staticEvent, eventType, minTeamSize, maxTeamSize, members: [user._id] };
   }
   // TEAM Logic
-  else if (Array.isArray(members) && members.length > 0) {
+// TEAM Logic - only if not solo
+  else {
     let parsedMembers = [];
-    try {
-      parsedMembers = Array.isArray(members) ? (members) : JSON.parse(members);
-    } catch {
-      // If parsing fails, we assume it's invalid
+
+    // Parse members input
+    if (typeof members === 'string') {
+      try {
+        parsedMembers = JSON.parse(members);
+      } catch (err) {
+        console.error(`[validateHelper] JSON parse error for members: ${err.message}`);
+        throw new Error("Invalid members JSON format.");
+      }
+    } else if (Array.isArray(members)) {
+      parsedMembers = members;
+    } else {
+      throw new Error("Members must be provided as an array or valid JSON string for team events.");
     }
 
+    // Validate team name
     if (!teamName || teamName.trim() === "") {
-      throw new Error("Team Name is required.");
+      throw new Error("Team Name is required for team events.");
     }
 
-    if (!parsedMembers || !Array.isArray(parsedMembers)) {
-      throw new Error("Members list is required.");
+    // Validate members array
+    if (!Array.isArray(parsedMembers) || parsedMembers.length === 0) {
+      throw new Error("Members list is required and cannot be empty for team events.");
     }
 
-    const uniqueMembers = [...new Set(parsedMembers)];
+    // Get unique member IDs
+    const uniqueMembers = [...new Set(parsedMembers.map(m => m.toString()))];
     const memberCount = uniqueMembers.length;
 
+    // Validate team size
     if (memberCount < minTeamSize || memberCount > maxTeamSize) {
       throw new TeamSizeError(
-        `Team must have between ${minTeamSize} and ${maxTeamSize} members.`
+        `Team must have between ${minTeamSize} and ${maxTeamSize} members. Current team has ${memberCount} member(s).`
       );
     }
 
-    if (!uniqueMembers.includes(inventoId)) throw new Error("Leader must be included in members.");
+    // Validate leader is included in members
+    if (!uniqueMembers.includes(inventoId.toString())) {
+      throw new Error("Team leader must be included in the members list.");
+    }
 
+    // Check for duplicate registrations
     const alreadyRegistered = event.registrations.teams.some(team =>
-      team.members.some(m => uniqueMembers.includes(m.inventoId))
+      team.members.some(m => uniqueMembers.includes(m.inventoId.toString()))
     );
-    if (alreadyRegistered) throw new DuplicateRegistrationError("One or more members already registered.");
+    if (alreadyRegistered) {
+      throw new DuplicateRegistrationError("One or more team members are already registered for this event.");
+    }
 
-    if (event.slots.availableSlots <= 0) throw new SlotFullError();
+    // Check available slots
+    if (event.slots.availableSlots <= 0) {
+      throw new SlotFullError("No slots available for team registration.");
+    }
 
-    return { user, staticEvent, eventType, minTeamSize, maxTeamSize, members: uniqueMembers };
-  }
-  else {
-    // Fallback for unknown type, treat as SOLO mostly to avoid crashes but warn
-    console.warn(`Unknown event type: ${eventType}. Defaulting to SOLO logic.`);
-    return { user, staticEvent, eventType: "SOLO", minTeamSize, maxTeamSize, members: [user._id] };
+    return { 
+      user, 
+      staticEvent, 
+      eventType, 
+      minTeamSize, 
+      maxTeamSize, 
+      members: uniqueMembers 
+    };
   }
 };
 
@@ -930,13 +958,25 @@ export const updateEventDetails = async (req, res) => {
 
     // Update Specific Slots (Gender Based)
     if (specificSlotsUpdate) {
+      const ALLOWED_SLOT_KEYS = ["male", "female"];
       for (const [key, value] of Object.entries(specificSlotsUpdate)) {
+        if (!ALLOWED_SLOT_KEYS.includes(key)) {
+          console.warn(`[updateEventDetails] Skipping unknown slot key: ${key}`);
+          continue;
+        }
+
+        const numValue = Number(value);
+        if (isNaN(numValue) || !Number.isFinite(numValue) || numValue < 0) {
+          console.warn(`[updateEventDetails] Skipping invalid slot value for ${key}: ${value}`);
+          continue;
+        }
+
         if (event.specificSlots) {
           // If Map
           if (typeof event.specificSlots.set === 'function') {
-            event.specificSlots.set(key, value);
+            event.specificSlots.set(key, numValue);
           } else {
-            event.specificSlots[key] = value;
+            event.specificSlots[key] = numValue;
           }
         }
       }
