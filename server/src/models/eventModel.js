@@ -17,7 +17,8 @@ const eventSchema = new mongoose.Schema({
   registration: {
     isOpen: { type: Boolean, default: true },
     deadline: { type: Date },
-    officialTeamsPerCollege: { type: Number, default: 1 }
+    officialTeamsPerCollege: { type: Number, default: 1 },
+    officialOnly: { type: Boolean, default: false }
   },
 
   registrations: {

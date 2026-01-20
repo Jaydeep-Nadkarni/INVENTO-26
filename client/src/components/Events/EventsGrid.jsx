@@ -258,7 +258,14 @@ const EventsGrid = () => {
 
         setRegLoading(true)
         try {
-            const { data } = await apiPost('/api/events/create-order', { eventId: currentEvent.id }, navigate)
+            const { data } = await apiPost('/api/events/create-order', {
+                eventId: currentEvent.id,
+                inventoId: user._id || user.id,
+                teamName: teamInfo.teamName,
+                members: [user._id || user.id, ...memberDetails.map(m => m._id)],
+                isOfficial,
+                contingentKey
+            }, navigate)
 
             // Common registration payload
             const regPayload = {

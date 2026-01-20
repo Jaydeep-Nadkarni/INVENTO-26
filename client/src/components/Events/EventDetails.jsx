@@ -545,7 +545,7 @@ const EventDetails = ({
                                         onClick={initiatePayment}
                                         className="flex-1 py-4 bg-stone-900 text-white font-serif font-black uppercase tracking-tighter hover:bg-red-600 transition-all shadow-[8px_8px_0px_rgba(0,0,0,0.1)] active:shadow-none active:translate-x-1 active:translate-y-1 disabled:opacity-50 text-sm"
                                     >
-                                        {regLoading ? 'PROCESSING...' : 'REGISTER & PAY'}
+                                        {regLoading ? 'PROCESSING...' : 'REGISTER'}
                                     </button>
                                 </div>
                             </div>
