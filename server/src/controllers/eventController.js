@@ -164,10 +164,6 @@ const validateHelper = async (event, inventoId, members, teamName, isOfficial, c
   // SOLO Logic
   if (isSoloEvent) {
     // Solo event logic
-    if (!user) {
-      throw new Error("Participant data missing for solo event");
-    }
-
     if (event.registrations.participants.some(p => p.inventoId === inventoId)) {
       throw new DuplicateRegistrationError();
     }
@@ -315,7 +311,8 @@ export const registerForEvent = async (req, res) => {
         let slotKey = null;
         if (isMasterMiss) {
           const gender = user.gender?.toLowerCase();
-          slotKey = (gender === "male") ? "male" : "female";
+          slotKey = (gender === "male") ? "male" : (gender === "female") ? "female" : null;
+          if (!slotKey) throw new InvalidGenderError("Gender required for this event (Male/Female).");
         }
 
         if (slotKey) {
@@ -906,7 +903,12 @@ export const updateEventDetails = async (req, res) => {
     if (!event) return res.status(404).json({ message: "Event not found" });
 
     // Update Price
-    if (price !== undefined) event.price = price;
+    if (price !== undefined) {
+      if (typeof price !== 'number' || price < 0) {
+        return res.status(400).json({ message: "Price must be a non-negative number" });
+      }
+      event.price = price;
+    }
 
     // Update Slots
     if (slotsChange !== undefined && slotsChange !== 0) {

@@ -9,7 +9,8 @@ let cachedEvents = null;
 
 export const getStaticEvents = () => {
     // Disable caching for dev/debug to ensure file changes are picked up
-    // if (cachedEvents) return cachedEvents;
+    const useCache = process.env.NODE_ENV !== 'development';
+    if (useCache && cachedEvents) return cachedEvents;
 
     try {
         if (!fs.existsSync(EVENTS_FILE_PATH)) {
@@ -32,7 +33,7 @@ export const getStaticEvents = () => {
         // Use Function constructor to safely evaluate the array string
         // This is necessary because events.js is likely ES module and contains objects
         const events = new Function(`return ${arrayStr}`)();
-        cachedEvents = events;
+        if (process.env.NODE_ENV !== 'development') cachedEvents = events;
         return events;
     } catch (error) {
         console.error(`[StaticData] Error parsing events.js: ${error.message}`);

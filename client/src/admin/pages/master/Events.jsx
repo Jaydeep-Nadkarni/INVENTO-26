@@ -7,7 +7,7 @@ import {
     ArrowUpRight, Search, Filter,
     Database, Layers, Clock,
     Venus, Mars, RefreshCcw,
-    Edit, X, Save, Lock, Unlock, ShieldAlert
+    Edit, X, Save, Lock, Unlock, ShieldAlert, AlertCircle
 } from 'lucide-react';
 
 const GENDER_SPECIFIC_EVENT_IDS = ["22", "23"];
@@ -18,6 +18,7 @@ const MasterEvents = () => {
     const [editingEvent, setEditingEvent] = useState(null);
     const [formData, setFormData] = useState({});
     const [saving, setSaving] = useState(false);
+    const [error, setError] = useState(null);
 
     const filteredEvents = useMemo(() => {
         if (!events) return [];
@@ -30,31 +31,33 @@ const MasterEvents = () => {
 
     const handleEditClick = (event) => {
         setEditingEvent(event);
+        setError(null);
         setFormData({
             price: event.price,
             slotsChange: 0,
             isOpen: event.registration?.isOpen ?? true,
             officialOnly: event.registration?.officialOnly ?? false,
             // Specific Slots
-            maleSlots: event.specificSlots?.male || event.specificSlots?.get?.('male') || 0,
-            femaleSlots: event.specificSlots?.female || event.specificSlots?.get?.('female') || 0
+            maleSlots: event.specificSlots?.male || 0,
+            femaleSlots: event.specificSlots?.female || 0
         });
     };
 
     const handleSave = async () => {
         if (!editingEvent) return;
+        setError(null);
 
         // Validation
         const price = Number(formData.price);
         const slotsChange = Number(formData.slotsChange);
 
         if (isNaN(price) || price < 0) {
-            alert("Please enter a valid non-negative price.");
+            setError("Please enter a valid non-negative price.");
             return;
         }
 
         if (isNaN(slotsChange)) {
-            alert("Please enter a valid number for slots adjustment.");
+            setError("Please enter a valid number for slots adjustment.");
             return;
         }
 
@@ -63,11 +66,11 @@ const MasterEvents = () => {
         const newAvailable = editingEvent.available_slots + slotsChange;
 
         if (newTotal < 0) {
-            alert("Total slots cannot be negative. Please adjust the value.");
+            setError("Total slots cannot be negative. Please adjust the value.");
             return;
         }
         if (newAvailable < 0) {
-            alert("Cannot reduce capacity below the number of currently occupied slots.");
+            setError("Cannot reduce capacity below the number of currently occupied slots.");
             return;
         }
 
@@ -76,7 +79,11 @@ const MasterEvents = () => {
             const mSlots = Number(formData.maleSlots);
             const fSlots = Number(formData.femaleSlots);
             if (isNaN(mSlots) || mSlots < 0 || isNaN(fSlots) || fSlots < 0) {
-                alert("Please enter valid non-negative numbers for gender specific slots.");
+                setError("Please enter valid non-negative numbers for gender specific slots.");
+                return;
+            }
+            if (mSlots + fSlots > newTotal) {
+                setError(`Sum of gender slots (${mSlots + fSlots}) cannot exceed total slots (${newTotal}).`);
                 return;
             }
         }
@@ -101,7 +108,7 @@ const MasterEvents = () => {
             await refreshEvents();
             setEditingEvent(null);
         } catch (error) {
-            alert(`Failed to update event: ${error.message}`);
+            setError(`Failed to update event: ${error.message}`);
         } finally {
             setSaving(false);
         }
@@ -201,11 +208,11 @@ const MasterEvents = () => {
                                                 </p>
                                                 <div className="flex justify-between items-center text-[11px] font-bold">
                                                     <span className="flex items-center gap-1.5 text-blue-400"><Mars className="w-3" /> Boys</span>
-                                                    <span>{specificSlots.male ?? (specificSlots.get?.('male') || 0)}</span>
+                                                    <span>{specificSlots.male || 0}</span>
                                                 </div>
                                                 <div className="flex justify-between items-center text-[11px] font-bold">
                                                     <span className="flex items-center gap-1.5 text-pink-400"><Venus className="w-3" /> Girls</span>
-                                                    <span>{specificSlots.female ?? (specificSlots.get?.('female') || 0)}</span>
+                                                    <span>{specificSlots.female || 0}</span>
                                                 </div>
                                             </div>
                                         )}
@@ -250,6 +257,14 @@ const MasterEvents = () => {
                         </div>
 
                         <div className="p-6 space-y-6">
+                            {error && (
+                                <div className="bg-red-500/10 border border-red-500/50 rounded p-3">
+                                    <p className="text-red-400 text-xs font-bold flex items-center gap-2">
+                                        <AlertCircle className="w-4 h-4" />
+                                        {error}
+                                    </p>
+                                </div>
+                            )}
                             {/* Price */}
                             <div>
                                 <label className="text-[10px] uppercase font-bold text-gray-500 block mb-2">Registration Fee (₹)</label>
