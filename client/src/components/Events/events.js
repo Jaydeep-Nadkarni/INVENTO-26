@@ -1215,6 +1215,10 @@ const eventsData = [
         {
         name: "Shreyash Savant",
         phone: "7019864016"
+        },
+        {
+        name: "Aryan Patil",
+        phone: "8495940101"
         }
     ],
     resgitartions: [

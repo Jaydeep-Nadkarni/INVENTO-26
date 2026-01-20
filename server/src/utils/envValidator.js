@@ -27,7 +27,9 @@ const OPTIONAL_ENV_VARS = {
   'NODE_ENV': 'development',
   'LOG_LEVEL': 'info',
   'JWT_EXPIRY': '7d',
-  'ALLOWED_ORIGINS': 'http://localhost:3000,http://localhost:5173'
+  'ALLOWED_ORIGINS': 'http://localhost:3000,http://localhost:5173',
+  'RAZORPAY_KEY_ID': '',
+  'RAZORPAY_KEY_SECRET': ''
 };
 
 /**
@@ -57,12 +59,27 @@ export const validateEnvironmentVariables = () => {
   // Throw error if required variables are missing
   if (missingVars.length > 0) {
     const errorMessage = `Missing required environment variables:\n${missingVars.map(v => `  - ${v}`).join('\n')}\n\nPlease add these to your .env file.`;
+    
     console.error(`\n${'='.repeat(60)}\n[ERROR] ${errorMessage}\n${'='.repeat(60)}\n`);
-    throw new Error(errorMessage);
+    
+    // Only throw in production. In dev, we log and continue if possible.
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(errorMessage);
+    } else {
+      console.warn("\n[WARNING] Continuing startup despite missing variables. Some features will be broken.");
+      if (missingVars.includes('MONGO_URI')) {
+        console.warn("[CRITICAL] MONGO_URI is missing. API calls will fail.");
+      }
+    }
   }
 
   // Validate environment variable formats
-  validateVariableFormats(config);
+  try {
+    validateVariableFormats(config);
+  } catch (fmtError) {
+    if (process.env.NODE_ENV === 'production') throw fmtError;
+    console.warn(`[WARNING] Format validation failed: ${fmtError.message}`);
+  }
 
   // Log startup configuration (without sensitive values)
   logStartupConfiguration(config);

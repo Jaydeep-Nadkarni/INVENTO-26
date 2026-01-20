@@ -29,7 +29,7 @@ const EventsGrid = () => {
                         const clubEvents = club.events.map(staticEvent => {
                             const dbEvent = data.find(de => de._id === staticEvent.id || de.id === staticEvent.id);
                             if (dbEvent) {
-                                const mappedDbEvent = mapEventFromDb(dbEvent);
+                                const mappedDbEvent = mapEventFromDb(dbEvent, true);
                                 // Merge DB data into static data, only overwriting if DB has value
                                 return {
                                     ...staticEvent,
@@ -38,9 +38,9 @@ const EventsGrid = () => {
                                             v !== null && v !== undefined && v !== '' && (Array.isArray(v) ? v.length > 0 : true)
                                         )
                                     ),
-                                    // Always use DB for slots even if zero or empty
-                                    slotsAvailable: mappedDbEvent.slotsAvailable,
-                                    specificSlots: mappedDbEvent.specificSlots
+                                    // Special handling for slots
+                                    slotsAvailable: mappedDbEvent.slotsAvailable !== undefined ? mappedDbEvent.slotsAvailable : staticEvent.slotsAvailable,
+                                    specificSlots: mappedDbEvent.specificSlots !== null ? mappedDbEvent.specificSlots : staticEvent.specificSlots
                                 };
                             }
                             return staticEvent;
@@ -363,6 +363,7 @@ const EventsGrid = () => {
             return (
                 <EventDetails
                     currentEvent={currentEvent}
+                    currentClub={currentClub}
                     clubSlug={clubSlug}
                     handleBackToEvents={handleBackToEvents}
                     goToPrevEvent={goToPrevEvent}

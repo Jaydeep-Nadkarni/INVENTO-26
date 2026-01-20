@@ -5,6 +5,7 @@ import paperTexture from '../../assets/UI/paper-texture.jpg'
 
 const EventDetails = ({
     currentEvent,
+    currentClub,
     clubSlug,
     handleBackToEvents,
     goToPrevEvent,
@@ -30,6 +31,27 @@ const EventDetails = ({
     navigate
 }) => {
     if (!currentEvent) return null;
+
+    const userStr = localStorage.getItem('currentUser');
+    const user = userStr ? JSON.parse(userStr) : null;
+    const isMasterMiss = /master|miss|mr\.|ms\./i.test(currentEvent.themeName || currentEvent.name);
+
+    const renderSlots = () => {
+        if (isMasterMiss) {
+            const boys = currentEvent.specificSlots?.availableBoysSlots ?? currentEvent.specificSlots?.male ?? 0;
+            const girls = currentEvent.specificSlots?.availableGirlsSlots ?? currentEvent.specificSlots?.female ?? 0;
+
+            if (!user) {
+                return `${boys + girls}`;
+            }
+
+            if (user.gender === "Male") return `${boys} (Master)`;
+            if (user.gender === "Female") return `${girls} (Miss)`;
+            return `${boys + girls}`;
+        }
+
+        return currentEvent.slotsAvailable === 'TBD' ? 'OPEN' : (currentEvent.slotsAvailable || 'Unlimited');
+    };
 
     return (
         <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/95 backdrop-blur-md p-4 md:p-8 pt-24 md:pt-32">
@@ -61,20 +83,35 @@ const EventDetails = ({
                             onClick={handleBackToEvents}
                             className="flex items-center gap-2 text-[10px] font-mono text-gray-400 uppercase tracking-widest hover:text-white transition-colors mb-8"
                         >
-                            ← Back to dossier
+                            ← Back to {currentClub?.name || 'Sector'} dossier
                         </button>
 
                         <div className="mt-auto mb-auto">
+                            <div className="flex items-center gap-2 mb-4">
+                                <div className="w-8 h-[2px] bg-red-600"></div>
+                                <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-gray-400">{currentClub?.name} // Archive File</span>
+                                {currentEvent.tier && (
+                                    <span className={`text-[9px] font-mono px-2 py-0.5 rounded border ${
+                                        currentEvent.tier.toLowerCase() === 'gold' || currentEvent.tier.toLowerCase() === 'platinum' ? 'border-yellow-500 text-yellow-500' :
+                                        currentEvent.tier.toLowerCase() === 'silver' ? 'border-gray-400 text-gray-400' :
+                                        'border-orange-700 text-orange-700'
+                                    }`}>
+                                        {currentEvent.tier.toUpperCase()} TIER
+                                    </span>
+                                )}
+                            </div>
                             <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tight leading-none font-serif mb-2 text-yellow-500">
                                 {currentEvent.themeName}
                             </h2>
-                            <h3 className="text-xl md:text-2xl font-serif italic text-gray-400 mb-6">
-                                ( {currentEvent.realName ||' '} )
-                            </h3>
+                            {currentEvent.realName && (
+                                <h3 className="text-xl md:text-2xl font-serif italic text-gray-400 mb-6">
+                                    ( {currentEvent.realName} )
+                                </h3>
+                            )}
 
                             <div className="space-y-4 font-mono text-sm text-gray-300">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-1 h-8 bg-red-600"></div>
+                                    <div className="w-1 h-8" style={{ backgroundColor: currentClub?.color || '#dc2626' }}></div>
                                     <div>
                                         <p className="text-[10px] uppercase tracking-widest text-gray-500">Registration Fee</p>
                                         <p className="text-xl font-bold text-white">{currentEvent.fee || 'Free'}</p>
@@ -96,21 +133,7 @@ const EventDetails = ({
                 <div className="relative z-30 flex-1 flex flex-col h-full overflow-hidden bg-[#fdfbf7]">
                     {/* Slots Badge */}
                     <div className="absolute top-0 right-0 bg-yellow-500 text-black font-bold font-mono text-xs px-6 py-2 z-40 shadow-md">
-                        {(() => {
-                            const userStr = localStorage.getItem('currentUser');
-                            const user = userStr ? JSON.parse(userStr) : null;
-                            const isMasterMiss = /master|miss|mr\.|ms\./i.test(currentEvent.themeName || currentEvent.name);
-
-                            if (isMasterMiss) {
-                                if (!user) return "SLOTS AVAILABLE : Master + Miss Available";
-                                const boys = currentEvent.specificSlots?.availableBoysSlots ?? 0;
-                                const girls = currentEvent.specificSlots?.availableGirlsSlots ?? 0;
-                                if (user.gender === "Male") return `SLOTS AVAILABLE : ${boys} (Master)`;
-                                if (user.gender === "Female") return `SLOTS AVAILABLE : ${girls} (Miss)`;
-                                return "SLOTS AVAILABLE : Master + Miss Available";
-                            }
-                            return `SLOTS AVAILABLE : ${currentEvent.slotsAvailable || 'Unlimited'}`;
-                        })()}
+                        SLOTS AVAILABLE : {renderSlots()}
                     </div>
 
 
@@ -132,7 +155,9 @@ const EventDetails = ({
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">Rounds</p>
-                                    <p className="font-bold text-gray-900 text-lg">{currentEvent.rounds || 1}</p>
+                                    <p className="font-bold text-gray-900 text-lg">
+                                        {Math.max(parseInt(currentEvent.rounds || 0), (currentEvent.roundDetails?.length || 0)) || 'TBD'}
+                                    </p>
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">Date</p>

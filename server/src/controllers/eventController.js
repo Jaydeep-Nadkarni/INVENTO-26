@@ -91,8 +91,14 @@ const verifyRazorpayPayment = (orderId, paymentId, signature) => {
   console.log(`[verifyRazorpayPayment] Checking: Order=${orderId}, Payment=${paymentId}, Sig=${signature ? 'Present' : 'MISSING'}`);
   const body = `${orderId}|${paymentId}`;
 
+  const secret = process.env.RAZORPAY_KEY_SECRET;
+  if (!secret) {
+    console.error("[verifyRazorpayPayment] RAZORPAY_KEY_SECRET is missing!");
+    return false;
+  }
+
   const expectedSignature = crypto
-    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+    .createHmac("sha256", secret)
     .update(body)
     .digest("hex");
 
@@ -100,8 +106,9 @@ const verifyRazorpayPayment = (orderId, paymentId, signature) => {
   if (!isValid) {
     console.warn(`[verifyRazorpayPayment] Mismatch!`);
     console.warn(`Order: ${orderId}, Payment: ${paymentId}`);
-    console.warn(`Expected: ${expectedSignature}`);
-    console.warn(`Received: ${signature}`);
+    // Only log first 4 chars of expected signature for debugging
+    console.warn(`Expected starts with: ${expectedSignature.substring(0, 4)}...`);
+    console.warn(`Received starts with: ${signature ? signature.substring(0, 4) : 'NULL'}...`);
   }
   return isValid;
 };
@@ -111,42 +118,73 @@ const verifyRazorpayPayment = (orderId, paymentId, signature) => {
 export const createOrder = async (req, res) => {
   try {
     const { eventId } = req.body;
+    if (!eventId) {
+      console.warn(`[createOrder] Attempted order without eventId`);
+      return res.status(400).json({ message: "Event ID is required" });
+    }
+
     console.log(`[createOrder] Request for eventId: ${eventId}`);
 
-    // Robust find: _id (as string) OR id field
-    let event = await Event.findOne({ $or: [{ _id: eventId }, { id: eventId }] });
+    // Robust find: Match either custom string _id OR the 'id' field
+    const eventIdStr = eventId.toString();
+    const event = await Event.findOne({ 
+      $or: [
+        { _id: eventIdStr }, 
+        { id: eventIdStr }
+      ] 
+    });
 
     if (!event) {
-      console.error(`[createOrder] Event not found for ID: ${eventId}`);
-      return res.status(404).json({ message: "Event not found" });
+      console.error(`[createOrder] Event not found for ID: ${eventIdStr}`);
+      return res.status(404).json({ message: "Event not found in directory" });
     }
 
     if (event.price === 0) {
       return res.json({ free: true });
     }
 
-    const razorpay = getRazorpayInstance();
+    if (!event.price || isNaN(event.price) || event.price < 0) {
+      console.error(`[createOrder] Invalid price for event ${event.name}: ${event.price}`);
+      return res.status(400).json({ message: "This event has an invalid price configuration." });
+    }
+
+    const key_id = process.env.RAZORPAY_KEY_ID;
+    const key_secret = process.env.RAZORPAY_KEY_SECRET;
+
+    if (!key_id || !key_secret || key_id === 'missing_key') {
+      console.error("[createOrder] Razorpay keys are missing in environment variables");
+      return res.status(500).json({ message: "Payment gateway is not configured on server" });
+    }
+
+    const razorpay = new Razorpay({ key_id, key_secret });
+    
     const options = {
-      amount: event.price * 100, // amount in paise
+      amount: Math.round(event.price * 100), // amount in paise, must be integer
       currency: "INR",
-      receipt: `receipt_order_${Date.now()}`,
+      receipt: `receipt_order_${Date.now()}_${eventIdStr.substring(eventIdStr.length - 4)}`,
     };
 
-    const order = await razorpay.orders.create(options);
-    if (!order) return res.status(500).json({ message: "Razorpay order creation failed" });
+    try {
+      const order = await razorpay.orders.create(options);
+      if (!order) {
+        throw new Error("Razorpay returned empty order object");
+      }
 
-    // Assuming user ID is available in req.user from auth middleware, or passed in body?
-    // The route '/create-order' in eventRoutes doesn't seem to use 'protect' middleware.
-    // So we just return the order.
-
-    // Return keyId so frontend uses the same key
-    res.json({
-      ...order,
-      keyId: process.env.RAZORPAY_KEY_ID
-    });
+      // Return order details + public keyId
+      res.json({
+        ...order,
+        keyId: key_id
+      });
+    } catch (rzpError) {
+      console.error("[createOrder] Razorpay SDK Error:", rzpError);
+      return res.status(502).json({ 
+        message: "Payment gateway communication error", 
+        details: rzpError.message 
+      });
+    }
   } catch (error) {
-    console.error("Error in createOrder:", error);
-    res.status(500).json({ message: error.message });
+    console.error("Error in createOrder global catch:", error);
+    res.status(500).json({ message: "Critical order processing error: " + error.message });
   }
 };
 
@@ -678,6 +716,7 @@ export const getEventTeams = async (req, res) => {
 
 // GET /api/events/
 export const getEvents = async (req, res) => {
+  console.log("[getEvents] Fetching all events...");
   try {
     const events = await Event.find({}, {
       _id: 1,
