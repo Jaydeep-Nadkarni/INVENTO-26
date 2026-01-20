@@ -53,24 +53,6 @@ const seed = async () => {
         await Event.deleteMany({});
 
         const transformedEvents = staticEvents.map(event => {
-            const isSolo = (event.type || "Solo").toLowerCase() === "solo";
-            const eventType = isSolo ? "SOLO" : "TEAM";
-
-            // Initialize registrations based on event type
-            const registrations = {
-                participants: [],
-                teams: []
-            };
-
-            // Logistics mapping
-            const logistics = {
-                venue: event.venue || "TBD",
-                date: event.date || "TBD",
-                time: event.time || "TBD",
-                whatsappLink: event.whatsapplink || ""
-            };
-
-
             // Specific slots for Master/Miss events
             let specificSlots = {};
             const title = (event.title || "").toLowerCase();
@@ -81,27 +63,18 @@ const seed = async () => {
 
             if (isMasterMiss) {
                 specificSlots = {
-                    availableBoysSlots: 20,
-                    availableGirlsSlots: 20
+                    male: 20,
+                    female: 20
                 };
             }
 
-
             return {
-                _id: event.slug,
-                id: (event.id || "").toString(),
+                _id: event.slug, // used as canonical ID
+                id: (event.id || "").toString(), // numeric ID backup
                 name: event.title,
-                subtitle: event.subtitle || "",
-                description: event.description || "",
-                eventType,
-                minTeamSize: event.team?.min || 1,
-                maxTeamSize: event.team?.max || 1,
-                club: event.club ? [event.club] : [],
+
+                // Dynamic fields
                 price: event.registartionfee || 0,
-                rounds: event.rounds || 0,
-                rounddetails: event.rounddetails || [],
-                rules: event.rules || [],
-                contact: event.contact || [],
                 slots: {
                     totalSlots: event.slots?.total || 100,
                     availableSlots: event.slots?.available || 100
@@ -111,11 +84,11 @@ const seed = async () => {
                     isOpen: event.status === "Open",
                     officialTeamsPerCollege: event.teampercollege || 3
                 },
-                registrations,
-                logistics,
-                whatsappLink: event.whatsapplink || ""
+                registrations: {
+                    participants: [],
+                    teams: []
+                }
             };
-
         });
 
         console.log("Inserting new events...");

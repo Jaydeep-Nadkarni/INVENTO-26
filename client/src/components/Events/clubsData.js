@@ -18,47 +18,49 @@ export const mapEventFromDb = (event, isDb = false) => ({
     id: (event._id || event.id || "").toString(),
 
     themeName: event.name || event.title,
-    realName: event.subtitle || (isDb ? null : ''),
-    category: event.club,
-    tier: event.tier,
-    type: event.eventType || event.type,
-    description: event.description || (isDb ? null : ''),
-    fee: (event.price ?? event.registartionfee) === 0 ? 'FREE' : (event.price || event.registartionfee ? `Rs. ${event.price ?? event.registartionfee}` : (isDb ? null : 'FREE')),
+    realName: event.subtitle || (isDb ? undefined : ''),
+    category: event.club || (isDb ? undefined : []),
+    tier: event.tier || (isDb ? undefined : 'Silver'),
+    type: event.eventType || event.type || (isDb ? undefined : 'Solo'),
+    description: event.description || (isDb ? undefined : ''),
+
+    // Dynamic fields - keep logic
+    fee: (event.price ?? event.registartionfee) === 0 ? 'FREE' : (event.price || event.registartionfee ? `Rs. ${event.price ?? event.registartionfee}` : (isDb ? undefined : 'FREE')),
     teamSize: (() => {
-        const min = event.minTeamSize ?? event.team?.min ?? (isDb ? null : 1);
-        const max = event.maxTeamSize ?? event.team?.max ?? (isDb ? null : 1);
-        if (min === null && max === null) return null;
+        const min = event.minTeamSize ?? event.team?.min ?? (isDb ? undefined : 1);
+        const max = event.maxTeamSize ?? event.team?.max ?? (isDb ? undefined : 1);
+        if (min === undefined && max === undefined) return undefined;
         return min === max ? `${max}` : `${min}-${max}`;
     })(),
 
-
     slotsAvailable: (/master|miss|mr\.|ms\./i.test(event.name || event.title))
         ? null
-        : (event.slots?.availableSlots ?? event.slots?.available ?? (isDb ? null : 'TBD')),
+        : (event.slots?.availableSlots ?? event.slots?.available ?? (isDb ? undefined : 'TBD')),
 
-    specificSlots: event.specificSlots || (isDb ? null : {}),
+    specificSlots: event.specificSlots || (isDb ? undefined : {}),
+
+    // Static fields from DB - should be undefined if not present
     rounds: (() => {
         const r = event.rounds || event.rounddetails?.length;
         if (r) return r.toString();
-        return isDb ? null : "1";
+        return isDb ? undefined : "1";
     })(),
-    date: event.logistics?.date || event.date || (isDb ? null : 'TBD'),
-    venue: event.logistics?.venue || event.venue || (isDb ? null : 'TBD'),
+    date: event.logistics?.date || event.date || (isDb ? undefined : 'TBD'),
+    venue: event.logistics?.venue || event.venue || (isDb ? undefined : 'TBD'),
 
-
-    rules: event.rules?.length > 0 ? event.rules : (isDb ? null : []),
-    whatsapplink: event.whatsapplink || (isDb ? null : ""),
+    rules: event.rules?.length > 0 ? event.rules : (isDb ? undefined : []),
+    whatsapplink: event.whatsapplink || (isDb ? undefined : ""),
     roundDetails: (event.rounddetails || []).length > 0 ? (event.rounddetails || []).map(r => ({
         title: `Round ${r.round}`,
         details: [r.description]
-    })) : (isDb ? null : []),
+    })) : (isDb ? undefined : []),
     contacts: (event.contact || []).filter(c => c && c.name).map(c => ({
         name: c.name,
         phone: c.phone
     })).length > 0 ? (event.contact || []).filter(c => c && c.name).map(c => ({
         name: c.name,
         phone: c.phone
-    })) : (isDb ? null : [])
+    })) : (isDb ? undefined : [])
 });
 
 const getEventsByClub = (clubName) => {

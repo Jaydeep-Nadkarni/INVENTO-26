@@ -140,7 +140,6 @@ const EventDetails = ({
 
                     {/* Event Identity */}
                     <div className="space-y-3 md:space-y-4 mb-6 md:mb-8">
-
                         <p>
                             <span className={`font-serif font-black text-lg uppercase ${tierClass}`}>
                                 {currentEvent.tier}

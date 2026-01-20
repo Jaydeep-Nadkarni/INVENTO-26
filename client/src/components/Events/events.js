@@ -690,6 +690,10 @@ const eventsData = [
         {
         name: "Neil Rego",
         phone: "9731379082"
+        },
+        {
+        name:"Jaydeep Nadkarni",
+        phone:"9481740517"
         }
     ],
     resgitartions: [

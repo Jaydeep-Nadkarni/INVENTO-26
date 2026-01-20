@@ -2,31 +2,13 @@ import mongoose from "mongoose";
 
 const eventSchema = new mongoose.Schema({
   _id: {
-    type: String, // ✅ allow custom string IDs like evt0001
+    type: String, // slugs like 'raga-solo-singing-eastern'
   },
-  id: { type: String, unique: true, sparse: true },
-  name: { type: String, required: true }, // maps to title
-  subtitle: { type: String },
-  description: { type: String },
-  eventType: { type: String, enum: ["SOLO", "TEAM"], required: true },
-  minTeamSize: { type: Number, default: 1 },
-  maxTeamSize: { type: Number, default: 1 },
-  club: [{ type: String }],
+  id: { type: String, unique: true, sparse: true }, // numeric IDs like '1'
+  name: { type: String, required: true }, // maps to title/themeName
+
+  // Dynamic fields
   price: { type: Number, required: true }, // maps to registrationfee
-  rounds: { type: Number, default: 1 },
-  rounddetails: [
-    {
-      round: Number,
-      description: String
-    }
-  ],
-  rules: [String],
-  contact: [
-    {
-      name: String,
-      phone: String
-    }
-  ],
   slots: {
     totalSlots: { type: Number, default: 0 },
     availableSlots: { type: Number, default: 0 }
@@ -81,15 +63,7 @@ const eventSchema = new mongoose.Schema({
         ]
       }
     ]
-  },
-  logistics: {
-    venue: String,
-    date: String,
-    time: String,
-    whatsappLink: String
-  },
-
-  whatsappLink: { type: String } // Keeping for backward compatibility
+  }
 }, { timestamps: true });
 
 const Event = mongoose.model("Event", eventSchema);
