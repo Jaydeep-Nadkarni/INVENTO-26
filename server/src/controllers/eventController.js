@@ -126,30 +126,33 @@ const validateHelper = async (event, inventoId, members, teamName, isOfficial, c
   const rawType = staticEvent?.type ? String(staticEvent.type) : "Solo";
   let eventType = rawType.trim().toUpperCase();
 
-  const minTeamSize = staticEvent?.team?.min || 1;
-  const maxTeamSize = staticEvent?.team?.max || 1;
+  const minTeamSize = Number(staticEvent?.team?.min) || 1;
+  const maxTeamSize = Number(staticEvent?.team?.max) || 1;
 
   if (minTeamSize === 1 && maxTeamSize === 1) {
     eventType = "SOLO";
   }
 
-
-
   if (event.registration?.officialOnly && !isOfficial) {
     throw new Error("Registration for this event is restricted to official entries only.");
   }
 
-  if (!mongoose.Types.ObjectId.isValid(inventoId)) {
-    throw new Error("Invalid Invento ID format.");
-  }
+  // if (!mongoose.Types.ObjectId.isValid(inventoId)) {
+  //   throw new Error("Invalid Invento ID format.");
+  // }
 
-  const user = await User.findById(inventoId).session(session);
+  // Handle session properly - it can be null during createOrder
+  const user = session
+    ? await User.findById(inventoId).session(session)
+    : await User.findById(inventoId);
   if (!user) throw new Error("Invalid Invento ID.");
 
   // Official Key Validation
   if (isOfficial) {
     if (!contingentKey) throw new Error("Contingent Key required for official registration.");
-    const keyDoc = await ContingentKey.findOne({ key: contingentKey }).session(session);
+    const keyDoc = session
+      ? await ContingentKey.findOne({ key: contingentKey }).session(session)
+      : await ContingentKey.findOne({ key: contingentKey });
     if (!keyDoc) throw new Error("Invalid Contingent Key.");
 
     const currentOfficialCount = [
@@ -163,7 +166,14 @@ const validateHelper = async (event, inventoId, members, teamName, isOfficial, c
     }
   }
 
- const isSoloEvent = eventType === "SOLO" || !members || (Array.isArray(members) && members.length === 0);
+  // Determine if this is a solo event - more robust detection
+  const hasNoMembers = !members ||
+    (Array.isArray(members) && members.length === 0) ||
+    (typeof members === 'string' && members.trim() === '');
+
+  const isSoloEvent = eventType === "SOLO" ||
+    (minTeamSize === 1 && maxTeamSize === 1) ||
+    hasNoMembers;
   // SOLO Logic
   if (isSoloEvent) {
     // Solo event logic
@@ -188,7 +198,7 @@ const validateHelper = async (event, inventoId, members, teamName, isOfficial, c
     return { user, staticEvent, eventType, minTeamSize, maxTeamSize, members: [user._id] };
   }
   // TEAM Logic
-// TEAM Logic - only if not solo
+  // TEAM Logic - only if not solo
   else {
     let parsedMembers = [];
 
@@ -245,13 +255,13 @@ const validateHelper = async (event, inventoId, members, teamName, isOfficial, c
       throw new SlotFullError("No slots available for team registration.");
     }
 
-    return { 
-      user, 
-      staticEvent, 
-      eventType, 
-      minTeamSize, 
-      maxTeamSize, 
-      members: uniqueMembers 
+    return {
+      user,
+      staticEvent,
+      eventType,
+      minTeamSize,
+      maxTeamSize,
+      members: uniqueMembers
     };
   }
 };
@@ -269,9 +279,9 @@ export const createOrder = async (req, res) => {
     const event = await Event.findOne({ $or: [{ _id: eventId }, { id: eventId }] });
     if (!event) throw new EventNotFoundError();
 
-    // Perform validation BEFORE creating order
+    // Perform validation BEFORE creating order (pass null for session)
     try {
-      await validateEventRegistration(event, { inventoId, members, teamName, isOfficial, contingentKey });
+      await validateEventRegistration(event, { inventoId, members, teamName, isOfficial, contingentKey }, null);
     } catch (valErr) {
       return res.status(valErr.statusCode || 400).json({ error: valErr.name, message: valErr.message });
     }
@@ -291,7 +301,7 @@ export const createOrder = async (req, res) => {
     const options = {
       amount: Math.round(event.price * 100),
       currency: "INR",
-      receipt: `receipt_${eventId}_${Date.now()}`,
+      receipt: `rcpt_${Date.now().toString().slice(-8)}_${eventId.slice(0, 20)}`,
     };
 
     const order = await razorpay.orders.create(options);
