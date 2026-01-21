@@ -14,11 +14,11 @@ const globalSettingsSchema = new mongoose.Schema({
 
 // Ensure only one settings document exists
 globalSettingsSchema.statics.getSettings = async function() {
-    let settings = await this.findOne();
-    if (!settings) {
-        settings = await this.create({});
-    }
-    return settings;
+    return await this.findOneAndUpdate(
+        {},
+        { $setOnInsert: { passControl: "to all", registrationsOpen: true } },
+        { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
 };
 
 const GlobalSettings = mongoose.model("GlobalSettings", globalSettingsSchema);

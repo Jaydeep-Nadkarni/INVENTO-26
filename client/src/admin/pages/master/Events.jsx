@@ -24,6 +24,18 @@ const EventCard = ({ event, onUpdate }) => {
         femaleSlots: event.specificSlots?.female || 0
     });
 
+    // Rehydrate form data when event prop updates
+    React.useEffect(() => {
+        setFormData({
+            price: event.price,
+            totalSlots: event.slots?.totalSlots || event.total_slots || 0,
+            isOpen: event.registration?.isOpen ?? true,
+            officialOnly: event.registration?.officialOnly ?? false,
+            maleSlots: event.specificSlots?.male || 0,
+            femaleSlots: event.specificSlots?.female || 0
+        });
+    }, [event]);
+
     const isGenderSpecific = GENDER_SPECIFIC_EVENT_IDS.includes(String(event.id));
     const occupancy = event.slots?.totalSlots > 0
         ? Math.round(((event.slots.totalSlots - event.slots.availableSlots) / event.slots.totalSlots) * 100)
@@ -186,28 +198,8 @@ const EventCard = ({ event, onUpdate }) => {
                                     />
                                 ) : (
                                     <span className="font-mono text-white">
-                                        {formData.maleSlots - (event.specificSlots?.male - (event.registrations?.participants?.filter(p => !p.isOfficial /* Simplified, assuming backend handled */) || []).length || 0)} / {formData.maleSlots}
-                                        {/* Ideally we use available/total logic from backend but specificSlots obj structure might vary. 
-                                            Using simplified display if detailed tracking not in prop. 
-                                            Actually, event.specificSlots usually holds AVAILABLE slots in some models, or map.
-                                            Let's just show Total for editing, and Available for viewing if possible.
-                                            
-                                            Wait, `specificSlots` in `eventModel` is Map<String, Number>.
-                                            Controller logic: `event.specificSlots.get(slotKey)` is available slots.
-                                            So `formData.maleSlots` should likely represent the TOTAL if we are editing capacity?
-                                            Actually the controller updates the value directly.
-                                            "updateEventDetails" sets `event.specificSlots.set(key, numValue)`.
-                                            So we are setting the CURRENT AVAILABLE slots directly or TOTAL?
-                                            Users usually want to increase capacity.
-                                            If I set 50, does it mean 50 available now?
-                                            Yes, looking at controller: `event.specificSlots.set(key, numValue)`.
-                                            This overwrites the value.
-                                            So in "Edit" mode, we are setting "Available Slots" or "Total"?
-                                            The `eventModel` only has `specificSlots` map. It doesn't seem to track "Total Gender Slots" separately like `slots.totalSlots`.
-                                            So this input is effectively "Set Remaining/Available Slots".
-                                            I should label it clearly: "Available Slots (Boys)".
-                                        */}
-                                        <span className="text-gray-600 ml-1">(Avl)</span>
+                                        {formData.maleSlots}
+                                        <span className="text-gray-600 ml-1">(Boys — Available)</span>
                                     </span>
                                 )}
                             </div>

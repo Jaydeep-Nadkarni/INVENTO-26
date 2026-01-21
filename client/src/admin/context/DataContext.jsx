@@ -23,6 +23,18 @@ export const DataProvider = ({ children }) => {
 
     const [loading, setLoading] = useState(false);
 
+    // Derived events filtered by team (Registration events excluded globally)
+    const filteredEvents = useMemo(() => {
+        return data.events.filter(e => e.team?.toLowerCase() !== 'registration');
+    }, [data.events]);
+
+    // Filtered data for granular admins - moved to top level
+    const adminEvents = useMemo(() => {
+        if (!adminUser || adminUser.role === 'master' || adminUser.isRegistration) return filteredEvents;
+        if (!adminUser.access || adminUser.access.length === 0) return [];
+        return filteredEvents.filter(e => adminUser.access.includes(e.id));
+    }, [filteredEvents, adminUser]);
+
     // Fetch fresh events list
     const refreshEvents = async () => {
         try {
@@ -162,18 +174,12 @@ export const DataProvider = ({ children }) => {
     const value = {
         data: {
             ...data,
-            // Decisively exclude Registration events and stats from the entire application (case-insensitive)
-            events: data.events.filter(e => e.team?.toLowerCase() !== 'registration'),
+            events: filteredEvents,
             masterStats: stats.masterStats,
             adminDistribution: stats.adminDistribution,
             overviewStats: data.overviewStats
         },
-        // Filtered data for granular admins
-        adminEvents: useMemo(() => {
-            if (!adminUser || adminUser.role === 'master' || adminUser.isRegistration) return data.events;
-            if (!adminUser.access || adminUser.access.length === 0) return [];
-            return data.events.filter(e => adminUser.access.includes(e.id) || adminUser.access.includes(e._id));
-        }, [data.events, adminUser]),
+        adminEvents,
         loading,
         refreshEvents,
         refreshStats,

@@ -107,10 +107,17 @@ export const updateAdmin = async (req, res) => {
         const admin = await Admin.findById(id);
 
         if (admin) {
-            admin.name = req.body.name || admin.name;
-            admin.email = req.body.email || admin.email;
-            admin.team = req.body.team || admin.team;
-            admin.status = req.body.status || admin.status;
+            if (req.body.email !== undefined && req.body.email !== admin.email) {
+                const existing = await Admin.findOne({ email: req.body.email });
+                if (existing && existing._id.toString() !== id) {
+                    return res.status(400).json({ message: "An administrator with this email already exists." });
+                }
+                admin.email = req.body.email;
+            }
+
+            if (req.body.name !== undefined) admin.name = req.body.name;
+            if (req.body.team !== undefined) admin.team = req.body.team;
+            if (req.body.status !== undefined) admin.status = req.body.status;
 
             if (req.body.password) {
                 admin.password = req.body.password;
@@ -136,14 +143,6 @@ export const updateAdmin = async (req, res) => {
                 status: updatedAdmin.status,
                 isRegistration: updatedAdmin.isRegistration
             });
-        } else {
-            res.status(404).json({ message: "Admin not found" });
-        }
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-};
-
         } else {
             res.status(404).json({ message: "Admin not found" });
         }

@@ -53,13 +53,8 @@ const MasterAdmins = () => {
     const handleCreateAdmin = async (e) => {
         e.preventDefault();
         try {
-            // Auto-generate ID if needed, but backend handles _id. 
-            // Frontend generic ID for display:
-            const customId = `ADM-${(admins.length + 1).toString().padStart(3, '0')}`;
-
             const payload = {
-                ...formData,
-                id: customId
+                ...formData
             };
 
             const res = await apiPost('/api/admins', payload);
@@ -113,7 +108,7 @@ const MasterAdmins = () => {
 
     // Memoized filtered events for the dropdown
     const filteredEvents = useMemo(() => {
-        return events.filter(e => e.name.toLowerCase().includes(eventSearch.toLowerCase()));
+        return events.filter(e => (e?.name || '').toLowerCase().includes(eventSearch.toLowerCase()));
     }, [events, eventSearch]);
 
     return (
@@ -309,7 +304,7 @@ const MasterAdmins = () => {
                                                         {admin.name}
                                                         {admin.isRegistration && <span className="bg-blue-900 text-blue-300 text-[10px] px-1.5 py-0.5 rounded border border-blue-800">REG</span>}
                                                     </div>
-                                                    <div className="text-xs font-mono text-gray-500">{admin.id || admin._id.substring(0, 8)} • {admin.email}</div>
+                                                    <div className="text-xs font-mono text-gray-500">{admin.id || String(admin._id ?? '').substring(0, 8)} • {admin.email}</div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">

@@ -21,16 +21,20 @@ const MasterStats = () => {
     const { data: { overviewStats, events }, loading: contextLoading } = useData();
     const [detailedStats, setDetailedStats] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [clubFilter, setClubFilter] = useState('All');
     const [viewType, setViewType] = useState('count'); // 'count' or 'revenue'
+    const [isClubOpen, setIsClubOpen] = useState(false);
 
     const fetchDetailedStats = async () => {
         try {
             setLoading(true);
+            setError(null);
             const { data } = await apiGet('/api/events/analytics/detailed');
             setDetailedStats(data);
         } catch (error) {
             console.error("Failed to fetch detailed stats:", error);
+            setError(error.message || "Failed to establish uplink with analytics server.");
         } finally {
             setLoading(false);
         }
@@ -120,6 +124,25 @@ const MasterStats = () => {
             <Sidebar panelType="master" />
             <main className="flex-1 overflow-y-auto p-8 lg:ml-64">
                 <div className="max-w-7xl mx-auto pb-20">
+                    {/* Error State */}
+                    {error && (
+                        <div className="mb-8 bg-red-950/30 border border-red-900/50 p-6 rounded flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <AlertCircle className="w-6 h-6 text-red-500" />
+                                <div>
+                                    <h3 className="text-sm font-black uppercase text-red-500">Uplink Failure</h3>
+                                    <p className="text-[10px] text-red-400 font-bold uppercase tracking-widest">{error}</p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={fetchDetailedStats}
+                                className="px-4 py-2 bg-red-900 text-white text-[10px] font-black uppercase tracking-widest rounded hover:bg-red-800 transition-all"
+                            >
+                                Retry Handshake
+                            </button>
+                        </div>
+                    )}
+
                     {/* Header */}
                     <header className="mb-10 border-b border-gray-800 pb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                         <div>
@@ -131,23 +154,37 @@ const MasterStats = () => {
                         </div>
 
                         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                            <div className="relative group">
-                                <button className="flex items-center gap-2 bg-gray-900 border border-gray-800 px-4 py-2 rounded text-[10px] font-bold uppercase tracking-widest hover:border-blue-500 transition-all">
+                            <div className="relative">
+                                <button 
+                                    onClick={() => setIsClubOpen(!isClubOpen)}
+                                    aria-haspopup="true"
+                                    aria-expanded={isClubOpen}
+                                    className="flex items-center gap-2 bg-gray-900 border border-gray-800 px-4 py-2 rounded text-[10px] font-bold uppercase tracking-widest hover:border-blue-500 transition-all"
+                                >
                                     <Filter className="w-3 h-3" />
                                     Club: {clubFilter}
-                                    <ChevronDown className="w-3 h-3" />
+                                    <ChevronDown className={`w-3 h-3 transition-transform ${isClubOpen ? 'rotate-180' : ''}`} />
                                 </button>
-                                <div className="absolute top-full right-0 mt-2 w-48 bg-gray-950 border border-gray-800 rounded shadow-2xl z-50 hidden group-hover:block">
-                                    {clubs.map(club => (
-                                        <button 
-                                            key={club} 
-                                            onClick={() => setClubFilter(club)}
-                                            className="w-full text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-gray-900 transition-colors border-b border-gray-900 last:border-0"
-                                        >
-                                            {club}
-                                        </button>
-                                    ))}
-                                </div>
+                                {isClubOpen && (
+                                    <div 
+                                        role="menu"
+                                        className="absolute top-full right-0 mt-2 w-48 bg-gray-950 border border-gray-800 rounded shadow-2xl z-50 animate-in fade-in slide-in-from-top-1"
+                                    >
+                                        {clubs.map(club => (
+                                            <button 
+                                                key={club} 
+                                                role="menuitem"
+                                                onClick={() => {
+                                                    setClubFilter(club);
+                                                    setIsClubOpen(false);
+                                                }}
+                                                className="w-full text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-gray-900 transition-colors border-b border-gray-900 last:border-0"
+                                            >
+                                                {club}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                             <button
                                 onClick={fetchDetailedStats}
@@ -335,10 +372,10 @@ const MasterStats = () => {
                                 { label: "Total Clubs", value: detailedStats?.clubStats?.length, icon: Globe },
                                 { label: "Top Club", value: detailedStats?.clubStats?.[0]?._id?.substring(0, 10), icon: Flag },
                                 { label: "Official (AAA)", value: detailedStats?.userStats?.onboarding?.[0]?.count || 0, icon: ShieldCheck }, // Placeholder logic
-                                { label: "Waitlisted", value: detailedStats?.eventStats?.reduce((a, b) => a + (b.waitlisted || 0), 0), icon: Clock },
-                                { label: "Disqualified", value: "0", icon: AlertCircle },
-                                { label: "Rev / Solo", value: `₹${((detailedStats?.clubStats?.reduce((a, b) => a + b.totalRevenue, 0) || 0) * 0.4).toFixed(0)}`, icon: CreditCard }, // Proxy
-                                { label: "Rev / Team", value: `₹${((detailedStats?.clubStats?.reduce((a, b) => a + b.totalRevenue, 0) || 0) * 0.6).toFixed(0)}`, icon: CreditCard }, // Proxy
+                                { label: "Waitlisted", value: detailedStats?.eventStats?.reduce((a, b) => a + (b.waitlistCount || 0), 0), icon: Clock },
+                                { label: "Disqualified", value: "—", icon: AlertCircle },
+                                { label: "Est. Rev / Solo", value: `₹${((detailedStats?.clubStats?.reduce((a, b) => a + b.totalRevenue, 0) || 0) * 0.4).toFixed(0)}`, icon: CreditCard }, // Proxy
+                                { label: "Est. Rev / Team", value: `₹${((detailedStats?.clubStats?.reduce((a, b) => a + b.totalRevenue, 0) || 0) * 0.6).toFixed(0)}`, icon: CreditCard }, // Proxy
                                 { label: "Onboarded %", value: `${((detailedStats?.userStats?.onboarding?.find(o => o._id === true)?.count / (detailedStats?.userStats?.onboarding?.reduce((a, b) => a + b.count, 0) || 1)) * 100).toFixed(1)}%`, icon: Zap },
                                 { label: "Gender: Male", value: genderData.find(g => g.name === 'Male')?.value || 0, icon: Users },
                                 { label: "Gender: Female", value: genderData.find(g => g.name === 'Female')?.value || 0, icon: Users },
@@ -450,13 +487,13 @@ const MasterStats = () => {
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-16 h-1 bg-gray-900 rounded-full overflow-hidden">
-                                                        <div className={`h-full ${event.occupancy > 80 ? 'bg-red-500' : 'bg-blue-500'}`} style={{ width: `${Math.min(event.occupancy, 100)}%` }}></div>
+                                                        <div className={`h-full ${(event.occupancy || 0) > 80 ? 'bg-red-500' : 'bg-blue-500'}`} style={{ width: `${Math.min(event.occupancy || 0, 100)}%` }}></div>
                                                     </div>
-                                                    <span className="text-[9px] font-bold text-gray-500">{event.occupancy.toFixed(0)}%</span>
+                                                    <span className="text-[9px] font-bold text-gray-500">{(event.occupancy || 0).toFixed(0)}%</span>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-right text-xs font-black text-amber-500">
-                                                ₹{event.revenue.toLocaleString()}
+                                                ₹{(event.revenue || 0).toLocaleString()}
                                             </td>
                                         </tr>
                                     ))}
@@ -501,7 +538,7 @@ const MasterStats = () => {
                                     <div className="text-[8px] font-bold text-gray-700 uppercase">Hubs</div>
                                 </div>
                                 <div className="text-center">
-                                    <div className="text-xl font-black text-white italic">{(overview.totalSolo + overview.totalTeam)}</div>
+                                    <div className="text-xl font-black text-white italic">{(overview.totalSolo || 0) + (overview.totalTeam || 0)}</div>
                                     <div className="text-[8px] font-bold text-gray-700 uppercase">Infiltrators</div>
                                 </div>
                             </div>

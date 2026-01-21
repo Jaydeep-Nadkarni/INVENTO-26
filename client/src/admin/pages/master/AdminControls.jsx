@@ -128,8 +128,11 @@ const AdminControls = () => {
                                 ].map((choice) => (
                                     <button
                                         key={choice.id}
+                                        disabled={updating}
                                         onClick={() => handleUpdate({ passControl: choice.id })}
                                         className={`p-4 border rounded-lg text-left transition-all ${
+                                            updating ? 'opacity-50 cursor-not-allowed' : ''
+                                        } ${
                                             settings.passControl === choice.id 
                                             ? 'bg-blue-600 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)]' 
                                             : 'bg-black border-gray-800 hover:border-gray-600'

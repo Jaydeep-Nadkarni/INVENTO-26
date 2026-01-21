@@ -61,7 +61,7 @@ const Sidebar = ({ panelType = 'admin' }) => {
                         <NavLink
                             key={link.path}
                             to={link.path}
-                            className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-all ${isActive
+                            className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-all group ${isActive
                                     ? 'bg-gray-900 text-white shadow-sm'
                                     : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
                                 }`}

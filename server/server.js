@@ -77,8 +77,17 @@ app.use(cors({
       origin.startsWith('https://10.') ||
       origin.startsWith('http://192.168.') ||
       origin.startsWith('https://192.168.') ||
-      origin.startsWith('http://172.') ||
-      origin.startsWith('https://172.');
+      (() => {
+        try {
+          const url = new URL(origin);
+          const parts = url.hostname.split('.');
+          if (parts.length === 4 && parts[0] === '172') {
+            const secondOctet = parseInt(parts[1], 10);
+            return secondOctet >= 16 && secondOctet <= 31;
+          }
+        } catch (e) { }
+        return false;
+      })();
 
     if (isAllowed) {
       callback(null, true);

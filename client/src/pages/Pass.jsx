@@ -83,6 +83,8 @@ const Pass = () => {
 
   if (!user) return null;
 
+  const passType = user.passType || "G";
+
   // Check if passes are closed
   if (passSettings.passControl === 'close' || (passSettings.passControl === 'typewise' && passType === 'G')) {
     return (

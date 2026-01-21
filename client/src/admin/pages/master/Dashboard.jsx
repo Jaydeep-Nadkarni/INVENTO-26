@@ -20,6 +20,9 @@ const MasterDashboard = () => {
 
     // Use backend-provided club unique stats if available, otherwise might need fallback or wait
     const clubUniqueStats = overviewStats?.clubUnique || [];
+    const filteredClubs = useMemo(() => 
+        clubUniqueStats.filter(s => s.club?.toLowerCase() !== 'registration'),
+    [clubUniqueStats]);
 
     // Calculate occupancy by club
     const clubOccupancy = useMemo(() => {
@@ -157,9 +160,8 @@ const MasterDashboard = () => {
 
                     <div className="flex-1 overflow-y-auto p-6">
                         <div className="space-y-1">
-                            {clubUniqueStats
-                                .filter(s => s.club?.toLowerCase() !== 'registration')
-                                .map((stat, idx) => (
+                            {filteredClubs.length > 0 ? (
+                                filteredClubs.map((stat, idx) => (
                                     <div key={idx} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors group">
                                         <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500 group-hover:bg-white group-hover:shadow-sm transition-all border border-transparent group-hover:border-gray-200">
@@ -171,10 +173,10 @@ const MasterDashboard = () => {
                                             {stat.count}
                                         </span>
                                     </div>
-                                ))}
-                            {clubUniqueStats.length === 0 && (
+                                ))
+                            ) : (
                                 <div className="text-center py-8">
-                                    <p className="text-sm text-gray-400">Loading metrics...</p>
+                                    <p className="text-sm text-gray-400">No metrics available</p>
                                 </div>
                             )}
                         </div>

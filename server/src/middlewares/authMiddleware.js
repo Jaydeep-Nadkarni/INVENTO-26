@@ -128,8 +128,13 @@ export const checkEventAccess = (req, res, next) => {
         return next();
       }
     }
+  } else if (req.user.role === 'COORDINATOR') {
+    // COORDINATORS must have an access array to proceed
+    return res.status(403).json({
+      message: "Access Denied: COORDINATOR role requires explicit event assignment."
+    });
   } else {
-    // Fallback for coordinators/other admins without granular access setup
+    // Temporary allow during migration for other unspecified roles
     return next();
   }
 

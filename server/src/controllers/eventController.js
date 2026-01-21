@@ -967,8 +967,12 @@ export const getFestRegistrations = async (req, res) => {
     // Build query
     const query = {};
     if (!isMaster && !isRegistration && req.user.access) {
+      const objectIdAccess = req.user.access
+        .filter(id => mongoose.isValidObjectId(id))
+        .map(id => new mongoose.Types.ObjectId(id));
+        
       query.$or = [
-        { _id: { $in: req.user.access } },
+        { _id: { $in: objectIdAccess } },
         { id: { $in: req.user.access } }
       ];
     }
@@ -1031,7 +1035,7 @@ export const updateEventDetails = async (req, res) => {
     // Allow setting absolute totalSlots (overrides slotsChange if both present, or calculates delta)
     if (req.body.totalSlots !== undefined) {
       const targetTotal = Number(req.body.totalSlots);
-      if (typeof targetTotal !== 'number' || targetTotal < 0) {
+      if (Number.isNaN(targetTotal) || !Number.isFinite(targetTotal) || targetTotal < 0) {
         return res.status(400).json({ message: "Total slots must be a non-negative number" });
       }
       delta = targetTotal - event.slots.totalSlots;
@@ -1237,12 +1241,16 @@ export const getDetailedAnalytics = async (req, res) => {
       {
         $facet: {
           genderDist: [
+            // Only global admins see full demographics
+            ...(isMaster || isRegistration ? [] : [{ $match: { _id: { $exists: false } } }]), 
             { $group: { _id: "$gender", count: { $sum: 1 } } }
           ],
           onboarding: [
+            ...(isMaster || isRegistration ? [] : [{ $match: { _id: { $exists: false } } }]),
             { $group: { _id: "$onboardingCompleted", count: { $sum: 1 } } }
           ],
           userGrowth: [
+            ...(isMaster || isRegistration ? [] : [{ $match: { _id: { $exists: false } } }]),
             {
               $group: {
                 _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
@@ -1257,6 +1265,12 @@ export const getDetailedAnalytics = async (req, res) => {
     ]);
 
     const paymentTrendPromise = Payment.aggregate([
+      // Filter by accessible events for coordinators
+      ...(isMaster || isRegistration ? [] : [{
+        $match: {
+          eventId: { $in: req.user.access.map(id => mongoose.isValidObjectId(id) ? new mongoose.Types.ObjectId(id) : id) }
+        }
+      }]),
       {
         $lookup: {
           from: "events",
