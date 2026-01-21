@@ -151,6 +151,24 @@ export const updateAdmin = async (req, res) => {
     }
 };
 
+// @desc    Delete admin
+// @route   DELETE /api/admins/:id
+// @access  Private/Admin
+export const deleteAdmin = async (req, res) => {
+    try {
+        const admin = await Admin.findById(req.params.id);
+
+        if (admin) {
+            await admin.deleteOne();
+            res.json({ message: "Admin removed" });
+        } else {
+            res.status(404).json({ message: "Admin not found" });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // @desc    Get global settings
 // @route   GET /api/admins/settings/global
 // @access  Private/Admin

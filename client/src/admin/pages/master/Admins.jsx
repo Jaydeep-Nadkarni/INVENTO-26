@@ -300,27 +300,27 @@ const MasterAdmins = () => {
                                         <tr key={admin._id} className="hover:bg-gray-900/50 transition-colors group">
                                             <td className="px-6 py-4">
                                                 <div>
-                                                    <div className="font-bold text-white flex items-center gap-2">
+                                                    <div className="font-bold text-gray-900 flex items-center gap-2">
                                                         {admin.name}
-                                                        {admin.isRegistration && <span className="bg-blue-900 text-blue-300 text-[10px] px-1.5 py-0.5 rounded border border-blue-800">REG</span>}
+                                                        {admin.isRegistration && <span className="bg-blue-50 text-blue-600 text-[10px] px-1.5 py-0.5 rounded border border-blue-200">REG</span>}
                                                     </div>
                                                     <div className="text-xs font-mono text-gray-500">{admin.id || String(admin._id ?? '').substring(0, 8)} • {admin.email}</div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="text-xs text-gray-400">
+                                                <div className="text-xs text-gray-600">
                                                     {admin.access && admin.access.length > 0 ? (
                                                         <span className="flex items-center gap-1">
-                                                            <Zap size={12} className="text-yellow-500" />
+                                                            <Zap size={12} className="text-yellow-600" />
                                                             {admin.access.length} Events
                                                         </span>
                                                     ) : (
-                                                        <span className="text-gray-600">Restricted</span>
+                                                        <span className="text-gray-500">Restricted</span>
                                                     )}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className="text-[10px] font-black px-2 py-0.5 border border-gray-700 text-gray-400 rounded uppercase">
+                                                <span className="text-[10px] font-black px-2 py-0.5 border border-gray-200 text-gray-500 rounded uppercase">
                                                     {admin.team || 'N/A'}
                                                 </span>
                                             </td>
@@ -328,8 +328,8 @@ const MasterAdmins = () => {
                                                 <button
                                                     onClick={() => toggleAdminStatus(admin)}
                                                     className={`text-[9px] font-black px-2 py-1 rounded uppercase tracking-tighter transition-all ${admin.status === 'Active'
-                                                            ? 'bg-green-950 text-green-400 border border-green-900 hover:bg-green-900'
-                                                            : 'bg-red-950 text-red-400 border border-red-900 hover:bg-red-900'
+                                                            ? 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100'
+                                                            : 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100'
                                                         }`}>
                                                     {admin.status}
                                                 </button>

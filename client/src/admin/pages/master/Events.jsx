@@ -86,13 +86,13 @@ const EventCard = ({ event, onUpdate }) => {
     return (
         <div className={`
             relative p-6 rounded-xl border transition-all duration-300
-            bg-gray-950/50 backdrop-blur-sm
-            ${isEditing ? 'border-indigo-500/50 shadow-lg shadow-indigo-500/10' : 'border-gray-800 hover:border-gray-700'}
+            bg-white shadow-sm
+            ${isEditing ? 'border-indigo-500/50 shadow-lg shadow-indigo-500/10' : 'border-gray-200 hover:border-gray-300'}
         `}>
             {/* Header */}
             <div className="flex justify-between items-start mb-6">
                 <div>
-                    <h3 className="font-bold text-lg text-white tracking-tight">{event.name}</h3>
+                    <h3 className="font-bold text-lg text-gray-900 tracking-tight">{event.name}</h3>
                     <p className="text-xs font-mono text-gray-500 uppercase tracking-widest mt-1">
                         #{event.id} • {event.team}
                     </p>
@@ -105,8 +105,8 @@ const EventCard = ({ event, onUpdate }) => {
                             onClick={() => setFormData(p => ({ ...p, isOpen: !p.isOpen }))}
                             className={`p-1.5 rounded-lg border transition-all
                                 ${formData.isOpen
-                                    ? 'bg-green-500/10 border-green-500/30 text-green-400'
-                                    : 'bg-red-500/10 border-red-500/30 text-red-400'
+                                    ? 'bg-green-50 border-green-200 text-green-600'
+                                    : 'bg-red-50 border-red-200 text-red-600'
                                 }`}
                             title={formData.isOpen ? "Registration Open" : "Registration Closed"}
                         >
@@ -114,7 +114,7 @@ const EventCard = ({ event, onUpdate }) => {
                         </button>
                     ) : (
                         !formData.isOpen && (
-                            <span className="bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-bold px-2 py-1 rounded-md uppercase">
+                            <span className="bg-red-50 border border-red-200 text-red-600 text-[10px] font-bold px-2 py-1 rounded-md uppercase">
                                 Closed
                             </span>
                         )
@@ -126,8 +126,8 @@ const EventCard = ({ event, onUpdate }) => {
                             onClick={() => setFormData(p => ({ ...p, officialOnly: !p.officialOnly }))}
                             className={`p-1.5 rounded-lg border transition-all
                                 ${formData.officialOnly
-                                    ? 'bg-blue-500/10 border-blue-500/30 text-blue-400'
-                                    : 'bg-gray-800 border-gray-700 text-gray-500'
+                                    ? 'bg-blue-50 border-blue-200 text-blue-600'
+                                    : 'bg-gray-50 border-gray-200 text-gray-500'
                                 }`}
                             title={formData.officialOnly ? "Official Entries Only" : "Open to All"}
                         >
@@ -135,7 +135,7 @@ const EventCard = ({ event, onUpdate }) => {
                         </button>
                     ) : (
                         formData.officialOnly && (
-                            <span className="bg-blue-500/10 border border-blue-500/20 text-blue-500 text-[10px] font-bold px-2 py-1 rounded-md uppercase">
+                            <span className="bg-blue-50 border border-blue-200 text-blue-600 text-[10px] font-bold px-2 py-1 rounded-md uppercase">
                                 Official Only
                             </span>
                         )
@@ -147,7 +147,7 @@ const EventCard = ({ event, onUpdate }) => {
             <div className="space-y-4">
                 {/* Row 1: Fee and Occupancy */}
                 <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-gray-900/50 rounded-lg p-3 border border-gray-800/50">
+                    <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
                         <label className="text-[10px] uppercase text-gray-500 font-bold mb-1 flex items-center gap-1">
                             <IndianRupee size={10} /> Fee
                         </label>
@@ -156,25 +156,25 @@ const EventCard = ({ event, onUpdate }) => {
                                 type="number"
                                 value={formData.price}
                                 onChange={e => setFormData({ ...formData, price: e.target.value })}
-                                className="w-full bg-black border border-gray-700 rounded text-sm px-2 py-1 text-white focus:border-indigo-500 outline-none transition-colors"
+                                className="w-full bg-white border border-gray-200 rounded text-sm px-2 py-1 text-gray-900 focus:border-indigo-500 outline-none transition-colors"
                             />
                         ) : (
-                            <div className="text-sm font-mono text-white">₹{formData.price}</div>
+                            <div className="text-sm font-mono text-gray-900">₹{formData.price}</div>
                         )}
                     </div>
 
-                    <div className="bg-gray-900/50 rounded-lg p-3 border border-gray-800/50">
+                    <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
                         <label className="text-[10px] uppercase text-gray-500 font-bold mb-1 flex items-center gap-1">
                             <Activity size={10} /> Usage
                         </label>
                         <div className="flex items-center gap-2">
-                            <div className="flex-1 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                            <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                                 <div
                                     className={`h-full ${occupancy >= 100 ? 'bg-red-500' : 'bg-emerald-500'}`}
                                     style={{ width: `${Math.min(occupancy, 100)}%` }}
                                 />
                             </div>
-                            <span className="text-[10px] font-mono text-gray-400">{occupancy}%</span>
+                            <span className="text-[10px] font-mono text-gray-500">{occupancy}%</span>
                         </div>
                     </div>
                 </div>
@@ -184,24 +184,24 @@ const EventCard = ({ event, onUpdate }) => {
                     <div className="space-y-2">
                         <div className="text-[10px] uppercase text-gray-500 font-bold mb-1 flex items-center gap-1">
                             <Users size={10} /> Total Capacity: {Number(formData.maleSlots) + Number(formData.femaleSlots)}
-                            <span className="text-gray-600 font-normal normal-case">
+                            <span className="text-gray-500 font-normal normal-case">
                                 ({formData.maleSlots} Boys + {formData.femaleSlots} Girls)
                             </span>
                         </div>
-                        <div className="p-3 bg-gray-900/30 rounded-lg border border-gray-800/50 text-xs">
+                        <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 text-xs">
                             <div className="flex justify-between items-center mb-2">
                                 <span className="text-gray-500 uppercase font-bold text-[10px]">Boys Slots</span>
                                 {isEditing ? (
                                     <input
                                         type="number"
-                                        className="w-16 bg-black border border-gray-700 rounded px-1.5 py-0.5 text-right font-mono"
+                                        className="w-16 bg-white border border-gray-200 rounded px-1.5 py-0.5 text-right font-mono text-gray-900"
                                         value={formData.maleSlots}
                                         onChange={e => setFormData({ ...formData, maleSlots: e.target.value })}
                                     />
                                 ) : (
-                                    <span className="font-mono text-white">
+                                    <span className="font-mono text-gray-900">
                                         {formData.maleSlots}
-                                        <span className="text-gray-600 ml-1">(Boys — Available)</span>
+                                        <span className="text-gray-500 ml-1">(Boys — Available)</span>
                                     </span>
                                 )}
                             </div>
@@ -210,24 +210,24 @@ const EventCard = ({ event, onUpdate }) => {
                                 {isEditing ? (
                                     <input
                                         type="number"
-                                        className="w-16 bg-black border border-gray-700 rounded px-1.5 py-0.5 text-right font-mono"
+                                        className="w-16 bg-white border border-gray-200 rounded px-1.5 py-0.5 text-right font-mono text-gray-900"
                                         value={formData.femaleSlots}
                                         onChange={e => setFormData({ ...formData, femaleSlots: e.target.value })}
                                     />
                                 ) : (
-                                    <span className="font-mono text-white">
-                                        {formData.femaleSlots} <span className="text-gray-600 ml-1">(Avl)</span>
+                                    <span className="font-mono text-gray-900">
+                                        {formData.femaleSlots} <span className="text-gray-500 ml-1">(Avl)</span>
                                     </span>
                                 )}
                             </div>
                         </div>
-                        <div className="text-[9px] text-gray-600 text-center">
+                        <div className="text-[9px] text-gray-500 text-center">
                             * For gender events, you are editing <u>Available</u> slots directly.
                         </div>
                     </div>
                 ) : (
                     /* General Slots */
-                    <div className="bg-gray-900/50 rounded-lg p-3 border border-gray-800/50">
+                    <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
                         <div className="flex justify-between items-center mb-1">
                             <label className="text-[10px] uppercase text-gray-500 font-bold flex items-center gap-1">
                                 <Users size={10} /> Total Capacity
@@ -245,12 +245,12 @@ const EventCard = ({ event, onUpdate }) => {
                                     type="number"
                                     value={formData.totalSlots}
                                     onChange={e => setFormData({ ...formData, totalSlots: e.target.value })}
-                                    className="flex-1 bg-black border border-gray-700 rounded text-sm px-2 py-1 text-white focus:border-indigo-500 outline-none font-mono"
+                                    className="flex-1 bg-white border border-gray-200 rounded text-sm px-2 py-1 text-gray-900 focus:border-indigo-500 outline-none font-mono"
                                 />
                                 <span className="text-xs text-gray-500 font-mono">slots</span>
                             </div>
                         ) : (
-                            <div className="text-lg font-mono text-white tracking-tight">
+                            <div className="text-lg font-mono text-gray-900 tracking-tight">
                                 {event.slots?.totalSlots ?? event.total_slots}
                             </div>
                         )}
@@ -265,14 +265,14 @@ const EventCard = ({ event, onUpdate }) => {
                         <button
                             onClick={handleCancel}
                             disabled={saving}
-                            className="p-2 rounded-lg bg-gray-900 text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+                            className="p-2 rounded-lg bg-gray-100 text-gray-500 hover:text-gray-900 hover:bg-gray-200 transition-colors"
                         >
                             <X size={16} />
                         </button>
                         <button
                             onClick={handleSave}
                             disabled={saving}
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white font-bold text-xs hover:bg-indigo-500 transition-colors shadow-lg shadow-indigo-900/20"
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white font-bold text-xs hover:bg-indigo-500 transition-colors shadow-lg shadow-indigo-200"
                         >
                             {saving ? <RefreshCcw size={14} className="animate-spin" /> : <Save size={14} />}
                             SAVE
@@ -281,9 +281,9 @@ const EventCard = ({ event, onUpdate }) => {
                 ) : (
                     <button
                         onClick={() => setIsEditing(true)}
-                        className="w-full py-2 rounded-lg border border-gray-800 text-gray-500 text-xs font-bold uppercase tracking-widest hover:border-gray-600 hover:text-white transition-colors flex items-center justify-center gap-2 group"
+                        className="w-full py-2 rounded-lg border border-gray-200 text-gray-500 text-xs font-bold uppercase tracking-widest hover:border-gray-400 hover:text-gray-900 transition-colors flex items-center justify-center gap-2 group"
                     >
-                        <Edit2 size={12} className="group-hover:text-indigo-400 transition-colors" />
+                        <Edit2 size={12} className="group-hover:text-indigo-600 transition-colors" />
                         Edit Event
                     </button>
                 )}
@@ -325,60 +325,44 @@ const MasterEvents = () => {
     }, [events, activeTeam, searchTerm]);
 
     return (
-        <div className="flex h-screen bg-black text-white overflow-hidden">
+        <div className="flex h-screen bg-gray-50 text-gray-900 overflow-hidden">
             <Sidebar panelType="master" />
 
             <main className="flex-1 flex flex-col h-full overflow-hidden lg:ml-64 relative">
                 {/* Decorative Background */}
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-900 via-black to-black opacity-40 pointer-events-none" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-white via-gray-50 to-gray-100 opacity-40 pointer-events-none" />
 
                 <div className="p-8 flex-1 overflow-y-auto">
                     <div className="max-w-7xl mx-auto space-y-8">
 
                         {/* Header */}
-                        <div className="flex flex-col md:flex-row justify-between items-end gap-4 pb-6 border-b border-gray-900">
+                        <div className="flex flex-col md:flex-row justify-between items-end gap-4 pb-6 border-b border-gray-200">
                             <div>
-                                <h1 className="text-3xl font-black tracking-tighter text-white mb-2">EVENT MATRIX</h1>
+                                <h1 className="text-3xl font-black tracking-tighter text-gray-900 mb-2">EVENT MATRIX</h1>
                                 <p className="text-sm text-gray-500 font-mono">Manage capacity, pricing, and status protocols.</p>
                             </div>
 
                             <div className="flex items-center gap-3">
                                 <div className="relative group">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Users className="h-4 w-4 text-gray-600 group-focus-within:text-indigo-500 transition-colors" />
+                                        <Users className="h-4 w-4 text-gray-400 group-focus-within:text-indigo-600 transition-colors" />
                                     </div>
                                     <input
                                         type="text"
                                         placeholder="SEARCH PROTOCOLS..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="bg-gray-950 border border-gray-800 text-gray-300 text-xs rounded-lg block pl-10 p-2.5 w-64 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none uppercase tracking-wide font-mono transition-all"
+                                        className="bg-white border border-gray-200 text-gray-700 text-xs rounded-lg block pl-10 p-2.5 w-64 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none uppercase tracking-wide font-mono transition-all"
                                     />
                                 </div>
                                 <button
                                     onClick={refreshEvents}
-                                    className="p-2.5 bg-gray-950 border border-gray-800 text-gray-400 rounded-lg hover:text-white hover:border-gray-600 transition-all"
+                                    className="p-2.5 bg-white border border-gray-200 text-gray-400 rounded-lg hover:text-gray-900 hover:border-gray-400 transition-all"
                                     title="Sync Data"
                                 >
                                     <RefreshCcw size={16} className={loading ? "animate-spin" : ""} />
                                 </button>
                             </div>
-                        </div>
-
-                        {/* Filters */}
-                        <div className="flex flex-wrap gap-2">
-                            {['All', ...(teams || []).filter(t => t.name?.toLowerCase() !== 'registration').map(t => t.name)].map(team => (
-                                <button
-                                    key={team}
-                                    onClick={() => setActiveTeam(team)}
-                                    className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg border transition-all ${activeTeam === team
-                                        ? 'bg-white text-black border-white'
-                                        : 'bg-transparent text-gray-500 border-gray-900 hover:border-gray-700 hover:text-gray-300'
-                                        }`}
-                                >
-                                    {team}
-                                </button>
-                            ))}
                         </div>
 
                         {/* Grid */}
