@@ -112,7 +112,6 @@ const Pass = () => {
 
   // Logic for pass details
   const isPaid = user.payment;
-  const passType = user.passType || "G";
 
   // Minimalist accent colors
   const getRoleStyle = (type) => {

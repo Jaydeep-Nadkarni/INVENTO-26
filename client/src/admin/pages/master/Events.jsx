@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Sidebar from '../../components/sidebar';
 import { useData } from '../../context/DataContext';
 import { apiPatch } from '../../../utils/apiClient';
@@ -25,16 +25,18 @@ const EventCard = ({ event, onUpdate }) => {
     });
 
     // Rehydrate form data when event prop updates
-    React.useEffect(() => {
-        setFormData({
-            price: event.price,
-            totalSlots: event.slots?.totalSlots || event.total_slots || 0,
-            isOpen: event.registration?.isOpen ?? true,
-            officialOnly: event.registration?.officialOnly ?? false,
-            maleSlots: event.specificSlots?.male || 0,
-            femaleSlots: event.specificSlots?.female || 0
-        });
-    }, [event]);
+    useEffect(() => {
+        if (!isEditing) {
+            setFormData({
+                price: event.price,
+                totalSlots: event.slots?.totalSlots || event.total_slots || 0,
+                isOpen: event.registration?.isOpen ?? true,
+                officialOnly: event.registration?.officialOnly ?? false,
+                maleSlots: event.specificSlots?.male || 0,
+                femaleSlots: event.specificSlots?.female || 0
+            });
+        }
+    }, [event, isEditing]);
 
     const isGenderSpecific = GENDER_SPECIFIC_EVENT_IDS.includes(String(event.id));
     const occupancy = event.slots?.totalSlots > 0

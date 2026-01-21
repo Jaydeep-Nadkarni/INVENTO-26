@@ -133,8 +133,8 @@ export const checkEventAccess = (req, res, next) => {
     return res.status(403).json({
       message: "Access Denied: COORDINATOR role requires explicit event assignment."
     });
-  } else {
-    // Temporary allow during migration for other unspecified roles
+  } else if (req.user.role === 'MASTER' || req.user.role === 'ADMIN') {
+    // Explicitly allowed roles that might not hit the access check above (e.g. Master without access array)
     return next();
   }
 

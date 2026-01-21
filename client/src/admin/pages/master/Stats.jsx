@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Sidebar from '../../components/sidebar';
 import { useData } from '../../context/DataContext';
 import { apiGet } from '../../../utils/apiClient';
@@ -25,6 +25,31 @@ const MasterStats = () => {
     const [clubFilter, setClubFilter] = useState('All');
     const [viewType, setViewType] = useState('count'); // 'count' or 'revenue'
     const [isClubOpen, setIsClubOpen] = useState(false);
+    const dropdownRef = useRef(null);
+
+    useEffect(() => {
+        if (!isClubOpen) return;
+
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsClubOpen(false);
+            }
+        };
+
+        const handleEscape = (event) => {
+            if (event.key === 'Escape') {
+                setIsClubOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleEscape);
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleEscape);
+        };
+    }, [isClubOpen]);
 
     const fetchDetailedStats = async () => {
         try {
@@ -119,6 +144,14 @@ const MasterStats = () => {
 
     const { overview = {} } = detailedStats || {};
 
+    // Safe computations for stats cards
+    const totalClubRevenue = detailedStats?.clubStats?.reduce((acc, item) => acc + (Number(item?.totalRevenue) || 0), 0) || 0;
+    
+    const onboarding = detailedStats?.userStats?.onboarding;
+    const totalOnboarding = onboarding?.reduce((a, b) => a + (b.count || 0), 0) || 0;
+    const onboardedCount = onboarding?.find(o => o._id === true)?.count || 0;
+    const onboardedPercent = totalOnboarding > 0 ? ((onboardedCount / totalOnboarding) * 100).toFixed(1) : "0.0";
+
     return (
         <div className="flex h-screen bg-black text-white border-gray-800">
             <Sidebar panelType="master" />
@@ -154,7 +187,7 @@ const MasterStats = () => {
                         </div>
 
                         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                            <div className="relative">
+                            <div className="relative" ref={dropdownRef}>
                                 <button 
                                     onClick={() => setIsClubOpen(!isClubOpen)}
                                     aria-haspopup="true"
@@ -374,9 +407,9 @@ const MasterStats = () => {
                                 { label: "Official (AAA)", value: detailedStats?.userStats?.onboarding?.[0]?.count || 0, icon: ShieldCheck }, // Placeholder logic
                                 { label: "Waitlisted", value: detailedStats?.eventStats?.reduce((a, b) => a + (b.waitlistCount || 0), 0), icon: Clock },
                                 { label: "Disqualified", value: "—", icon: AlertCircle },
-                                { label: "Est. Rev / Solo", value: `₹${((detailedStats?.clubStats?.reduce((a, b) => a + b.totalRevenue, 0) || 0) * 0.4).toFixed(0)}`, icon: CreditCard }, // Proxy
-                                { label: "Est. Rev / Team", value: `₹${((detailedStats?.clubStats?.reduce((a, b) => a + b.totalRevenue, 0) || 0) * 0.6).toFixed(0)}`, icon: CreditCard }, // Proxy
-                                { label: "Onboarded %", value: `${((detailedStats?.userStats?.onboarding?.find(o => o._id === true)?.count / (detailedStats?.userStats?.onboarding?.reduce((a, b) => a + b.count, 0) || 1)) * 100).toFixed(1)}%`, icon: Zap },
+                                { label: "Est. Rev / Solo", value: `₹${(totalClubRevenue * 0.4).toFixed(0)}`, icon: CreditCard },
+                                { label: "Est. Rev / Team", value: `₹${(totalClubRevenue * 0.6).toFixed(0)}`, icon: CreditCard },
+                                { label: "Onboarded %", value: `${onboardedPercent}%`, icon: Zap },
                                 { label: "Gender: Male", value: genderData.find(g => g.name === 'Male')?.value || 0, icon: Users },
                                 { label: "Gender: Female", value: genderData.find(g => g.name === 'Female')?.value || 0, icon: Users },
                                 { label: "Avg / College", value: ((overview.totalSolo + overview.totalTeam) / (detailedStats?.collegeStats?.length || 1)).toFixed(1), icon: School }
