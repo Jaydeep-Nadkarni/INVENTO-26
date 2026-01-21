@@ -21,7 +21,7 @@ import {
 
 const AdminParticipants = () => {
     const { adminUser } = useAdminAuth();
-    const { data } = useData();
+    const { data, adminEvents } = useData();
     const { events } = data;
 
     const [participantsList, setParticipantsList] = useState([]);
@@ -34,24 +34,28 @@ const AdminParticipants = () => {
     const [officialFilter, setOfficialFilter] = useState('All');
     const [collegeFilter, setCollegeFilter] = useState('');
 
-    const isRegistration = adminUser?.team === 'Registration';
+    const isRegistration = adminUser?.isRegistration || adminUser?.team === 'Registration';
 
-    // Get events relevant to this admin's team
-    const relevantEvents = useMemo(() => {
-        if (!events) return [];
-        if (isRegistration) return events;
-        return events.filter(e => e.team === adminUser?.team);
-    }, [events, adminUser?.team, isRegistration]);
+    // Get events relevant to this admin's team/access
+    const relevantEvents = adminEvents;
 
     const fetchParticipants = async () => {
         setLoading(true);
         try {
             let endpoint = '/api/events/registrations/all';
-
-            // If a specific event is selected, we could use the specific endpoint
-            // but the universal registry is easier for now to handle team filters
             const { data: results } = await apiGet(endpoint);
-            setParticipantsList(results);
+            
+            // Filter list centrally if not registration admin
+            if (!isRegistration) {
+                const accessibleEventIds = relevantEvents.map(e => String(e.id));
+                const accessibleEventNames = relevantEvents.map(e => e.name);
+                setParticipantsList(results.filter(p => 
+                    accessibleEventNames.includes(p.eventName) || 
+                    accessibleEventIds.includes(String(p.eventId))
+                ));
+            } else {
+                setParticipantsList(results);
+            }
         } catch (error) {
             console.error("Failed to fetch participants:", error);
         } finally {
@@ -170,9 +174,16 @@ const AdminParticipants = () => {
                     {/* Header Section */}
                     <header className="mb-8 border-b border-gray-100 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
-                            <h1 className="text-2xl font-bold tracking-tight">Participants Registry</h1>
+                            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-3">
+                                Participants Registry
+                                {isRegistration && adminUser?.role !== 'master' && (
+                                    <span className="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full border border-blue-100 font-bold uppercase tracking-tighter">
+                                        Read-Only Access
+                                    </span>
+                                )}
+                            </h1>
                             <p className="text-sm text-gray-500">
-                                {isRegistration ? "Universal attendee management" : `Managing attendees for ${adminUser?.team} domain`}
+                                {isRegistration ? "Universal attendee management & entry control" : `Managing attendees for ${adminUser?.team} domain`}
                             </p>
                         </div>
                         <div className="flex items-center gap-3 w-full md:w-auto">
@@ -341,9 +352,10 @@ const AdminParticipants = () => {
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <select
-                                                        className={`text-[10px] font-bold uppercase border rounded px-2 py-1 focus:outline-none transition-colors ${statusColors[participant.status]}`}
+                                                        className={`text-[10px] font-bold uppercase border rounded px-2 py-1 focus:outline-none transition-colors ${statusColors[participant.status]} ${(isRegistration && adminUser?.role !== 'master') ? 'opacity-70 cursor-not-allowed' : ''}`}
                                                         value={participant.status}
                                                         onChange={(e) => handleUpdateStatus(participant, e.target.value)}
+                                                        disabled={isRegistration && adminUser?.role !== 'master'}
                                                     >
                                                         <option value="PENDING">Pending</option>
                                                         <option value="CONFIRMED">Confirmed</option>

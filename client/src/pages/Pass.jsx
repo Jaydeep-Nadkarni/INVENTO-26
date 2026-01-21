@@ -8,8 +8,21 @@ const Pass = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [passSettings, setPassSettings] = useState({ passControl: 'to all' });
 
   // Prevent zooming on mobile to maintain "App-like" feel
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const { data } = await apiGet('/api/events/settings/global');
+        setPassSettings(data);
+      } catch (err) {
+        console.error("Failed to fetch settings", err);
+      }
+    };
+    fetchSettings();
+  }, []);
+
   useEffect(() => {
     const metaViewport = document.querySelector('meta[name="viewport"]');
     const originalContent = metaViewport ? metaViewport.getAttribute('content') : 'width=device-width, initial-scale=1';
@@ -69,6 +82,31 @@ const Pass = () => {
   }
 
   if (!user) return null;
+
+  // Check if passes are closed
+  if (passSettings.passControl === 'close' || (passSettings.passControl === 'typewise' && passType === 'G')) {
+    return (
+      <div className="flex min-h-[100dvh] bg-black items-center justify-center p-6 text-center">
+        <div className="max-w-md space-y-4">
+          <div className="w-16 h-16 bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-black uppercase italic tracking-tighter text-white font-sans">Access Temporarily Suspended</h1>
+          <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.3em] leading-relaxed font-sans">
+            Passes will be available soon. The system is currently undergoing synchronization.
+          </p>
+          <button 
+            onClick={() => navigate('/profile')}
+            className="mt-8 px-8 py-3 bg-white text-black text-[10px] font-black uppercase tracking-widest hover:bg-zinc-200 transition-colors font-sans"
+          >
+            Back to Profile
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Logic for pass details
   const isPaid = user.payment;

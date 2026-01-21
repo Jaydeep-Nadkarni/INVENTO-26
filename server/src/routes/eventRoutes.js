@@ -12,9 +12,11 @@ import {
     getEventParticipants,
     getEventTeams,
     getFestOverview,
+    getDetailedAnalytics,
     getEvents,
     getFestRegistrations,
-    updateEventDetails
+    updateEventDetails,
+    getPublicGlobalSettings
 } from "../controllers/eventController.js";
 
 
@@ -23,7 +25,7 @@ import {
     validateRequest,
     validateRegistrationLogic
 } from "../middlewares/eventValidationMiddleware.js";
-import { protect, requireOnboarding, isAdminOrCoordinator } from "../middlewares/authMiddleware.js";
+import { protect, requireOnboarding, isAdminOrCoordinator, checkEventAccess } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
@@ -53,28 +55,33 @@ router.post("/add-key", addContingentKey);
 /* ================= ADMIN/COORDINATOR ACTIONS ================= */
 
 // Update participant status
-router.patch("/:eventId/participants/:inventoId/status", protect, isAdminOrCoordinator, updateParticipantStatus);
+router.patch("/:eventId/participants/:inventoId/status", protect, isAdminOrCoordinator, checkEventAccess, updateParticipantStatus);
 
 // Mark participant attendance
-router.patch("/:eventId/participants/:inventoId/attendance", protect, isAdminOrCoordinator, updateParticipantAttendance);
+router.patch("/:eventId/participants/:inventoId/attendance", protect, isAdminOrCoordinator, checkEventAccess, updateParticipantAttendance);
 
 // Update team status
-router.patch("/:eventId/teams/:teamName/status", protect, isAdminOrCoordinator, updateTeamStatus);
+router.patch("/:eventId/teams/:teamName/status", protect, isAdminOrCoordinator, checkEventAccess, updateTeamStatus);
 
 // Update team member attendance
-router.patch("/:eventId/teams/:teamName/members/:inventoId/attendance", protect, isAdminOrCoordinator, updateMemberAttendance);
+router.patch("/:eventId/teams/:teamName/members/:inventoId/attendance", protect, isAdminOrCoordinator, checkEventAccess, updateMemberAttendance);
 
 // Update event details (slots, status, etc.)
-router.patch("/:eventId", protect, isAdminOrCoordinator, updateEventDetails);
+router.patch("/:eventId", protect, isAdminOrCoordinator, checkEventAccess, updateEventDetails);
 
 /* ================= ANALYTICS & REPORTING ================= */
 
 // List all events (basic info) - PUBLIC
 router.get("/", getEvents);
 
+// Get Public Global Settings
+router.get("/settings/global", getPublicGlobalSettings);
 
 // Fest-wide overview (Put this BEFORE /:eventId routes to avoid conflict)
 router.get("/analytics/overview", protect, isAdminOrCoordinator, getFestOverview);
+
+// Detailed Analytics for Dashboard
+router.get("/analytics/detailed", protect, isAdminOrCoordinator, getDetailedAnalytics);
 
 // All registrations (Universal registry)
 router.get("/registrations/all", protect, isAdminOrCoordinator, getFestRegistrations);
@@ -82,12 +89,12 @@ router.get("/registrations/all", protect, isAdminOrCoordinator, getFestRegistrat
 
 
 // Event specific stats
-router.get("/:eventId/stats", protect, isAdminOrCoordinator, getEventStats);
+router.get("/:eventId/stats", protect, isAdminOrCoordinator, checkEventAccess, getEventStats);
 
 // Participant listing (SOLO)
-router.get("/:eventId/participants", protect, isAdminOrCoordinator, getEventParticipants);
+router.get("/:eventId/participants", protect, isAdminOrCoordinator, checkEventAccess, getEventParticipants);
 
 // Team listing (TEAM)
-router.get("/:eventId/teams", protect, isAdminOrCoordinator, getEventTeams);
+router.get("/:eventId/teams", protect, isAdminOrCoordinator, checkEventAccess, getEventTeams);
 
 export default router;

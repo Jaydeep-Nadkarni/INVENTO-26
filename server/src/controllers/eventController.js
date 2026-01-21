@@ -3,6 +3,7 @@ import Event from "../models/eventModel.js";
 import User from "../models/userModel.js";
 import Payment from "../models/paymentModel.js";
 import ContingentKey from "../models/contingentKeyModel.js";
+import GlobalSettings from "../models/globalSettingsModel.js";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
 import Razorpay from "razorpay";
@@ -317,6 +318,12 @@ export const registerForEvent = async (req, res) => {
   const session = await mongoose.startSession();
   try {
     const result = await session.withTransaction(async () => {
+      // Global Registration Check
+      const globalSettings = await GlobalSettings.getSettings();
+      if (!globalSettings.registrationsOpen) {
+        throw new Error("All event registrations are currently closed by administration.");
+      }
+
       const {
         inventoId, teamName, members, razorpay_order_id, razorpay_payment_id, razorpay_signature,
         isOfficial, contingentKey
@@ -815,7 +822,23 @@ export const getEvents = async (req, res) => {
 // GET /api/events/analytics/overview
 export const getFestOverview = async (req, res) => {
   try {
+    const isMaster = req.user.role === 'ADMIN' && !req.user.access;
+    const isRegistration = req.user.isRegistration === true;
+
+    // Build filter
+    const matchFilter = {};
+    if (!isMaster && !isRegistration && req.user.access) {
+      matchFilter.$or = [
+        { _id: { $in: req.user.access.map(id => mongoose.isValidObjectId(id) ? new mongoose.Types.ObjectId(id) : id) } },
+        { id: { $in: req.user.access } }
+      ];
+    } else if (!isMaster && !isRegistration) {
+      // If no access array and not master/reg, they shouldn't see anything
+      return res.json({ totals: [], eventLeaderboard: [], collegeParticipation: [] });
+    }
+
     const stats = await Event.aggregate([
+      { $match: matchFilter },
       {
         $facet: {
           totals: [
@@ -884,6 +907,45 @@ export const getFestOverview = async (req, res) => {
             { $group: { _id: "$clgs", count: { $sum: 1 } } },
             { $sort: { count: -1 } },
             { $limit: 10 }
+          ],
+          clubUnique: [
+            {
+              $project: {
+                clubName: {
+                  $cond: {
+                    if: { $isArray: "$club" },
+                    then: { $arrayElemAt: ["$club", 0] },
+                    else: "$club"
+                  }
+                },
+                allParticipants: {
+                  $concatArrays: [
+                    "$registrations.participants.inventoId",
+                    {
+                      $reduce: {
+                        input: "$registrations.teams",
+                        initialValue: [],
+                        in: { $concatArrays: ["$$value", "$$this.members.inventoId"] }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            { $unwind: "$allParticipants" },
+            {
+              $group: {
+                _id: "$clubName",
+                uniqueIds: { $addToSet: "$allParticipants" }
+              }
+            },
+            {
+              $project: {
+                club: "$_id",
+                count: { $size: "$uniqueIds" }
+              }
+            },
+            { $sort: { count: -1 } }
           ]
         }
       }
@@ -898,7 +960,20 @@ export const getFestOverview = async (req, res) => {
 // GET /api/events/registrations/all
 export const getFestRegistrations = async (req, res) => {
   try {
-    const events = await Event.find({}, { name: 1, eventType: 1, club: 1, registrations: 1 });
+    // Determine if we should filter events
+    const isMaster = req.user.role === 'ADMIN' && !req.user.access;
+    const isRegistration = req.user.isRegistration === true;
+
+    // Build query
+    const query = {};
+    if (!isMaster && !isRegistration && req.user.access) {
+      query.$or = [
+        { _id: { $in: req.user.access } },
+        { id: { $in: req.user.access } }
+      ];
+    }
+
+    const events = await Event.find(query, { name: 1, id: 1, eventType: 1, club: 1, registrations: 1 });
     let allParticipants = [];
 
     events.forEach(event => {
@@ -949,17 +1024,28 @@ export const updateEventDetails = async (req, res) => {
     }
 
     // Update Slots
-    if (slotsChange !== undefined && slotsChange !== 0) {
-      if (typeof slotsChange !== 'number') return res.status(400).json({ message: "Invalid slotsChange value" });
+    // Update Slots
+    let delta = 0;
+    if (slotsChange !== undefined) delta = Number(slotsChange);
 
-      const newTotal = event.slots.totalSlots + slotsChange;
-      const newAvailable = event.slots.availableSlots + slotsChange;
+    // Allow setting absolute totalSlots (overrides slotsChange if both present, or calculates delta)
+    if (req.body.totalSlots !== undefined) {
+      const targetTotal = Number(req.body.totalSlots);
+      if (typeof targetTotal !== 'number' || targetTotal < 0) {
+        return res.status(400).json({ message: "Total slots must be a non-negative number" });
+      }
+      delta = targetTotal - event.slots.totalSlots;
+    }
+
+    if (delta !== 0) {
+      const newTotal = event.slots.totalSlots + delta;
+      const newAvailable = event.slots.availableSlots + delta;
 
       if (newTotal < 0) return res.status(400).json({ message: "Total slots cannot be negative" });
       if (newAvailable < 0) return res.status(400).json({ message: "Cannot reduce capacity below the number of currently occupied slots." });
 
       event.slots.totalSlots = newTotal;
-      event.slots.availableSlots = newAvailable; // Adjust available by the same delta
+      event.slots.availableSlots = newAvailable;
     }
 
     // Update Registration Status
@@ -998,6 +1084,213 @@ export const updateEventDetails = async (req, res) => {
 
     res.json({ success: true, message: "Event updated successfully", event });
 
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// GET /api/events/settings/global
+export const getPublicGlobalSettings = async (req, res) => {
+  try {
+    const settings = await GlobalSettings.getSettings();
+    res.json({
+        registrationsOpen: settings.registrationsOpen,
+        passControl: settings.passControl
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// GET /api/events/analytics/detailed
+export const getDetailedAnalytics = async (req, res) => {
+  try {
+    const isMaster = req.user.role === 'ADMIN' && !req.user.access;
+    const isRegistration = (req.user.isRegistration === true) || (req.user.team === 'Registration');
+
+    // Build filter
+    const matchFilter = {};
+    if (!isMaster && !isRegistration && req.user.access) {
+      matchFilter.$or = [
+        { _id: { $in: req.user.access.map(id => mongoose.isValidObjectId(id) ? new mongoose.Types.ObjectId(id) : id) } },
+        { id: { $in: req.user.access } }
+      ];
+    } else if (!isMaster && !isRegistration) {
+      return res.status(403).json({ success: false, message: "No access assigned" });
+    }
+
+    const statsPromise = Event.aggregate([
+      { $match: matchFilter },
+      {
+        $facet: {
+          overview: [
+            {
+              $project: {
+                soloCount: { $size: "$registrations.participants" },
+                teamCount: { $size: "$registrations.teams" },
+                confirmedSolo: { $size: { $filter: { input: "$registrations.participants", as: "p", cond: { $eq: ["$$p.status", "CONFIRMED"] } } } },
+                confirmedTeam: { $size: { $filter: { input: "$registrations.teams", as: "t", cond: { $eq: ["$$t.status", "CONFIRMED"] } } } },
+                pendingSolo: { $size: { $filter: { input: "$registrations.participants", as: "p", cond: { $eq: ["$$p.status", "PENDING"] } } } },
+                pendingTeam: { $size: { $filter: { input: "$registrations.teams", as: "t", cond: { $eq: ["$$t.status", "PENDING"] } } } },
+                revenue: {
+                  $add: [
+                    { $multiply: [{ $size: { $filter: { input: "$registrations.participants", as: "p", cond: { $eq: ["$$p.paid", true] } } } }, "$price"] },
+                    { $multiply: [{ $size: { $filter: { input: "$registrations.teams", as: "t", cond: { $eq: ["$$t.paid", true] } } } }, "$price"] }
+                  ]
+                },
+                pendingRevenue: {
+                  $add: [
+                    { $multiply: [{ $size: { $filter: { input: "$registrations.participants", as: "p", cond: { $and: [{ $eq: ["$$p.status", "PENDING"] }, { $eq: ["$$p.paid", false] }] } } } }, "$price"] },
+                    { $multiply: [{ $size: { $filter: { input: "$registrations.teams", as: "t", cond: { $and: [{ $eq: ["$$t.status", "PENDING"] }, { $eq: ["$$t.paid", false] }] } } } }, "$price"] }
+                  ]
+                }
+              }
+            },
+            {
+              $group: {
+                _id: null,
+                totalSolo: { $sum: "$soloCount" },
+                totalTeam: { $sum: "$teamCount" },
+                confirmedSolo: { $sum: "$confirmedSolo" },
+                confirmedTeam: { $sum: "$confirmedTeam" },
+                pendingSolo: { $sum: "$pendingSolo" },
+                pendingTeam: { $sum: "$pendingTeam" },
+                totalRevenue: { $sum: "$revenue" },
+                totalPendingRevenue: { $sum: "$pendingRevenue" }
+              }
+            }
+          ],
+          clubStats: [
+            {
+              $project: {
+                clubName: { $cond: { if: { $isArray: "$club" }, then: { $arrayElemAt: ["$club", 0] }, else: "$club" } },
+                registrations: { $add: [{ $size: "$registrations.participants" }, { $size: "$registrations.teams" }] },
+                revenue: {
+                  $add: [
+                    { $multiply: [{ $size: { $filter: { input: "$registrations.participants", as: "p", cond: { $eq: ["$$p.paid", true] } } } }, "$price"] },
+                    { $multiply: [{ $size: { $filter: { input: "$registrations.teams", as: "t", cond: { $eq: ["$$t.paid", true] } } } }, "$price"] }
+                  ]
+                }
+              }
+            },
+            {
+              $group: {
+                _id: "$clubName",
+                totalRegistrations: { $sum: "$registrations" },
+                totalRevenue: { $sum: "$revenue" },
+                eventCount: { $sum: 1 }
+              }
+            },
+            { $sort: { totalRegistrations: -1 } }
+          ],
+          eventStats: [
+            {
+              $project: {
+                name: 1,
+                club: 1,
+                totalRegistrations: { $add: [{ $size: "$registrations.participants" }, { $size: "$registrations.teams" }] },
+                capacity: "$slots.totalSlots",
+                occupancy: {
+                  $cond: [
+                    { $gt: ["$slots.totalSlots", 0] },
+                    { $multiply: [{ $divide: [{ $subtract: ["$slots.totalSlots", "$slots.availableSlots"] }, "$slots.totalSlots"] }, 100] },
+                    0
+                  ]
+                },
+                revenue: {
+                  $add: [
+                    { $multiply: [{ $size: { $filter: { input: "$registrations.participants", as: "p", cond: { $eq: ["$$p.paid", true] } } } }, "$price"] },
+                    { $multiply: [{ $size: { $filter: { input: "$registrations.teams", as: "t", cond: { $eq: ["$$t.paid", true] } } } }, "$price"] }
+                  ]
+                }
+              }
+            },
+            { $sort: { totalRegistrations: -1 } }
+          ],
+          collegeStats: [
+            {
+              $project: {
+                clgs: {
+                  $concatArrays: [
+                    "$registrations.participants.clgName",
+                    {
+                      $reduce: {
+                        input: "$registrations.teams",
+                        initialValue: [],
+                        in: { $concatArrays: ["$$value", "$$this.members.clgName"] }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            { $unwind: "$clgs" },
+            { $group: { _id: "$clgs", count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+            { $limit: 20 }
+          ]
+        }
+      }
+    ]);
+
+    const userStatsPromise = User.aggregate([
+      {
+        $facet: {
+          genderDist: [
+            { $group: { _id: "$gender", count: { $sum: 1 } } }
+          ],
+          onboarding: [
+            { $group: { _id: "$onboardingCompleted", count: { $sum: 1 } } }
+          ],
+          userGrowth: [
+            {
+              $group: {
+                _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                count: { $sum: 1 }
+              }
+            },
+            { $sort: { _id: 1 } },
+            { $limit: 30 }
+          ]
+        }
+      }
+    ]);
+
+    const paymentTrendPromise = Payment.aggregate([
+      {
+        $lookup: {
+          from: "events",
+          localField: "eventId",
+          foreignField: "_id",
+          as: "eventInfo"
+        }
+      },
+      { $unwind: { path: "$eventInfo", preserveNullAndEmptyArrays: true } },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          count: { $sum: 1 },
+          revenue: { $sum: { $ifNull: ["$eventInfo.price", 0] } }
+        }
+      },
+      { $sort: { _id: 1 } },
+      { $limit: 30 }
+    ]);
+
+    const [stats, userStats, paymentTrend] = await Promise.all([
+      statsPromise,
+      userStatsPromise,
+      paymentTrendPromise
+    ]);
+
+    res.json({
+      overview: stats[0].overview[0] || {},
+      clubStats: stats[0].clubStats,
+      eventStats: stats[0].eventStats,
+      collegeStats: stats[0].collegeStats,
+      userStats: userStats[0],
+      paymentTrend
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

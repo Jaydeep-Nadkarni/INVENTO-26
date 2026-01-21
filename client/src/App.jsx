@@ -26,7 +26,7 @@ import MasterAdmins from './admin/pages/master/Admins'
 import MasterEvents from './admin/pages/master/Events'
 import MasterParticipants from './admin/pages/master/Participants'
 import MasterStats from './admin/pages/master/Stats'
-import MasterTeams from './admin/pages/master/Teams'
+import MasterAdminControls from './admin/pages/master/AdminControls'
 import MasterActivity from './admin/pages/master/Activity'
 
 // Protected Route Component
@@ -117,7 +117,7 @@ function App() {
                 <Route path="/events" element={<MasterEvents />} />
                 <Route path="/participants" element={<MasterParticipants />} />
                 <Route path="/stats" element={<MasterStats />} />
-                <Route path="/teams" element={<MasterTeams />} />
+                <Route path="/controls" element={<MasterAdminControls />} />
                 <Route path="/activity" element={<MasterActivity />} />
               </Routes>
             </MasterRoute>

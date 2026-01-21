@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import defaultData from '../data/masterData';
 import { apiGet } from '../../utils/apiClient';
+import { useAdminAuth } from './AuthContext';
 
 const DataContext = createContext(null);
 
 export const DataProvider = ({ children }) => {
+    const { adminUser } = useAdminAuth();
     // Initialize state from localData or local storage (as fallback/cache)
     const [data, setData] = useState(() => {
         const saved = localStorage.getItem('adminData');
@@ -37,7 +39,10 @@ export const DataProvider = ({ children }) => {
                 reserved_slots: e.slots.totalSlots - e.slots.availableSlots,
                 status: e.registration?.isOpen ? "Live" : "Closed",
                 eventType: e.eventType,
-                specificSlots: e.specificSlots
+                specificSlots: e.specificSlots,
+                price: e.price,
+                registration: e.registration,
+                slots: e.slots
             }));
 
             setData(prev => ({
@@ -163,6 +168,12 @@ export const DataProvider = ({ children }) => {
             adminDistribution: stats.adminDistribution,
             overviewStats: data.overviewStats
         },
+        // Filtered data for granular admins
+        adminEvents: useMemo(() => {
+            if (!adminUser || adminUser.role === 'master' || adminUser.isRegistration) return data.events;
+            if (!adminUser.access || adminUser.access.length === 0) return [];
+            return data.events.filter(e => adminUser.access.includes(e.id) || adminUser.access.includes(e._id));
+        }, [data.events, adminUser]),
         loading,
         refreshEvents,
         refreshStats,
