@@ -85,7 +85,7 @@ export const DataProvider = ({ children }) => {
             const formattedEvents = events.map(e => ({
                 id: e._id || e.id,
                 name: e.name,
-                team: Array.isArray(e.club) ? e.club[0] : (e.club || 'General'),
+                team: e.club || 'General',
                 club: e.club,
                 total_slots: e.slots?.totalSlots || 0,
                 available_slots: e.slots?.availableSlots || 0,

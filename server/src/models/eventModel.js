@@ -6,7 +6,7 @@ const eventSchema = new mongoose.Schema({
   },
   id: { type: String, unique: true, sparse: true }, // numeric IDs like '1'
   name: { type: String, required: true }, // maps to title/themeName
-  club: { type: mongoose.Schema.Types.Mixed }, // Can be String or Array of Strings
+  club: { type: String }, // Now a simple String for consistency
   eventType: { type: String }, // SOLO, TEAM, etc.
 
   // Dynamic fields

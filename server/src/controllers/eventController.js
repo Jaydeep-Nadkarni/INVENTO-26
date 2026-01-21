@@ -912,13 +912,7 @@ export const getFestOverview = async (req, res) => {
           clubUnique: [
             {
               $project: {
-                clubName: {
-                  $cond: {
-                    if: { $isArray: "$club" },
-                    then: { $arrayElemAt: ["$club", 0] },
-                    else: "$club"
-                  }
-                },
+                clubName: { $ifNull: ["$club", "General"] },
                 allParticipants: {
                   $concatArrays: [
                     "$registrations.participants.inventoId",
@@ -991,7 +985,7 @@ export const getFestRegistrations = async (req, res) => {
         eventName: event.name,
         eventId: event._id,
         eventType: eventType,
-        team: Array.isArray(event.club) ? event.club[0] : event.club
+        team: event.club || 'General'
       }));
 
       const teams = event.registrations.teams.map(t => ({
@@ -999,7 +993,7 @@ export const getFestRegistrations = async (req, res) => {
         eventName: event.name,
         eventId: event._id,
         eventType: eventType,
-        team: Array.isArray(event.club) ? event.club[0] : event.club,
+        team: event.club || 'General',
         isTeam: true
       }));
 
@@ -1090,6 +1084,8 @@ export const updateEventDetails = async (req, res) => {
 
     event.markModified('registration');
     event.markModified('specificSlots');
+    event.markModified('club');
+    event.markModified('eventType');
     await event.save();
 
     res.json({ success: true, message: "Event updated successfully", event });
@@ -1174,7 +1170,7 @@ export const getDetailedAnalytics = async (req, res) => {
           clubStats: [
             {
               $project: {
-                clubName: { $cond: { if: { $isArray: "$club" }, then: { $arrayElemAt: ["$club", 0] }, else: "$club" } },
+                clubName: { $ifNull: ["$club", "General"] },
                 registrations: { $add: [{ $size: "$registrations.participants" }, { $size: "$registrations.teams" }] },
                 revenue: {
                   $add: [
