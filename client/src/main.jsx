@@ -40,10 +40,10 @@ window.addEventListener('orientationchange', () => {
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <DataProvider>
-      <AdminAuthProvider>
+    <AdminAuthProvider>
+      <DataProvider>
         <App />
-      </AdminAuthProvider>
-    </DataProvider>
+      </DataProvider>
+    </AdminAuthProvider>
   </StrictMode>,
 )

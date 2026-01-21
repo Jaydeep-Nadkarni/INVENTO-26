@@ -3,96 +3,52 @@ import Sidebar from '../../components/sidebar';
 import { useData } from '../../context/DataContext';
 import { apiPatch } from '../../../utils/apiClient';
 import {
-    Calendar, MapPin, Users,
-    ArrowUpRight, Search, Filter,
-    Database, Layers, Clock,
-    Venus, Mars, RefreshCcw,
-    Edit, X, Save, Lock, Unlock, ShieldAlert, AlertCircle
+    RefreshCcw, Edit2, Save, X,
+    Unlock, Lock, ShieldAlert, ShieldCheck,
+    Users, IndianRupee, Activity
 } from 'lucide-react';
 
 const GENDER_SPECIFIC_EVENT_IDS = ["22", "23"];
 
-const MasterEvents = () => {
-    const { data: { events, teams }, loading, refreshEvents } = useData();
-    const [activeTeam, setActiveTeam] = useState('All');
-    const [editingEvent, setEditingEvent] = useState(null);
-    const [formData, setFormData] = useState({});
+const EventCard = ({ event, onUpdate }) => {
+    const [isEditing, setIsEditing] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [error, setError] = useState(null);
 
-    const filteredEvents = useMemo(() => {
-        if (!events) return [];
-        // Sort by ID
-        const sorted = [...events].sort((a, b) => Number(a.id) - Number(b.id));
-        return activeTeam === 'All'
-            ? sorted
-            : sorted.filter(e => e.team === activeTeam);
-    }, [events, activeTeam]);
+    // Initial State derived from event
+    const [formData, setFormData] = useState({
+        price: event.price,
+        totalSlots: event.slots?.totalSlots || event.total_slots || 0,
+        isOpen: event.registration?.isOpen ?? true,
+        officialOnly: event.registration?.officialOnly ?? false,
+        maleSlots: event.specificSlots?.male || 0,
+        femaleSlots: event.specificSlots?.female || 0
+    });
 
-    const handleEditClick = (event) => {
-        setEditingEvent(event);
-        setError(null);
-        setFormData({
-            price: event.price,
-            slotsChange: 0,
-            isOpen: event.registration?.isOpen ?? true,
-            officialOnly: event.registration?.officialOnly ?? false,
-            // Specific Slots
-            maleSlots: event.specificSlots?.male || 0,
-            femaleSlots: event.specificSlots?.female || 0
-        });
-    };
+    // Rehydrate form data when event prop updates
+    useEffect(() => {
+        if (!isEditing) {
+            setFormData({
+                price: event.price,
+                totalSlots: event.slots?.totalSlots || event.total_slots || 0,
+                isOpen: event.registration?.isOpen ?? true,
+                officialOnly: event.registration?.officialOnly ?? false,
+                maleSlots: event.specificSlots?.male || 0,
+                femaleSlots: event.specificSlots?.female || 0
+            });
+        }
+    }, [event, isEditing]);
+
+    const isGenderSpecific = GENDER_SPECIFIC_EVENT_IDS.includes(String(event.id));
+    const occupancy = event.slots?.totalSlots > 0
+        ? Math.round(((event.slots.totalSlots - event.slots.availableSlots) / event.slots.totalSlots) * 100)
+        : (event.total_slots > 0 ? Math.round(((event.total_slots - event.available_slots) / event.total_slots) * 100) : 0);
 
     const handleSave = async () => {
-        if (!editingEvent) return;
-        setError(null);
-
-        // Validation
-        const price = Number(formData.price);
-        const slotsChange = Number(formData.slotsChange);
-
-        if (isNaN(price) || price < 0) {
-            setError("Please enter a valid non-negative price.");
-            return;
-        }
-
-        if (isNaN(slotsChange)) {
-            setError("Please enter a valid number for slots adjustment.");
-            return;
-        }
-
-        // Check constraints
-        const newTotal = editingEvent.total_slots + slotsChange;
-        const newAvailable = editingEvent.available_slots + slotsChange;
-
-        if (newTotal < 0) {
-            setError("Total slots cannot be negative. Please adjust the value.");
-            return;
-        }
-        if (newAvailable < 0) {
-            setError("Cannot reduce capacity below the number of currently occupied slots.");
-            return;
-        }
-
-        const isGenderSpecific = GENDER_SPECIFIC_EVENT_IDS.includes(String(editingEvent.id));
-        if (isGenderSpecific) {
-            const mSlots = Number(formData.maleSlots);
-            const fSlots = Number(formData.femaleSlots);
-            if (isNaN(mSlots) || mSlots < 0 || isNaN(fSlots) || fSlots < 0) {
-                setError("Please enter valid non-negative numbers for gender specific slots.");
-                return;
-            }
-            if (mSlots + fSlots > newTotal) {
-                setError(`Sum of gender slots (${mSlots + fSlots}) cannot exceed total slots (${newTotal}).`);
-                return;
-            }
-        }
-
         setSaving(true);
         try {
             const payload = {
-                price: price,
-                slotsChange: slotsChange,
+                price: Number(formData.price),
+                totalSlots: Number(formData.totalSlots), // Backend now accepts this
                 isOpen: formData.isOpen,
                 officialOnly: formData.officialOnly,
             };
@@ -104,265 +60,345 @@ const MasterEvents = () => {
                 };
             }
 
-            await apiPatch(`/api/events/${editingEvent._id || editingEvent.id}`, payload);
-            await refreshEvents();
-            setEditingEvent(null);
-        } catch (err) {
-            setError(`Failed to update event: ${err.message}`);
+            await onUpdate(event._id || event.id, payload);
+            setIsEditing(false);
+        } catch (error) {
+            console.error("Update failed", error);
+            alert("Failed to update: " + error.message);
         } finally {
             setSaving(false);
         }
     };
 
-    return (
-        <div className="flex h-screen bg-black text-white border-gray-800">
-            <Sidebar panelType="master" />
-            <main className="flex-1 overflow-y-auto p-8 lg:ml-64">
-                <div className="max-w-7xl mx-auto">
-                    {/* Header Section */}
-                    <header className="mb-8 border-b border-gray-800 pb-6 flex justify-between items-end">
-                        <div>
-                            <h1 className="text-2xl font-bold tracking-tight">Event Capacity Matrix</h1>
-                            <p className="text-sm text-gray-400">Monitor and adjust event slots and reservations</p>
-                        </div>
-                        <button
-                            onClick={refreshEvents}
-                            className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-gray-400 text-[10px] font-black uppercase tracking-widest rounded border border-gray-800 hover:text-white hover:border-white transition-all"
-                        >
-                            <RefreshCcw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
-                            Sync Registry
-                        </button>
-                    </header>
+    const handleCancel = () => {
+        setIsEditing(false);
+        // Reset form
+        setFormData({
+            price: event.price,
+            totalSlots: event.slots?.totalSlots || event.total_slots || 0,
+            isOpen: event.registration?.isOpen ?? true,
+            officialOnly: event.registration?.officialOnly ?? false,
+            maleSlots: event.specificSlots?.male || 0,
+            femaleSlots: event.specificSlots?.female || 0
+        });
+    };
 
-                    {/* Team Tabs */}
-                    <div className="mb-8 flex flex-wrap gap-2 border-b border-gray-800 pb-4">
-                        {['All', ...teams.filter(t => t.name?.toLowerCase() !== 'registration').map(t => t.name)].map(team => (
-                            <button
-                                key={team}
-                                onClick={() => setActiveTeam(team)}
-                                className={`px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] rounded transition-all ${activeTeam === team
-                                    ? 'bg-white text-black shadow-md'
-                                    : 'bg-black text-gray-500 hover:text-white'
-                                    }`}
-                            >
-                                {team}
-                            </button>
-                        ))}
+    return (
+        <div className={`
+            relative p-6 rounded-xl border transition-all duration-300
+            bg-gray-950/50 backdrop-blur-sm
+            ${isEditing ? 'border-indigo-500/50 shadow-lg shadow-indigo-500/10' : 'border-gray-800 hover:border-gray-700'}
+        `}>
+            {/* Header */}
+            <div className="flex justify-between items-start mb-6">
+                <div>
+                    <h3 className="font-bold text-lg text-white tracking-tight">{event.name}</h3>
+                    <p className="text-xs font-mono text-gray-500 uppercase tracking-widest mt-1">
+                        #{event.id} • {event.team}
+                    </p>
+                </div>
+                {/* Status Badges */}
+                <div className="flex gap-2">
+                    {/* Status Toggle or Badge */}
+                    {isEditing ? (
+                        <button
+                            onClick={() => setFormData(p => ({ ...p, isOpen: !p.isOpen }))}
+                            className={`p-1.5 rounded-lg border transition-all
+                                ${formData.isOpen
+                                    ? 'bg-green-500/10 border-green-500/30 text-green-400'
+                                    : 'bg-red-500/10 border-red-500/30 text-red-400'
+                                }`}
+                            title={formData.isOpen ? "Registration Open" : "Registration Closed"}
+                        >
+                            {formData.isOpen ? <Unlock size={14} /> : <Lock size={14} />}
+                        </button>
+                    ) : (
+                        !formData.isOpen && (
+                            <span className="bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-bold px-2 py-1 rounded-md uppercase">
+                                Closed
+                            </span>
+                        )
+                    )}
+
+                    {/* Official Only Toggle or Badge */}
+                    {isEditing ? (
+                        <button
+                            onClick={() => setFormData(p => ({ ...p, officialOnly: !p.officialOnly }))}
+                            className={`p-1.5 rounded-lg border transition-all
+                                ${formData.officialOnly
+                                    ? 'bg-blue-500/10 border-blue-500/30 text-blue-400'
+                                    : 'bg-gray-800 border-gray-700 text-gray-500'
+                                }`}
+                            title={formData.officialOnly ? "Official Entries Only" : "Open to All"}
+                        >
+                            {formData.officialOnly ? <ShieldAlert size={14} /> : <ShieldCheck size={14} />}
+                        </button>
+                    ) : (
+                        formData.officialOnly && (
+                            <span className="bg-blue-500/10 border border-blue-500/20 text-blue-500 text-[10px] font-bold px-2 py-1 rounded-md uppercase">
+                                Official Only
+                            </span>
+                        )
+                    )}
+                </div>
+            </div>
+
+            {/* Content Grid */}
+            <div className="space-y-4">
+                {/* Row 1: Fee and Occupancy */}
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-gray-900/50 rounded-lg p-3 border border-gray-800/50">
+                        <label className="text-[10px] uppercase text-gray-500 font-bold mb-1 flex items-center gap-1">
+                            <IndianRupee size={10} /> Fee
+                        </label>
+                        {isEditing ? (
+                            <input
+                                type="number"
+                                value={formData.price}
+                                onChange={e => setFormData({ ...formData, price: e.target.value })}
+                                className="w-full bg-black border border-gray-700 rounded text-sm px-2 py-1 text-white focus:border-indigo-500 outline-none transition-colors"
+                            />
+                        ) : (
+                            <div className="text-sm font-mono text-white">₹{formData.price}</div>
+                        )}
                     </div>
 
-                    {/* Events Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {filteredEvents.map((event) => {
-                            const occupancy = Math.round(((event.total_slots - event.available_slots) / event.total_slots) * 100) || 0;
-                            const isGenderSpecific = GENDER_SPECIFIC_EVENT_IDS.includes(String(event.id));
-                            const specificSlots = event.specificSlots || {};
+                    <div className="bg-gray-900/50 rounded-lg p-3 border border-gray-800/50">
+                        <label className="text-[10px] uppercase text-gray-500 font-bold mb-1 flex items-center gap-1">
+                            <Activity size={10} /> Usage
+                        </label>
+                        <div className="flex items-center gap-2">
+                            <div className="flex-1 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                                <div
+                                    className={`h-full ${occupancy >= 100 ? 'bg-red-500' : 'bg-emerald-500'}`}
+                                    style={{ width: `${Math.min(occupancy, 100)}%` }}
+                                />
+                            </div>
+                            <span className="text-[10px] font-mono text-gray-400">{occupancy}%</span>
+                        </div>
+                    </div>
+                </div>
 
-                            return (
-                                <div key={event.id} className="bg-gray-950 border border-gray-800 p-6 rounded group hover:border-white transition-all flex flex-col h-full shadow-sm relative overflow-hidden">
-                                    {/* Status Indicators */}
-                                    <div className="absolute top-0 right-0 p-2 flex gap-1">
-                                        {!event.registration?.isOpen && (
-                                            <span className="bg-red-500/20 text-red-400 text-[9px] px-2 py-1 rounded font-bold uppercase border border-red-500/50">CLOSED</span>
-                                        )}
-                                        {event.registration?.officialOnly && (
-                                            <span className="bg-blue-500/20 text-blue-400 text-[9px] px-2 py-1 rounded font-bold uppercase border border-blue-500/50">OFFICIAL ONLY</span>
-                                        )}
+                {/* Specific Slots Logic for Gender Specific Events */}
+                {isGenderSpecific ? (
+                    <div className="space-y-2">
+                        <div className="text-[10px] uppercase text-gray-500 font-bold mb-1 flex items-center gap-1">
+                            <Users size={10} /> Total Capacity: {Number(formData.maleSlots) + Number(formData.femaleSlots)}
+                            <span className="text-gray-600 font-normal normal-case">
+                                ({formData.maleSlots} Boys + {formData.femaleSlots} Girls)
+                            </span>
+                        </div>
+                        <div className="p-3 bg-gray-900/30 rounded-lg border border-gray-800/50 text-xs">
+                            <div className="flex justify-between items-center mb-2">
+                                <span className="text-gray-500 uppercase font-bold text-[10px]">Boys Slots</span>
+                                {isEditing ? (
+                                    <input
+                                        type="number"
+                                        className="w-16 bg-black border border-gray-700 rounded px-1.5 py-0.5 text-right font-mono"
+                                        value={formData.maleSlots}
+                                        onChange={e => setFormData({ ...formData, maleSlots: e.target.value })}
+                                    />
+                                ) : (
+                                    <span className="font-mono text-white">
+                                        {formData.maleSlots}
+                                        <span className="text-gray-600 ml-1">(Boys — Available)</span>
+                                    </span>
+                                )}
+                            </div>
+                            <div className="flex justify-between items-center">
+                                <span className="text-gray-500 uppercase font-bold text-[10px]">Girls Slots</span>
+                                {isEditing ? (
+                                    <input
+                                        type="number"
+                                        className="w-16 bg-black border border-gray-700 rounded px-1.5 py-0.5 text-right font-mono"
+                                        value={formData.femaleSlots}
+                                        onChange={e => setFormData({ ...formData, femaleSlots: e.target.value })}
+                                    />
+                                ) : (
+                                    <span className="font-mono text-white">
+                                        {formData.femaleSlots} <span className="text-gray-600 ml-1">(Avl)</span>
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                        <div className="text-[9px] text-gray-600 text-center">
+                            * For gender events, you are editing <u>Available</u> slots directly.
+                        </div>
+                    </div>
+                ) : (
+                    /* General Slots */
+                    <div className="bg-gray-900/50 rounded-lg p-3 border border-gray-800/50">
+                        <div className="flex justify-between items-center mb-1">
+                            <label className="text-[10px] uppercase text-gray-500 font-bold flex items-center gap-1">
+                                <Users size={10} /> Total Capacity
+                            </label>
+                            {!isEditing && (
+                                <span className="text-[10px] text-gray-500">
+                                    {event.slots?.availableSlots ?? event.available_slots} Available
+                                </span>
+                            )}
+                        </div>
+
+                        {isEditing ? (
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="number"
+                                    value={formData.totalSlots}
+                                    onChange={e => setFormData({ ...formData, totalSlots: e.target.value })}
+                                    className="flex-1 bg-black border border-gray-700 rounded text-sm px-2 py-1 text-white focus:border-indigo-500 outline-none font-mono"
+                                />
+                                <span className="text-xs text-gray-500 font-mono">slots</span>
+                            </div>
+                        ) : (
+                            <div className="text-lg font-mono text-white tracking-tight">
+                                {event.slots?.totalSlots ?? event.total_slots}
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+
+            {/* Actions */}
+            <div className="mt-6 flex justify-end gap-2">
+                {isEditing ? (
+                    <>
+                        <button
+                            onClick={handleCancel}
+                            disabled={saving}
+                            className="p-2 rounded-lg bg-gray-900 text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+                        >
+                            <X size={16} />
+                        </button>
+                        <button
+                            onClick={handleSave}
+                            disabled={saving}
+                            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white font-bold text-xs hover:bg-indigo-500 transition-colors shadow-lg shadow-indigo-900/20"
+                        >
+                            {saving ? <RefreshCcw size={14} className="animate-spin" /> : <Save size={14} />}
+                            SAVE
+                        </button>
+                    </>
+                ) : (
+                    <button
+                        onClick={() => setIsEditing(true)}
+                        className="w-full py-2 rounded-lg border border-gray-800 text-gray-500 text-xs font-bold uppercase tracking-widest hover:border-gray-600 hover:text-white transition-colors flex items-center justify-center gap-2 group"
+                    >
+                        <Edit2 size={12} className="group-hover:text-indigo-400 transition-colors" />
+                        Edit Event
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+};
+
+const MasterEvents = () => {
+    const { data: { events, teams }, loading, refreshEvents } = useData();
+    const [activeTeam, setActiveTeam] = useState('All');
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const handleUpdateEvent = async (id, payload) => {
+        await apiPatch(`/api/events/${id}`, payload);
+        await refreshEvents(); // Refresh to ensure sync
+    };
+
+    const filteredEvents = useMemo(() => {
+        if (!events) return [];
+        let result = [...events];
+
+        // Filter by Team
+        if (activeTeam !== 'All') {
+            result = result.filter(e => e.team === activeTeam);
+        }
+
+        // Filter by Search
+        if (searchTerm) {
+            const lower = searchTerm.toLowerCase();
+            result = result.filter(e =>
+                e.name.toLowerCase().includes(lower) ||
+                String(e.id).includes(lower)
+            );
+        }
+
+        return result.sort((a, b) => Number(a.id) - Number(b.id));
+
+    }, [events, activeTeam, searchTerm]);
+
+    return (
+        <div className="flex h-screen bg-black text-white overflow-hidden">
+            <Sidebar panelType="master" />
+
+            <main className="flex-1 flex flex-col h-full overflow-hidden lg:ml-64 relative">
+                {/* Decorative Background */}
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-900 via-black to-black opacity-40 pointer-events-none" />
+
+                <div className="p-8 flex-1 overflow-y-auto">
+                    <div className="max-w-7xl mx-auto space-y-8">
+
+                        {/* Header */}
+                        <div className="flex flex-col md:flex-row justify-between items-end gap-4 pb-6 border-b border-gray-900">
+                            <div>
+                                <h1 className="text-3xl font-black tracking-tighter text-white mb-2">EVENT MATRIX</h1>
+                                <p className="text-sm text-gray-500 font-mono">Manage capacity, pricing, and status protocols.</p>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                                <div className="relative group">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <Users className="h-4 w-4 text-gray-600 group-focus-within:text-indigo-500 transition-colors" />
                                     </div>
-
-                                    <div className="flex justify-between items-start mb-6 mt-4">
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <span className="text-[9px] bg-white text-black px-1.5 py-0.5 rounded font-black uppercase tracking-widest">
-                                                    #{event.id} {event.team}
-                                                </span>
-                                                <span className={`text-[9px] font-black uppercase tracking-widest ${occupancy > 90 ? 'text-red-500' : 'text-green-500'
-                                                    }`}>
-                                                    • {occupancy}% OCCUPIED
-                                                </span>
-                                            </div>
-                                            <h3 className="text-lg font-black text-white uppercase tracking-tighter leading-snug">
-                                                {event.name}
-                                            </h3>
-                                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">
-                                                {event.eventType} EVENT • ₹{event.price}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div className="p-3 bg-gray-900 border border-gray-800 rounded">
-                                                <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mb-1">Total</p>
-                                                <p className="text-xl font-black text-white">{event.total_slots}</p>
-                                            </div>
-                                            <div className="p-3 bg-gray-900 border border-gray-800 rounded">
-                                                <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mb-1">Available</p>
-                                                <p className="text-xl font-black text-white">{event.available_slots}</p>
-                                            </div>
-                                        </div>
-
-                                        {isGenderSpecific && (
-                                            <div className="p-3 bg-indigo-950/20 border border-indigo-900/50 rounded space-y-2">
-                                                <p className="text-[9px] text-indigo-400 font-bold uppercase tracking-widest mb-2 border-b border-indigo-900/50 pb-1 flex items-center gap-2">
-                                                    <Layers className="w-3" /> Gender Specific Slots
-                                                </p>
-                                                <div className="flex justify-between items-center text-[11px] font-bold">
-                                                    <span className="flex items-center gap-1.5 text-blue-400"><Mars className="w-3" /> Boys</span>
-                                                    <span>{specificSlots.male || 0}</span>
-                                                </div>
-                                                <div className="flex justify-between items-center text-[11px] font-bold">
-                                                    <span className="flex items-center gap-1.5 text-pink-400"><Venus className="w-3" /> Girls</span>
-                                                    <span>{specificSlots.female || 0}</span>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        <div className="space-y-4 pt-4 border-t border-dotted border-gray-800">
-                                            <div className="w-full bg-gray-900 h-1 rounded-full overflow-hidden">
-                                                <div
-                                                    className={`h-full transition-all duration-1000 ${occupancy > 90 ? 'bg-red-500' : 'bg-green-500'}`}
-                                                    style={{ width: `${occupancy}%` }}
-                                                ></div>
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 gap-3 pt-4">
-                                            <button
-                                                onClick={() => handleEditClick(event)}
-                                                className="py-2.5 bg-gray-900 border border-gray-800 text-[9px] font-black text-white uppercase tracking-widest rounded hover:bg-gray-800 hover:border-white transition-all flex items-center justify-center gap-2"
-                                            >
-                                                <Edit className="w-3 h-3" /> Edit Protocol
-                                            </button>
-                                        </div>
-                                    </div>
+                                    <input
+                                        type="text"
+                                        placeholder="SEARCH PROTOCOLS..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="bg-gray-950 border border-gray-800 text-gray-300 text-xs rounded-lg block pl-10 p-2.5 w-64 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none uppercase tracking-wide font-mono transition-all"
+                                    />
                                 </div>
-                            );
-                        })}
+                                <button
+                                    onClick={refreshEvents}
+                                    className="p-2.5 bg-gray-950 border border-gray-800 text-gray-400 rounded-lg hover:text-white hover:border-gray-600 transition-all"
+                                    title="Sync Data"
+                                >
+                                    <RefreshCcw size={16} className={loading ? "animate-spin" : ""} />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Filters */}
+                        <div className="flex flex-wrap gap-2">
+                            {['All', ...(teams || []).filter(t => t.name?.toLowerCase() !== 'registration').map(t => t.name)].map(team => (
+                                <button
+                                    key={team}
+                                    onClick={() => setActiveTeam(team)}
+                                    className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg border transition-all ${activeTeam === team
+                                        ? 'bg-white text-black border-white'
+                                        : 'bg-transparent text-gray-500 border-gray-900 hover:border-gray-700 hover:text-gray-300'
+                                        }`}
+                                >
+                                    {team}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pb-12">
+                            {filteredEvents.map(event => (
+                                <EventCard
+                                    key={event.id}
+                                    event={event}
+                                    onUpdate={handleUpdateEvent}
+                                />
+                            ))}
+                            {filteredEvents.length === 0 && (
+                                <div className="col-span-full py-20 text-center text-gray-600 font-mono uppercase tracking-widest">
+                                    No Protocols Found
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </main>
-
-            {/* EDIT MODAL */}
-            {editingEvent && (
-                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-gray-950 border border-gray-800 rounded-lg max-w-md w-full shadow-2xl overflow-hidden">
-                        <div className="p-4 border-b border-gray-800 flex justify-between items-center bg-gray-900/50">
-                            <div>
-                                <h2 className="text-lg font-bold text-white uppercase tracking-tight">Edit Protocol</h2>
-                                <p className="text-xs text-gray-400">{editingEvent.name}</p>
-                            </div>
-                            <button onClick={() => setEditingEvent(null)} className="text-gray-400 hover:text-white">
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-
-                        <div className="p-6 space-y-6">
-                            {error && (
-                                <div className="bg-red-500/10 border border-red-500/50 rounded p-3">
-                                    <p className="text-red-400 text-xs font-bold flex items-center gap-2">
-                                        <AlertCircle className="w-4 h-4" />
-                                        {error}
-                                    </p>
-                                </div>
-                            )}
-                            {/* Price */}
-                            <div>
-                                <label className="text-[10px] uppercase font-bold text-gray-500 block mb-2">Registration Fee (₹)</label>
-                                <input
-                                    type="number"
-                                    value={formData.price}
-                                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                                    className="w-full bg-black border border-gray-700 rounded px-3 py-2 text-white font-mono focus:border-white focus:outline-none"
-                                />
-                            </div>
-
-                            {/* Slot Adjustment */}
-                            <div>
-                                <label className="text-[10px] uppercase font-bold text-gray-500 block mb-2">Adjust Capacity (+/- Slots)</label>
-                                <div className="flex gap-2">
-                                    <input
-                                        type="number"
-                                        value={formData.slotsChange}
-                                        onChange={(e) => setFormData({ ...formData, slotsChange: Number(e.target.value) })}
-                                        className="w-full bg-black border border-gray-700 rounded px-3 py-2 text-white font-mono focus:border-white focus:outline-none"
-                                        placeholder="Enter number (e.g. 5 or -5)"
-                                    />
-                                </div>
-                                <p className="text-[10px] text-gray-600 mt-1">Current Total: {editingEvent.total_slots}. New Total will be {editingEvent.total_slots + Number(formData.slotsChange)}</p>
-                            </div>
-
-                            {/* Gender Specific Slots */}
-                            {GENDER_SPECIFIC_EVENT_IDS.includes(String(editingEvent.id)) && (
-                                <div className="bg-indigo-950/10 p-4 border border-indigo-900/30 rounded">
-                                    <label className="text-[10px] uppercase font-bold text-indigo-400 block mb-3 border-b border-indigo-900/30 pb-1">Gender Specific Slots (Set Total)</label>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="text-[9px] uppercase font-bold text-gray-500 block mb-1">Boys Slots</label>
-                                            <input
-                                                type="number"
-                                                value={formData.maleSlots}
-                                                onChange={(e) => setFormData({ ...formData, maleSlots: e.target.value })}
-                                                className="w-full bg-black border border-gray-700 rounded px-3 py-2 text-white font-mono focus:border-white focus:outline-none"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="text-[9px] uppercase font-bold text-gray-500 block mb-1">Girls Slots</label>
-                                            <input
-                                                type="number"
-                                                value={formData.femaleSlots}
-                                                onChange={(e) => setFormData({ ...formData, femaleSlots: e.target.value })}
-                                                className="w-full bg-black border border-gray-700 rounded px-3 py-2 text-white font-mono focus:border-white focus:outline-none"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Toggles */}
-                            <div className="grid grid-cols-2 gap-4">
-                                <button
-                                    type="button"
-                                    onClick={() => setFormData({ ...formData, isOpen: !formData.isOpen })}
-                                    aria-pressed={formData.isOpen}
-                                    className={`cursor-pointer p-4 rounded border flex flex-col items-center justify-center gap-2 transition-all focus:outline-none focus:ring-2 focus:ring-white/20 ${formData.isOpen ? 'bg-green-950/20 border-green-900 text-green-400' : 'bg-red-950/20 border-red-900 text-red-400'
-                                        }`}
-                                >
-                                    {formData.isOpen ? <Unlock className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
-                                    <span className="text-[10px] font-black uppercase tracking-widest">{formData.isOpen ? 'Reg. Open' : 'Reg. Closed'}</span>
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={() => setFormData({ ...formData, officialOnly: !formData.officialOnly })}
-                                    aria-pressed={formData.officialOnly}
-                                    className={`cursor-pointer p-4 rounded border flex flex-col items-center justify-center gap-2 transition-all focus:outline-none focus:ring-2 focus:ring-white/20 ${formData.officialOnly ? 'bg-blue-950/20 border-blue-900 text-blue-400' : 'bg-gray-900 border-gray-800 text-gray-500'
-                                        }`}
-                                >
-                                    <ShieldAlert className="w-5 h-5" />
-                                    <span className="text-[10px] font-black uppercase tracking-widest">Official Only</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="p-4 border-t border-gray-800 bg-gray-900/50 flex justify-end gap-3">
-                            <button
-                                onClick={() => setEditingEvent(null)}
-                                className="px-4 py-2 text-xs font-bold text-gray-400 hover:text-white"
-                            >
-                                CANCEL
-                            </button>
-                            <button
-                                onClick={handleSave}
-                                disabled={saving}
-                                className="px-6 py-2 bg-white text-black text-xs font-black uppercase tracking-widest rounded hover:bg-gray-200 flex items-center gap-2"
-                            >
-                                {saving ? <RefreshCcw className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
-                                SAVE CHANGES
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

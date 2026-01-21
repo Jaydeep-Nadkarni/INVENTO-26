@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import defaultData from '../data/masterData';
 import { apiGet } from '../../utils/apiClient';
+import { useAdminAuth } from './AuthContext';
 
 const DataContext = createContext(null);
 
 export const DataProvider = ({ children }) => {
+    const { adminUser } = useAdminAuth();
     // Initialize state from localData or local storage (as fallback/cache)
     const [data, setData] = useState(() => {
         const saved = localStorage.getItem('adminData');
@@ -20,6 +22,18 @@ export const DataProvider = ({ children }) => {
     });
 
     const [loading, setLoading] = useState(false);
+
+    // Derived events filtered by team (Registration events excluded globally)
+    const filteredEvents = useMemo(() => {
+        return data.events.filter(e => e.team?.toLowerCase() !== 'registration');
+    }, [data.events]);
+
+    // Filtered data for granular admins - moved to top level
+    const adminEvents = useMemo(() => {
+        if (!adminUser || adminUser.role === 'master' || adminUser.isRegistration) return filteredEvents;
+        if (!adminUser.access || adminUser.access.length === 0) return [];
+        return filteredEvents.filter(e => adminUser.access.includes(e.id));
+    }, [filteredEvents, adminUser]);
 
     // Fetch fresh events list
     const refreshEvents = async () => {
@@ -37,7 +51,10 @@ export const DataProvider = ({ children }) => {
                 reserved_slots: e.slots.totalSlots - e.slots.availableSlots,
                 status: e.registration?.isOpen ? "Live" : "Closed",
                 eventType: e.eventType,
-                specificSlots: e.specificSlots
+                specificSlots: e.specificSlots,
+                price: e.price,
+                registration: e.registration,
+                slots: e.slots
             }));
 
             setData(prev => ({
@@ -157,12 +174,12 @@ export const DataProvider = ({ children }) => {
     const value = {
         data: {
             ...data,
-            // Decisively exclude Registration events and stats from the entire application (case-insensitive)
-            events: data.events.filter(e => e.team?.toLowerCase() !== 'registration'),
+            events: filteredEvents,
             masterStats: stats.masterStats,
             adminDistribution: stats.adminDistribution,
             overviewStats: data.overviewStats
         },
+        adminEvents,
         loading,
         refreshEvents,
         refreshStats,
@@ -175,6 +192,7 @@ export const DataProvider = ({ children }) => {
 
     return (
         <DataContext.Provider value={value}>
+            {console.log("DataProvider is rendering children:", !!children)}
             {children}
         </DataContext.Provider>
     );
@@ -183,6 +201,7 @@ export const DataProvider = ({ children }) => {
 export const useData = () => {
     const context = useContext(DataContext);
     if (!context) {
+        console.error("useData called outside of Provider! Current tree might be broken.");
         throw new Error('useData must be used within a DataProvider');
     }
     return context;

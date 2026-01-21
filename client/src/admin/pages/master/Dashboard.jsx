@@ -1,13 +1,14 @@
 import React, { useMemo } from 'react';
 import Sidebar from '../../components/sidebar';
 import { useData } from '../../context/DataContext';
-import { Shield, Users, Calendar, Wallet, Activity, Database } from 'lucide-react';
+import { Shield, Users, Calendar, Wallet, Database, Activity, TrendingUp } from 'lucide-react';
 
 const MasterDashboard = () => {
     const { data } = useData();
-    
+
     // Defensive extraction
     const events = data?.events || [];
+    const overviewStats = data?.overviewStats || {};
     const masterStats = data?.masterStats || {
         totalParticipants: 0,
         totalEvents: 0,
@@ -16,7 +17,12 @@ const MasterDashboard = () => {
         systemHealth: "Initializing",
         activeNodes: 0
     };
-    const adminDistribution = data?.adminDistribution || [];
+
+    // Use backend-provided club unique stats if available, otherwise might need fallback or wait
+    const clubUniqueStats = overviewStats?.clubUnique || [];
+    const filteredClubs = useMemo(() => 
+        clubUniqueStats.filter(s => s.club?.toLowerCase() !== 'registration'),
+    [clubUniqueStats]);
 
     // Calculate occupancy by club
     const clubOccupancy = useMemo(() => {
@@ -35,7 +41,7 @@ const MasterDashboard = () => {
             stats[club].totalSlots += (event.total_slots || 0);
             stats[club].filledSlots += (event.reserved_slots || 0);
         });
-        
+
         return Object.entries(stats).map(([name, data]) => ({
             name,
             ...data,
@@ -44,134 +50,148 @@ const MasterDashboard = () => {
     }, [events]);
 
     return (
-        <div className="flex h-screen bg-black text-white border-gray-800">
+        <div className="flex h-screen bg-gray-50 text-gray-900 font-sans">
             <Sidebar panelType="master" />
-            
-            <main className="flex-1 overflow-y-auto p-8 lg:ml-64">
-                <div className="max-w-7xl mx-auto">
-                    {/* Master Header */}
-                    <header className="mb-8 border-b border-gray-800 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <div>
-                            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-3">
-                                <Shield className="w-6 h-6 text-white" />
-                                Master Control Panel
-                            </h1>
-                            <p className="text-sm text-gray-400">
-                                Global system overview and real-time event analytics
-                            </p>
-                        </div>
-                        <div className="flex items-center gap-6">
+
+            <main className="flex-1 flex overflow-hidden lg:ml-64">
+                {/* Center Content */}
+                <div className="flex-1 overflow-y-auto p-8">
+                    <div className="max-w-5xl mx-auto space-y-10">
+
+                        {/* Header */}
+                        <header className="flex justify-between items-end border-b border-gray-200 pb-6">
+                            <div>
+                                <h1 className="text-3xl font-light text-gray-900 tracking-tight">
+                                    Master Dashboard
+                                </h1>
+                                <p className="text-sm text-gray-500 mt-2 font-medium">
+                                    Overview & Real-time Analytics
+                                </p>
+                            </div>
                             <div className="text-right">
-                                <div className="flex items-center justify-end gap-2 mb-1">
-                                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                                    <span className="text-sm font-medium text-white">System Live</span>
-                                </div>
-                                <p className="text-xs text-gray-500 font-medium whitespace-nowrap">Node ID: INVENTO_M_01</p>
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    System Live
+                                </span>
                             </div>
-                        </div>
-                    </header>
+                        </header>
 
-                    {/* Master KPI Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        {[
-                            { label: "Total Participants", value: masterStats.totalParticipants, icon: Users, color: "text-blue-400" },
-                            { label: "Total Events", value: masterStats.totalEvents, icon: Calendar, color: "text-purple-400" },
-                            { label: "Admin Network", value: masterStats.totalAdmins, icon: Shield, color: "text-amber-400" },
-                            { label: "Total Revenue", value: masterStats.totalRevenue, icon: Wallet, color: "text-green-400" }
-                        ].map((stat, idx) => (
-                            <div key={idx} className="bg-gray-950 border border-gray-800 p-6 rounded-md shadow-sm">
-                                <div className="flex justify-between items-start mb-4">
-                                    <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{stat.label}</h3>
-                                    <stat.icon className={`w-4 h-4 ${stat.color}`} />
-                                </div>
-                                <p className="text-3xl font-black text-white tracking-tight">{stat.value}</p>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        {/* Club Occupancy Distribution */}
-                        <section className="lg:col-span-2 bg-gray-950 border border-gray-800 rounded-md p-6 shadow-sm">
-                            <div className="flex items-center justify-between mb-8">
-                                <h2 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
-                                    <Database className="w-4 h-4" />
-                                    Club Occupancy Statistics
-                                </h2>
-                                <span className="text-[10px] font-bold px-2 py-1 bg-gray-900 text-gray-400 rounded">LIVE SLOTS</span>
-                            </div>
-                            <div className="space-y-6">
-                                {clubOccupancy.map((club, idx) => (
-                                    <div key={idx} className="space-y-2">
-                                        <div className="flex justify-between items-end">
-                                            <div className="flex flex-col">
-                                                <span className="text-sm font-bold text-white uppercase tracking-tight">{club.name}</span>
-                                                <span className="text-[10px] text-gray-500 font-medium">Resources Utilized: {club.filledSlots}/{club.totalSlots}</span>
-                                            </div>
-                                            <div className="text-xs font-black text-white">
-                                                {club.percentage}%
-                                            </div>
+                        {/* KPI Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {[
+                                { label: "Participants", value: masterStats.totalParticipants, icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
+                                { label: "Active Events", value: masterStats.totalEvents, icon: Calendar, color: "text-purple-600", bg: "bg-purple-50" },
+                                { label: "Admins", value: masterStats.totalAdmins, icon: Shield, color: "text-amber-600", bg: "bg-amber-50" },
+                                { label: "Revenue", value: masterStats.totalRevenue, icon: Wallet, color: "text-emerald-600", bg: "bg-emerald-50" }
+                            ].map((stat, idx) => (
+                                <div key={idx} className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className={`p-2 rounded-lg ${stat.bg}`}>
+                                            <stat.icon className={`w-5 h-5 ${stat.color}`} />
                                         </div>
-                                        <div className="h-1.5 w-full bg-gray-900 rounded-full overflow-hidden">
-                                            <div 
-                                                className="h-full bg-blue-500 transition-all duration-700 ease-out" 
+                                        <TrendingUp className="w-4 h-4 text-gray-300" />
+                                    </div>
+                                    <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                                    <p className="text-xs font-medium text-gray-400 uppercase mt-1 tracking-wide">{stat.label}</p>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Club Occupancy Section */}
+                        <section className="bg-white rounded-xl border border-gray-100 shadow-sm p-8">
+                            <div className="flex items-center justify-between mb-8">
+                                <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                                    <Activity className="w-5 h-5 text-gray-400" />
+                                    Slot Occupancy
+                                </h2>
+                                <span className="text-xs font-medium px-3 py-1 bg-gray-100 text-gray-600 rounded-full">
+                                    Live Updates
+                                </span>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+                                {clubOccupancy.map((club, idx) => (
+                                    <div key={idx} className="group">
+                                        <div className="flex justify-between items-end mb-2">
+                                            <div>
+                                                <h3 className="text-sm font-semibold text-gray-800">{club.name}</h3>
+                                                <p className="text-xs text-gray-400 mt-0.5">
+                                                    {club.filledSlots} <span className="text-gray-300">/</span> {club.totalSlots} Slots
+                                                </p>
+                                            </div>
+                                            <span className="text-sm font-bold text-gray-900">{club.percentage}%</span>
+                                        </div>
+                                        <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                                            <div
+                                                className={`h-full rounded-full transition-all duration-1000 ease-out ${club.percentage >= 90 ? 'bg-red-500' :
+                                                        club.percentage >= 70 ? 'bg-amber-500' :
+                                                            'bg-gray-900'
+                                                    }`}
                                                 style={{ width: `${club.percentage}%` }}
-                                            ></div>
+                                            />
                                         </div>
                                     </div>
                                 ))}
                                 {clubOccupancy.length === 0 && (
-                                    <p className="text-xs text-gray-500 text-center py-4 italic text-wrap">No active event data available</p>
+                                    <div className="col-span-2 text-center py-10 text-gray-400 text-sm">
+                                        No occupancy data available.
+                                    </div>
                                 )}
                             </div>
                         </section>
 
-                        {/* Quick Stats / System Health */}
-                        <section className="bg-gray-950 border border-gray-800 rounded-md p-6 shadow-sm">
-                            <h2 className="text-sm font-bold text-white uppercase tracking-widest mb-6 flex items-center gap-2">
-                                <Activity className="w-4 h-4" />
-                                Team Assets
-                            </h2>
-                            <div className="space-y-4">
-                                {adminDistribution
-                                    ?.filter(dist => dist.team?.toLowerCase() !== 'registration')
-                                    .map((dist, idx) => (
-                                    <div key={idx} className="p-3 border border-gray-900 rounded hover:bg-gray-900 transition-colors">
-                                        <div className="flex justify-between items-center mb-1">
-                                            <span className="text-xs font-bold text-white uppercase">{dist.team}</span>
-                                            <span className="text-[10px] text-gray-500 font-medium whitespace-nowrap overflow-hidden text-ellipsis uppercase">Domain Node</span>
-                                        </div>
-                                        <div className="flex items-center gap-4">
-                                            <div className="flex items-center gap-2">
-                                                <Users className="w-3 h-3 text-gray-500" />
-                                                <span className="text-[10px] text-gray-400">Admins: {dist.admins}</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <Database className="w-3 h-3 text-gray-500" />
-                                                <span className="text-[10px] text-gray-400">Reg: {dist.participants}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                                {adminDistribution?.length === 0 && (
-                                    <p className="text-xs text-gray-400 text-center py-4 italic text-wrap">No team distribution data found</p>
-                                )}
-                            </div>
-                            <button className="w-full mt-6 py-2 bg-gray-900 hover:bg-gray-800 text-white text-[10px] font-bold uppercase tracking-widest transition-all rounded shadow-sm">
-                                System Configuration
-                            </button>
-                        </section>
                     </div>
 
-                    {/* Security Footer */}
-                    <footer className="mt-12 py-6 border-t border-gray-800 flex justify-between items-center">
-                        <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500">
-                            MASTER_NODE_ALPHA_26 © 2026 INVENTO GLOBAL SECURITY
-                        </div>
-                        <div className="text-[10px] font-medium text-gray-400 uppercase tracking-widest">
-                            Global Access Restricted
-                        </div>
+                    {/* Footer */}
+                    <footer className="max-w-5xl mx-auto mt-16 pt-8 border-t border-gray-200 flex justify-between items-center text-xs text-gray-400">
+                        <p>© 2026 INVENTO Master Control</p>
+                        <p className="font-mono">v2.4.0-stable</p>
                     </footer>
                 </div>
+
+                {/* Right Sidebar - Unique Participants */}
+                <aside className="w-80 bg-white border-l border-gray-200 hidden xl:flex flex-col">
+                    <div className="p-6 border-b border-gray-100">
+                        <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                            <Database className="w-4 h-4 text-gray-400" />
+                            Participants
+                        </h2>
+                        <p className="text-xs text-gray-400 mt-1">Unique individuals per club</p>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto p-6">
+                        <div className="space-y-1">
+                            {filteredClubs.length > 0 ? (
+                                filteredClubs.map((stat, idx) => (
+                                    <div key={idx} className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors group">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500 group-hover:bg-white group-hover:shadow-sm transition-all border border-transparent group-hover:border-gray-200">
+                                                {idx + 1}
+                                            </div>
+                                            <span className="text-sm font-medium text-gray-700">{stat.club}</span>
+                                        </div>
+                                        <span className="text-sm font-bold text-gray-900 bg-gray-50 px-2 py-1 rounded border border-gray-100 group-hover:bg-white group-hover:shadow-sm transition-all">
+                                            {stat.count}
+                                        </span>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="text-center py-8">
+                                    <p className="text-sm text-gray-400">No metrics available</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Quick Action / Status */}
+                    <div className="p-6 bg-gray-50 border-t border-gray-200">
+                        <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
+                            <h4 className="text-blue-900 font-semibold text-sm mb-1">Total Reach</h4>
+                            <p className="text-blue-700 text-xs leading-relaxed">
+                                Aggregated count of unique student participation across all club verticals.
+                            </p>
+                        </div>
+                    </div>
+                </aside>
             </main>
         </div>
     );

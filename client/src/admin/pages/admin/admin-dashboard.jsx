@@ -17,41 +17,43 @@ import {
 
 const AdminDashboard = () => {
     const { adminUser } = useAdminAuth();
-    const { data } = useData();
+    const { data, adminEvents } = useData();
     const { participants, events } = data;
 
     const [selectedTeam, setSelectedTeam] = useState('All');
     const [selectedEvent, setSelectedEvent] = useState('All');
 
-    const isRegistration = adminUser?.team === 'Registration';
+    const isRegistration = adminUser?.isRegistration || adminUser?.team === 'Registration';
 
     // Calculation Logic
     const stats = useMemo(() => {
-        // Filter based on team/event logic
-        const teamParticipants = isRegistration
-            ? (selectedTeam === 'All' ? participants : participants.filter(p => p.team === selectedTeam))
-            : participants.filter(p => p.team === adminUser?.team);
+        // Filter events based on admin access
+        const relevantEvents = adminEvents;
+
+        // Filter participants based on relevant events
+        const accessibleEventIds = relevantEvents.map(e => e.id);
+        const accessibleEventNames = relevantEvents.map(e => e.name);
+
+        const filteredParticipants = isRegistration 
+            ? participants 
+            : participants.filter(p => accessibleEventNames.includes(p.eventName) || accessibleEventIds.includes(p.eventId));
 
         const finalParticipants = isRegistration && selectedEvent !== 'All'
-            ? teamParticipants.filter(p => p.event === selectedEvent)
-            : teamParticipants;
+            ? filteredParticipants.filter(p => p.eventName === selectedEvent)
+            : filteredParticipants;
 
-        const teamEvents = isRegistration
-            ? (selectedTeam === 'All' ? events : events.filter(e => e.team === selectedTeam))
-            : events.filter(e => e.team === adminUser?.team);
-
-        const totalSlots = teamEvents.reduce((acc, e) => acc + (e.total_slots || 0), 0);
-        const verifiedCount = finalParticipants.filter(p => p.status === 'Verified').length;
+        const totalSlots = relevantEvents.reduce((acc, e) => acc + (e.total_slots || 0), 0);
+        const verifiedCount = finalParticipants.filter(p => p.status === 'Verified' || p.status === 'CONFIRMED').length;
 
         return {
             participantsCount: finalParticipants.length,
-            eventsCount: teamEvents.length,
+            eventsCount: relevantEvents.length,
             slotsOccupancy: totalSlots > 0 ? Math.round((finalParticipants.length / totalSlots) * 100) : 0,
             verifiedPercentage: finalParticipants.length > 0 ? Math.round((verifiedCount / finalParticipants.length) * 100) : 0,
-            globalVerifiedPercentage: participants.length > 0 ? Math.round((participants.filter(p => p.status === 'Verified').length / participants.length) * 100) : 0,
-            relevantEvents: teamEvents
+            globalVerifiedPercentage: participants.length > 0 ? Math.round((participants.filter(p => p.status === 'Verified' || p.status === 'CONFIRMED').length / participants.length) * 100) : 0,
+            relevantEvents: relevantEvents
         };
-    }, [participants, events, adminUser?.team, isRegistration, selectedTeam, selectedEvent]);
+    }, [participants, events, adminEvents, adminUser, isRegistration, selectedEvent]);
 
     const handleExport = (format) => {
         const filename = `Invento_Report_${adminUser?.team || 'Admin'}_${new Date().toISOString().split('T')[0]}`;

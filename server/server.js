@@ -11,6 +11,7 @@ import userRoutes from "./src/routes/userRoutes.js";
 import eventRoutes from "./src/routes/eventRoutes.js";
 import noticeRoutes from "./src/routes/noticeRoutes.js";
 import volunteerRoutes from "./src/routes/volunteerRoutes.js";
+import adminRoutes from "./src/routes/adminRoutes.js";
 import { validateEnvironmentVariables } from "./src/utils/envValidator.js";
 
 dotenv.config();
@@ -53,31 +54,40 @@ app.use(helmet({
 }));
 
 // CORS Configuration - Restrict to allowed origins
-const allowedOrigins = process.env.ALLOWED_ORIGINS 
+const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
   : [
-      'http://localhost:3000', 
-      'http://localhost:5173', 
-      'http://localhost:5174',
-      'http://127.0.0.1:3000', 
-      'http://127.0.0.1:5173',
-      'http://127.0.0.1:5174']
-      
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:5174']
+
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
+
     // Check if origin is in the allowed list or is a local address
-    const isAllowed = allowedOrigins.includes(origin) || 
-                     origin.startsWith('http://localhost:') || 
-                     origin.startsWith('http://127.0.0.1:') ||
-                     origin.startsWith('http://10.') ||
-                     origin.startsWith('https://10.') ||
-                     origin.startsWith('http://192.168.') ||
-                     origin.startsWith('https://192.168.') ||
-                     origin.startsWith('http://172.') ||
-                     origin.startsWith('https://172.');
+    const isAllowed = allowedOrigins.includes(origin) ||
+      origin.startsWith('http://localhost:') ||
+      origin.startsWith('http://127.0.0.1:') ||
+      origin.startsWith('http://10.') ||
+      origin.startsWith('https://10.') ||
+      origin.startsWith('http://192.168.') ||
+      origin.startsWith('https://192.168.') ||
+      (() => {
+        try {
+          const url = new URL(origin);
+          const parts = url.hostname.split('.');
+          if (parts.length === 4 && parts[0] === '172') {
+            const secondOctet = parseInt(parts[1], 10);
+            return secondOctet >= 16 && secondOctet <= 31;
+          }
+        } catch (e) { }
+        return false;
+      })();
 
     if (isAllowed) {
       callback(null, true);
@@ -163,6 +173,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/notices", noticeRoutes);
 app.use("/api/volunteers", volunteerRoutes);
+app.use("/api/admins", adminRoutes);
 
 // ---------- 404 Handler (must be before global error handler) ----------
 app.use((req, res, next) => {
@@ -181,7 +192,7 @@ app.use((err, req, res, next) => {
   }
 
   const statusCode = err.status || err.statusCode || 500;
-  
+
   // Always return JSON
   res.setHeader('Content-Type', 'application/json');
   res.status(statusCode).json({
