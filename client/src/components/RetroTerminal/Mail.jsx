@@ -11,7 +11,7 @@ const Mail = () => {
       date:new Date().toLocaleDateString('en-IN', { year: 'numeric', month: '2-digit', day: '2-digit' }),
       body: `Hello everyone!
       
-      If you are reading this, then the mission is already accomplished.I am glad that you have stayed up till here. To be honest, putting a simulated OS inside a fest website didn’t seem like the most obvious or practical idea, maybe even a little over the top.
+      If you are reading this, then the mission is already accomplished. I am glad that you explored the website. To be honest, putting a simulated OS inside a fest website didn’t seem like the most obvious or practical idea, maybe even a little over the top.
 
       But sometimes creativity isn’t about what makes sense it’s about doing something no one expects.
 
