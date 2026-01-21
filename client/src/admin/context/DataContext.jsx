@@ -1,18 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { apiGet } from '../../utils/apiClient';
+import { apiGet, apiPatch } from '../../utils/apiClient';
 import { useAdminAuth } from './AuthContext';
 
 const DataContext = createContext(null);
-
-const DEFAULT_TEAMS = [
-    { id: "T-01", name: "Dance" },
-    { id: "T-02", name: "Music" },
-    { id: "T-03", name: "Media" },
-    { id: "T-04", name: "Coding" },
-    { id: "T-05", name: "Gaming" },
-    { id: "T-06", name: "HR" },
-    { id: "T-07", name: "Art" },
-];
 
 export const DataProvider = ({ children }) => {
     const { adminUser } = useAdminAuth();
@@ -31,8 +21,10 @@ export const DataProvider = ({ children }) => {
                         events: parsed.events || [],
                         participants: parsed.participants || [],
                         admins: parsed.admins || [],
-                        teams: parsed.teams?.length ? parsed.teams : DEFAULT_TEAMS,
-                        overviewStats: parsed.overviewStats || null
+                        teams: parsed.teams || [],
+                        overviewStats: parsed.overviewStats || null,
+                        globalSettings: parsed.globalSettings || { registrationsOpen: true },
+                        masterActivityLogs: parsed.masterActivityLogs || []
                     };
                 }
             } catch (e) {
@@ -43,8 +35,10 @@ export const DataProvider = ({ children }) => {
             events: [],
             participants: [],
             admins: [],
-            teams: DEFAULT_TEAMS,
-            overviewStats: null
+            teams: [],
+            overviewStats: null,
+            globalSettings: { registrationsOpen: true },
+            masterActivityLogs: []
         };
     });
 
@@ -53,6 +47,23 @@ export const DataProvider = ({ children }) => {
     // Derived events filtered by team (Registration events excluded globally)
     const filteredEvents = useMemo(() => {
         return (data.events || []).filter(e => e.team?.toLowerCase() !== 'registration');
+    }, [data.events]);
+
+    // Derived teams from events
+    const derivedTeams = useMemo(() => {
+        const teamsSet = new Set();
+        (data.events || []).forEach(e => {
+            if (e.team && e.team.toLowerCase() !== 'registration') {
+                teamsSet.add(e.team);
+            }
+        });
+        // Always include General if not present
+        teamsSet.add('General');
+        
+        return Array.from(teamsSet).map((team, index) => ({
+            id: `T-${String(index + 1).padStart(2, '0')}`,
+            name: team
+        }));
     }, [data.events]);
 
     // Filtered data for granular admins - moved to top level
@@ -75,6 +86,7 @@ export const DataProvider = ({ children }) => {
                 id: e._id || e.id,
                 name: e.name,
                 team: Array.isArray(e.club) ? e.club[0] : (e.club || 'General'),
+                club: e.club,
                 total_slots: e.slots?.totalSlots || 0,
                 available_slots: e.slots?.availableSlots || 0,
                 reserved_slots: (e.slots?.totalSlots || 0) - (e.slots?.availableSlots || 0),
@@ -127,6 +139,15 @@ export const DataProvider = ({ children }) => {
         }
     };
 
+    const refreshGlobalSettings = async () => {
+        try {
+            const { data } = await apiGet('/api/admins/settings/global');
+            setData(prev => ({ ...prev, globalSettings: data }));
+        } catch (error) {
+            console.error("Failed to fetch global settings:", error);
+        }
+    };
+
     // Fetch fest-wide overview
     const refreshStats = async () => {
         try {
@@ -137,6 +158,29 @@ export const DataProvider = ({ children }) => {
             }));
         } catch (error) {
             console.error("Failed to fetch overview stats:", error);
+        }
+    };
+
+    const refreshAll = async () => {
+        setLoading(true);
+        await Promise.allSettled([
+            refreshEvents(),
+            refreshParticipants(),
+            refreshStats(),
+            refreshAdmins(),
+            refreshGlobalSettings()
+        ]);
+        setLoading(false);
+    };
+
+    const updateGlobalSettings = async (updates) => {
+        try {
+            const { data } = await apiPut('/api/admins/settings/global', updates);
+            setData(prev => ({ ...prev, globalSettings: data }));
+            return true;
+        } catch (error) {
+            console.error("Failed to update global settings:", error);
+            return false;
         }
     };
 
@@ -175,13 +219,13 @@ export const DataProvider = ({ children }) => {
     const stats = useMemo(() => {
         // Filter out any lingering registration events from statistics
         const currentEvents = data.events || [];
-        const filteredEvents = currentEvents.filter(e => e.team !== 'Registration');
+        const filteredEventsList = currentEvents.filter(e => e.team !== 'Registration');
 
         const participants = data.participants || [];
         const admins = data.admins || [];
 
         const totalParticipants = participants.length;
-        const totalEvents = filteredEvents.length;
+        const totalEvents = filteredEventsList.length;
         const totalAdmins = admins.length;
         
         // Use revenue from overviewStats if available, otherwise calculate from local data
@@ -189,12 +233,10 @@ export const DataProvider = ({ children }) => {
         const revenueValue = data.overviewStats?.totals?.[0]?.totalRevenue || 
                             data.overviewStats?.totalRevenue || 0;
 
-        const adminDistribution = [
-            "Dance", "Music", "Media", "Coding", "Gaming", "HR", "Art"
-        ].map(team => ({
-            team,
-            admins: admins.filter(a => a.team === team).length,
-            participants: participants.filter(p => p.team === team).length
+        const adminDistribution = derivedTeams.map(teamObj => ({
+            team: teamObj.name,
+            admins: admins.filter(a => a.team === teamObj.name).length,
+            participants: participants.filter(p => p.team === teamObj.name).length
         }));
 
         return {
@@ -208,28 +250,73 @@ export const DataProvider = ({ children }) => {
             },
             adminDistribution
         };
-    }, [data.participants, data.events, data.admins, data.teams, data.overviewStats]);
+    }, [data.participants, data.events, data.admins, derivedTeams, data.overviewStats]);
 
     // Update Functions
-    const updateParticipant = (id, updates) => {
-        setData(prev => ({
-            ...prev,
-            participants: prev.participants.map(p => p.id === id ? { ...p, ...updates } : p)
-        }));
+    const updateParticipant = async (eventId, inventoId, updates) => {
+        try {
+            // updates could contain: status, isPresent, paid
+            if (updates.status) {
+                await apiPatch(`/api/events/${eventId}/participants/${inventoId}/status`, { status: updates.status });
+            }
+            if (updates.isPresent !== undefined) {
+                await apiPatch(`/api/events/${eventId}/participants/${inventoId}/attendance`, { isPresent: updates.isPresent });
+            }
+            // Add other update logic if needed (e.g., payment status)
+            
+            // Refresh participants to get updated state from backend
+            await refreshParticipants();
+            return true;
+        } catch (error) {
+            console.error("Failed to update participant:", error);
+            return false;
+        }
     };
 
-    const updateEvent = (id, updates) => {
-        setData(prev => ({
-            ...prev,
-            events: prev.events.map(e => e.id === id ? { ...e, ...updates } : e)
-        }));
+    const updateEvent = async (id, updates) => {
+        try {
+            await apiPatch(`/api/events/${id}`, updates);
+            await refreshEvents();
+            return true;
+        } catch (error) {
+            console.error("Failed to update event:", error);
+            return false;
+        }
     };
 
-    const addAdmin = (newAdmin) => {
-        setData(prev => ({
-            ...prev,
-            admins: [...prev.admins, newAdmin]
-        }));
+    const createAdmin = async (payload) => {
+        try {
+            await apiPost('/api/admins', payload);
+            await refreshAdmins();
+            await refreshStats();
+            return true;
+        } catch (error) {
+            console.error("Failed to create admin:", error);
+            return false;
+        }
+    };
+
+    const updateAdmin = async (id, updates) => {
+        try {
+            await apiPut(`/api/admins/${id}`, updates);
+            await refreshAdmins();
+            return true;
+        } catch (error) {
+            console.error("Failed to update admin:", error);
+            return false;
+        }
+    };
+
+    const deleteAdmin = async (id) => {
+        try {
+            await apiDelete(`/api/admins/${id}`);
+            await refreshAdmins();
+            await refreshStats();
+            return true;
+        } catch (error) {
+            console.error("Failed to delete admin:", error);
+            return false;
+        }
     };
 
     const updateTeam = (id, updates) => {
@@ -243,9 +330,11 @@ export const DataProvider = ({ children }) => {
         data: {
             ...data,
             events: filteredEvents,
+            teams: derivedTeams,
             masterStats: stats.masterStats,
             adminDistribution: stats.adminDistribution,
-            overviewStats: data.overviewStats
+            overviewStats: data.overviewStats,
+            masterActivityLogs: data.masterActivityLogs || []
         },
         adminEvents,
         loading,
@@ -253,16 +342,19 @@ export const DataProvider = ({ children }) => {
         refreshStats,
         refreshParticipants,
         refreshAdmins,
+        refreshGlobalSettings,
         updateParticipant,
         updateEvent,
-        addAdmin,
+        createAdmin,
+        updateAdmin,
+        deleteAdmin,
+        updateGlobalSettings,
         updateTeam
     };
 
 
     return (
         <DataContext.Provider value={value}>
-            {console.log("DataProvider is rendering children:", !!children)}
             {children}
         </DataContext.Provider>
     );

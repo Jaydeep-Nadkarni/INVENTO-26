@@ -17,7 +17,7 @@ import {
 
 const AdminDashboard = () => {
     const { adminUser } = useAdminAuth();
-    const { data, adminEvents } = useData();
+    const { data, adminEvents, teams: contextTeams } = useData();
     const { participants, events } = data;
 
     const [selectedTeam, setSelectedTeam] = useState('All');
@@ -98,7 +98,6 @@ const AdminDashboard = () => {
         }
     };
 
-    const teams = ["Dance", "Music", "Media", "Coding", "Gaming", "HR", "Art"];
 
     return (
         <div className="flex h-screen bg-white text-gray-900 border-gray-200">
@@ -128,7 +127,9 @@ const AdminDashboard = () => {
                                     }}
                                 >
                                     <option value="All">All Teams</option>
-                                    {teams.map(t => <option key={t} value={t}>{t}</option>)}
+                                    {contextTeams
+                                        .filter(t => t.name?.toLowerCase() !== 'registration')
+                                        .map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
                                 </select>
                                 <select
                                     className="text-xs font-semibold px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-900"

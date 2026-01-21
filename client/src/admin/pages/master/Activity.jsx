@@ -64,6 +64,11 @@ const MasterActivity = () => {
                                 </div>
                             </div>
                         ))}
+                        {filteredLogs.length === 0 && (
+                            <div className="bg-white border border-gray-200 p-12 rounded-md text-center shadow-sm">
+                                <p className="text-sm text-gray-400">No activity logs found for the selected sector.</p>
+                            </div>
+                        )}
                     </div>
 
                     <div className="mt-12 p-12 bg-white border border-dashed border-gray-200 rounded-md text-center shadow-sm">

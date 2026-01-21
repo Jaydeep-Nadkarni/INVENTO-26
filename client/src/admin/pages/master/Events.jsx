@@ -21,7 +21,8 @@ const EventCard = ({ event, onUpdate }) => {
         isOpen: event.registration?.isOpen ?? true,
         officialOnly: event.registration?.officialOnly ?? false,
         maleSlots: event.specificSlots?.male || 0,
-        femaleSlots: event.specificSlots?.female || 0
+        femaleSlots: event.specificSlots?.female || 0,
+        club: event.team || event.club || 'General'
     });
 
     // Rehydrate form data when event prop updates
@@ -33,7 +34,8 @@ const EventCard = ({ event, onUpdate }) => {
                 isOpen: event.registration?.isOpen ?? true,
                 officialOnly: event.registration?.officialOnly ?? false,
                 maleSlots: event.specificSlots?.male || 0,
-                femaleSlots: event.specificSlots?.female || 0
+                femaleSlots: event.specificSlots?.female || 0,
+                club: event.team || event.club || 'General'
             });
         }
     }, [event, isEditing]);
@@ -51,6 +53,7 @@ const EventCard = ({ event, onUpdate }) => {
                 totalSlots: Number(formData.totalSlots), // Backend now accepts this
                 isOpen: formData.isOpen,
                 officialOnly: formData.officialOnly,
+                club: formData.club
             };
 
             if (isGenderSpecific) {
@@ -79,7 +82,8 @@ const EventCard = ({ event, onUpdate }) => {
             isOpen: event.registration?.isOpen ?? true,
             officialOnly: event.registration?.officialOnly ?? false,
             maleSlots: event.specificSlots?.male || 0,
-            femaleSlots: event.specificSlots?.female || 0
+            femaleSlots: event.specificSlots?.female || 0,
+            club: event.team || event.club || 'General'
         });
     };
 
@@ -145,6 +149,24 @@ const EventCard = ({ event, onUpdate }) => {
 
             {/* Content Grid */}
             <div className="space-y-4">
+                {/* Club Info */}
+                <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                    <label className="text-[10px] uppercase text-gray-500 font-bold mb-1 flex items-center gap-1">
+                        Club / Team Name
+                    </label>
+                    {isEditing ? (
+                        <input
+                            type="text"
+                            value={formData.club}
+                            onChange={e => setFormData({ ...formData, club: e.target.value })}
+                            className="w-full bg-white border border-gray-200 rounded text-sm px-2 py-1 text-gray-900 focus:border-indigo-500 outline-none transition-colors"
+                            placeholder="Enter club name"
+                        />
+                    ) : (
+                        <div className="text-sm font-medium text-gray-900">{formData.club}</div>
+                    )}
+                </div>
+
                 {/* Row 1: Fee and Occupancy */}
                 <div className="grid grid-cols-2 gap-4">
                     <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
@@ -293,13 +315,12 @@ const EventCard = ({ event, onUpdate }) => {
 };
 
 const MasterEvents = () => {
-    const { data: { events, teams }, loading, refreshEvents } = useData();
+    const { data: { events, teams }, loading, refreshEvents, updateEvent } = useData();
     const [activeTeam, setActiveTeam] = useState('All');
     const [searchTerm, setSearchTerm] = useState('');
 
     const handleUpdateEvent = async (id, payload) => {
-        await apiPatch(`/api/events/${id}`, payload);
-        await refreshEvents(); // Refresh to ensure sync
+        await updateEvent(id, payload);
     };
 
     const filteredEvents = useMemo(() => {

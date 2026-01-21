@@ -1015,11 +1015,15 @@ export const getFestRegistrations = async (req, res) => {
 // Update event details (Admin)
 export const updateEventDetails = async (req, res) => {
   const { eventId } = req.params;
-  const { price, slotsChange, isOpen, officialOnly, specificSlotsUpdate } = req.body;
+  const { price, slotsChange, isOpen, officialOnly, specificSlotsUpdate, club, eventType } = req.body;
 
   try {
     const event = await Event.findOne({ $or: [{ _id: eventId }, { id: eventId }] });
     if (!event) return res.status(404).json({ message: "Event not found" });
+
+    // Update Basic Info
+    if (club !== undefined) event.club = club;
+    if (eventType !== undefined) event.eventType = eventType;
 
     // Update Price
     if (price !== undefined) {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../../components/sidebar';
-import { apiGet, apiPut } from '../../../utils/apiClient';
+import { useData } from '../../context/DataContext';
 import { 
     ToggleLeft, 
     ToggleRight, 
@@ -13,44 +13,30 @@ import {
 } from 'lucide-react';
 
 const AdminControls = () => {
-    const [settings, setSettings] = useState({
-        passControl: 'to all',
-        registrationsOpen: true
-    });
-    const [loading, setLoading] = useState(true);
+    const { 
+        data: { globalSettings: settings }, 
+        loading, 
+        refreshGlobalSettings, 
+        updateGlobalSettings 
+    } = useData();
+
     const [updating, setUpdating] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
 
-    const fetchSettings = async () => {
-        try {
-            setLoading(true);
-            const { data } = await apiGet('/api/admins/settings/global');
-            setSettings(data);
-        } catch (error) {
-            console.error("Failed to fetch settings:", error);
-            setMessage({ type: 'error', text: 'Failed to synchronize with central command.' });
-        } finally {
-            setLoading(false);
-        }
-    };
-
     useEffect(() => {
-        fetchSettings();
+        refreshGlobalSettings();
     }, []);
 
     const handleUpdate = async (newSettings) => {
-        try {
-            setUpdating(true);
-            const { data } = await apiPut('/api/admins/settings/global', newSettings);
-            setSettings(data);
+        setUpdating(true);
+        const success = await updateGlobalSettings(newSettings);
+        if (success) {
             setMessage({ type: 'success', text: 'System configuration protocols updated successfully.' });
             setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-        } catch (error) {
-            console.error("Update failed:", error);
+        } else {
             setMessage({ type: 'error', text: 'Override failed. Check system permissions.' });
-        } finally {
-            setUpdating(false);
         }
+        setUpdating(false);
     };
 
     if (loading) {
