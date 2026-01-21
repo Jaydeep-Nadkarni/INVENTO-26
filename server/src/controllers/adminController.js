@@ -28,7 +28,7 @@ export const authAdmin = async (req, res) => {
                 role: admin.role,
                 access: admin.access,
                 isRegistration: admin.isRegistration,
-                token: generateToken(admin._id),
+                token: generateToken(admin),
             });
         } else {
             res.status(401).json({ message: "Invalid email or password" });

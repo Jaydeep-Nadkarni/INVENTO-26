@@ -1,26 +1,40 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import defaultData from '../data/masterData';
 import { apiGet } from '../../utils/apiClient';
 import { useAdminAuth } from './AuthContext';
 
 const DataContext = createContext(null);
 
+const DEFAULT_TEAMS = [
+    { id: "T-01", name: "Dance" },
+    { id: "T-02", name: "Music" },
+    { id: "T-03", name: "Media" },
+    { id: "T-04", name: "Coding" },
+    { id: "T-05", name: "Gaming" },
+    { id: "T-06", name: "HR" },
+    { id: "T-07", name: "Art" },
+];
+
 export const DataProvider = ({ children }) => {
     const { adminUser } = useAdminAuth();
-    // Initialize state from localData or local storage (as fallback/cache)
+    // Initialize state from local storage (as fallback/cache)
     const [data, setData] = useState(() => {
         const saved = localStorage.getItem('adminData');
         if (saved) {
             try {
                 const parsed = JSON.parse(saved);
-                return {
-                    ...parsed,
-                    events: parsed.events || [],
-                    participants: parsed.participants || [],
-                    admins: parsed.admins || [],
-                    teams: parsed.teams || [],
-                    overviewStats: parsed.overviewStats || null
-                };
+                // Ensure we don't carry over static data by checking if it looks like masterData
+                if (parsed.participants?.length === 120 && parsed.admins?.length === 8) {
+                    localStorage.removeItem('adminData');
+                } else {
+                    return {
+                        ...parsed,
+                        events: parsed.events || [],
+                        participants: parsed.participants || [],
+                        admins: parsed.admins || [],
+                        teams: parsed.teams?.length ? parsed.teams : DEFAULT_TEAMS,
+                        overviewStats: parsed.overviewStats || null
+                    };
+                }
             } catch (e) {
                 console.error("Error loading adminData from localStorage:", e);
             }
@@ -29,7 +43,7 @@ export const DataProvider = ({ children }) => {
             events: [],
             participants: [],
             admins: [],
-            teams: [],
+            teams: DEFAULT_TEAMS,
             overviewStats: null
         };
     });
@@ -170,17 +184,10 @@ export const DataProvider = ({ children }) => {
         const totalEvents = filteredEvents.length;
         const totalAdmins = admins.length;
         
-        // Calculate revenue from participants and teams
-        const revenue = participants.reduce((sum, p) => {
-            // Check if it's a team or solo participant
-            if (p.paid || p.payment_status === 'paid') {
-                // If it's a team, we should be careful not to double count if the structure is different
-                // In getFestRegistrations, it seems teams are included in the same list
-                const amount = p.payment_amount || p.amount || 0;
-                return sum + amount;
-            }
-            return sum;
-        }, 0);
+        // Use revenue from overviewStats if available, otherwise calculate from local data
+        // (Note: local data might be incomplete if price is not included)
+        const revenueValue = data.overviewStats?.totals?.[0]?.totalRevenue || 
+                            data.overviewStats?.totalRevenue || 0;
 
         const adminDistribution = [
             "Dance", "Music", "Media", "Coding", "Gaming", "HR", "Art"
@@ -195,13 +202,13 @@ export const DataProvider = ({ children }) => {
                 totalParticipants,
                 totalEvents,
                 totalAdmins,
-                totalRevenue: `₹${revenue.toLocaleString()}`,
+                totalRevenue: `₹${revenueValue.toLocaleString()}`,
                 systemHealth: "Optimal",
-                activeNodes: admins.filter(a => a.status === 'Active').length || 8
+                activeNodes: admins.filter(a => a.status === 'Active').length
             },
             adminDistribution
         };
-    }, [data.participants, data.events, data.admins, data.teams]);
+    }, [data.participants, data.events, data.admins, data.teams, data.overviewStats]);
 
     // Update Functions
     const updateParticipant = (id, updates) => {
