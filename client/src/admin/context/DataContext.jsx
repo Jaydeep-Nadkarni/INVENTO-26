@@ -1,31 +1,69 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import defaultData from '../data/masterData';
-import { apiGet } from '../../utils/apiClient';
+import { apiGet, apiPatch } from '../../utils/apiClient';
 import { useAdminAuth } from './AuthContext';
 
 const DataContext = createContext(null);
 
 export const DataProvider = ({ children }) => {
     const { adminUser } = useAdminAuth();
-    // Initialize state from localData or local storage (as fallback/cache)
+    // Initialize state from local storage (as fallback/cache)
     const [data, setData] = useState(() => {
         const saved = localStorage.getItem('adminData');
         if (saved) {
             try {
-                return JSON.parse(saved);
+                const parsed = JSON.parse(saved);
+                // Ensure we don't carry over static data by checking if it looks like masterData
+                if (parsed.participants?.length === 120 && parsed.admins?.length === 8) {
+                    localStorage.removeItem('adminData');
+                } else {
+                    return {
+                        ...parsed,
+                        events: parsed.events || [],
+                        participants: parsed.participants || [],
+                        admins: parsed.admins || [],
+                        teams: parsed.teams || [],
+                        overviewStats: parsed.overviewStats || null,
+                        globalSettings: parsed.globalSettings || { registrationsOpen: true },
+                        masterActivityLogs: parsed.masterActivityLogs || []
+                    };
+                }
             } catch (e) {
                 console.error("Error loading adminData from localStorage:", e);
-                return defaultData;
             }
         }
-        return defaultData;
+        return {
+            events: [],
+            participants: [],
+            admins: [],
+            teams: [],
+            overviewStats: null,
+            globalSettings: { registrationsOpen: true },
+            masterActivityLogs: []
+        };
     });
 
     const [loading, setLoading] = useState(false);
 
     // Derived events filtered by team (Registration events excluded globally)
     const filteredEvents = useMemo(() => {
-        return data.events.filter(e => e.team?.toLowerCase() !== 'registration');
+        return (data.events || []).filter(e => e.team?.toLowerCase() !== 'registration');
+    }, [data.events]);
+
+    // Derived teams from events
+    const derivedTeams = useMemo(() => {
+        const teamsSet = new Set();
+        (data.events || []).forEach(e => {
+            if (e.team && e.team.toLowerCase() !== 'registration') {
+                teamsSet.add(e.team);
+            }
+        });
+        // Always include General if not present
+        teamsSet.add('General');
+        
+        return Array.from(teamsSet).map((team, index) => ({
+            id: `T-${String(index + 1).padStart(2, '0')}`,
+            name: team
+        }));
     }, [data.events]);
 
     // Filtered data for granular admins - moved to top level
@@ -41,14 +79,17 @@ export const DataProvider = ({ children }) => {
             setLoading(true);
             const { data: events } = await apiGet('/api/events');
 
+            if (!Array.isArray(events)) return;
+
             // Map backend fields to frontend expected fields if necessary
             const formattedEvents = events.map(e => ({
                 id: e._id || e.id,
                 name: e.name,
-                team: Array.isArray(e.club) ? e.club[0] : (e.club || 'General'),
-                total_slots: e.slots.totalSlots,
-                available_slots: e.slots.availableSlots,
-                reserved_slots: e.slots.totalSlots - e.slots.availableSlots,
+                team: e.club || 'General',
+                club: e.club,
+                total_slots: e.slots?.totalSlots || 0,
+                available_slots: e.slots?.availableSlots || 0,
+                reserved_slots: (e.slots?.totalSlots || 0) - (e.slots?.availableSlots || 0),
                 status: e.registration?.isOpen ? "Live" : "Closed",
                 eventType: e.eventType,
                 specificSlots: e.specificSlots,
@@ -68,6 +109,45 @@ export const DataProvider = ({ children }) => {
         }
     };
 
+    // Fetch all participants/registrations
+    const refreshParticipants = async () => {
+        try {
+            const { data: participants } = await apiGet('/api/events/registrations/all');
+            if (Array.isArray(participants)) {
+                setData(prev => ({
+                    ...prev,
+                    participants: participants
+                }));
+            }
+        } catch (error) {
+            console.error("Failed to fetch participants:", error);
+        }
+    };
+
+    // Fetch all admins
+    const refreshAdmins = async () => {
+        try {
+            const { data: admins } = await apiGet('/api/admins');
+            if (Array.isArray(admins)) {
+                setData(prev => ({
+                    ...prev,
+                    admins: admins
+                }));
+            }
+        } catch (error) {
+            console.error("Failed to fetch admins:", error);
+        }
+    };
+
+    const refreshGlobalSettings = async () => {
+        try {
+            const { data } = await apiGet('/api/admins/settings/global');
+            setData(prev => ({ ...prev, globalSettings: data }));
+        } catch (error) {
+            console.error("Failed to fetch global settings:", error);
+        }
+    };
+
     // Fetch fest-wide overview
     const refreshStats = async () => {
         try {
@@ -81,6 +161,29 @@ export const DataProvider = ({ children }) => {
         }
     };
 
+    const refreshAll = async () => {
+        setLoading(true);
+        await Promise.allSettled([
+            refreshEvents(),
+            refreshParticipants(),
+            refreshStats(),
+            refreshAdmins(),
+            refreshGlobalSettings()
+        ]);
+        setLoading(false);
+    };
+
+    const updateGlobalSettings = async (updates) => {
+        try {
+            const { data } = await apiPut('/api/admins/settings/global', updates);
+            setData(prev => ({ ...prev, globalSettings: data }));
+            return true;
+        } catch (error) {
+            console.error("Failed to update global settings:", error);
+            return false;
+        }
+    };
+
     // Auto-persist on every update
     useEffect(() => {
         localStorage.setItem('adminData', JSON.stringify(data));
@@ -89,44 +192,51 @@ export const DataProvider = ({ children }) => {
     // Fetch on initial load if we have a token and proper role
     useEffect(() => {
         const token = localStorage.getItem('token');
-        const userStr = localStorage.getItem('currentUser');
+        const adminUserStr = localStorage.getItem('adminUser');
 
         if (token) {
-            refreshEvents(); // Events list is now public, so safe to fetch for everyone
+            refreshEvents(); 
 
-            // Only fetch admin specific stats if user is admin/coordinator
-            if (userStr) {
+            if (adminUserStr) {
                 try {
-                    const user = JSON.parse(userStr);
-                    if (user.role === 'ADMIN' || user.role === 'COORDINATOR') {
+                    const user = JSON.parse(adminUserStr);
+                    const role = user.role?.toUpperCase();
+                    if (role === 'ADMIN' || role === 'MASTER' || role === 'COORDINATOR') {
                         refreshStats();
+                        refreshParticipants();
+                        if (role === 'MASTER') {
+                            refreshAdmins();
+                        }
                     }
                 } catch (e) {
                     console.error("Error parsing user for stats fetch:", e);
                 }
             }
         }
-    }, []);
-
-
+    }, [adminUser]);
 
     // Computed Stats (Re-calculated when participants/events/admins/teams change)
     const stats = useMemo(() => {
         // Filter out any lingering registration events from statistics
-        const filteredEvents = data.events.filter(e => e.team !== 'Registration');
+        const currentEvents = data.events || [];
+        const filteredEventsList = currentEvents.filter(e => e.team !== 'Registration');
 
-        const totalParticipants = data.participants.length;
-        const totalEvents = filteredEvents.length;
-        const totalAdmins = data.admins.length;
-        const paidParticipants = data.participants.filter(p => p.payment_status === 'paid');
-        const revenue = paidParticipants.reduce((sum, p) => sum + p.payment_amount, 0);
+        const participants = data.participants || [];
+        const admins = data.admins || [];
 
-        const adminDistribution = [
-            "Dance", "Music", "Media", "Coding", "Gaming", "HR", "Art"
-        ].map(team => ({
-            team,
-            admins: data.admins.filter(a => a.team === team).length,
-            participants: data.participants.filter(p => p.team === team).length
+        const totalParticipants = participants.length;
+        const totalEvents = filteredEventsList.length;
+        const totalAdmins = admins.length;
+        
+        // Use revenue from overviewStats if available, otherwise calculate from local data
+        // (Note: local data might be incomplete if price is not included)
+        const revenueValue = data.overviewStats?.totals?.[0]?.totalRevenue || 
+                            data.overviewStats?.totalRevenue || 0;
+
+        const adminDistribution = derivedTeams.map(teamObj => ({
+            team: teamObj.name,
+            admins: admins.filter(a => a.team === teamObj.name).length,
+            participants: participants.filter(p => p.team === teamObj.name).length
         }));
 
         return {
@@ -134,34 +244,79 @@ export const DataProvider = ({ children }) => {
                 totalParticipants,
                 totalEvents,
                 totalAdmins,
-                totalRevenue: `₹${revenue.toLocaleString()}`,
+                totalRevenue: `₹${revenueValue.toLocaleString()}`,
                 systemHealth: "Optimal",
-                activeNodes: 8
+                activeNodes: admins.filter(a => a.status === 'Active').length
             },
             adminDistribution
         };
-    }, [data.participants, data.events, data.admins, data.teams]);
+    }, [data.participants, data.events, data.admins, derivedTeams, data.overviewStats]);
 
     // Update Functions
-    const updateParticipant = (id, updates) => {
-        setData(prev => ({
-            ...prev,
-            participants: prev.participants.map(p => p.id === id ? { ...p, ...updates } : p)
-        }));
+    const updateParticipant = async (eventId, inventoId, updates) => {
+        try {
+            // updates could contain: status, isPresent, paid
+            if (updates.status) {
+                await apiPatch(`/api/events/${eventId}/participants/${inventoId}/status`, { status: updates.status });
+            }
+            if (updates.isPresent !== undefined) {
+                await apiPatch(`/api/events/${eventId}/participants/${inventoId}/attendance`, { isPresent: updates.isPresent });
+            }
+            // Add other update logic if needed (e.g., payment status)
+            
+            // Refresh participants to get updated state from backend
+            await refreshParticipants();
+            return true;
+        } catch (error) {
+            console.error("Failed to update participant:", error);
+            return false;
+        }
     };
 
-    const updateEvent = (id, updates) => {
-        setData(prev => ({
-            ...prev,
-            events: prev.events.map(e => e.id === id ? { ...e, ...updates } : e)
-        }));
+    const updateEvent = async (id, updates) => {
+        try {
+            await apiPatch(`/api/events/${id}`, updates);
+            await refreshEvents();
+            return true;
+        } catch (error) {
+            console.error("Failed to update event:", error);
+            return false;
+        }
     };
 
-    const addAdmin = (newAdmin) => {
-        setData(prev => ({
-            ...prev,
-            admins: [...prev.admins, newAdmin]
-        }));
+    const createAdmin = async (payload) => {
+        try {
+            await apiPost('/api/admins', payload);
+            await refreshAdmins();
+            await refreshStats();
+            return true;
+        } catch (error) {
+            console.error("Failed to create admin:", error);
+            return false;
+        }
+    };
+
+    const updateAdmin = async (id, updates) => {
+        try {
+            await apiPut(`/api/admins/${id}`, updates);
+            await refreshAdmins();
+            return true;
+        } catch (error) {
+            console.error("Failed to update admin:", error);
+            return false;
+        }
+    };
+
+    const deleteAdmin = async (id) => {
+        try {
+            await apiDelete(`/api/admins/${id}`);
+            await refreshAdmins();
+            await refreshStats();
+            return true;
+        } catch (error) {
+            console.error("Failed to delete admin:", error);
+            return false;
+        }
     };
 
     const updateTeam = (id, updates) => {
@@ -175,24 +330,31 @@ export const DataProvider = ({ children }) => {
         data: {
             ...data,
             events: filteredEvents,
+            teams: derivedTeams,
             masterStats: stats.masterStats,
             adminDistribution: stats.adminDistribution,
-            overviewStats: data.overviewStats
+            overviewStats: data.overviewStats,
+            masterActivityLogs: data.masterActivityLogs || []
         },
         adminEvents,
         loading,
         refreshEvents,
         refreshStats,
+        refreshParticipants,
+        refreshAdmins,
+        refreshGlobalSettings,
         updateParticipant,
         updateEvent,
-        addAdmin,
+        createAdmin,
+        updateAdmin,
+        deleteAdmin,
+        updateGlobalSettings,
         updateTeam
     };
 
 
     return (
         <DataContext.Provider value={value}>
-            {console.log("DataProvider is rendering children:", !!children)}
             {children}
         </DataContext.Provider>
     );

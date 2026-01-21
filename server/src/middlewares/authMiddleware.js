@@ -27,7 +27,7 @@ export const protect = async (req, res, next) => {
       if (!user) return res.status(404).json({ message: "User/Admin not found." });
 
       // Determine if it is a user or admin object (Admin model has 'access' field)
-      const isAdmin = !!user.access || user.role === 'ADMIN';
+      const isAdmin = !!user.access || user.role === 'ADMIN' || user.role === 'MASTER' || user.role === 'COORDINATOR';
 
       req.user = user; // attach full user/admin
       req.isAdmin = isAdmin; // easy flag
@@ -75,14 +75,19 @@ export const isAdminOrCoordinator = (req, res, next) => {
     return res.status(401).json({ message: "Authentication required." });
   }
 
-  const role = req.user.role?.toUpperCase();
-  if (role !== "ADMIN" && role !== "COORDINATOR" && role !== "MASTER") {
-    return res.status(403).json({
-      message: "Access forbidden. Admin or Coordinator privileges required."
-    });
+  // If already flagged as admin in protect middleware
+  if (req.isAdmin) {
+    return next();
   }
 
-  next();
+  const role = req.user.role?.toUpperCase();
+  if (role === "ADMIN" || role === "COORDINATOR" || role === "MASTER") {
+    return next();
+  }
+
+  return res.status(403).json({
+    message: "Access forbidden. Admin or Coordinator privileges required."
+  });
 };
 
 /**

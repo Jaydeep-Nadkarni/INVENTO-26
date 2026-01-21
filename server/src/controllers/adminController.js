@@ -28,7 +28,7 @@ export const authAdmin = async (req, res) => {
                 role: admin.role,
                 access: admin.access,
                 isRegistration: admin.isRegistration,
-                token: generateToken(admin._id),
+                token: generateToken(admin),
             });
         } else {
             res.status(401).json({ message: "Invalid email or password" });
@@ -143,6 +143,24 @@ export const updateAdmin = async (req, res) => {
                 status: updatedAdmin.status,
                 isRegistration: updatedAdmin.isRegistration
             });
+        } else {
+            res.status(404).json({ message: "Admin not found" });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Delete admin
+// @route   DELETE /api/admins/:id
+// @access  Private/Admin
+export const deleteAdmin = async (req, res) => {
+    try {
+        const admin = await Admin.findById(req.params.id);
+
+        if (admin) {
+            await admin.deleteOne();
+            res.json({ message: "Admin removed" });
         } else {
             res.status(404).json({ message: "Admin not found" });
         }

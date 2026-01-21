@@ -28,7 +28,7 @@ const MasterDashboard = () => {
     const clubOccupancy = useMemo(() => {
         const stats = {};
         events.forEach(event => {
-            const club = event.team || 'General';
+            const club = event.club || event.team || 'General';
             // Explicitly exclude Registration from occupancy stats (case-insensitive)
             if (club.toLowerCase() === 'registration') return;
 
@@ -38,8 +38,12 @@ const MasterDashboard = () => {
                     filledSlots: 0
                 };
             }
-            stats[club].totalSlots += (event.total_slots || 0);
-            stats[club].filledSlots += (event.reserved_slots || 0);
+            const total = event.slots?.totalSlots || event.total_slots || 0;
+            const available = event.slots?.availableSlots ?? event.available_slots ?? total;
+            const filled = total - available;
+
+            stats[club].totalSlots += total;
+            stats[club].filledSlots += filled;
         });
 
         return Object.entries(stats).map(([name, data]) => ({
