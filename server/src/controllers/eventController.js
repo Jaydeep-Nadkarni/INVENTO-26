@@ -822,8 +822,9 @@ export const getEvents = async (req, res) => {
 // GET /api/events/analytics/overview
 export const getFestOverview = async (req, res) => {
   try {
-    const isMaster = req.user.role === 'ADMIN' && !req.user.access;
-    const isRegistration = req.user.isRegistration === true;
+    const role = req.user.role?.toUpperCase();
+    const isMaster = role === 'MASTER' || (role === 'ADMIN' && !req.user.access?.length);
+    const isRegistration = (req.user.isRegistration === true) || (req.user.team === 'Registration');
 
     // Build filter
     const matchFilter = {};
@@ -961,8 +962,9 @@ export const getFestOverview = async (req, res) => {
 export const getFestRegistrations = async (req, res) => {
   try {
     // Determine if we should filter events
-    const isMaster = req.user.role === 'ADMIN' && !req.user.access;
-    const isRegistration = req.user.isRegistration === true;
+    const role = req.user.role?.toUpperCase();
+    const isMaster = role === 'MASTER' || (role === 'ADMIN' && !req.user.access?.length);
+    const isRegistration = (req.user.isRegistration === true) || (req.user.team === 'Registration');
 
     // Build query
     const query = {};
@@ -1109,7 +1111,8 @@ export const getPublicGlobalSettings = async (req, res) => {
 // GET /api/events/analytics/detailed
 export const getDetailedAnalytics = async (req, res) => {
   try {
-    const isMaster = req.user.role === 'ADMIN' && !req.user.access;
+    const role = req.user.role?.toUpperCase();
+    const isMaster = role === 'MASTER' || (role === 'ADMIN' && !req.user.access?.length);
     const isRegistration = (req.user.isRegistration === true) || (req.user.team === 'Registration');
 
     // Build filter

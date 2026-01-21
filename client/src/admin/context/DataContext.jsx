@@ -192,6 +192,7 @@ export const DataProvider = ({ children }) => {
 
     return (
         <DataContext.Provider value={value}>
+            {console.log("DataProvider is rendering children:", !!children)}
             {children}
         </DataContext.Provider>
     );
@@ -200,6 +201,7 @@ export const DataProvider = ({ children }) => {
 export const useData = () => {
     const context = useContext(DataContext);
     if (!context) {
+        console.error("useData called outside of Provider! Current tree might be broken.");
         throw new Error('useData must be used within a DataProvider');
     }
     return context;

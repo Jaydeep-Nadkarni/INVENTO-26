@@ -279,9 +279,9 @@ const MasterStats = () => {
                                     </button>
                                 </div>
                             </div>
-                            <div className="h-80 w-full">
+                            <div className="h-80 w-full min-w-0">
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={clubChartData}>
+                                    <BarChart data={clubChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" vertical={false} />
                                         <XAxis 
                                             dataKey="name" 
@@ -307,7 +307,7 @@ const MasterStats = () => {
                                 <PieChart className="w-4 h-4 text-pink-500" />
                                 Club Ecosystem
                             </h2>
-                            <div className="h-80 w-full flex items-center">
+                            <div className="h-80 w-full flex items-center min-w-0">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <RePieChart>
                                         <Pie
@@ -346,7 +346,7 @@ const MasterStats = () => {
                                 <BarChart3 className="w-4 h-4 text-green-500" />
                                 Registration Momentum (Time Series)
                             </h2>
-                            <div className="h-80 w-full">
+                            <div className="h-80 w-full min-w-0">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <BarChart data={revenueTrendData}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" vertical={false} />
@@ -368,7 +368,7 @@ const MasterStats = () => {
                                 <TrendingUp className="w-4 h-4 text-amber-500" />
                                 Financial Velocity (Line)
                             </h2>
-                            <div className="h-80 w-full">
+                            <div className="h-80 w-full min-w-0">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <LineChart data={revenueTrendData}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" vertical={false} />
@@ -461,7 +461,7 @@ const MasterStats = () => {
                                 <PieChart className="w-4 h-4 text-pink-500" />
                                 Biological Demographics
                             </h2>
-                            <div className="h-80 w-full flex items-center">
+                            <div className="h-80 w-full flex items-center min-w-0">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <RePieChart>
                                         <Pie

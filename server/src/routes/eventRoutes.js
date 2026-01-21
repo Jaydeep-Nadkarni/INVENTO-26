@@ -34,6 +34,25 @@ router.use((req, res, next) => {
     next();
 });
 
+/* ================= ANALYTICS & REPORTING (MOVED UP) ================= */
+
+// List all events (basic info) - PUBLIC
+router.get("/", getEvents);
+
+// Get Public Global Settings
+router.get("/settings/global", getPublicGlobalSettings);
+
+// Fest-wide overview (Put this BEFORE /:eventId routes to avoid conflict)
+router.get("/analytics/overview", protect, isAdminOrCoordinator, getFestOverview);
+
+// Detailed Analytics for Dashboard
+router.get("/analytics/detailed", protect, isAdminOrCoordinator, getDetailedAnalytics);
+
+// All registrations (Universal registry)
+router.get("/registrations/all", protect, isAdminOrCoordinator, getFestRegistrations);
+
+/* ================= EVENT REGISTRATION ================= */
+
 // 🏆 Event Registration (Requires Auth + Onboarding + Validation)
 router.post(
     "/register/:id",
@@ -68,25 +87,6 @@ router.patch("/:eventId/teams/:teamName/members/:inventoId/attendance", protect,
 
 // Update event details (slots, status, etc.)
 router.patch("/:eventId", protect, isAdminOrCoordinator, checkEventAccess, updateEventDetails);
-
-/* ================= ANALYTICS & REPORTING ================= */
-
-// List all events (basic info) - PUBLIC
-router.get("/", getEvents);
-
-// Get Public Global Settings
-router.get("/settings/global", getPublicGlobalSettings);
-
-// Fest-wide overview (Put this BEFORE /:eventId routes to avoid conflict)
-router.get("/analytics/overview", protect, isAdminOrCoordinator, getFestOverview);
-
-// Detailed Analytics for Dashboard
-router.get("/analytics/detailed", protect, isAdminOrCoordinator, getDetailedAnalytics);
-
-// All registrations (Universal registry)
-router.get("/registrations/all", protect, isAdminOrCoordinator, getFestRegistrations);
-
-
 
 // Event specific stats
 router.get("/:eventId/stats", protect, isAdminOrCoordinator, checkEventAccess, getEventStats);

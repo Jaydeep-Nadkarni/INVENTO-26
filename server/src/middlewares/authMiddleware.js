@@ -75,7 +75,8 @@ export const isAdminOrCoordinator = (req, res, next) => {
     return res.status(401).json({ message: "Authentication required." });
   }
 
-  if (req.user.role !== "ADMIN" && req.user.role !== "COORDINATOR") {
+  const role = req.user.role?.toUpperCase();
+  if (role !== "ADMIN" && role !== "COORDINATOR" && role !== "MASTER") {
     return res.status(403).json({
       message: "Access forbidden. Admin or Coordinator privileges required."
     });
@@ -91,17 +92,12 @@ export const isAdminOrCoordinator = (req, res, next) => {
 export const checkEventAccess = (req, res, next) => {
   if (!req.user) return res.status(401).json({ message: "Not authorized" });
 
-  // Super Admins (if any) or existing Coordinators might have global access
-  // For now, let's assume Coordinators have full access to their domain, but we'll stick to the requested "access array" logic.
+  const role = req.user.role?.toUpperCase();
+  // Super Admins or registration admins get global access
+  if (role === 'MASTER' || req.user.isRegistration) return next();
 
   // If user is basic User, deny
-  if (req.user.role === 'USER') return res.status(403).json({ message: "Forbidden" });
-
-  // If allow-all flag (like a Super Admin - not explicitly requested but good practice)
-  // For this specific request: "Implement registration admin flag that grants read-only access to all participants"
-  // If it's a registration admin, they might have access to ALL events for registration purposes?
-  // The request says "isRegistration ... grants read-only access to all participants".
-  // This likely applies to fetching participants, not necessarily editing event details.
+  if (role === 'USER') return res.status(403).json({ message: "Forbidden" });
 
   const eventId = req.params.eventId;
 
