@@ -12,20 +12,33 @@ export const DataProvider = ({ children }) => {
         const saved = localStorage.getItem('adminData');
         if (saved) {
             try {
-                return JSON.parse(saved);
+                const parsed = JSON.parse(saved);
+                return {
+                    ...parsed,
+                    events: parsed.events || [],
+                    participants: parsed.participants || [],
+                    admins: parsed.admins || [],
+                    teams: parsed.teams || [],
+                    overviewStats: parsed.overviewStats || null
+                };
             } catch (e) {
                 console.error("Error loading adminData from localStorage:", e);
-                return defaultData;
             }
         }
-        return defaultData;
+        return {
+            events: [],
+            participants: [],
+            admins: [],
+            teams: [],
+            overviewStats: null
+        };
     });
 
     const [loading, setLoading] = useState(false);
 
     // Derived events filtered by team (Registration events excluded globally)
     const filteredEvents = useMemo(() => {
-        return data.events.filter(e => e.team?.toLowerCase() !== 'registration');
+        return (data.events || []).filter(e => e.team?.toLowerCase() !== 'registration');
     }, [data.events]);
 
     // Filtered data for granular admins - moved to top level
@@ -41,14 +54,16 @@ export const DataProvider = ({ children }) => {
             setLoading(true);
             const { data: events } = await apiGet('/api/events');
 
+            if (!Array.isArray(events)) return;
+
             // Map backend fields to frontend expected fields if necessary
             const formattedEvents = events.map(e => ({
                 id: e._id || e.id,
                 name: e.name,
                 team: Array.isArray(e.club) ? e.club[0] : (e.club || 'General'),
-                total_slots: e.slots.totalSlots,
-                available_slots: e.slots.availableSlots,
-                reserved_slots: e.slots.totalSlots - e.slots.availableSlots,
+                total_slots: e.slots?.totalSlots || 0,
+                available_slots: e.slots?.availableSlots || 0,
+                reserved_slots: (e.slots?.totalSlots || 0) - (e.slots?.availableSlots || 0),
                 status: e.registration?.isOpen ? "Live" : "Closed",
                 eventType: e.eventType,
                 specificSlots: e.specificSlots,
@@ -65,6 +80,36 @@ export const DataProvider = ({ children }) => {
             console.error("Failed to fetch events:", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Fetch all participants/registrations
+    const refreshParticipants = async () => {
+        try {
+            const { data: participants } = await apiGet('/api/events/registrations/all');
+            if (Array.isArray(participants)) {
+                setData(prev => ({
+                    ...prev,
+                    participants: participants
+                }));
+            }
+        } catch (error) {
+            console.error("Failed to fetch participants:", error);
+        }
+    };
+
+    // Fetch all admins
+    const refreshAdmins = async () => {
+        try {
+            const { data: admins } = await apiGet('/api/admins');
+            if (Array.isArray(admins)) {
+                setData(prev => ({
+                    ...prev,
+                    admins: admins
+                }));
+            }
+        } catch (error) {
+            console.error("Failed to fetch admins:", error);
         }
     };
 
@@ -89,44 +134,60 @@ export const DataProvider = ({ children }) => {
     // Fetch on initial load if we have a token and proper role
     useEffect(() => {
         const token = localStorage.getItem('token');
-        const userStr = localStorage.getItem('currentUser');
+        const adminUserStr = localStorage.getItem('adminUser');
 
         if (token) {
-            refreshEvents(); // Events list is now public, so safe to fetch for everyone
+            refreshEvents(); 
 
-            // Only fetch admin specific stats if user is admin/coordinator
-            if (userStr) {
+            if (adminUserStr) {
                 try {
-                    const user = JSON.parse(userStr);
-                    if (user.role === 'ADMIN' || user.role === 'COORDINATOR') {
+                    const user = JSON.parse(adminUserStr);
+                    const role = user.role?.toUpperCase();
+                    if (role === 'ADMIN' || role === 'MASTER' || role === 'COORDINATOR') {
                         refreshStats();
+                        refreshParticipants();
+                        if (role === 'MASTER') {
+                            refreshAdmins();
+                        }
                     }
                 } catch (e) {
                     console.error("Error parsing user for stats fetch:", e);
                 }
             }
         }
-    }, []);
-
-
+    }, [adminUser]);
 
     // Computed Stats (Re-calculated when participants/events/admins/teams change)
     const stats = useMemo(() => {
         // Filter out any lingering registration events from statistics
-        const filteredEvents = data.events.filter(e => e.team !== 'Registration');
+        const currentEvents = data.events || [];
+        const filteredEvents = currentEvents.filter(e => e.team !== 'Registration');
 
-        const totalParticipants = data.participants.length;
+        const participants = data.participants || [];
+        const admins = data.admins || [];
+
+        const totalParticipants = participants.length;
         const totalEvents = filteredEvents.length;
-        const totalAdmins = data.admins.length;
-        const paidParticipants = data.participants.filter(p => p.payment_status === 'paid');
-        const revenue = paidParticipants.reduce((sum, p) => sum + p.payment_amount, 0);
+        const totalAdmins = admins.length;
+        
+        // Calculate revenue from participants and teams
+        const revenue = participants.reduce((sum, p) => {
+            // Check if it's a team or solo participant
+            if (p.paid || p.payment_status === 'paid') {
+                // If it's a team, we should be careful not to double count if the structure is different
+                // In getFestRegistrations, it seems teams are included in the same list
+                const amount = p.payment_amount || p.amount || 0;
+                return sum + amount;
+            }
+            return sum;
+        }, 0);
 
         const adminDistribution = [
             "Dance", "Music", "Media", "Coding", "Gaming", "HR", "Art"
         ].map(team => ({
             team,
-            admins: data.admins.filter(a => a.team === team).length,
-            participants: data.participants.filter(p => p.team === team).length
+            admins: admins.filter(a => a.team === team).length,
+            participants: participants.filter(p => p.team === team).length
         }));
 
         return {
@@ -136,7 +197,7 @@ export const DataProvider = ({ children }) => {
                 totalAdmins,
                 totalRevenue: `₹${revenue.toLocaleString()}`,
                 systemHealth: "Optimal",
-                activeNodes: 8
+                activeNodes: admins.filter(a => a.status === 'Active').length || 8
             },
             adminDistribution
         };
@@ -183,6 +244,8 @@ export const DataProvider = ({ children }) => {
         loading,
         refreshEvents,
         refreshStats,
+        refreshParticipants,
+        refreshAdmins,
         updateParticipant,
         updateEvent,
         addAdmin,

@@ -18,7 +18,7 @@ const MasterLogin = () => {
 
         await new Promise(resolve => setTimeout(resolve, 1200));
         
-        const result = login(email, password);
+        const result = await login(email, password);
         if (result.success) {
             if (result.role === 'master') {
                 navigate('/master/dashboard');

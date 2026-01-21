@@ -18,7 +18,7 @@ const AdminLogin = () => {
         
         await new Promise(resolve => setTimeout(resolve, 800));
         
-        const result = login(email, password);
+        const result = await login(email, password);
         if (result.success) {
             if (result.role === 'master') {
                 navigate('/master/dashboard');

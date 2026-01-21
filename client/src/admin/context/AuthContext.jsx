@@ -19,30 +19,42 @@ export const AdminAuthProvider = ({ children }) => {
         setLoading(false);
     }, []);
 
-    const login = (email, password) => {
-        const creds = {
-            'dance@invento.com': 'dance123',
-            'media@invento.com': 'media123',
-            'registration@invento.com': 'reg123',
-            'hr@invento.com': 'hr123',
-            'music@invento.com': 'music123',
-            'coding@invento.com': 'coding123',
-            'gaming@invento.com': 'gaming123',
-            'art@invento.com': 'art123',
-            'master@invento.com': 'master123'
-        };
+    const login = async (email, password) => {
+        try {
+            const response = await fetch('/api/admins/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password }),
+            });
 
-        if (creds[email] && creds[email] === password) {
-            const role = email.includes('master') ? 'master' : 'admin';
-            const teamName = email.split('@')[0];
-            const team = teamName.charAt(0).toUpperCase() + teamName.slice(1);
-            
-            const user = { email, role, team };
-            localStorage.setItem('adminUser', JSON.stringify(user));
-            setAdminUser(user);
-            return { success: true, role, team };
+            const data = await response.json();
+
+            if (response.ok) {
+                const user = {
+                    id: data.id,
+                    name: data.name,
+                    email: data.email,
+                    role: data.role.toLowerCase(), // Store lowercase for frontend consistency if needed, but backend expects uppercase
+                    team: data.team,
+                    access: data.access || [],
+                    isRegistration: data.isRegistration || false
+                };
+                
+                // Store both token and user
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('adminUser', JSON.stringify(user));
+                setAdminUser(user);
+                
+                return { success: true, role: user.role, team: user.team };
+            } else {
+                return { success: false, message: data.message || 'Invalid credentials' };
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            return { success: false, message: 'Server connection failed' };
         }
-        return { success: false, message: 'Invalid credentials' };
     };
 
     const logout = () => {
