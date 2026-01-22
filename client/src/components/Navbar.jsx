@@ -13,7 +13,16 @@ const Navbar = ({ onEventsClick, isMobile, position = 'fixed' }) => {
   const navigate = useNavigate()
   const [currentUser, setCurrentUser] = useState(null)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
   const textures = [tex1, tex2, tex3]
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20)
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const navItems = [
     { label: 'Home', path: '/' },
@@ -53,7 +62,11 @@ const Navbar = ({ onEventsClick, isMobile, position = 'fixed' }) => {
   }
 
   return (
-    <nav className={`${position} top-0 left-0 w-full z-50 px-4 h-16 md:px-6 py-3 md:py-4 flex items-center justify-between transition-colors duration-300 ${isMobile && mobileMenuOpen ? 'bg-black' : 'bg-transparent md:bg-transparent'}`}>
+    <nav className={`${position} top-0 left-0 w-full z-50 px-4 h-16 md:px-6 py-3 md:py-4 flex items-center justify-between transition-all duration-500 ${
+      scrolled && location.pathname !== '/' 
+        ? 'bg-black/10 backdrop-blur-[1px] shadow-2xl' 
+        : (isMobile && mobileMenuOpen ? 'bg-black' : 'bg-transparent')
+    }`}>
       {/* Logo/Brand */}
       <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
         <img src={inventoLogo} alt="INVENTO" className="h-12 md:h-14 w-auto" />
