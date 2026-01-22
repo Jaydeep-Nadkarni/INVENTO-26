@@ -182,20 +182,6 @@ const FileManager = ({ onOpenFile }) => {
                         <p>Override: <span className="bg-black text-black select-none">DELTA-OMICRON</span></p>
                     </div>
                 )
-            },
-            {
-                id: 'meme1',
-                name: 'evidence_A.jpg',
-                type: 'image',
-                size: 45000,
-                url: 'https://i.imgflip.com/26am.jpg'
-            },
-             {
-                id: 'meme2',
-                name: 'intercept.jpg',
-                type: 'image',
-                size: 32000,
-                url: 'https://i.imgflip.com/1ur9b0.jpg'
             }
         ]
     }
