@@ -94,9 +94,6 @@ const EventGridCard = ({ club, index, onSelect }) => {
                             <p className="text-[10px] font-mono text-gray-500 uppercase tracking-wider max-w-[70%] line-clamp-1">
                                 {club.tagline}
                             </p>
-                            <div className="w-6 h-6 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-bold">
-                                +
-                            </div>
                         </div>
                     </div>
                 </div>

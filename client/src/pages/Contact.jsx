@@ -18,16 +18,16 @@ const teamsData = [
     name: 'Registration',
     members: [
       { name: 'Akhilesh Joshi', role: 'Registartion Lead', phone: '+91 88618 14369', img: 'https://i.postimg.cc/7hxjHFnj/Akhilesh-joshi.jpg', socials: { instagram: 'https://www.instagram.com/akhileshjoshi_04?igsh=OXB5cTY1dWh6a2xr', linkedin: "https://www.linkedin.com/in/akhilesh-joshi-aj2004?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app", whatsapp: "https://wa.me/8861814369" } },
-      { name: 'Aastha Mishra', role: 'Registration Lead', phone: '+91 8473870310', img: 'https://i.postimg.cc/BnmQ11Zm/Aastha.jpg', socials: { linkedin: '#', whatsapp: 'https://wa.me/8473870310' } },
+      { name: 'Aastha Mishra', role: 'Registration Lead', phone: '+91 84738 70310', img: 'https://i.postimg.cc/BnmQ11Zm/Aastha.jpg', socials: { linkedin: '#', whatsapp: 'https://wa.me/8473870310' } },
     ]
   },
   {
     id: 'technical',
     name: 'Technical',
     members: [
-      { name: 'Jaydeep Nadkarni', role: 'Frontend Developer', phone: '+91 9481740517', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Rohan', socials: { instagram: 'https://www.instagram.com/jaydeep_nadkarni/', linkedin: 'https://www.linkedin.com/in/jaydeep-nadkarni/', whatsapp: 'https://wa.me/9481740517' } },
-      { name: 'Sandesh Chavan', role: 'Backend Developer', phone: '+91 98807 83498', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Priya', socials: { instagram: 'https://www.instagram.com/s.a.n.d.e.s.h._/', linkedin: null, whatsapp: 'https://wa.me/9880783498' } },
-      { name: 'Harshit Baliyan', role: 'Frontend Developer', phone: '+91 88103 10294', img: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Amit', socials: { instagram: 'https://www.instagram.com/_harshitbaliyan.__011/', linkedin: 'https://www.linkedin.com/in/harshit-baliyan-7455942a9/', whatsapp: 'https://wa.me/8810310294' } },
+      { name: 'Jaydeep Nadkarni', role: 'Frontend Developer', phone: '+91 94817 40517', img: 'https://i.postimg.cc/W14dtBqq/Jaydeep-Nadkarni.jpg', socials: { instagram: 'https://www.instagram.com/jaydeep_nadkarni/', linkedin: 'https://www.linkedin.com/in/jaydeep-nadkarni/', whatsapp: 'https://wa.me/9481740517' } },
+      { name: 'Sandesh Chavan', role: 'Backend Developer', phone: '+91 98807 83498', img: 'https://i.postimg.cc/Nj0KL32r/Sandesh.jpg', socials: { instagram: 'https://www.instagram.com/s.a.n.d.e.s.h._/', linkedin: null, whatsapp: 'https://wa.me/9880783498' } },
+      { name: 'Harshit Baliyan', role: 'Frontend Developer', phone: '+91 88103 10294', img: 'https://i.postimg.cc/Gm9v68KR/Harshit.jpg', socials: { instagram: 'https://www.instagram.com/_harshitbaliyan.__011/', linkedin: 'https://www.linkedin.com/in/harshit-baliyan-7455942a9/', whatsapp: 'https://wa.me/8810310294' } },
     ]
   },
   {

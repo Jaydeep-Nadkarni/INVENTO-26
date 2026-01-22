@@ -415,20 +415,28 @@ export const registerForEvent = async (req, res) => {
         await Payment.create([{ paymentId: razorpay_payment_id, orderId: razorpay_order_id, eventId: event._id }], { session });
       }
 
-      return { type: eventType, user, eventName: event.name, whatsappLink, teamName };
+      return { type: eventType, user, eventName: event.name, whatsappLink, teamName, userList };
     });
 
-    // Send Mail
-    await transporter.sendMail({
-      from: `"Invento 2026" <${process.env.EMAIL_USER}>`,
-      to: result.user.email,
-      subject: `Registration Success: ${result.eventName}`,
-      html: spaceMail(
-        result.type === "SOLO" ? "REGISTRATION CONFIRMED" : "TEAM REGISTRATION CONFIRMED",
-        result.type === "SOLO" ? "You are successfully registered!" : `Team ${result.teamName} is successfully registered!`,
-        result.eventName, result.user.name, result.user._id
-      )
-    }).catch(err => console.error("Mail Error:", err));
+    // Send Mail to all participants
+    if (result.userList && result.userList.length > 0) {
+      const mailPromises = result.userList.map(recipient => 
+        transporter.sendMail({
+          from: `"Invento 2026" <${process.env.EMAIL_USER}>`,
+          to: recipient.email,
+          subject: `Registration Success: ${result.eventName}`,
+          html: spaceMail(
+            result.type === "SOLO" ? "REGISTRATION CONFIRMED" : "TEAM REGISTRATION CONFIRMED",
+            result.type === "SOLO" ? "You are successfully registered!" : `Team ${result.teamName} is successfully registered!`,
+            result.eventName, recipient.name, recipient._id
+          )
+        }).catch(err => console.error(`Mail Error (${recipient.email}):`, err))
+      );
+      
+      // We don't necessarily need to await all mails before responding to the user, 
+      // but we do it to maintain current behavior of ensuring mail attempt.
+      await Promise.all(mailPromises);
+    }
 
     res.json({ message: "Registration successful", whatsappLink: result.whatsappLink });
   } catch (error) {

@@ -25,26 +25,29 @@ const useSwipeGesture = (onNext, onPrev) => {
     const touchStartX = useRef(null);
     const touchStartY = useRef(null);
     const touchEndX = useRef(null);
-    const minSwipeDistance = 80;
+    const touchEndY = useRef(null);
+    const minSwipeDistance = 50;
 
     const onTouchStart = (e) => {
         touchEndX.current = null;
+        touchEndY.current = null;
         touchStartX.current = e.targetTouches[0].clientX;
         touchStartY.current = e.targetTouches[0].clientY;
     };
 
     const onTouchMove = (e) => {
         touchEndX.current = e.targetTouches[0].clientX;
+        touchEndY.current = e.targetTouches[0].clientY;
     };
 
     const onTouchEnd = () => {
-        if (!touchStartX.current || !touchEndX.current || !touchStartY.current) return;
+        if (!touchStartX.current || !touchEndX.current || !touchStartY.current || !touchEndY.current) return;
         
         const horizontalDistance = touchStartX.current - touchEndX.current;
-        const verticalDistance = Math.abs(touchStartY.current - (touchEndX.current || touchStartY.current));
+        const verticalDistance = Math.abs(touchStartY.current - touchEndY.current);
         
-        // Only trigger swipe if horizontal movement is dominant
-        if (Math.abs(horizontalDistance) > minSwipeDistance && Math.abs(horizontalDistance) > verticalDistance * 2) {
+        // Only trigger swipe if horizontal movement is dominant (to avoid diagonal or accidental vertical swipes)
+        if (Math.abs(horizontalDistance) > minSwipeDistance && Math.abs(horizontalDistance) > verticalDistance * 1.5) {
             const isLeftSwipe = horizontalDistance > minSwipeDistance;
             const isRightSwipe = horizontalDistance < -minSwipeDistance;
             if (isLeftSwipe && onNext) onNext();
@@ -117,6 +120,7 @@ const EventDetails = ({
     return (
         <div 
             className="fixed inset-0 z-100 bg-stone-950 flex flex-col md:flex-row overflow-hidden selection:bg-red-600 selection:text-white"
+            {...swipeHandlers}
         >
             <TextureOverlay opacity={0.3} className="pointer-events-none fixed inset-0" />
 
@@ -132,7 +136,7 @@ const EventDetails = ({
                             <ArrowLeft size={12} className="group-hover:-translate-x-1 transition-transform" />
                             BACK TO EVENTS
                         </button>
-                        <div className="flex gap-2">
+                        <div className="hidden md:flex gap-2">
                              <button onClick={goToPrevEvent} className="p-2 border border-stone-700 hover:bg-stone-800 text-stone-400 transition-all"><ChevronLeft size={16}/></button>
                              <button onClick={goToNextEvent} className="p-2 border border-stone-700 hover:bg-stone-800 text-stone-400 transition-all"><ChevronRight size={16}/></button>
                         </div>
@@ -193,8 +197,7 @@ const EventDetails = ({
 
             {/* --- RIGHT PANEL: DETAILS (Desktop: 60%) --- */}
             <div 
-                className="md:w-[60%] w-full bg-stone-100 flex-1 relative scroll-smooth selection:bg-stone-900 selection:text-white overflow-y-auto"
-                {...swipeHandlers}
+                className="md:w-[60%] w-full md:sm:px-auto px-5 bg-stone-100 flex-1 relative scroll-smooth selection:bg-stone-900 selection:text-white overflow-y-auto"
             >
                 <style>{`
                     .grain-overlay {
@@ -324,16 +327,16 @@ const EventDetails = ({
                         <h4 className="font-mono text-[12px] text-stone-400 uppercase tracking-widest border-b border-stone-200 pb-2">Event Coordinators</h4>
                          <div className="grid gap-4">
                              {currentEvent.contacts?.map((contact, idx) => (
-                                 <div key={idx} className="flex justify-between items-center bg-white p-4 border border-stone-200 shadow-sm">
-                                     <div className="flex items-center gap-3">
-                                         <div className="w-10 h-10 rounded bg-stone-100 flex items-center justify-center text-stone-500">
-                                             <User size={16} />
-                                         </div>
-                                         <span className="font-serif italic text-stone-900 font-bold">{contact.name}</span>
+                                 <div key={idx} className="bg-white p-4 border border-stone-200 shadow-sm flex gap-3 items-center">
+                                     <div className="w-10 h-10 rounded bg-stone-100 flex items-center justify-center text-stone-500">
+                                         <User size={16} />
                                      </div>
-                                     <a href={`tel:${contact.phone}`} className="font-mono text-sm text-red-600 flex items-center justify-center">
-                                         {contact.phone}
-                                     </a>
+                                     <div className="flex flex-col flex-1">
+                                         <span className="font-serif italic text-stone-900 font-bold">{contact.name}</span>
+                                         <a href={`tel:${contact.phone}`} className="font-mono text-sm text-red-600 mt-1">
+                                             {contact.phone}
+                                         </a>
+                                     </div>
                                  </div>
                              ))}
                          </div>
@@ -364,6 +367,24 @@ const EventDetails = ({
             >
                 <span className="text-xl font-mono group-hover:rotate-90 transition-transform">✕</span>
             </button>
+
+            {/* --- MOBILE SIDE NAVIGATION --- */}
+            <div className="md:hidden fixed left-0 top-1/2 -translate-y-1/2 z-120pointer-events-none">
+                <button 
+                    onClick={goToPrevEvent}
+                    className="p-1.5 text-stone-400 active:text-black transition-all pointer-events-auto"
+                >
+                    <ChevronLeft size={30} />
+                </button>
+            </div>
+            <div className="md:hidden fixed right-0 top-1/2 -translate-y-1/2 z-120 pointer-events-none">
+                <button 
+                    onClick={goToNextEvent}
+                    className="p-1.5 text-stone-400 active:text-black transition-all pointer-events-auto"
+                >
+                    <ChevronRight size={30} />
+                </button>
+            </div>
 
             {/* --- REGISTRATION MODAL (PRESERVED FUNCTIONALITY) --- */}
             <AnimatePresence>
