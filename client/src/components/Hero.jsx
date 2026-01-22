@@ -9,6 +9,7 @@ import paperTexture from '../assets/UI/paper-texture.jpg'
 import year2026 from '../assets/UI/2026.png'
 import handprint from '../assets/UI/handprint.webp'
 import windowsPlayer from '../assets/UI/windows-player.jpg'
+import inventoLogo from '../assets/UI/Invento-logo.png'
 
 // Countdown Timer Component
 const CountdownTimer = () => {
@@ -47,7 +48,7 @@ const CountdownTimer = () => {
       initial={{ opacity: 0, y: 10 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
-      className="mt-8 relative"
+      className="mt-2 relative"
     >
       {/* Elegant Dark Background with Gradient */}
       <div className="relative bg-transparent rounded-lg px-6 sm:px-8 md:px-12 py-2 sm:py-8 md:py-2 mx-4 overflow-hidden ">
@@ -58,49 +59,105 @@ const CountdownTimer = () => {
         <div className="relative flex flex-col items-center gap-4">
 
           {/* Timer Display */}
-          <div className="flex gap-1 sm:gap-2 md:gap-3 justify-center items-center">
+          <div className="flex gap-2 sm:gap-4 md:gap-4 justify-center items-center">
             {/* Days */}
             <div className="flex flex-col items-center">
-              <span className="text-4xl sm:text-6xl md:text-7xl bg-gradient-to-b from-amber-300 via-yellow-300 to-amber-400 bg-clip-text text-transparent drop-shadow-lg"
-                style={{ fontFamily: '"DM Serif Text", serif', fontVariantNumeric: 'tabular-nums', textShadow: '0 0 20px rgba(251, 191, 36, 0.5), 0 0 40px rgba(217, 119, 6, 0.3)' }}>
+              <span className="text-6xl sm:text-7xl md:text-8xl leading-none"
+                style={{ 
+                  fontFamily: '"Bebas Neue", sans-serif', 
+                  fontVariantNumeric: 'tabular-nums', 
+                  color: 'white',
+                  WebkitTextStroke: '2px black',
+                  textShadow: '4px 4px 0px #000',
+                  paintOrder: 'stroke fill'
+                }}>
                 {String(timeLeft.days).padStart(2, '0')}
               </span>
-              <span className="mt-2 font-serif text-xs sm:text-sm text-amber-300/80 uppercase tracking-widest font-semibold">
+              <span className="mt-2 text-lg sm:text-lg tracking-widest" 
+                style={{ 
+                  fontFamily: '"Bebas Neue", sans-serif', 
+                  color: 'white',
+                  WebkitTextStroke: '1px black',
+                  textShadow: '2px 2px 0px #000',
+                  paintOrder: 'stroke fill'
+                }}>
                 Days
               </span>
             </div>
 
             {/* Colon */}
-            <div className="pb-4 md:pb-6">
-              <span className="font-serif text-4xl sm:text-4xl md:text-6xl text-amber-400/60 font-light">:</span>
+            <div className="pb-8 md:pb-10">
+              <span className="text-5xl sm:text-6xl md:text-7xl" 
+                style={{ 
+                  fontFamily: '"Bebas Neue", sans-serif', 
+                  color: 'white',
+                  WebkitTextStroke: '2px black',
+                  textShadow: '4px 4px 0px #000',
+                  paintOrder: 'stroke fill'
+                }}>:</span>
             </div>
 
             {/* Hours */}
             <div className="flex flex-col items-center">
-              <span style={{ fontFamily: '"DM Serif Text", serif', fontVariantNumeric: 'tabular-nums', textShadow: '0 0 20px rgba(251, 191, 36, 0.5), 0 0 40px rgba(217, 119, 6, 0.3)' }}
-                className="text-4xl sm:text-6xl md:text-7xl bg-gradient-to-b from-amber-300 via-yellow-300 to-amber-400 bg-clip-text text-transparent drop-shadow-lg">
+              <span className="text-6xl sm:text-7xl md:text-8xl leading-none"
+                style={{ 
+                  fontFamily: '"Bebas Neue", sans-serif', 
+                  fontVariantNumeric: 'tabular-nums', 
+                  color: 'white',
+                  WebkitTextStroke: '2px black',
+                  textShadow: '4px 4px 0px #000',
+                  paintOrder: 'stroke fill'
+                }}>
                 {String(timeLeft.hours).padStart(2, '0')}
               </span>
-              <span className="mt-2 font-serif text-xs sm:text-sm text-amber-300/80 uppercase tracking-widest font-semibold">
+              <span className="mt-2 text-lg sm:text-lg tracking-widest" 
+                style={{ 
+                  fontFamily: '"Bebas Neue", sans-serif', 
+                  color: 'white',
+                  WebkitTextStroke: '1px black',
+                  textShadow: '2px 2px 0px #000',
+                  paintOrder: 'stroke fill'
+                }}>
                 Hours
               </span>
             </div>
 
             {/* Colon */}
-            <div className="pb-4 md:pb-6">
-              <span className="font-serif text-4xl sm:text-4xl md:text-6xl text-amber-400/60 font-light">:</span>
+            <div className="pb-8 md:pb-10">
+              <span className="text-5xl sm:text-6xl md:text-7xl" 
+                style={{ 
+                  fontFamily: '"Bebas Neue", sans-serif', 
+                  color: 'white',
+                  WebkitTextStroke: '2px black',
+                  textShadow: '4px 4px 0px #000',
+                  paintOrder: 'stroke fill'
+                }}>:</span>
             </div>
 
             {/* Minutes */}
             <div className="flex flex-col items-center">
-              <span style={{ fontFamily: '"DM Serif Text", serif', fontVariantNumeric: 'tabular-nums', textShadow: '0 0 20px rgba(251, 191, 36, 0.5), 0 0 40px rgba(217, 119, 6, 0.3)' }}
-                className="text-4xl sm:text-6xl md:text-7xl bg-gradient-to-b from-amber-300 via-yellow-300 to-amber-400 bg-clip-text text-transparent drop-shadow-lg">
+              <span className="text-6xl sm:text-7xl md:text-8xl leading-none"
+                style={{ 
+                  fontFamily: '"Bebas Neue", sans-serif', 
+                  fontVariantNumeric: 'tabular-nums', 
+                  color: 'white',
+                  WebkitTextStroke: '2px black',
+                  textShadow: '4px 4px 0px #000',
+                  paintOrder: 'stroke fill'
+                }}>
                 {String(timeLeft.minutes).padStart(2, '0')}
               </span>
-              <span className="mt-2 font-serif text-xs sm:text-sm text-amber-300/80 uppercase tracking-widest font-semibold">
+              <span className="mt-2 text-lg sm:text-lg tracking-widest" 
+                style={{ 
+                  fontFamily: '"Bebas Neue", sans-serif', 
+                  color: 'white',
+                  WebkitTextStroke: '1px black',
+                  textShadow: '2px 2px 0px #000',
+                  paintOrder: 'stroke fill'
+                }}>
                 Minutes
               </span>
-            </div>
+            </div> 
           </div>
         </div>
       </div>
@@ -132,29 +189,9 @@ const Hero = () => {
         transition={{ duration: 0.8, ease: "easeOut" }}
         className="z-20 transform flex flex-col items-center"
       >
-        <div className="relative">
-          <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-red-700 drop-shadow-2xl"
-            style={{
-              fontFamily: "'Playfair Display', serif",
-              textShadow: '2px 2px 0px #000, 4px 4px 0px #444, 6px 6px 15px rgba(0,0,0,0.5)'
-            }}>
-            INVENTO
-          </h1>
-          <div className="absolute -top-4 -right-8 transform rotate-12 border-4 border-red-600 px-2 py-1 text-red-600 font-bold text-lg uppercase tracking-widest opacity-80 mix-blend-multiply">
-            Top Secret
-          </div>
+        <div className="relative mb-6">
+          <img src={inventoLogo} alt="INVENTO Logo" className="h-48 md:h-72 w-auto drop-shadow-2xl" />
         </div>
-
-        <div className="mt-2 bg-black/80 text-yellow-500 px-4 py-1 rounded border border-yellow-600/50 backdrop-blur-sm">
-          <p className="text-lg md:text-xl font-mono tracking-[0.2em] uppercase">
-            Spyverse 2026
-          </p>
-        </div>
-
-        <p className="mt-4 text-white italic font-serif text-sm md:text-base max-w-xs text-center">
-          "Smiles in the Spotlight, Secrets in the Shadow"
-        </p>
-
         <CountdownTimer />
       </motion.div>
 

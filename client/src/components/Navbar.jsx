@@ -6,6 +6,7 @@ import tex1 from '../assets/UI/button-texture-1.webp'
 import tex2 from '../assets/UI/button-texture-2.webp'
 import tex3 from '../assets/UI/button-texture-3.webp'
 import registerBtn from '../assets/UI/register.png'
+import inventoLogo from '../assets/UI/Invento-logo.png'
 
 const Navbar = ({ onEventsClick, isMobile, position = 'fixed' }) => {
   const location = useLocation()
@@ -54,8 +55,8 @@ const Navbar = ({ onEventsClick, isMobile, position = 'fixed' }) => {
   return (
     <nav className={`${position} top-0 left-0 w-full z-50 px-4 h-16 md:px-6 py-3 md:py-4 flex items-center justify-between transition-colors duration-300 ${isMobile && mobileMenuOpen ? 'bg-black' : 'bg-transparent md:bg-transparent'}`}>
       {/* Logo/Brand */}
-      <Link to="/" className="text-yellow-500 font-serif font-bold text-lg md:text-xl tracking-tighter hover:opacity-80 transition-opacity">
-        INVENTO <span className="text-xs align-top opacity-70">'26</span>
+      <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+        <img src={inventoLogo} alt="INVENTO" className="h-12 md:h-14 w-auto" />
       </Link>
 
       {/* Desktop Nav Links */}
