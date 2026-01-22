@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import inventoLogo from '../assets/UI/Invento-logo.png';
 
 const Loader = ({ progress, onComplete }) => {
     const [status, setStatus] = useState('INITIALIZING SECURE CONNECTION...');
@@ -61,6 +62,7 @@ const Loader = ({ progress, onComplete }) => {
                     animate={{ opacity: 1 }}
                     className="flex flex-col items-center space-y-4"
                 >
+                    <img src={inventoLogo} alt="INVENTO" className="h-16 md:h-64 w-auto" />
                     <div className="text-red-700 text-sm tracking-[0.3em] font-bold uppercase">
                         Classification: Top Secret
                     </div>

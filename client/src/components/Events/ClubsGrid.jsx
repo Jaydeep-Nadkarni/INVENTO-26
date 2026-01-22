@@ -120,7 +120,7 @@ const ClubsGrid = ({ liveClubs, eventsLoading, handleClubClick }) => {
                 <div className="mb-12 border-b border-dashed border-white/20 pb-4 flex justify-between items-end">
                     <div>
                         <h2 className="text-sm font-mono text-red-600 tracking-[0.3em] uppercase mb-2">Decrypted Directory</h2>
-                        <h1 className="text-4xl font-serif md:text-5xl font-black text-white uppercase tracking-tighter">Competitions</h1>
+                        <h1 className="text-4xl font-serif md:text-5xl font-black text-white uppercase tracking-tighter">Events</h1>
                     </div>
                     <div className="hidden md:block text-xs font-mono text-gray-500">
                         {eventsLoading ? (

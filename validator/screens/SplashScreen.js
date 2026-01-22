@@ -35,8 +35,8 @@ const SplashScreen = () => {
                 {/* Logo SVG */}
                 <View className="mb-8">
                     <Image
-                        source={require('../assets/images/Logo-loader.svg')}
-                        style={{ width: 120, height: 120 }}
+                        source={require('../assets/images/Invento-logo.webp')}
+                        style={{ width: 140, height: 140 }}
                         resizeMode="contain"
                     />
                 </View>

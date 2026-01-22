@@ -37,7 +37,6 @@ const EventCardGrid = ({
 
                     <div className="flex flex-col md:flex-row justify-between items-end border-b border-white/10 pb-6">
                         <div>
-                            <h4 className="font-mono text-red-600 text-xs tracking-[0.4em] uppercase mb-2">Decrypted Archive // Sector_{currentClub?.slug.toUpperCase()}</h4>
                             <h1 className="text-6xl md:text-8xl font-black text-white uppercase tracking-tighter leading-none font-serif">
                                 {currentClub?.name}
                             </h1>

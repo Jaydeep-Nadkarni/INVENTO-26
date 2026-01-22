@@ -43,7 +43,7 @@ const teamsData = [
     id: 'media',
     name: 'Media',
     members: [
-      { name: 'Goureesh Hiremath', role: 'Secretary', phone: '+91 99024 34746', img: 'https://i.postimg.cc/L8x6ZZ4W/Goureesh.jpg', socials: { instagram: 'https://www.instagram.com/goureesh.h/?hl=en', linkedin: '#', whatsapp: 'https://wa.me/9902434746' } },
+      { name: 'Goureesh Hiremath', role: 'Secretary', phone: '+91 99024 34746', img: 'https://i.postimg.cc/wv2gq4Vy/Goureesh.jpg', socials: { instagram: 'https://www.instagram.com/goureesh.h/?hl=en', linkedin: '#', whatsapp: 'https://wa.me/9902434746' } },
       { name: 'Vedant Kangralkar', role: 'Secretary', phone: '+91 63638 16784', img: 'https://i.postimg.cc/g05zgFZH/Vedant.jpg', socials: { instagram: 'https://www.instagram.com/vedant_2012?igsh=MW16Zm16ZGZkaGl4cw==', linkedin: '#', whatsapp: 'https://wa.me/6363816784' } },
       { name: 'Akash Patil', role: 'Secretary', phone: '+91 76194 82051', img: 'https://i.postimg.cc/wTNjRJXZ/Akash-Patil.jpg', socials: { instagram: 'https://www.instagram.com/akashh.patil/', linkedin: '#', whatsapp: 'https://wa.me/7619482051' } },
       { name: 'Ganesh Tudvekar', role: 'Secretary', phone: '+91 98868 11751', img: 'https://i.postimg.cc/P5Sr88rs/Ganesh.jpg', socials: { instagram: 'https://www.instagram.com/__ganesh._7?igsh=MWF5ZzFsNjNrYzkzbA==', linkedin: '#', whatsapp: 'https://wa.me/9886811751' } },
