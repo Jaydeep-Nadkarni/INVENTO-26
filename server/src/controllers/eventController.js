@@ -142,18 +142,13 @@ const validateHelper = async (event, inventoId, members, teamName, isOfficial, c
   //   throw new Error("Invalid Invento ID format.");
   // }
 
-  // Handle session properly - it can be null during createOrder
-  const user = session
-    ? await User.findById(inventoId).session(session)
-    : await User.findById(inventoId);
+  const user = await User.findById(inventoId);
   if (!user) throw new Error("Invalid Invento ID.");
 
   // Official Key Validation
   if (isOfficial) {
     if (!contingentKey) throw new Error("Contingent Key required for official registration.");
-    const keyDoc = session
-      ? await ContingentKey.findOne({ key: contingentKey }).session(session)
-      : await ContingentKey.findOne({ key: contingentKey });
+    const keyDoc = await ContingentKey.findOne({ key: contingentKey });
     if (!keyDoc) throw new Error("Invalid Contingent Key.");
 
     const currentOfficialCount = [
@@ -314,111 +309,107 @@ export const createOrder = async (req, res) => {
 };
 
 export const registerForEvent = async (req, res) => {
-  const reqId = Date.now();
-  const session = await mongoose.startSession();
   try {
-    const result = await session.withTransaction(async () => {
-      // Global Registration Check
-      const globalSettings = await GlobalSettings.getSettings();
-      if (!globalSettings.registrationsOpen) {
-        throw new Error("All event registrations are currently closed by administration.");
+    // Global Registration Check
+    const globalSettings = await GlobalSettings.getSettings();
+    if (!globalSettings.registrationsOpen) {
+      throw new Error("All event registrations are currently closed by administration.");
+    }
+
+    const {
+      inventoId, teamName, members, razorpay_order_id, razorpay_payment_id, razorpay_signature,
+      isOfficial, contingentKey
+    } = req.body;
+
+    const eventIdParam = req.params.id.trim();
+    const event = await Event.findOne({ $or: [{ _id: eventIdParam }, { id: eventIdParam }] });
+    if (!event) throw new EventNotFoundError();
+
+    // Shared Validation (without session)
+    const { user, staticEvent, eventType, members: validatedMembers } = await validateEventRegistration(
+      event, { inventoId, members, teamName, isOfficial, contingentKey }, null
+    );
+
+    const whatsappLink = staticEvent?.whatsapplink || "";
+
+    // Payment Verification
+    if (!isOfficial && event.price > 0) {
+      if (!verifyRazorpayPayment(razorpay_order_id, razorpay_payment_id, razorpay_signature)) {
+        throw new Error("Payment verification failed");
+      }
+      const usedPayment = await Payment.findOne({ paymentId: razorpay_payment_id, eventId: event._id });
+      if (usedPayment) throw new Error("Payment already used.");
+    }
+
+    const status = (event.price > 0 && !isOfficial) ? "CONFIRMED" : "PENDING";
+    const isMasterMiss = GENDER_SPECIFIC_EVENT_IDS.includes(String(event.id));
+
+    if (eventType === "SOLO") {
+      let slotKey = null;
+      if (isMasterMiss) {
+        const gender = user.gender?.toLowerCase();
+        slotKey = (gender === "male") ? "male" : (gender === "female") ? "female" : null;
+        if (!slotKey) throw new InvalidGenderError("Gender required for this event (Male/Female).");
       }
 
-      const {
-        inventoId, teamName, members, razorpay_order_id, razorpay_payment_id, razorpay_signature,
-        isOfficial, contingentKey
-      } = req.body;
-
-      const eventIdParam = req.params.id.trim();
-      const event = await Event.findOne({ $or: [{ _id: eventIdParam }, { id: eventIdParam }] }).session(session);
-      if (!event) throw new EventNotFoundError();
-
-      // Shared Validation
-      const { user, staticEvent, eventType, members: validatedMembers } = await validateEventRegistration(
-        event, { inventoId, members, teamName, isOfficial, contingentKey }, session
-      );
-
-      const whatsappLink = staticEvent?.whatsapplink || "";
-
-      // Payment Verification
-      if (!isOfficial && event.price > 0) {
-        if (!verifyRazorpayPayment(razorpay_order_id, razorpay_payment_id, razorpay_signature)) {
-          throw new Error("Payment verification failed");
-        }
-        const usedPayment = await Payment.findOne({ paymentId: razorpay_payment_id, eventId: event._id }).session(session);
-        if (usedPayment) throw new Error("Payment already used.");
-      }
-
-      const status = (event.price > 0 && !isOfficial) ? "CONFIRMED" : "PENDING";
-      const isMasterMiss = GENDER_SPECIFIC_EVENT_IDS.includes(String(event.id));
-
-      if (eventType === "SOLO") {
-        let slotKey = null;
-        if (isMasterMiss) {
-          const gender = user.gender?.toLowerCase();
-          slotKey = (gender === "male") ? "male" : (gender === "female") ? "female" : null;
-          if (!slotKey) throw new InvalidGenderError("Gender required for this event (Male/Female).");
-        }
-
-        if (slotKey) {
-          const currentGenderSlots = event.specificSlots.get(slotKey);
-          event.specificSlots.set(slotKey, currentGenderSlots - 1);
-          event.markModified('specificSlots');
-        } else {
-          event.slots.availableSlots -= 1;
-        }
-
-        event.registrations.participants.push({
-          inventoId: user._id,
-          name: user.name,
-          email: user.email,
-          phone: user.phone,
-          clgName: user.clgName,
-          paid: (event.price > 0 && !isOfficial),
-          status,
-          isOfficial: !!isOfficial,
-          contingentKey
-        });
-      }
-      else {
-        // TEAM Registration logic (Atomic)
-        const memberData = await User.find({ _id: { $in: validatedMembers } }).session(session);
-        event.registrations.teams.push({
-          teamName,
-          leaderId: inventoId,
-          status,
-          isOfficial: !!isOfficial,
-          contingentKey,
-          paid: (event.price > 0 && !isOfficial),
-          members: memberData.map(u => ({
-            inventoId: u._id,
-            name: u.name,
-            email: u.email,
-            phone: u.phone,
-            clgName: u.clgName
-          }))
-        });
+      if (slotKey) {
+        const currentGenderSlots = event.specificSlots.get(slotKey);
+        event.specificSlots.set(slotKey, currentGenderSlots - 1);
+        event.markModified('specificSlots');
+      } else {
         event.slots.availableSlots -= 1;
       }
 
-      await event.save({ session });
+      event.registrations.participants.push({
+        inventoId: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        clgName: user.clgName,
+        paid: (event.price > 0 && !isOfficial),
+        status,
+        isOfficial: !!isOfficial,
+        contingentKey
+      });
+    }
+    else {
+      // TEAM Registration logic
+      const memberData = await User.find({ _id: { $in: validatedMembers } });
+      event.registrations.teams.push({
+        teamName,
+        leaderId: inventoId,
+        status,
+        isOfficial: !!isOfficial,
+        contingentKey,
+        paid: (event.price > 0 && !isOfficial),
+        members: memberData.map(u => ({
+          inventoId: u._id,
+          name: u.name,
+          email: u.email,
+          phone: u.phone,
+          clgName: u.clgName
+        }))
+      });
+      event.slots.availableSlots -= 1;
+    }
 
-      // Update users' registeredEvents and passType
-      const userList = eventType === "SOLO" ? [user] : await User.find({ _id: { $in: validatedMembers } }).session(session);
-      for (const u of userList) {
-        if (!u.registeredEvents.includes(event.name)) u.registeredEvents.push(event.name);
-        u.passType = isOfficial ? "AAA" : (u.passType === "G" ? "A" : u.passType);
-        await u.save({ session });
-      }
+    await event.save();
 
-      if (event.price > 0 && !isOfficial) {
-        await Payment.create([{ paymentId: razorpay_payment_id, orderId: razorpay_order_id, eventId: event._id }], { session });
-      }
+    // Update users' registeredEvents and passType
+    const userList = eventType === "SOLO" ? [user] : await User.find({ _id: { $in: validatedMembers } });
+    for (const u of userList) {
+      if (!u.registeredEvents.includes(event.name)) u.registeredEvents.push(event.name);
+      u.passType = isOfficial ? "AAA" : (u.passType === "G" ? "A" : u.passType);
+      await u.save();
+    }
 
-      return { type: eventType, user, eventName: event.name, whatsappLink, teamName, userList };
-    });
+    if (event.price > 0 && !isOfficial) {
+      await Payment.create({ paymentId: razorpay_payment_id, orderId: razorpay_order_id, eventId: event._id });
+    }
 
-    // Send Mail to all participants
+    const result = { type: eventType, user, eventName: event.name, whatsappLink, teamName, userList };
+
+    // Send Mail to all participants (non-blocking)
     if (result.userList && result.userList.length > 0) {
       const mailPromises = result.userList.map(recipient => 
         transporter.sendMail({
@@ -433,17 +424,14 @@ export const registerForEvent = async (req, res) => {
         }).catch(err => console.error(`Mail Error (${recipient.email}):`, err))
       );
       
-      // We don't necessarily need to await all mails before responding to the user, 
-      // but we do it to maintain current behavior of ensuring mail attempt.
-      await Promise.all(mailPromises);
+      // Fire and forget - don't block the response
+      Promise.all(mailPromises).catch(err => console.error("Mail sending error:", err));
     }
 
     res.json({ message: "Registration successful", whatsappLink: result.whatsappLink });
   } catch (error) {
     console.error("Registration Error:", error);
     res.status(error.statusCode || 400).json({ error: error.name, message: error.message });
-  } finally {
-    session.endSession();
   }
 };
 
@@ -483,23 +471,21 @@ export const updateParticipantStatus = async (req, res) => {
     return res.status(400).json({ message: "Invalid status value" });
   }
 
-  const session = await mongoose.startSession();
   try {
-    await session.withTransaction(async () => {
-      const event = await Event.findOne({
-        $or: [{ _id: eventId }, { id: eventId }]
-      }).session(session);
+    const event = await Event.findOne({
+      $or: [{ _id: eventId }, { id: eventId }]
+    });
 
-      if (!event) throw new Error("Event not found");
+    if (!event) throw new Error("Event not found");
 
-      const participant = event.registrations.participants.find(p => p.inventoId === inventoId);
-      if (!participant) throw new Error("Participant not found");
+    const participant = event.registrations.participants.find(p => p.inventoId === inventoId);
+    if (!participant) throw new Error("Participant not found");
 
-      const isMasterMiss = GENDER_SPECIFIC_EVENT_IDS.includes(String(event.id));
-      let slotKey = null;
-      if (isMasterMiss) {
-        // Fetch user to check gender
-        const user = await User.findById(inventoId).session(session);
+    const isMasterMiss = GENDER_SPECIFIC_EVENT_IDS.includes(String(event.id));
+    let slotKey = null;
+    if (isMasterMiss) {
+      // Fetch user to check gender
+      const user = await User.findById(inventoId);
         if (user) {
           const gender = user.gender?.toLowerCase();
           if (gender === "male") slotKey = "male";
@@ -551,18 +537,15 @@ export const updateParticipantStatus = async (req, res) => {
         }
       }
 
-      participant.status = status;
-      // Mark modified to ensure updatedAt is bumped even if only subdocs changed
-      event.markModified('registrations.participants');
-      event.markModified('specificSlots');
-      await event.save({ session });
-    });
+    participant.status = status;
+    // Mark modified to ensure updatedAt is bumped even if only subdocs changed
+    event.markModified('registrations.participants');
+    event.markModified('specificSlots');
+    await event.save();
 
     res.status(200).json({ message: `Participant status updated to ${status}` });
   } catch (error) {
     res.status(400).json({ message: error.message });
-  } finally {
-    session.endSession();
   }
 };
 
@@ -601,17 +584,15 @@ export const updateTeamStatus = async (req, res) => {
     return res.status(400).json({ message: "Invalid status value" });
   }
 
-  const session = await mongoose.startSession();
   try {
-    await session.withTransaction(async () => {
-      const event = await Event.findOne({
-        $or: [{ _id: eventId }, { id: eventId }]
-      }).session(session);
+    const event = await Event.findOne({
+      $or: [{ _id: eventId }, { id: eventId }]
+    });
 
-      if (!event) throw new Error("Event not found");
+    if (!event) throw new Error("Event not found");
 
-      const team = event.registrations.teams.find(t => t.teamName === teamName);
-      if (!team) throw new Error("Team not found");
+    const team = event.registrations.teams.find(t => t.teamName === teamName);
+    if (!team) throw new Error("Team not found");
 
       const oldStatus = team.status;
       const isActive = (s) => ["CONFIRMED", "PENDING"].includes(s);
@@ -629,16 +610,13 @@ export const updateTeamStatus = async (req, res) => {
         event.slots.availableSlots += 1;
       }
 
-      team.status = status;
-      event.markModified('registrations.teams');
-      await event.save({ session });
-    });
+    team.status = status;
+    event.markModified('registrations.teams');
+    await event.save();
 
     res.status(200).json({ message: `Team status updated to ${status}` });
   } catch (error) {
     res.status(400).json({ message: error.message });
-  } finally {
-    session.endSession();
   }
 };
 

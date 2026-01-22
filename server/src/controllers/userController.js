@@ -209,6 +209,9 @@ export const completeOnboarding = async (req, res) => {
 
       // 1. Check if user exists by firebaseUid
       let user = await User.findOne({ firebaseUid });
+
+      // Sanitize input data
+    const sanitizedData = sanitizeOnboardingData({ firebaseUid, name, phone, clgName, gender });
       
       // If user is null, it might be a brand new registration (NEW_USER status from auth/google)
       // In this case, we create the user here.
@@ -276,8 +279,7 @@ export const completeOnboarding = async (req, res) => {
       return res.status(400).json({ message: "Onboarding already completed." });
     }
 
-    // Sanitize input data
-    const sanitizedData = sanitizeOnboardingData({ firebaseUid, name, phone, clgName, gender });
+    
 
     // Update profile photo if uploaded
     if (req.file) {
