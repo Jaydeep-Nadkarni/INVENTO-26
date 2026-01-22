@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import JamesBondEasterEgg from '../components/Something/JamesBondEasterEgg';
@@ -7,8 +7,13 @@ import TeamReveal from '../components/Something/TeamReveal';
 
 const Something = () => {
     const navigate = useNavigate();
-    React.useEffect(() => {
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+    useEffect(() => {
         window.scrollTo(0, 0);
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
     }, []);
 
     return (
@@ -22,8 +27,22 @@ const Something = () => {
                 <span className="font-medium">Home</span>
             </button>
             <JamesBondEasterEgg />
-            <ArtistsReveal />
-            <TeamReveal />
+            
+            {!isMobile ? (
+                <>
+                    <ArtistsReveal />
+                    <TeamReveal />
+                </>
+            ) : (
+                <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-[#0a0a0a]">
+                    <h2 className="text-4xl font-black italic uppercase text-white mb-6" style={{ fontFamily: '"Bebas Neue", sans-serif' }}>
+                        Access Granted
+                    </h2>
+                    <p className="text-zinc-400 font-mono text-sm max-w-xs">
+                        Desktop view contains the full dossiers. On mobile, use the navigation menu to access Concert and Developer files.
+                    </p>
+                </div>
+            )}
         </div>
     );
 };

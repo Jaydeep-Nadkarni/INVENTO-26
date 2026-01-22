@@ -1,101 +1,130 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import spy1 from '../../assets/UI/spy1.png';
-import spy2 from '../../assets/UI/spy2.png';
-import img1 from '../../assets/UI/img1.png';
+import devBg from '../../assets/UI/dev-bg.jpg'; 
+import jaydeepImg from '../../assets/UI/Members/Jaydeep.png';
+import sandeshImg from '../../assets/UI/Members/Sandesh.png';
+import harshitImg from '../../assets/UI/Members/Harshit.png';
 
-const TeamMember = ({ name, role, quote, specialty, image, index }) => {
+const MemberSection = ({ name, lastName, post, image, isLeft }) => {
     return (
-        <div className="relative w-full min-h-screen flex items-center justify-center overflow-hidden bg-black px-4 md:px-0 z-30 shadow-[0_-50px_100px_rgba(0,0,0,1)]">
-            {/* Solid Black Layer to ensure absolute coverage */}
-            <div className="absolute inset-0 bg-black z-[-1]" />
-
-            {/* Background Halftone Pattern */}
-            <div className="absolute inset-0 opacity-10 pointer-events-none"
+        <div className="relative w-full h-screen bg-[#0a0a0a] overflow-hidden z-30 flex items-center justify-center font-sans">
+            {/* 1. Evidence Board Background Section */}
+            <div 
+                className="absolute inset-0 z-0 opacity-40 grayscale contrast-125 transition-all duration-700"
                 style={{
-                    backgroundImage: 'radial-gradient(circle, #444 1px, transparent 1px)',
-                    backgroundSize: '30px 30px'
+                    backgroundImage: `url(${devBg})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
                 }}
             />
 
-            <div className="relative w-full max-w-6xl flex flex-col md:flex-row items-center justify-between gap-12 z-10 p-8 md:p-12">
-                {/* Image Section with Glow and Card-like Backdrop */}
-                <motion.div
-                    initial={{ opacity: 0, x: -100, scale: 0.9 }}
-                    whileInView={{ opacity: 1, x: 0, scale: 1 }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    viewport={{ once: true, margin: "-100px" }}
-                    className="relative order-2 md:order-1 group"
-                >
-                    <div className="absolute -inset-10 bg-red-600/5 rounded-full blur-[120px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
-
-                    <div className="relative">
-                        <div className="absolute -inset-2 border-2 border-yellow-400/30 rounded-lg blur-sm" />
-                        <img
-                            src={image}
-                            alt={name}
-                            className="relative w-64 md:w-[380px] h-auto object-contain drop-shadow-[0_0_50px_rgba(0,0,0,1)] rounded-lg"
-                        />
-                        {/* Vertical Specialty Text */}
-                        <div className="absolute -right-12 top-1/2 -translate-y-1/2 -rotate-90">
-                            <span className="text-red-600 text-5xl md:text-7xl font-black uppercase tracking-[0.3em] whitespace-nowrap opacity-90 drop-shadow-[0_0_15px_rgba(220,38,38,0.5)]">
-                                {specialty}
-                            </span>
-                        </div>
-                    </div>
-                </motion.div>
-
-                {/* Text Section with localized dark background for focus */}
-                <motion.div
-                    initial={{ opacity: 0, x: 100 }}
+            {/* Halftone Overlay */}
+            <div className="absolute inset-0 z-1 opacity-20"
+                style={{
+                    backgroundImage: 'radial-gradient(#ff3131 1.5px, transparent 1.5px)',
+                    backgroundSize: '15px 15px',
+                }}
+            />
+            
+            {/* 2. Massive Background Text (Behind Character) */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-5 overflow-hidden">
+                <motion.h1 
+                    initial={{ opacity: 0, x: isLeft ? 100 : -100, rotate: isLeft ? 2 : -2 }}
                     whileInView={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-                    viewport={{ once: true, margin: "-100px" }}
-                    className="flex flex-col items-start md:items-end text-left md:text-right max-w-xl order-1 md:order-2 bg-black/40 backdrop-blur-sm p-6 rounded-xl border border-white/5"
+                    transition={{ duration: 1, ease: "easeOut" }}
+                    className="text-[7rem] md:text-[12rem] font-black italic uppercase tracking-tighter leading-none select-none text-center whitespace-nowrap"
+                    style={{ 
+                        color: 'transparent',
+                        WebkitTextStroke: '2px rgba(255, 49, 49, 0.2)',
+                        fontFamily: '"Bebas Neue", sans-serif'
+                    }}
                 >
-                    <div className="space-y-1">
-                        <h4 className="text-yellow-500 font-mono text-xs md:text-sm tracking-[0.5em] uppercase mb-2">
-                            -- FILE: 00{index + 1} // NAME --
-                        </h4>
-                        <h2 className="text-white text-6xl md:text-9xl font-black uppercase tracking-tighter leading-none mb-2 drop-shadow-2xl">
-                            {name}
-                        </h2>
-                    </div>
-
-                    <div className="h-[2px] w-full bg-linear-to-r from-transparent via-yellow-500/50 to-transparent md:bg-linear-to-l my-6" />
-
-                    <h3 className="text-white text-3xl md:text-4xl font-black uppercase italic tracking-widest mb-6 opacity-80 decoration-red-600 decoration-4">
-                        {role}
-                    </h3>
-
-                    <p className="text-white/60 font-mono text-sm md:text-lg italic leading-relaxed max-w-md border-r-4 border-red-600 pr-6">
-                        "{quote}"
-                    </p>
-                </motion.div>
+                    {name} {lastName}
+                </motion.h1>
             </div>
 
-            {/* Corner Decorative Elements */}
-            <div className="absolute top-10 left-10 w-20 h-20 border-t-2 border-l-2 border-yellow-400/20" />
-            <div className="absolute bottom-10 right-10 w-20 h-20 border-b-2 border-r-2 border-yellow-400/20" />
+            {/* 3. Main Layout Section */}
+            <div className={`relative z-10 w-full h-full flex flex-col md:flex-row items-center justify-between px-10 md:px-32 ${isLeft ? 'md:flex-row' : 'md:flex-row-reverse'}`}>
+                
+                {/* Name and Labels */}
+                <motion.div 
+                    initial={{ opacity: 0, x: isLeft ? -100 : 100 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.4, duration: 0.8 }}
+                    className={`flex flex-col ${isLeft ? 'items-start' : 'items-end'} z-20 w-full md:w-auto`}
+                >
+                    <div className="bg-white text-black px-6 md:px-10 py-3 md:py-4 -rotate-2 shadow-2xl border-b-6 border-red-600">
+                        <h2 className="text-4xl md:text-7xl font-black italic uppercase leading-none" style={{ fontFamily: '"Bebas Neue", sans-serif' }}>
+                            {name} {lastName}
+                        </h2>
+                    </div>
+                    <div className={`bg-red-600 text-white px-5 md:px-8 py-2 md:py-3 rotate-1 -mt-3 shadow-lg border-2 border-white ${isLeft ? 'translate-x-5' : '-translate-x-5'} self-start md:self-auto`}>
+                        <p className="text-xl md:text-3xl font-black italic uppercase tracking-widest leading-none" style={{ fontFamily: '"Bebas Neue", sans-serif' }}>
+                            {post}
+                        </p>
+                    </div>
+                </motion.div>
+
+                {/* Character Image */}
+                <div className="relative group mt-10 md:mt-0">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.8, x: isLeft ? 100 : -100 }}
+                        whileInView={{ opacity: 1, scale: 1, x: 0 }}
+                        transition={{ duration: 0.8, type: "spring", damping: 15 }}
+                        className="relative"
+                    >
+                        <img 
+                            src={image} 
+                            alt={`${name} ${lastName}`} 
+                            className="relative w-[300px] md:w-[500px] h-auto object-contain z-10 drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)]"
+                            style={{
+                                filter: `
+                                    drop-shadow(6px 0px 0px white) 
+                                    drop-shadow(-6px 0px 0px white) 
+                                    drop-shadow(0px 6px 0px white) 
+                                    drop-shadow(0px -6px 0px white)
+                                `
+                            }}
+                        />
+                    </motion.div>
+                </div>
+            </div>
+
+            {/* Decorative Vignette */}
+            <div className="absolute inset-0 pointer-events-none z-30 bg-[radial-gradient(circle,transparent_40%,rgba(0,0,0,0.8)_100%)]" />
         </div>
     );
 };
 
 const TeamReveal = () => {
-    const team = [
+    const teamMembers = [
         {
-            name: "CIPHER",
-            role: "GHOST",
-            quote: "If you can see me, I've already failed. The best code is the one that's never suspected.",
-            specialty: "SECURITY",
-            image: img1
+            name: "Jaydeep",
+            lastName: "Nadkarni",
+            post: "Frontend Developer",
+            image: jaydeepImg,
+            isLeft: true
+        },
+        {
+            name: "Sandesh",
+            lastName: "Chavan",
+            post: "Backend Developer",
+            image: sandeshImg,
+            isLeft: false
+        },
+        {
+            name: "Harshit",
+            lastName: "Baliyan",
+            post: "Frontend Developer",
+            image: harshitImg,
+            isLeft: true
         }
     ];
 
     return (
         <div className="bg-black">
-            {team.map((member, index) => (
-                <TeamMember key={index} {...member} index={index} />
+            {teamMembers.map((member, index) => (
+                <MemberSection key={index} {...member} />
             ))}
         </div>
     );

@@ -11,6 +11,8 @@ import BriefcasePage from './pages/Briefcase.jsx'
 import Pass from './pages/Pass.jsx'
 import Something from './pages/Something.jsx'
 import Newspaper from './pages/Newspaper.jsx'
+import Concert from './pages/Concert.jsx'
+import Developers from './pages/Developers.jsx'
 import ScrollToTop from './components/ScrollToTop.jsx'
 import { useAdminAuth } from './admin/context/AuthContext'
 import { monitorLongTasks, isMobileDevice } from './utils/performanceOptimization'
@@ -85,6 +87,8 @@ function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/something" element={<Something />} />
         <Route path="/newspaper" element={<Newspaper />} />
+        <Route path="/concert" element={<Concert />} />
+        <Route path="/developers" element={<Developers />} />
 
         {/* Admin and Master Auth */}
         <Route path="/admin/login" element={<AdminLogin />} />
