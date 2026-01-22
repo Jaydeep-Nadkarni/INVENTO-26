@@ -12,7 +12,7 @@ const ArtistsReveal = () => {
             {/* Corner Focus Lights */}
             <div className="absolute inset-0 pointer-events-none z-20">
                 {/* Left Light */}
-                <div className="absolute top-0 left-0 w-1/2 opacity-60 scale-x-[-1] origin-top-left rotate-[10deg]">
+                <div className="absolute top-0 left-0 w-1/2 opacity-60 scale-x-[-1] origin-top-left">
                     <img 
                         src={focusLights} 
                         alt="Left Light" 
@@ -35,12 +35,12 @@ const ArtistsReveal = () => {
             <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 whileInView={{ opacity: 1, scale: 1 }}
-                className="mb-12 text-center z-10"
+                className="mb-8 md:mb-12 text-center z-10 px-4"
             >
-                <h3 className="text-red-600 font-mono text-sm md:text-xl tracking-[0.5em] uppercase mb-4 font-bold">
+                <h3 className="text-red-600 font-mono text-xs md:text-xl tracking-[0.5em] uppercase mb-4 font-bold">
                     -- THE HEADLINER --
                 </h3>
-                <h1 className="text-white text-4xl md:text-7xl font-black uppercase leading-none" style={{ fontFamily: '"Bebas Neue", sans-serif' }}>
+                <h1 className="text-white text-3xl md:text-7xl font-black uppercase leading-none" style={{ fontFamily: '"Bebas Neue", sans-serif' }}>
                     Still in the Shadows
                 </h1>
             </motion.div>
@@ -49,7 +49,7 @@ const ArtistsReveal = () => {
             <div className="flex flex-col items-center justify-center relative z-10 w-full max-w-6xl">
                 
                 {/* Artist Card Container */}
-                <div className="relative group mb-24"> 
+                <div className="relative group mb-12 md:mb-24"> 
                     {/* Artist Card */}
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9, y: 50 }}
@@ -57,7 +57,7 @@ const ArtistsReveal = () => {
                         transition={{ duration: 0.8 }}
                         viewport={{ once: true }}
                         whileHover={{ rotateY: 15, scale: 1.05 }}
-                        className="relative w-64 md:w-80 h-96 md:h-[450px] cursor-help perspective-1000"
+                        className="relative w-56 md:w-80 h-[350px] md:h-[450px] cursor-help perspective-1000"
                     >
                         {/* Glowing highlight */}
                         <div className="absolute -inset-4 bg-red-600/30 rounded-xl blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />

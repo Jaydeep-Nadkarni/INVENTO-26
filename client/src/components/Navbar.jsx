@@ -180,6 +180,26 @@ const Navbar = ({ onEventsClick, isMobile, position = 'fixed' }) => {
                 </motion.button>
               ))}
 
+              {/* Mobile-only menu items */}
+              {isMobile && (
+                <>
+                  <motion.button
+                    onClick={() => handleNavClick('/concert')}
+                    whileHover={shouldSkipAnimations() ? {} : { x: 8, color: '#fbbf24' }}
+                    className="text-left text-white font-bold text-sm uppercase tracking-wider hover:text-yellow-500 transition-colors pb-2 border-b border-gray-700"
+                  >
+                    Concert
+                  </motion.button>
+                  <motion.button
+                    onClick={() => handleNavClick('/developers')}
+                    whileHover={shouldSkipAnimations() ? {} : { x: 8, color: '#fbbf24' }}
+                    className="text-left text-white font-bold text-sm uppercase tracking-wider hover:text-yellow-500 transition-colors pb-2 border-b border-gray-700"
+                  >
+                    Developers
+                  </motion.button>
+                </>
+              )}
+
               {/* Register button in mobile menu if not logged in */}
               {!currentUser && (
                 <button
