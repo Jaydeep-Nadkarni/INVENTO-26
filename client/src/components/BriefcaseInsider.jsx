@@ -81,6 +81,28 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
     const audioRef = useRef(null)
     const morseAudioRef = useRef(null)
 
+    // Block Inspect and right-click for the entire briefcase experience
+    useEffect(() => {
+        if (isOpen) {
+            const handleContextMenu = (e) => e.preventDefault()
+            const handleKeyDown = (e) => {
+                if (
+                    e.keyCode === 123 || // F12
+                    (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) || // Ctrl+Shift+I/J/C
+                    (e.ctrlKey && (e.keyCode === 85 || e.keyCode === 83)) // Ctrl+U (View Source), Ctrl+S (Save)
+                ) {
+                    e.preventDefault()
+                }
+            }
+            window.addEventListener('contextmenu', handleContextMenu)
+            window.addEventListener('keydown', handleKeyDown)
+            return () => {
+                window.removeEventListener('contextmenu', handleContextMenu)
+                window.removeEventListener('keydown', handleKeyDown)
+            }
+        }
+    }, [isOpen])
+
     // Background OS Loading Simulation
     useEffect(() => {
         if (isOpen) {
@@ -95,7 +117,13 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
 
     useEffect(() => {
         audioRef.current = new Audio(radioAudio)
-        audioRef.current.loop = true
+        audioRef.current.loop = false
+        
+        // Stop the radio and update status when audio ends
+        audioRef.current.onended = () => {
+            setIsRadioPlaying(false)
+            setStatusText("Radio Signal Lost...")
+        }
 
         morseAudioRef.current = new Audio(morseAudio)
 

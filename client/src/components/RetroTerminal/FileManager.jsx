@@ -1,4 +1,5 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import acpImg from '../../assets/UI/OS/ACP.jpg'
 
 // Backup SVG icons kept as requested
 const SVG_BACKUP = {
@@ -41,8 +42,35 @@ const icons = {
     unknown: "https://win98icons.alexmeub.com/icons/png/file_lines-0.png"
 }
 
-const FileManager = ({ onOpenFile }) => {
+const FileManager = ({ onOpenFile, onFolderOpen }) => {
     const [currentPath, setCurrentPath] = useState(['root'])
+    const currentFolderId = currentPath[currentPath.length - 1]
+
+    // Block right-click and inspect shortcuts specifically for Invento Files
+    useEffect(() => {
+        if (currentFolderId === 'invento_files') {
+            const handleContextMenu = (e) => e.preventDefault()
+            const handleKeyDown = (e) => {
+                // Block F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U, Ctrl+S
+                if (
+                    e.keyCode === 123 || 
+                    (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) || 
+                    (e.ctrlKey && (e.keyCode === 85 || e.keyCode === 83))
+                ) {
+                    e.preventDefault()
+                    return false
+                }
+            }
+
+            window.addEventListener('contextmenu', handleContextMenu)
+            window.addEventListener('keydown', handleKeyDown)
+
+            return () => {
+                window.removeEventListener('contextmenu', handleContextMenu)
+                window.removeEventListener('keydown', handleKeyDown)
+            }
+        }
+    }, [currentFolderId])
     
     // File content definitions
     const fileSystem = {
@@ -66,7 +94,7 @@ const FileManager = ({ onOpenFile }) => {
 
                         <ul className="list-disc list-inside space-y-2 mt-3">
                         <li>
-                            All participants must carry a valid pass and present it whenever requested by an Event Official.
+                            All participants must carry thier college ID card and present it whenever requested by an Event Official.
                         </li>
 
                         <li>
@@ -74,7 +102,7 @@ const FileManager = ({ onOpenFile }) => {
                         </li>
 
                         <li>
-                            Passes will be provided <b>only if</b> you are registered for at least one event and have actively participated or attended the event.
+                            Passes will be provided <b>only if</b> you are registered for at least one event and have actively participated or attended the event. Rules and Conditions apply.
                         </li>
 
                         <li>
@@ -108,7 +136,15 @@ const FileManager = ({ onOpenFile }) => {
             }
         ],
         invento_files: [
-             {
+            {
+                id: 'acp_image',
+                name: 'confidential.jpg',
+                type: 'image',
+                size: 204800,
+                url: acpImg,
+                isACP: true
+            },
+            {
                 id: 'redacted1',
                 name: 'subject_01.txt',
                 type: 'document',
@@ -116,7 +152,7 @@ const FileManager = ({ onOpenFile }) => {
                 content: (
                     <div className="font-mono text-sm leading-relaxed p-2 h-full overflow-y-auto max-h-[400px]">
                         <p className="mb-2 font-bold border-b border-black pb-1 uppercase">CLASSIFIED DOSSIER: SUBJECT_01</p>
-                        <p className="mb-2 italic text-gray-600">Generated: {new Date().toLocaleDateString()} // Time: {new Date().toLocaleTimeString()}</p>
+                        <p className="mb-2 italic text-gray-600">Generated: {new Date().toLocaleDateString('en-GB')} Time: {new Date().toLocaleTimeString()}</p>
                         
                         <p className="mb-2">SUBJECT ID: <span className="bg-black text-black select-none">ID_REDACTED_BY_CMD</span></p>
                         <p className="mb-2">CLASS: <span className="bg-black text-black select-none">EUCLID_ANOMALY</span></p>
@@ -170,28 +206,28 @@ const FileManager = ({ onOpenFile }) => {
             },
             {
                 id: 'redacted2',
-                name: 'codes.txt',
+                name: 'artist.txt',
                 type: 'document',
                 size: 512,
                 content: (
                     <div className="font-mono">
-                        <p className="mb-2 underline">ACCESS CODES:</p>
-                        <p>Main Door: <span className="bg-black text-black select-none">8472</span></p>
-                        <p>Vault: <span className="bg-black text-black select-none">9999</span> (EXPIRED)</p>
-                        <p>Server Room: <span className="bg-black text-black select-none">PASSWORD123</span></p>
-                        <p>Override: <span className="bg-black text-black select-none">DELTA-OMICRON</span></p>
+                        <p className="mb-2 underline">About the artist:</p>
+                        <p>Venue: <span className="bg-black text-black select-none">Main Stage</span></p>
+                        <p>Date: <span className="bg-black text-black select-none">26th FEB 2026</span></p>
+                        <p>Name: <span className="bg-black text-black select-none">**** *****</span></p>
+                        <p>Listeners: <span className="bg-black text-black select-none">10M+ </span></p>
                     </div>
                 )
             }
         ]
     }
 
-    const currentFolderId = currentPath[currentPath.length - 1]
     const currentFiles = fileSystem[currentFolderId] || []
 
     const handleFileClick = (file) => {
         if (file.type === 'folder') {
             setCurrentPath([...currentPath, file.target])
+            if (onFolderOpen) onFolderOpen(file.target)
         } else {
             onOpenFile(file)
         }

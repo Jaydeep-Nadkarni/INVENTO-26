@@ -10,6 +10,8 @@ import VideoPlayer from './VideoPlayer'
 import SnakeGame from './SnakeGame'
 import Shutdown from './shutdown'
 import shutdownAudio from '../../assets/audios/shutdown.mp3'
+import fahhhhhAudio from '../../assets/audios/fahhhhh.mp3'
+import errorAudio from '../../assets/audios/error.mp3'
 import wallpaperImg from '../../assets/UI/OS/wallpaper.png'
 import fileManagerIcon from '../../assets/UI/OS/file-manager.png'
 import terminalIcon from '../../assets/UI/OS/terminal.png'
@@ -25,6 +27,8 @@ const RetroTerminal = ({ isOpen, onClose, initialBootProgress = 0 }) => {
     const [activeApp, setActiveApp] = useState(null)
     const [minimizedApps, setMinimizedApps] = useState([])
     const [selectedDesktopIcon, setSelectedDesktopIcon] = useState(null)
+    const [showInventoPopup, setShowInventoPopup] = useState(false)
+    const [hasOpenedInventoFiles, setHasOpenedInventoFiles] = useState(false)
     const [bootStatus, setBootStatus] = useState(initialBootProgress >= 100 ? 'running' : 'starting') // 'starting', 'running', 'shutting'
     const desktopRef = useRef(null)
 
@@ -55,12 +59,26 @@ const RetroTerminal = ({ isOpen, onClose, initialBootProgress = 0 }) => {
     const launchApp = (app) => {
         if (!openApps.find(a => a.id === app.id)) {
             setOpenApps([...openApps, { ...app, icon: app.icon, isImg: app.isImg }])
+            
+            // Play sound if opening ACP confidential image
+            if (app.isACP) {
+                const audio = new Audio(fahhhhhAudio)
+                audio.play().catch(e => console.log("Fahhhhh sound failed:", e))
+            }
         }
         setActiveApp(app.id)
         setMinimizedApps(minimizedApps.filter(id => id !== app.id))
     }
 
     const closeApp = (id) => {
+        // Show Invento popup when closing File Manager only if Invento Files were accessed
+        if (id === 'filemanager' && hasOpenedInventoFiles) {
+            setShowInventoPopup(true)
+            const audio = new Audio(errorAudio)
+            audio.play().catch(e => console.log("Error sound failed:", e))
+            setHasOpenedInventoFiles(false) // Reset after showing
+        }
+
         setOpenApps(openApps.filter(a => a.id !== id))
         setMinimizedApps(minimizedApps.filter(appId => appId !== id))
         if (activeApp === id) {
@@ -94,7 +112,14 @@ const RetroTerminal = ({ isOpen, onClose, initialBootProgress = 0 }) => {
     const renderAppContent = (app) => {
         switch (app.type) {
             case 'cmd': return <CMD />
-            case 'filemanager': return <FileManager onOpenFile={(file) => launchApp({ ...file, id: file.id, title: file.name.toUpperCase(), type: (file.type === 'video' || file.type === 'image') ? 'video' : 'notes' })} />
+            case 'filemanager': return (
+                <FileManager 
+                    onOpenFile={(file) => launchApp({ ...file, id: file.id, title: file.name.toUpperCase(), type: (file.type === 'video' || file.type === 'image') ? 'video' : 'notes' })} 
+                    onFolderOpen={(folderId) => {
+                        if (folderId === 'invento_files') setHasOpenedInventoFiles(true)
+                    }}
+                />
+            )
             case 'mail': return <Mail />
             case 'notes': return <Notes title={app.title} content={app.content} />
             case 'video': return <VideoPlayer title={app.title} url={app.url} />
@@ -188,6 +213,50 @@ const RetroTerminal = ({ isOpen, onClose, initialBootProgress = 0 }) => {
                                 ))}
                             </AnimatePresence>
                         </div>
+
+                        {/* Invento 2026 Popup */}
+                        {showInventoPopup && (
+                            <div 
+                                className="absolute inset-0 z-[300] flex items-center justify-center bg-black/20"
+                                onClick={() => {
+                                    const audio = new Audio(errorAudio)
+                                    audio.play().catch(e => console.log("Error sound failed:", e))
+                                }}
+                            >
+                                <div 
+                                    className="w-[300px] bg-[#c0c0c0] win95-border-raised p-1 shadow-2xl"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <div className="bg-blue-800 text-white px-2 py-0.5 flex justify-between items-center mb-4">
+                                        <span className="text-[11px] font-bold uppercase">Invento 2026</span>
+                                    </div>
+                                    <div className="px-4 py-2 flex flex-col items-center gap-4">
+                                        <div className="flex items-center gap-3">
+                                            <img 
+                                                src="https://win98icons.alexmeub.com/icons/png/msg_warning-0.png" 
+                                                alt="warning" 
+                                                className="w-10 h-10 object-contain" 
+                                            />
+                                            <p className="text-[11px] font-bold text-black text-center">Are you coming to INVENTO?</p>
+                                        </div>
+                                        <div className="flex gap-6 pb-2">
+                                            <button 
+                                                onClick={() => setShowInventoPopup(false)} 
+                                                className="win95-button px-6 py-1 text-[11px] font-bold min-w-[85px] bg-[#c0c0c0]"
+                                            >
+                                                YES
+                                            </button>
+                                            <button 
+                                                onClick={() => setShowInventoPopup(false)} 
+                                                className="win95-button px-6 py-1 text-[11px] font-bold min-w-[85px] bg-[#c0c0c0]"
+                                            >
+                                                YES
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Win95 Taskbar */}
                         <div className="h-10 bg-[#c0c0c0] win95-border-raised flex items-center justify-between px-1 z-50">
