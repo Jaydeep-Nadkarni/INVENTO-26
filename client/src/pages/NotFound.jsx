@@ -2,12 +2,15 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import spyVideo from '../assets/UI/Spy-bg-video.mp4';
+import Navbar from '../components/Navbar';
 
 const NotFound = () => {
     const navigate = useNavigate();
 
     return (
-        <div className="fixed inset-0 w-full h-full bg-black overflow-hidden flex items-center justify-center">
+        <div className="fixed inset-0 w-full h-full bg-black overflow-hidden flex items-center justify-center z-[9999]">
+            <Navbar isMobile={window.innerWidth < 768} />
+            
             {/* Fullscreen Video Background */}
             <video 
                 autoPlay 
