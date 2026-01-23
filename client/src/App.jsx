@@ -13,6 +13,7 @@ import Something from './pages/Something.jsx'
 import Newspaper from './pages/Newspaper.jsx'
 import Concert from './pages/Concert.jsx'
 import Developers from './pages/Developers.jsx'
+import Spy from './pages/Spy.jsx'
 import ScrollToTop from './components/ScrollToTop.jsx'
 import { useAdminAuth } from './admin/context/AuthContext'
 import { monitorLongTasks, isMobileDevice } from './utils/performanceOptimization'
@@ -86,6 +87,7 @@ function App() {
         <Route path="/schedule" element={<Schedule />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/something" element={<Something />} />
+        <Route path="/spy" element={<Spy />} />
         <Route path="/newspaper" element={<Newspaper />} />
         <Route path="/concert" element={<Concert />} />
         <Route path="/developers" element={<Developers />} />
