@@ -13,6 +13,7 @@ import Something from './pages/Something.jsx'
 import Newspaper from './pages/Newspaper.jsx'
 import Concert from './pages/Concert.jsx'
 import Developers from './pages/Developers.jsx'
+import NotFound from './pages/NotFound.jsx'
 import ScrollToTop from './components/ScrollToTop.jsx'
 import { useAdminAuth } from './admin/context/AuthContext'
 import { monitorLongTasks, isMobileDevice } from './utils/performanceOptimization'
@@ -166,6 +167,7 @@ function App() {
 
         <Route path="/:clubSlug" element={<Events />} />
         <Route path="/:clubSlug/:eventSlug" element={<Events />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   )
