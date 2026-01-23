@@ -175,10 +175,6 @@ const Hero = () => {
     navigate('/something');
   };
 
-  const handleSpy = () => {
-    navigate('/spy');
-  };
-
   const handleNewspaper = () => {
     navigate('/newspaper');
   };
@@ -224,7 +220,7 @@ const Hero = () => {
         <div className="relative transform flex items-start gap-2">
           {/* Handprint on the left */}
           <motion.div
-            onClick={handleSpy}
+            onClick={handleEasterEgg}
             className="relative rotate-0 cursor-pointer"
           >
             <img src={pin} alt="pin" className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-6 z-20" />
