@@ -6,7 +6,9 @@ import { signOut } from 'firebase/auth'
 import { apiGet } from '../utils/apiClient'
 import paperTexture from '../assets/UI/paper-texture.jpg'
 import bgImage from '../assets/UI/Invento-bg.webp'
+import logo from '../assets/UI/Invento-logo.png'
 import Navbar from '../components/Navbar'
+import { Instagram, MessageSquare, DownloadCloud } from 'lucide-react'
 
 // Mobile detection utility
 const isMobileDevice = () => {
@@ -65,6 +67,12 @@ const Icons = {
   ArrowLeft: () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    </svg>
+  ),
+  Instagram: () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-pink-600" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M7.75 2h8.5A5.75 5.75 0 0122 7.75v8.5A5.75 5.75 0 0116.25 22h-8.5A5.75 5.75 0 012 16.25v-8.5A5.75 5.75 0 017.75 2zM12 7a5 5 0 100 10 5 5 0 000-10zm6.5-.25a1.25 1.25 0 11-2.5 0 1.25 1.25 0 012.5 0z" />
+      <path d="M12 9.5a2.5 2.5 0 110 5 2.5 2.5 0 010-5z" />
     </svg>
   )
 }
@@ -187,19 +195,21 @@ const Profile = () => {
 
           {/* Header Section */}
           <div className="flex flex-col md:flex-row justify-between items-start mb-10">
-            <div>
-              <h1 className="text-5xl md:text-7xl font-black text-black-900 uppercase tracking-tighter leading-none mb-2">AGENT
-                <br/> <h1 className='text-red-900'>PROFILE</h1></h1>
+              <div>
+              <h1 className="text-5xl md:text-7xl font-black text-black-900 uppercase tracking-tighter leading-none mb-2">
+                AGENT<br/>
+                <span className='text-red-900'>PROFILE</span>
+              </h1>
               <div className="h-1.5 w-24 bg-red-900 mb-2"></div>
               <p className="font-mono text-sm text-red-800 font-bold uppercase tracking-[0.3em]">PARTICIPANT ID: INV{user?._id?.slice(-4) || '0000'}</p>
             </div>
             
-            <div className="mt-6 md:mt-0 text-right">
-              <p className="font-mono text-[10px] text-red-800 uppercase tracking-widest font-bold">STATUS</p>
-              <p className="text-red-800 font-bold flex items-center justify-end">
-                <span className="w-2 h-2 bg-red-600 rounded-full mr-2 animate-pulse"></span>
-                ACTIVE
-              </p>
+            <div className="mt-6 md:mt-0 flex justify-end">
+                <img 
+                  src={logo} 
+                  alt="Invento Logo" 
+                  className="hidden md:block w-64 lg:w-78 opacity-70 pointer-events-none select-none transform"
+                />
             </div>
           </div>
 
@@ -235,8 +245,8 @@ const Profile = () => {
               <div className="md:col-span-7 lg:col-span-8 space-y-10">
                 <div>
                   <p className="text-lg font-mono text-red-800 uppercase tracking-widest font-bold mb-1">FULL NAME</p>
-                  <h2 className="text-6xl md:text-6xl font-black text-[#1a1a1a] leading-tight tracking-tighter">{user.name}</h2>
-                  <p className="text-xl md:text-xl text-[#5c5446] font-mono mt-3 uppercase">{user.clgName}</p>
+                  <h2 className="text-4xl md:text-6xl font-black text-[#1a1a1a] leading-tight tracking-tighter">{user.name}</h2>
+                  <p className="text-sm md:text-xl text-[#5c5446] font-mono mt-3 uppercase">{user.clgName}</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10 border-t-2 border-black pt-8">
@@ -260,8 +270,8 @@ const Profile = () => {
                     {user.registeredEvents && user.registeredEvents.length > 0 ? (
                       <div className="flex flex-wrap gap-2 uppercase font-mono text-sm font-bold text-[#5c5446]">
                         {user.registeredEvents.map((event, index) => (
-                          <div key={index} className="bg-[#e0d7bc] px-3 py-1 border-2 border-black shadow-[2px_2px_0px_#000] mb-2">
-                            {event}
+                          <div key={index} className="px-3 py-1 mb-2">
+                            {isMobile ? `${index + 1}. ${event}` : event}
                           </div>
                         ))}
                       </div>
@@ -279,17 +289,24 @@ const Profile = () => {
             {/* Quick Links Row */}
             <div className="flex flex-wrap gap-4 align-middle justify-center font-sans">
               <button onClick={() => setShowLinksModal(true)} className="flex items-center gap-3 bg-[#fffefd] p-3 border-2 border-black shadow-[4px_4px_0px_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
-                <Icons.WhatsApp />
+                <MessageSquare className="h-5 w-5 mr-2 text-green-600" />
                 <div className="text-left leading-none uppercase">
                    <p className="text-[8px] font-bold text-gray-500">LINKS</p>
                    <p className="text-xs font-bold">WHATSAPP LINKS</p>
                 </div>
               </button>
-              <button className="flex items-center gap-3 bg-[#fffefd] p-3 border-2 border-black shadow-[4px_4px_0px_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
-                <Icons.PDF />
+              <a href="/assets/events-schedule.pdf" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-[#fffefd] p-3 border-2 border-black shadow-[4px_4px_0px_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
+                <DownloadCloud className="h-5 w-5 mr-2 text-red-600" />
                 <div className="text-left leading-none uppercase">
                    <p className="text-[8px] font-bold text-gray-500">DOWNLOAD</p>
                    <p className="text-xs font-bold">EVENTS SCHEDULE</p>
+                </div>
+              </a>
+              <button type="button" onClick={() => window.open("https://www.instagram.com/invento_2k25/", "_blank", "noopener,noreferrer")} className="flex items-center gap-3 bg-[#fffefd] p-3 border-2 border-black shadow-[4px_4px_0px_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
+                <Instagram className="h-5 w-5 mr-2 text-pink-600" />
+                <div className="text-left leading-none uppercase">
+                   <p className="text-[8px] font-bold text-gray-500">Connect Us</p>
+                   <p className="text-xs font-bold">INSTAGRAM</p>
                 </div>
               </button>
             </div>
@@ -362,7 +379,7 @@ const Profile = () => {
 
                     return (
                       <a key={idx} href={href} target="_blank" rel="noopener noreferrer" className="flex items-center p-3 bg-green-100 border border-green-300 hover:bg-green-200 transition-colors group">
-                        <Icons.WhatsApp />
+                        <MessageSquare className="h-5 w-5 mr-2 text-green-600" />
                         <span className="font-bold text-green-900 uppercase text-sm group-hover:underline">{e.name}{e.type ? ` (${e.type})` : ''}</span>
                       </a>
                     )
@@ -372,7 +389,7 @@ const Profile = () => {
                 )}
 
                 <a href="#" className="flex items-center p-3 bg-red-100 border border-red-300 hover:bg-red-200 transition-colors group">
-                  <Icons.PDF />
+                  <DownloadCloud className="h-5 w-5 mr-2 text-red-600" />
                   <span className="font-bold text-red-900 uppercase text-sm group-hover:underline">Declassified Briefing (Rulebook)</span>
                 </a>
               </div>
