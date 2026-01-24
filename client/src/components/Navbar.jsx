@@ -16,6 +16,21 @@ const Navbar = ({ onEventsClick, isMobile, position = 'fixed' }) => {
   const [scrolled, setScrolled] = useState(false)
   const textures = [tex1, tex2, tex3]
 
+  // Lock scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen && isMobile) {
+      document.body.style.overflow = 'hidden'
+      document.body.classList.add('scroll-locked')
+    } else {
+      document.body.style.overflow = 'unset'
+      document.body.classList.remove('scroll-locked')
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+      document.body.classList.remove('scroll-locked')
+    }
+  }, [mobileMenuOpen, isMobile])
+
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20)
@@ -62,10 +77,12 @@ const Navbar = ({ onEventsClick, isMobile, position = 'fixed' }) => {
   }
 
   return (
-    <nav className={`${position} top-0 left-0 w-full z-50 px-4 h-16 md:px-6 py-3 md:py-4 flex items-center justify-between transition-all duration-500 ${
-      scrolled && location.pathname !== '/' 
-        ? 'bg-black/10 backdrop-blur-[1px] shadow-2xl' 
-        : (isMobile && mobileMenuOpen ? 'bg-black' : 'bg-transparent')
+    <nav className={`${position} top-0 left-0 w-full z-50 px-4 h-16 md:px-6 py-3 md:py-4 flex items-center justify-between transition-colors duration-300 ${
+      mobileMenuOpen 
+        ? 'bg-black' 
+        : (scrolled && location.pathname !== '/' 
+            ? 'bg-black/20 backdrop-blur-md shadow-2xl' 
+            : 'bg-transparent')
     }`}>
       {/* Logo/Brand */}
       <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
@@ -161,13 +178,13 @@ const Navbar = ({ onEventsClick, isMobile, position = 'fixed' }) => {
       <AnimatePresence>
         {isMobile && mobileMenuOpen && (
           <motion.div
-            initial={shouldSkipAnimations() ? {} : { opacity: 0, y: -300 }}
+            initial={shouldSkipAnimations() ? { opacity: 0 } : { opacity: 0, y: -20 }}
             animate={shouldSkipAnimations() ? { opacity: 1 } : { opacity: 1, y: 0 }}
-            exit={shouldSkipAnimations() ? {} : { opacity: 0, y: -300 }}
-            transition={shouldSkipAnimations() ? {} : { type: 'spring', stiffness: 300, damping: 30 }}
-            className="fixed top-16 left-0 h-screen w-full bg-gradient-to-b from-black via-black to-black/80 backdrop-blur-md z-40"
+            exit={shouldSkipAnimations() ? { opacity: 0 } : { opacity: 0, y: -20 }}
+            transition={shouldSkipAnimations() ? { duration: 0 } : { type: 'spring', stiffness: 300, damping: 30 }}
+            className="fixed inset-0 top-16 left-0 w-full bg-black z-40 overflow-y-auto"
           >
-            <div className="flex flex-col p-6 gap-4">
+            <div className="flex flex-col p-6 gap-6 min-h-full">
               {/* Mobile Nav Items */}
               {navItems.map((item) => (
                 <motion.button

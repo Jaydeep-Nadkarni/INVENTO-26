@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import Home from './pages/Home.jsx'
 import Events from './pages/Events.jsx'
 import Schedule from './pages/Schedule.jsx'
@@ -58,10 +59,6 @@ const MasterRoute = ({ children }) => {
   return adminUser && adminUser.role === 'master' ? children : <Navigate to="/admin/login" replace />;
 }
 
-const NavigationManager = () => {
-  return null;
-};
-
 function App() {
   // Initialize performance monitoring
   useEffect(() => {
@@ -72,14 +69,13 @@ function App() {
 
     // Log Core Web Vitals on mobile
     if (isMobileDevice()) {
-      console.log('📱 Mobile optimization enabled: Animations disabled, lazy loading active');
+      console.log('Mobile optimization enabled: Animations disabled, lazy loading active');
     }
   }, [])
 
   return (
     <Router>
       <ScrollToTop />
-      <NavigationManager />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/briefcase" element={<BriefcasePage />} />
