@@ -9,6 +9,8 @@ import Briefcase from '../components/Briefcase'
 import Loader from '../components/Loader'
 import introVideo from '../assets/UI/intro.mp4'
 import introAudio from '../assets/UI/intro.mp3'
+import paperTexture from '../assets/UI/paper-texture.jpg'
+import { Monitor } from 'lucide-react'
 
 // Module-level flag tracks if we've already run the intro since JS loaded
 let introHasPlayed = false;
@@ -55,6 +57,26 @@ const Home = () => {
     const [showBlackout, setShowBlackout] = useState(false)
     const [showCallout, setShowCallout] = useState(false)
     const [isMuted, setIsMuted] = useState(true)
+    const [showDeviceNotice, setShowDeviceNotice] = useState(false)
+
+    useEffect(() => {
+        const hasBeenShown = sessionStorage.getItem('deviceNoticeShown');
+        
+        // Trigger notice once content is ready
+        if (!isLoading && !showIntro && isMobile && !hasBeenShown) {
+            setShowDeviceNotice(true);
+            sessionStorage.setItem('deviceNoticeShown', 'true');
+        }
+    }, [isLoading, showIntro, isMobile]);
+
+    useEffect(() => {
+        if (showDeviceNotice) {
+            const timer = setTimeout(() => {
+                setShowDeviceNotice(false);
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [showDeviceNotice]);
 
     const hoverTimerRef = useRef(null)
     const scrollPositionRef = useRef(0)
@@ -316,7 +338,38 @@ const Home = () => {
             <audio ref={audioRef} src={introAudio} preload="auto" />
       
       {(!isLoading && !showIntro && !showBlackout) && (
+        <>
+        <AnimatePresence>
+          {showDeviceNotice && (
+            <motion.div
+              initial={{ y: -50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -100, opacity: 0 }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+              className="absolute top-28 left-0 right-0 z-1000 md:hidden flex justify-center px-6"
+            >
+              <div className="relative bg-[#f5f5f5] p-3 px-6 shadow-[4px_4px_0px_#000] border border-gray-300 overflow-hidden" 
+                   style={{ backgroundImage: `url(${paperTexture})`, backgroundBlendMode: 'multiply' }}>
+                
+                {/* Timer Bar */}
+                <div className="absolute top-0 left-0 w-full h-1 bg-gray-300/30">
+                  <motion.div 
+                    initial={{ width: "100%" }}
+                    animate={{ width: "0%" }}
+                    transition={{ duration: 3, ease: "linear" }}
+                    className="h-full bg-red-700" 
+                  />
+                </div>
+
+                <p className="font-serif font-black text-stone-900 uppercase text-[11px] tracking-wide">
+                  Use laptops for extra features…
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
         <Navbar onEventsClick={handleNavigateToEvents} isMobile={isMobile} />
+        </>
       )}
 
       <AnimatePresence>
