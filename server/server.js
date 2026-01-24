@@ -1,6 +1,6 @@
+import "dotenv/config";
 import express from "express";
 import mongoose from "mongoose";
-import dotenv from "dotenv";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
@@ -13,8 +13,6 @@ import noticeRoutes from "./src/routes/noticeRoutes.js";
 import volunteerRoutes from "./src/routes/volunteerRoutes.js";
 import adminRoutes from "./src/routes/adminRoutes.js";
 import { validateEnvironmentVariables } from "./src/utils/envValidator.js";
-
-dotenv.config();
 
 // Validate environment variables on startup
 validateEnvironmentVariables();

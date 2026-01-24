@@ -340,7 +340,7 @@ const eventsData = [
         id: 7,
         slug: "ground-zero-act",
         title: "GROUND ZERO ACT",
-        subtitle: "Undercover Comedy – Humor in Disguise",
+        subtitle: "Nukkad Natak (Street Play)",
         description: "A Spy-Verse inspired comic performance competition where teams act as undercover agents using humor, satire, and exaggerated comic situations to decode everyday scenarios. The event focuses purely on comedy, comic timing, live energy, and audience engagement.",
         club: "WEC",
         tier: "Silver",

@@ -4,7 +4,7 @@ import {
     Shield, MapPin, AlertTriangle, Users, Zap, Clock, 
     Target, ChevronLeft, ChevronRight, Phone, User,
     FileText, List, Info, AlertCircle, Terminal,
-    Lock, Eye, ArrowLeft, ArrowRight
+    Lock, Eye, ArrowLeft, ArrowRight, X
 } from 'lucide-react'
 import { TextureOverlay } from './EventUIComponents'
 import paperTexture from '../../assets/UI/paper-texture.jpg'
@@ -82,6 +82,7 @@ const EventDetails = ({
     removeMember,
     initiatePayment,
     confirmation,
+    setConfirmation,
     navigate
 }) => {
     if (!currentEvent) return null;
@@ -575,45 +576,90 @@ const EventDetails = ({
                 )}
             </AnimatePresence>
 
-            {/* --- CONFIRMATION MODAL (PRESERVED) --- */}
+            {/* --- CONFIRMATION MODAL (THEMATIC UPDATE) --- */}
             <AnimatePresence>
                 {confirmation.show && (
-                    <div className="fixed inset-0 z-250 flex items-center justify-center bg-stone-950 p-4">
+                    <div 
+                        className="fixed inset-0 z-250 flex items-center justify-center bg-stone-950/90 backdrop-blur-sm p-4 cursor-pointer"
+                        onClick={() => setConfirmation(prev => ({ ...prev, show: false }))}
+                    >
                         <motion.div
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            className="bg-stone-900 w-full max-w-lg p-8 md:p-12 border-8 border-green-600 text-center space-y-6 md:space-y-8 shadow-[0_40px_100px_rgba(22,163,74,0.3)]"
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            onClick={(e) => e.stopPropagation()} // Prevent click-out when clicking the modal itself
+                            className="bg-stone-900 w-full max-w-lg border-4 border-stone-800 relative overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] cursor-default"
                         >
-                             <div className="w-20 h-20 md:w-24 md:h-24 bg-green-600 rounded-full flex items-center justify-center mx-auto text-white shadow-lg shadow-green-600/40">
-                                 <Zap size={40} className="fill-current" />
-                             </div>
-                             <div>
-                                 <h2 className="text-3xl md:text-5xl font-serif font-black text-white uppercase tracking-tighter mb-2">REGISTRATION SUCCESSFUL</h2>
-                                 <p className="font-mono text-[9px] text-green-500 uppercase tracking-[0.4em]">Event registration details confirmed</p>
-                             </div>
+                            {/* Terminal-like Header */}
+                            <div className="bg-stone-800 p-3 flex justify-between items-center border-b border-stone-700">
+                                <div className="flex gap-1.5">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-red-500/50"></div>
+                                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50"></div>
+                                    <div className="w-2.5 h-2.5 rounded-full bg-green-500/50"></div>
+                                </div>
+                                <p className="font-mono text-[10px] text-stone-500 tracking-widest hidden md:block">SYSTEM_CONFIRMATION_v2.0.26</p>
+                                <button 
+                                    onClick={() => setConfirmation(prev => ({ ...prev, show: false }))}
+                                    className="text-stone-500 hover:text-white transition-colors"
+                                >
+                                    <X size={16} />
+                                </button>
+                            </div>
 
-                             <div className="p-4 md:p-6 bg-stone-950 border-l-4 border-green-600 text-left">
-                                 <p className="text-stone-300 font-mono text-[10px] md:text-xs leading-relaxed uppercase">Log: {confirmation.message}</p>
-                             </div>
+                            <div className="p-8 md:p-12 text-center space-y-8">
+                                <div className="w-20 h-20 bg-green-500/10 border-2 border-green-500/50 rounded-full flex items-center justify-center mx-auto text-green-500 shadow-[0_0_20px_rgba(34,197,94,0.2)]">
+                                    <Zap size={32} className="fill-current" />
+                                </div>
+                                
+                                <div className="space-y-2">
+                                    <h2 className="text-3xl md:text-5xl font-serif font-black text-white uppercase tracking-tighter leading-none">
+                                        REGISTRATION <br/><span className="text-green-500">SUCCESSFUL</span>
+                                    </h2>
+                                    <div className="flex items-center justify-center gap-2">
+                                        <div className="h-[1px] w-8 bg-stone-800"></div>
+                                        <p className="font-mono text-[9px] text-stone-500 uppercase tracking-[0.4em]">Transmission Received</p>
+                                        <div className="h-[1px] w-8 bg-stone-800"></div>
+                                    </div>
+                                </div>
 
-                             <div className="space-y-4">
-                                 {confirmation.whatsappLink && (
-                                     <a
-                                         href={confirmation.whatsappLink}
-                                         target="_blank"
-                                         rel="noopener noreferrer"
-                                         className="w-full py-4 bg-white text-stone-900 font-serif font-black uppercase tracking-tighter hover:bg-green-600 hover:text-white transition-all flex items-center justify-center gap-4 text-lg md:text-xl"
-                                     >
-                                         <Eye size={20} /> JOIN WHATSAPP GROUP
-                                     </a>
-                                 )}
-                                 <button
-                                     onClick={() => navigate('/profile')}
-                                     className="text-[10px] font-mono font-bold uppercase text-stone-500 hover:text-white transition-all tracking-[0.3em]"
-                                 >
-                                     View My Registrations (Profile)
-                                 </button>
-                             </div>
+                                <div className="p-4 bg-stone-950 border border-stone-800 flex flex-col gap-2 text-left relative group">
+                                    <div className="absolute top-0 right-0 p-1">
+                                        <Terminal size={10} className="text-stone-800" />
+                                    </div>
+                                    <p className="text-green-500/80 font-mono text-[8px] uppercase tracking-wider">Status: MISSION_ACCOMPLISHED</p>
+                                    <p className="text-stone-300 font-mono text-[10px] leading-relaxed uppercase">
+                                        {confirmation.message}
+                                    </p>
+                                </div>
+
+                                <div className="flex flex-col gap-3">
+                                    {confirmation.whatsappLink && (
+                                        <a
+                                            href={confirmation.whatsappLink}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="w-full py-4 bg-green-600 text-white font-serif font-black uppercase tracking-tighter hover:bg-green-500 transition-all flex items-center justify-center gap-3 text-lg md:text-xl shadow-[4px_4px_0px_#14532d]"
+                                        >
+                                            <Phone size={20} fill="currentColor" /> JOIN SQUAD HUB
+                                        </a>
+                                    )}
+                                    
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button
+                                            onClick={() => setConfirmation(prev => ({ ...prev, show: false }))}
+                                            className="py-3 border-2 border-stone-800 text-stone-400 font-mono text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-stone-800 hover:text-white transition-all"
+                                        >
+                                            CANCEL
+                                        </button>
+                                        <button
+                                            onClick={() => navigate('/profile')}
+                                            className="py-3 bg-stone-100 text-stone-900 font-mono text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-red-600 hover:text-white transition-all"
+                                        >
+                                            PROFILE
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </motion.div>
                     </div>
                 )}

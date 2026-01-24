@@ -1,3 +1,4 @@
+import "dotenv/config";
 import mongoose from "mongoose";
 import Event from "../models/eventModel.js";
 import User from "../models/userModel.js";
@@ -27,64 +28,268 @@ const getRazorpayInstance = () => {
 };
 
 /* ================= MAIL TRANSPORT ================= */
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
-  },
+const createTransporter = () => {
+  return nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true, // Use SSL
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASSWORD,
+    },
+    tls: {
+      rejectUnauthorized: false
+    }
+  });
+};
+
+const transporter = createTransporter();
+
+// Verify connection configuration on startup
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("Mail server connection error ❌:", error.message);
+  } else {
+    console.log("Mail server connection successful ✅");
+  }
 });
+
+/**
+ * Sends an email using the centralized transporter
+ * @param {Object} options - { to, subject, html }
+ */
+export const sendMail = async (options) => {
+  try {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+      console.error("Mail credentials missing in environment variables!");
+      return null;
+    }
+
+    const mailOptions = {
+      from: `"Invento 2026" <${process.env.EMAIL_USER.trim()}>`,
+      ...options,
+      to: options.to.trim()
+    };
+    
+    console.log(`Attempting to send email to: ${mailOptions.to}...`);
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`Email sent successfully to ${mailOptions.to}: ${info.messageId} ✅`);
+    return info;
+  } catch (error) {
+    console.error(`Mail Sending Failed to ${options.to}:`, error.message);
+    // Don't throw error to prevent breaking the main application flow
+    return null;
+  }
+};
 
 
 /* ================= HTML MAIL ================= */
-const spaceMail = (title, message, eventName, userName, id) => `
+export const spaceMail = (title, message, eventName, userName, id) => `
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>INVENTO 2026 – Spyverse Email</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registration Confirmed - INVENTO 2026</title>
+  <style>
+    /* Reset styles for email clients */
+    body, table, td, p, h1 {
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      width: 100% !important;
+      height: 100% !important;
+      background-color: #000000;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    table {
+      border-collapse: collapse;
+    }
+    img {
+      border: 0;
+      height: auto;
+      line-height: 100%;
+      outline: none;
+      text-decoration: none;
+    }
+    /* App-like interactions for the intelligence hub */
+    .intel-box {
+      background: #0a0a0a;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 40px;
+      text-align: left;
+    }
+    .chat-display {
+      height: 150px;
+      overflow-y: auto;
+      background: #000;
+      border: 1px solid #334155;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #38bdf8;
+      font-family: monospace;
+      margin-bottom: 10px;
+    }
+    .input-group {
+      display: flex;
+      gap: 10px;
+    }
+    input {
+      flex-grow: 1;
+      background: #111827;
+      border: 1px solid #334155;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      outline: none;
+    }
+    button {
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: opacity 0.2s;
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  </style>
 </head>
-<body style="margin:0; padding:0; background:#020617; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+<body style="margin: 0; padding: 0; background-color: #000000; color: #e5e7eb;">
 
-  <div style="background:#0b1220; color:#e5e7eb; padding:32px; border-radius:14px; max-width:600px; margin:auto; border:1px solid #1e293b">
+  <!-- Main Wrapper Table -->
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation" style="background-color: #000000; border-radius: 12px;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        
+        <!-- Content Container -->
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation" style="max-width: 600px; width: 100%;">
+          
+          <!-- Logo Section -->
+          <tr>
+            <td align="center" style="padding-bottom: 30px;">
+              <img
+                src="https://i.postimg.cc/Dzw9P2Qd/Invento-logo.png"
+                alt="INVENTO 2026"
+                width="180"
+                style="display: block; border: 0;"
+              />
+            </td>
+          </tr>
 
-    <h1 style="color:#38bdf8; margin-top:0; margin-bottom:16px; font-size: 24px; text-transform: uppercase; letter-spacing: 1px;">
-      ${title} — INVENTO 2026
-    </h1>
+          <!-- Title Section -->
+          <tr>
+            <td align="center" style="padding-bottom: 20px;">
+              <h1 style="margin: 0; font-size: 24px; letter-spacing: 2px; text-transform: uppercase; color: #ffffff; font-weight: 700;">
+                ${title}
+              </h1>
+            </td>
+          </tr>
 
-    <p style="line-height:1.7; color: #cbd5e1;">
-      ${message}
-      <br /><br />
-      Please keep this information secure and present your credentials whenever requested during the event.
-    </p>
+          <!-- Message Section -->
+          <tr>
+            <td align="center" style="padding-bottom: 30px;">
+              <p style="margin: 0; font-size: 16px; line-height: 1.6; color: #cbd5e1; max-width: 480px;">
+                ${message}<br><br>
+                Your payment and registration have been successfully verified. Kindly keep this email for the records.
+              </p>
+            </td>
+          </tr>
 
-    <hr style="border:none; border-top:1px dashed #334155; margin:24px 0" />
+          <!-- Divider -->
+          <tr>
+            <td align="center" style="padding-bottom: 35px;">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation">
+                <tr>
+                  <td height="1" style="font-size: 1px; line-height: 1px; background: linear-gradient(to right, transparent, #ef4444, transparent);">&nbsp;</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-    <p style="margin: 8px 0;"><b>Event Name:</b> <span style="color:#38bdf8">${eventName}</span></p>
-    <p style="margin: 8px 0;"><b>Participant Name:</b> ${userName}</p>
-    <p style="margin: 8px 0;"><b>Invento ID:</b> <span style="font-family: monospace; background: #1e293b; padding: 2px 6px; rounded: 4px;">${id}</span></p>
+          <!-- Details Table -->
+          <tr>
+            <td align="center" style="padding-bottom: 35px;">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" role="presentation" style="max-width: 400px; margin: 0 auto;">
+                <tr>
+                  <td width="40%" align="left" style="padding: 10px 0; font-size: 14px; color: #94a3b8; border-bottom: 1px solid #1f2937;">Event</td>
+                  <td width="60%" align="right" style="padding: 10px 0; font-size: 14px; color: #ffffff; font-weight: 600; border-bottom: 1px solid #1f2937;">
+                    ${eventName}
+                  </td>
+                </tr>
+                <tr>
+                  <td width="40%" align="left" style="padding: 10px 0; font-size: 14px; color: #94a3b8; border-bottom: 1px solid #1f2937;">Participant</td>
+                  <td width="60%" align="right" style="padding: 10px 0; font-size: 14px; color: #ffffff; border-bottom: 1px solid #1f2937;">
+                    ${userName}
+                  </td>
+                </tr>
+                <tr>
+                  <td width="40%" align="left" style="padding: 15px 0 10px 0; font-size: 14px; color: #94a3b8;">Invento ID</td>
+                  <td width="60%" align="right" style="padding: 15px 0 10px 0;">
+                    <span id="invento-id" style="font-family: 'Courier New', Courier, monospace; background-color: #111827; padding: 6px 12px; border-radius: 6px; color: #38bdf8; border: 1px solid #1e293b;uppercase;">
+                      ${id}
+                    </span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-    <div style="margin-top:28px; padding:16px; background:#020617; border-radius:10px; border:1px solid #1e293b">
-      <p style="margin:0; font-size:13px; letter-spacing:1px; color:#94a3b8">
-        Status: <span style="color:#22c55e; font-weight:600">VERIFIED</span>
-      </p>
-    </div>
+          <!-- Status Badge -->
+          <tr>
+            <td align="center" style="padding-bottom: 40px;">
+              <table border="0" cellspacing="0" cellpadding="0" role="presentation">
+                <tr>
+                  <td align="center" style="padding: 12px 24px; border: 1px solid #16a34a; border-radius: 50px; background-color: rgba(22, 163, 74, 0.05);">
+                    <span style="font-size: 13px; letter-spacing: 1.5px; color: #22c55e; font-weight: 700;">
+                      ✔ VERIFIED
+                    </span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-    <p style="margin-top:30px; font-size:12px; color:#cbd5f5">
-      See you at <b>INVENTO 2026</b>
-    </p>
+          <!-- Footer Text -->
+          <tr>
+            <td align="center" style="padding-top: 40px; padding-bottom: 25px;">
+              <p style="font-size: 15px; color: #ffffff;">
+                See you at INVENTO 2026.
+              </p>
+            </td>
+          </tr>
 
-    <p style="font-size:12px; color:#94a3b8; margin-top:24px">
-      Technical Team,<br />
-      INVENTO 2026
-    </p>
+          <tr>
+            <td align="center" style="padding-bottom: 30px;">
+              <p style="font-size: 13px; line-height: 1.5; color: #94a3b8;">
+                Technical Team,<br>
+                <strong>INVENTO 2026</strong>
+              </p>
+            </td>
+          </tr>
 
-    <p style="font-size:11px; color:#64748b; margin-top:12px; text-align: center">
-      Please do not reply to this message.
-    </p>
-    </div>
+          <!-- Disclaimer -->
+          <tr>
+            <td align="center">
+              <p style="font-size: 11px; color: #475569; letter-spacing: 0.5px;">
+                This is an automated message. Please do not reply.
+              </p>
+            </td>
+          </tr>
 
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
 `;
@@ -234,6 +439,17 @@ const validateHelper = async (event, inventoId, members, teamName, isOfficial, c
       throw new TeamSizeError(
         `Team must have between ${minTeamSize} and ${maxTeamSize} members. Current team has ${memberCount} member(s).`
       );
+    }
+
+    // Verify all members exist in Database
+    const memberDocs = session 
+      ? await User.find({ _id: { $in: uniqueMembers } }).session(session)
+      : await User.find({ _id: { $in: uniqueMembers } });
+    
+    if (memberDocs.length !== uniqueMembers.length) {
+      const foundIds = memberDocs.map(d => d._id.toString());
+      const missingIds = uniqueMembers.filter(id => !foundIds.includes(id));
+      throw new Error(`One or more team members do not have valid accounts: ${missingIds.join(", ")}`);
     }
 
     // Validate leader is included in members
@@ -418,9 +634,10 @@ export const registerForEvent = async (req, res) => {
 
     // Send Mail to all participants
     if (result.userList && result.userList.length > 0) {
-      const mailPromises = result.userList.map(recipient => 
-        transporter.sendMail({
-          from: `"Invento 2026" <${process.env.EMAIL_USER}>`,
+      console.log(`[Registration] Sending confirmation emails to ${result.userList.length} participant(s) for event: ${result.eventName}`);
+      const mailPromises = result.userList.map(recipient => {
+        console.log(`[Registration] Queueing mail for: ${recipient.email} (${recipient.name})`);
+        return sendMail({
           to: recipient.email,
           subject: `Registration Success: ${result.eventName}`,
           html: spaceMail(
@@ -428,8 +645,8 @@ export const registerForEvent = async (req, res) => {
             result.type === "SOLO" ? "You are successfully registered!" : `Team ${result.teamName} is successfully registered!`,
             result.eventName, recipient.name, recipient._id
           )
-        }).catch(err => console.error(`Mail Error (${recipient.email}):`, err))
-      );
+        }).catch(err => console.error(`[Registration] Mail Error for ${recipient.email}:`, err.message));
+      });
       
       // We don't necessarily need to await all mails before responding to the user, 
       // but we do it to maintain current behavior of ensuring mail attempt.
