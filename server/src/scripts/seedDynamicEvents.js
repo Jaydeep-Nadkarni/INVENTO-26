@@ -53,32 +53,35 @@ const seed = async () => {
         await Event.deleteMany({});
 
         const transformedEvents = staticEvents.map(event => {
-            // Specific slots for Master/Miss events
+            // Gender specific slots logic
+            const isGenderSpecific = event.isGenderSpecific || false;
             let specificSlots = {};
-            const title = (event.title || "").toLowerCase();
-            const isMasterMiss = title.includes("mr.") ||
-                title.includes("ms.") ||
-                title.includes("miss") ||
-                title.includes("master");
+            let slots = {
+                totalSlots: event.slots?.total || 40,
+                availableSlots: event.slots?.available || 40
+            };
 
-            if (isMasterMiss) {
+            if (isGenderSpecific) {
+                const total = event.slots?.total || 40;
+                const half = Math.floor(total / 2);
                 specificSlots = {
-                    male: 20,
-                    female: 20
+                    male: half,
+                    female: half
                 };
+                slots = {}; // Ensure slots object is empty for gender specific events
             }
 
             return {
                 _id: event.slug, // used as canonical ID
                 id: (event.id || "").toString(), // numeric ID backup
                 name: event.title,
+                club: event.club,
+                whatsapplink: event.whatsapplink,
+                isGenderSpecific,
 
                 // Dynamic fields
                 price: event.registartionfee || 0,
-                slots: {
-                    totalSlots: event.slots?.total || 100,
-                    availableSlots: event.slots?.available || 100
-                },
+                slots,
                 specificSlots,
                 registration: {
                     isOpen: event.status === "Open",
