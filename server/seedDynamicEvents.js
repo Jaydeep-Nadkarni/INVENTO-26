@@ -3,13 +3,13 @@ import dotenv from "dotenv";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
-import Event from "../models/eventModel.js";
+import Event from "./src/models/eventModel.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: path.join(__dirname, "../../.env") });
+dotenv.config({ path: path.join(__dirname, ".env") });
 
-const EVENTS_FILE_PATH = path.join(__dirname, "../../../client/src/components/Events/events.js");
-const CLUBS_FILE_PATH = path.join(__dirname, "../../../client/src/components/Events/clubsData.js");
+const EVENTS_FILE_PATH = path.join(__dirname, "../client/src/components/Events/events.js");
+const CLUBS_FILE_PATH = path.join(__dirname, "../client/src/components/Events/clubsData.js");
 
 // Function to safely load data from the client-side JS file
 const loadData = (filePath, isClubs = false) => {
@@ -53,32 +53,35 @@ const seed = async () => {
         await Event.deleteMany({});
 
         const transformedEvents = staticEvents.map(event => {
-            // Specific slots for Master/Miss events
+            // Gender specific slots logic
+            const isGenderSpecific = event.isGenderSpecific || false;
             let specificSlots = {};
-            const title = (event.title || "").toLowerCase();
-            const isMasterMiss = title.includes("mr.") ||
-                title.includes("ms.") ||
-                title.includes("miss") ||
-                title.includes("master");
+            let slots = {
+                totalSlots: event.slots?.total || 40,
+                availableSlots: event.slots?.available || 40
+            };
 
-            if (isMasterMiss) {
+            if (isGenderSpecific) {
+                const total = event.slots?.total || 40;
+                const half = Math.floor(total / 2);
                 specificSlots = {
-                    male: 20,
-                    female: 20
+                    male: half,
+                    female: half
                 };
+                slots = {}; // Ensure slots object is empty for gender specific events
             }
 
             return {
                 _id: event.slug, // used as canonical ID
                 id: (event.id || "").toString(), // numeric ID backup
                 name: event.title,
+                club: event.club,
+                whatsapplink: event.whatsapplink,
+                isGenderSpecific,
 
                 // Dynamic fields
                 price: event.registartionfee || 0,
-                slots: {
-                    totalSlots: event.slots?.total || 100,
-                    availableSlots: event.slots?.available || 100
-                },
+                slots,
                 specificSlots,
                 registration: {
                     isOpen: event.status === "Open",

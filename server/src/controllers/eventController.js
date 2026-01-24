@@ -18,8 +18,6 @@ import {
 } from "../utils/customErrors.js";
 import { getStaticEvent } from "../utils/staticData.js";
 
-const GENDER_SPECIFIC_EVENT_IDS = ["22", "23"];
-
 /* ================= RAZORPAY ================= */
 const getRazorpayInstance = () => {
   return new Razorpay({
@@ -182,8 +180,8 @@ const validateHelper = async (event, inventoId, members, teamName, isOfficial, c
       throw new DuplicateRegistrationError();
     }
 
-    const isMasterMiss = GENDER_SPECIFIC_EVENT_IDS.includes(String(event.id));
-    if (isMasterMiss) {
+    const isGenderSpecific = event.isGenderSpecific || staticEvent?.isGenderSpecific;
+    if (isGenderSpecific) {
       const gender = user.gender?.toLowerCase();
       let slotKey = (gender === "male") ? "male" : (gender === "female" ? "female" : null);
       if (!slotKey) throw new InvalidGenderError("Gender required for this event (Male/Female).");
@@ -338,7 +336,7 @@ export const registerForEvent = async (req, res) => {
         event, { inventoId, members, teamName, isOfficial, contingentKey }, session
       );
 
-      const whatsappLink = staticEvent?.whatsapplink || "";
+      const whatsappLink = event.whatsapplink || staticEvent?.whatsapplink || "";
 
       // Payment Verification
       if (!isOfficial && event.price > 0) {
@@ -350,11 +348,11 @@ export const registerForEvent = async (req, res) => {
       }
 
       const status = (event.price > 0 && !isOfficial) ? "CONFIRMED" : "PENDING";
-      const isMasterMiss = GENDER_SPECIFIC_EVENT_IDS.includes(String(event.id));
+      const isGenderSpecific = event.isGenderSpecific || staticEvent?.isGenderSpecific;
 
       if (eventType === "SOLO") {
         let slotKey = null;
-        if (isMasterMiss) {
+        if (isGenderSpecific) {
           const gender = user.gender?.toLowerCase();
           slotKey = (gender === "male") ? "male" : (gender === "female") ? "female" : null;
           if (!slotKey) throw new InvalidGenderError("Gender required for this event (Male/Female).");
@@ -495,9 +493,9 @@ export const updateParticipantStatus = async (req, res) => {
       const participant = event.registrations.participants.find(p => p.inventoId === inventoId);
       if (!participant) throw new Error("Participant not found");
 
-      const isMasterMiss = GENDER_SPECIFIC_EVENT_IDS.includes(String(event.id));
+      const isGenderSpecific = event.isGenderSpecific;
       let slotKey = null;
-      if (isMasterMiss) {
+      if (isGenderSpecific) {
         // Fetch user to check gender
         const user = await User.findById(inventoId).session(session);
         if (user) {
@@ -805,8 +803,8 @@ export const getEvents = async (req, res) => {
 
     // Process events to nullify general slots for gender-based events as per request
     const processedEvents = events.map(event => {
-      const isMasterMiss = GENDER_SPECIFIC_EVENT_IDS.includes(String(event.id));
-      if (isMasterMiss) {
+      const isGenderSpecific = event.isGenderSpecific;
+      if (isGenderSpecific) {
         return {
           ...event,
           slots: { ...event.slots, availableSlots: null }

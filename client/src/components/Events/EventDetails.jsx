@@ -92,7 +92,7 @@ const EventDetails = ({
 
     const userStr = localStorage.getItem('currentUser');
     const user = userStr ? JSON.parse(userStr) : null;
-    const isMasterMiss = /master|miss|mr\.|ms\./i.test(currentEvent.themeName || currentEvent.name);
+    const isMasterMiss = currentEvent.isGenderSpecific;
 
     const renderSlots = () => {
         if (isMasterMiss) {
@@ -101,10 +101,10 @@ const EventDetails = ({
             const boys = slots.availableBoysSlots ?? slots.male ?? 0;
             const girls = slots.availableGirlsSlots ?? slots.female ?? 0;
             
-            if (!user) return `${boys + girls}`;
+            if (!user) return currentEvent.slotsAvailable;
             if (user.gender === "Male") return `${boys} (Master)`;
             if (user.gender === "Female") return `${girls} (Miss)`;
-            return boys + girls;
+            return currentEvent.slotsAvailable;
         }
         return currentEvent.slotsAvailable === 'TBD' ? 'OPEN' : (currentEvent.slotsAvailable || '∞');
     };

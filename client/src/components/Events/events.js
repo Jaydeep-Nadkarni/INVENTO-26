@@ -1253,7 +1253,8 @@ const eventsData = [
         status: "Open",
         createdAt: "2024-06-15T10:00:00Z",
         updatedAt: "2024-06-15T10:00:00Z",
-        whatsapplink: ""
+        whatsapplink: "",
+        isGenderSpecific: true
     },
     {
         id: 23,
@@ -1325,7 +1326,8 @@ const eventsData = [
         status: "Open",
         createdAt: "2024-06-15T10:00:00Z",
         updatedAt: "2024-06-15T10:00:00Z",
-        whatsapplink: ""
+        whatsapplink: "",
+        isGenderSpecific: true
     },
     {
         id: 24,
@@ -1717,7 +1719,167 @@ const eventsData = [
         createdAt: "2024-06-15T10:00:00Z",
         updatedAt: "2024-06-15T10:00:00Z",
         whatsapplink: ""
-    }
+    },
+
+    {
+    id: 30,
+    slug: "photography-silver",
+    title: "PHOTOGRAPHY",
+    subtitle: "On-the-Spot Theme",
+    description: "A solo photography competition where participants capture compelling images based on an on-the-spot theme, judged on creativity, composition, and overall impact.",
+    club: "Media",
+    tier: "Silver",
+    type: "Solo",
+    registartionfee: null,
+    team: {
+        min: 1,
+        max: 1
+    },
+    teampercollege: null,
+    slots: {
+        total: null,
+        available: null
+    },
+    rounds: 1,
+    rounddetails: [
+        {
+            round: 1,
+            description: "Final Round — Participants submit two best photographs based on the on-the-spot theme."
+        }
+    ],
+    venue: null,
+    date: null,
+    time: null,
+    rules: [
+        "The theme will be disclosed on the day of the event",
+        "Photographs must be clicked strictly based on the given theme",
+        "Photos must be in JPG or JPEG format only",
+        "Minimal photo editing is permissible; altering the photograph is not allowed",
+        "Participants must submit their best two photographs only",
+        "In case of multiple submissions, only the first two photos submitted will be considered",
+        "Any suspected altered photograph will be rejected",
+        "The submitted photograph must be original work of the participant",
+        "Photographs must not have been previously published in any media",
+        "Submission must be done via Google Drive link shared on the WhatsApp group before deadline",
+        "Judging criteria includes theme interpretation, composition, creativity, and overall impact",
+        "Organizing Committee’s decision will be final"
+    ],
+    contact: [],
+    resgitartions: [
+        {
+            pearticpants: [],
+            teams: []
+        }
+    ],
+    status: "Open",
+    createdAt: "2024-06-15T10:00:00Z",
+    updatedAt: "2024-06-15T10:00:00Z",
+    whatsapplink: ""
+    },
+    {
+        id: 31,
+        slug: "short-film-silver",
+        title: "SHORT FILM",
+        subtitle: "Short Film Competition",
+        description: "A team-based short film competition where participants create impactful stories within a limited duration, judged on direction, acting, storytelling, and technical excellence.",
+        club: "Media",
+        tier: "Gold",
+        type: "Team",
+        registartionfee: null,
+        team: {
+            min: 1,
+            max: 7
+        },
+        teampercollege: 1,
+        slots: {
+            total: null,
+            available: null
+        },
+        rounds: 1,
+        rounddetails: [
+            {
+                round: 1,
+                description: "Final Round — Teams submit a short film based on the announced theme."
+            }
+        ],
+        venue: null,
+        date: null,
+        time: null,
+        rules: [
+            "The theme will be released one week before the event on official social media handles",
+            "The short film duration must be between 3 to 6 minutes including titles and credits",
+            "Films must not have been previously published in any media",
+            "Video format must be MP4 or AVI",
+            "A short synopsis must be included with the submission",
+            "Films in languages other than English must include English subtitles",
+            "Submission must be done via Google Drive link shared on the WhatsApp group before deadline",
+            "Judging criteria includes direction, acting, editing, cinematography, story, and audio",
+            "The organizing committee’s decision will be final"
+        ],
+        contact: [],
+        resgitartions: [
+            {
+                pearticpants: [],
+                teams: []
+            }
+        ],
+        status: "Open",
+        createdAt: "2024-06-15T10:00:00Z",
+        updatedAt: "2024-06-15T10:00:00Z",
+        whatsapplink: ""
+    },
+    {
+        id: 32,
+        slug: "reel-making-silver",
+        title: "REEL MAKING",
+        subtitle: "Short Reel Competition",
+        description: "A creative reel-making competition where teams produce engaging short-form videos based on an on-the-spot theme, optimized for social media platforms.",
+        club: "Media",
+        tier: "Silver",
+        type: "Team",
+        registartionfee: null,
+        team: {
+            min: 2,
+            max: 2
+        },
+        teampercollege: null,
+        slots: {
+            total: null,
+            available: null
+        },
+        rounds: 1,
+        rounddetails: [
+            {
+                round: 1,
+                description: "Final Round — Teams submit a vertical reel based on the on-the-spot theme."
+            }
+        ],
+        venue: null,
+        date: null,
+        time: null,
+        rules: [
+            "The theme will be released on the spot",
+            "Reel duration must be between 15 to 60 seconds",
+            "All footage and audio used must be original",
+            "Only royalty-free music or owned content is allowed",
+            "The reel must be in vertical format (9:16 aspect ratio)",
+            "Content must be family-friendly with no explicit material",
+            "Submission must be done via Google Drive link shared on the WhatsApp group before deadline",
+            "Organizers reserve the right to modify rules if necessary"
+        ],
+        contact: [],
+        resgitartions: [
+            {
+                pearticpants: [],
+                teams: []
+            }
+        ],
+        status: "Open",
+        createdAt: "2024-06-15T10:00:00Z",
+        updatedAt: "2024-06-15T10:00:00Z",
+        whatsapplink: ""
+    },
+
 ]
 
 export default eventsData;

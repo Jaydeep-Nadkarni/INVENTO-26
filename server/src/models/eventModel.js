@@ -8,6 +8,8 @@ const eventSchema = new mongoose.Schema({
   name: { type: String, required: true }, // maps to title/themeName
   club: { type: String }, // Now a simple String for consistency
   eventType: { type: String }, // SOLO, TEAM, etc.
+  whatsapplink: { type: String },
+  isGenderSpecific: { type: Boolean, default: false },
 
   // Dynamic fields
   price: { type: Number, required: true }, // maps to registrationfee
