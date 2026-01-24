@@ -267,15 +267,15 @@ const eventsData = [
         club: "CDC",
         tier: "Gold",
         type: "Team",
-        registartionfee: 400,
+        registartionfee: 500,
         team: {
             min: 4,
             max: 4
         },
         teampercollege: null,
         slots: {
-            total: null,
-            available: null
+            total: 80,
+            available: 80
         },
         rounds: 3,
         rounddetails: [
@@ -340,7 +340,7 @@ const eventsData = [
         id: 7,
         slug: "ground-zero-act",
         title: "GROUND ZERO ACT",
-        subtitle: "Undercover Comedy – Humor in Disguise",
+        subtitle: "Nukkad Natak (Street Play)",
         description: "A Spy-Verse inspired comic performance competition where teams act as undercover agents using humor, satire, and exaggerated comic situations to decode everyday scenarios. The event focuses purely on comedy, comic timing, live energy, and audience engagement.",
         club: "WEC",
         tier: "Silver",
@@ -677,8 +677,8 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: null,
-            available: null
+            total: 10,
+            available: 10
         },
         rounds: 2,
         rounddetails: [
@@ -739,8 +739,8 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: null,
-            available: null
+            total: 20,
+            available: 20
         },
         rounds: 2,
         rounddetails: [
@@ -805,8 +805,8 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: null,
-            available: null
+            total: 40,
+            available: 40
         },
         rounds: 3,
         rounddetails: [
@@ -870,8 +870,8 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: null,
-            available: null
+            total: 40,
+            available: 40
         },
         rounds: 2,
         rounddetails: [
@@ -1096,8 +1096,8 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: null,
-            available: null
+            total: 15,
+            available: 15
         },
         rounds: 2,
         rounddetails: [
@@ -1207,8 +1207,8 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: null,
-            available: null
+            total: 30,
+            available: 30
         },
         rounds: 3,
         rounddetails: [
@@ -1529,8 +1529,8 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: null,
-            available: null
+            total: 80,
+            available: 80
         },
         rounds: 1,
         rounddetails: [
@@ -1653,76 +1653,8 @@ const eventsData = [
         updatedAt: "2024-06-15T10:00:00Z",
         whatsapplink: ""
     },
-
     {
-        id: 29,
-        slug: "cipher-kick-fifa",
-        title: "CIPHER KICK",
-        subtitle: "FIFA Tournament",
-        description: "A competitive FIFA 23 tournament where precision, tactics, and quick decision-making define success. Players battle through knockout stages to claim ultimate digital football supremacy.",
-        club: "Gaming",
-        tier: "Silver",
-        type: "Solo",
-        registartionfee: 200,
-        team: {
-            min: 1,
-            max: 1
-        },
-        teampercollege: null,
-        slots: {
-            total: null,
-            available: null
-        },
-        rounds: 1,
-        rounddetails: [
-            {
-                round: 1,
-                description: "Knockout Tournament — BO1 till Round of 16, Home & Away thereafter, BO3 Finals."
-            }
-        ],
-        venue: "CS Department Lab, 1st Floor",
-        date: "29-02-2026",
-        time: "10:30 AM",
-        rules: [
-            "Matches will be played using FIFA 23",
-            "Players must bring their own keyboards or controllers",
-            "Match duration: 4-minute halves (regular), 6-minute halves (semis & finals)",
-            "Draws go to penalties; extra time only in semis and finals",
-            "Game settings: overall rating 90, live form off, no national teams",
-            "Any misconduct results in immediate disqualification",
-            "Each participant must provide a valid WhatsApp number",
-            "Maximum two cross-college players allowed (0 GC points)",
-            "Only currently enrolled students are eligible",
-            "Coordinator’s decision is final"
-        ],
-        contact: [
-            {
-                name: "Shreyas Jamkandi",
-                contact: "6362630705"
-            },
-            {
-                name: "Aniket Patil",
-                contact: "8147484903"
-            },
-            {
-                name: "Sanjana Biradar",
-                contact: "9886037411"
-            }
-        ],
-        resgitartions: [
-            {
-                pearticpants: [],
-                teams: []
-            }
-        ],
-        status: "Open",
-        createdAt: "2024-06-15T10:00:00Z",
-        updatedAt: "2024-06-15T10:00:00Z",
-        whatsapplink: ""
-    },
-
-    {
-    id: 30,
+    id: 29,
     slug: "photography-silver",
     title: "PHOTOGRAPHY",
     subtitle: "On-the-Spot Theme",
@@ -1764,7 +1696,24 @@ const eventsData = [
         "Judging criteria includes theme interpretation, composition, creativity, and overall impact",
         "Organizing Committee’s decision will be final"
     ],
-    contact: [],
+    contact: [
+        {
+        name: "Goureesh Hiremath",
+        contact: "9902434746"
+        },
+        {
+        name: "Vedant Kangralkar",
+        contact: "6363816784"
+        },
+        {
+        name: "Akash Patil",
+        contact: "7619482051"
+        },
+        {
+        name: "Ganesh Tudvekar",
+        contact: "9886811751"
+        }
+   ],
     resgitartions: [
         {
             pearticpants: [],
@@ -1777,7 +1726,7 @@ const eventsData = [
     whatsapplink: ""
     },
     {
-        id: 31,
+        id: 30,
         slug: "short-film-silver",
         title: "SHORT FILM",
         subtitle: "Short Film Competition",
@@ -1816,7 +1765,24 @@ const eventsData = [
             "Judging criteria includes direction, acting, editing, cinematography, story, and audio",
             "The organizing committee’s decision will be final"
         ],
-        contact: [],
+        contact: [
+            {
+            name: "Goureesh Hiremath",
+            contact: "9902434746"
+            },
+            {
+            name: "Vedant Kangralkar",
+            contact: "6363816784"
+            },
+            {
+            name: "Akash Patil",
+            contact: "7619482051"
+            },
+            {
+            name: "Ganesh Tudvekar",
+            contact: "9886811751"
+            }
+    ],
         resgitartions: [
             {
                 pearticpants: [],
@@ -1829,7 +1795,7 @@ const eventsData = [
         whatsapplink: ""
     },
     {
-        id: 32,
+        id: 31,
         slug: "reel-making-silver",
         title: "REEL MAKING",
         subtitle: "Short Reel Competition",
@@ -1867,7 +1833,24 @@ const eventsData = [
             "Submission must be done via Google Drive link shared on the WhatsApp group before deadline",
             "Organizers reserve the right to modify rules if necessary"
         ],
-        contact: [],
+        contact: [
+            {
+            name: "Goureesh Hiremath",
+            contact: "9902434746"
+            },
+            {
+            name: "Vedant Kangralkar",
+            contact: "6363816784"
+            },
+            {
+            name: "Akash Patil",
+            contact: "7619482051"
+            },
+            {
+            name: "Ganesh Tudvekar",
+            contact: "9886811751"
+            }
+        ],
         resgitartions: [
             {
                 pearticpants: [],

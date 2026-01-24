@@ -393,6 +393,7 @@ const EventsGrid = () => {
                     removeMember={removeMember}
                     initiatePayment={initiatePayment}
                     confirmation={confirmation}
+                    setConfirmation={setConfirmation}
                     navigate={navigate}
                 />
             )

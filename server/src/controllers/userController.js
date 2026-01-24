@@ -1,9 +1,10 @@
 import User from "../models/userModel.js";
 import Event from "../models/eventModel.js";
-import dotenv from "dotenv";
+import "dotenv/config";
 import { verifyGoogleIdToken } from "../services/authService.js";
 import { processProfilePhoto } from "../services/imageService.js";
 import { generateToken } from "../services/jwtService.js";
+import { sendMail, spaceMail } from "./eventController.js";
 import {
   validateIdTokenFormat,
   validateOnboardingData,
@@ -11,8 +12,6 @@ import {
   logAuthAttempt,
   validateFirebaseUid
 } from "../utils/securityUtils.js";
-
-dotenv.config();
 
 // ================= GOOGLE AUTH =================
 /**
@@ -441,7 +440,24 @@ export const inviteVIP = async (req, res) => {
       await user.save();
     }
 
-    res.json({ success: true, message: "VIP designation granted.", id: user._id });
+    // Send VIP Invitation Email
+    try {
+      await sendMail({
+        to: user.email,
+        subject: "VIP Invitation - INVENTO 2026",
+        html: spaceMail(
+          "VIP INVITATION",
+          "You have been formally invited as a VIP guest to INVENTO 2026. This pass grants you full access to the event.",
+          "INVENTO 2026",
+          user.name,
+          user._id
+        )
+      });
+    } catch (mailError) {
+      console.error("Failed to send VIP invitation email:", mailError);
+    }
+
+    res.json({ success: true, message: "VIP designation granted and invitation sent.", id: user._id });
   } catch (error) {
     console.error("Error in inviteVIP:", error);
     res.status(500).json({ message: "Error granting VIP status." });
