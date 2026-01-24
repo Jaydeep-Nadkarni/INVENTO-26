@@ -1253,7 +1253,8 @@ const eventsData = [
         status: "Open",
         createdAt: "2024-06-15T10:00:00Z",
         updatedAt: "2024-06-15T10:00:00Z",
-        whatsapplink: ""
+        whatsapplink: "",
+        isGenderSpecific: true
     },
     {
         id: 23,
@@ -1325,7 +1326,8 @@ const eventsData = [
         status: "Open",
         createdAt: "2024-06-15T10:00:00Z",
         updatedAt: "2024-06-15T10:00:00Z",
-        whatsapplink: ""
+        whatsapplink: "",
+        isGenderSpecific: true
     },
     {
         id: 24,
@@ -1781,7 +1783,7 @@ const eventsData = [
         subtitle: "Short Film Competition",
         description: "A team-based short film competition where participants create impactful stories within a limited duration, judged on direction, acting, storytelling, and technical excellence.",
         club: "Media",
-        tier: "Silver",
+        tier: "Gold",
         type: "Team",
         registartionfee: null,
         team: {

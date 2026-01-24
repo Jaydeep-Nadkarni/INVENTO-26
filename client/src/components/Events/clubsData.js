@@ -23,6 +23,7 @@ export const mapEventFromDb = (event, isDb = false) => ({
     tier: event.tier || (isDb ? undefined : 'Silver'),
     type: event.eventType || event.type || (isDb ? undefined : 'Solo'),
     description: event.description || (isDb ? undefined : ''),
+    isGenderSpecific: event.isGenderSpecific || false,
 
     // Dynamic fields - keep logic
     fee: (event.price ?? event.registartionfee) === 0 ? 'FREE' : (event.price || event.registartionfee ? `Rs. ${event.price ?? event.registartionfee}` : (isDb ? undefined : 'FREE')),
@@ -33,8 +34,8 @@ export const mapEventFromDb = (event, isDb = false) => ({
         return min === max ? `${max}` : `${min}-${max}`;
     })(),
 
-    slotsAvailable: (/master|miss|mr\.|ms\./i.test(event.name || event.title))
-        ? null
+    slotsAvailable: (event.isGenderSpecific)
+        ? ((event.specificSlots?.male || 0) + (event.specificSlots?.female || 0))
         : (event.slots?.availableSlots ?? event.slots?.available ?? (isDb ? undefined : 'TBD')),
 
     specificSlots: event.specificSlots || (isDb ? undefined : {}),

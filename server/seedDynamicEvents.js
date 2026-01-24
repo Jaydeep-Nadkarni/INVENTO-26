@@ -3,13 +3,13 @@ import dotenv from "dotenv";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
-import Event from "../models/eventModel.js";
+import Event from "./src/models/eventModel.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: path.join(__dirname, "../../.env") });
+dotenv.config({ path: path.join(__dirname, ".env") });
 
-const EVENTS_FILE_PATH = path.join(__dirname, "../../../client/src/components/Events/events.js");
-const CLUBS_FILE_PATH = path.join(__dirname, "../../../client/src/components/Events/clubsData.js");
+const EVENTS_FILE_PATH = path.join(__dirname, "../client/src/components/Events/events.js");
+const CLUBS_FILE_PATH = path.join(__dirname, "../client/src/components/Events/clubsData.js");
 
 // Function to safely load data from the client-side JS file
 const loadData = (filePath, isClubs = false) => {

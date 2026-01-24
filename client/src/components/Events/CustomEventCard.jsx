@@ -5,14 +5,12 @@ import paperTexture from '../../assets/UI/paper-texture.jpg';
 const CustomEventCard = ({ event, onClick }) => {
     const userStr = localStorage.getItem('currentUser');
     const user = userStr ? JSON.parse(userStr) : null;
-    const isMasterMiss = /master|miss|mr\.|ms\./i.test(event.themeName || event.realName);
+    const isMasterMiss = event.isGenderSpecific;
 
     const renderSlots = () => {
         if (isMasterMiss) {
             if (!user) {
-                const boys = event.specificSlots?.availableBoysSlots ?? event.specificSlots?.male ?? 0;
-                const girls = event.specificSlots?.availableGirlsSlots ?? event.specificSlots?.female ?? 0;
-                return `${boys+girls} Slots`;
+                return `${event.slotsAvailable} Slots`;
             }
 
             const boys = event.specificSlots?.availableBoysSlots ?? event.specificSlots?.male ?? 0;
@@ -21,7 +19,7 @@ const CustomEventCard = ({ event, onClick }) => {
 
             if (user.gender === "Male") return `${boys} Slots (Master)`;
             if (user.gender === "Female") return `${girls} Slots (Miss)`;
-            return `${boys+girls} Slots`;
+            return `${event.slotsAvailable} Slots`;
         }
 
         return event.slotsAvailable === 'TBD' ? 'OPEN' : event.slotsAvailable;
