@@ -292,8 +292,8 @@ const eventsData = [
                 description: "OPERATION: RESCUE THE HOSTAGE! — Logic and observation based rescue mission in a sealed environment. Timing: 01:00 PM"
             }
         ],
-        venue: "To Be Announced",
-        date: "26-02-2026",
+        venue: "Mechanical Department",
+        date: "Day 0 & Day 1",
         time: "10:00 AM",
         rules: [
             "This is a combined physical and logical challenge; strength, strategy, and teamwork are essential",
@@ -1539,8 +1539,8 @@ const eventsData = [
                 description: "Tournament Matches — 5v5 Valorant matches with map selection via voting. Fixtures announced after registration closes."
             }
         ],
-        venue: "CS Department Lab, 1st Floor",
-        date: "29-02-2026",
+        venue: "CS Department Labs",
+        date: "Day 0 & Day 1",
         time: "9:00 AM",
         rules: [
             "Players must bring their own laptops and complete gaming setup",
@@ -1584,7 +1584,7 @@ const eventsData = [
         id: 28,
         slug: "battleground-exe-bgmi",
         title: "BATTLEGROUND.exe",
-        subtitle: "BGMI Showdown",
+        subtitle: "BGMI",
         description: "A next-generation BGMI tournament featuring qualification and final matches across iconic maps. Teams compete for survival, kills, and dominance in a high-stakes multiplayer warzone.",
         club: "Gaming",
         tier: "Gold",
@@ -1596,8 +1596,8 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: 74,
-            available: 74
+            total: 80,
+            available: 80
         },
         rounds: 3,
         rounddetails: [
@@ -1614,8 +1614,8 @@ const eventsData = [
                 description: "Final Match — Map decided by voting (Erangel / Miramar / Vikendi)"
             }
         ],
-        venue: "CS Department Classroom, 1st Floor",
-        date: "29-02-2026",
+        venue: "MB 106, MB 107 & MB 108",
+        date: "Day 0 & Day 1",
         time: "9:00 AM",
         rules: [
             "Only smartphones are allowed; earphones are mandatory",
