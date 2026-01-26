@@ -178,7 +178,7 @@ export const spaceMail = (title, message, eventName, userName, id) => `
           <tr>
             <td align="center" style="padding-bottom: 30px;">
               <img
-                src="https://i.postimg.cc/Dzw9P2Qd/Invento-logo.png"
+                src="https://i.postimg.cc/vTBzkb7R/logo.png"
                 alt="INVENTO 2026"
                 width="180"
                 style="display: block; border: 0;"
