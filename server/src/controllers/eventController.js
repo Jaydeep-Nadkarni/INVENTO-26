@@ -251,7 +251,7 @@ export const spaceMail = (title, message, eventName, userName, id) => `
                 <tr>
                   <td align="center" style="padding: 12px 24px; border: 1px solid #16a34a; border-radius: 50px; background-color: rgba(22, 163, 74, 0.05);">
                     <span style="font-size: 13px; letter-spacing: 1.5px; color: #22c55e; font-weight: 700;">
-                      ✔ VERIFIED
+                      ✔ PAYMENT VERIFIED
                     </span>
                   </td>
                 </tr>
