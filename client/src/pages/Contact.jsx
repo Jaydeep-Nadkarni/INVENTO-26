@@ -35,7 +35,7 @@ const teamsData = [
     name: 'HR & Literary',
     members: [
       { name: 'Akhilesh Joshi', role: 'Secretary', phone: '+91 88618 14369', img: 'https://i.postimg.cc/7hxjHFnj/Akhilesh-joshi.jpg', socials: { instagram: 'https://www.instagram.com/akhileshjoshi_04?igsh=OXB5cTY1dWh6a2xr', linkedin: "https://www.linkedin.com/in/akhilesh-joshi-aj2004?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app", whatsapp: "https://wa.me/8861814369" } },
-      { name: 'Ananya B.', role: 'Secretary', phone: '+91 63661 36535', img: 'https://i.postimg.cc/3rvBS82g/Ananya.jpg', socials: { instagram: 'https://www.instagram.com/ananyeah.x?igsh=MWJoMDFpMjczY3VrcQ==', linkedin: '#', whatsapp: 'https://wa.me/6366136535' } },
+      { name: 'Ananya Banhatti', role: 'Secretary', phone: '+91 63661 36535', img: 'https://i.postimg.cc/3rvBS82g/Ananya.jpg', socials: { instagram: 'https://www.instagram.com/ananyeah.x?igsh=MWJoMDFpMjczY3VrcQ==', linkedin: '#', whatsapp: 'https://wa.me/6366136535' } },
       { name: 'Saniya Kadarbhai', role: 'Secretary', phone: '+91 97318 56636', img: 'https://i.postimg.cc/GmkVZPY9/Sania.jpg', socials: { instagram: 'https://www.instagram.com/sania36396?igsh=MWI4OThqZGcwMnZncA==', linkedin: 'https://www.linkedin.com/in/saniya-kadarbhai/', whatsapp: 'https://wa.me/9731856636' } },
     ]
   },
@@ -63,7 +63,7 @@ const teamsData = [
     id: 'cdc',
     name: 'CDC',
     members: [
-      { name: 'Shreyas J.', role: 'Secretary', phone: '+91 6362630705', img: 'https://i.postimg.cc/yNW6hYk7/JKD.jpg', socials: { instagram: 'https://www.instagram.com/shreyasjkd?igsh=ajdlN2cxY3NuZ2Ro', linkedin: '#', whatsapp: 'https://wa.me/6362630705' } },
+      { name: 'Shreyas Jamakhandi', role: 'Secretary', phone: '+91 6362630705', img: 'https://i.postimg.cc/yNW6hYk7/JKD.jpg', socials: { instagram: 'https://www.instagram.com/shreyasjkd?igsh=ajdlN2cxY3NuZ2Ro', linkedin: '#', whatsapp: 'https://wa.me/6362630705' } },
       { name: 'Sanjana Biradar', role: 'Secretary', phone: '+91 98860 37411', img: 'https://i.postimg.cc/7LcHK825/Sanjana.jpg', socials: { instagram: 'https://www.instagram.com/_sanjanabiradar_?igsh=bWQ1OGU0YjRrNGw1', linkedin: '#', whatsapp: 'https://wa.me/9886037411' } },
     ]
   },
@@ -71,7 +71,7 @@ const teamsData = [
     id: 'wec',
     name: 'WEC',
     members: [
-      { name: 'Shraddha S.', role: 'Secretary', phone: '+91 72049 55278', img: 'https://i.postimg.cc/QdLv4YFR/Shraddha.jpg', socials: { instagram: 'https://www.instagram.com/shraddha754shahapurkar?igsh=MTlsdHgzZ2swY2hyYg==', linkedin: '#', whatsapp: 'https://wa.me/7204955278' } },
+      { name: 'Shraddha Shahapurkar', role: 'Secretary', phone: '+91 72049 55278', img: 'https://i.postimg.cc/QdLv4YFR/Shraddha.jpg', socials: { instagram: 'https://www.instagram.com/shraddha754shahapurkar?igsh=MTlsdHgzZ2swY2hyYg==', linkedin: '#', whatsapp: 'https://wa.me/7204955278' } },
       { name: 'Ananya Pattar', role: 'Secretary', phone: '+91 93533 67220', img: 'https://i.postimg.cc/Fsh9WKwk/ananya-Pattar.jpg', socials: { instagram: 'https://www.instagram.com/ananya_pattar_26?igsh=MTlieXU0bDRhbXRyZg==', linkedin: '#', whatsapp: 'https://wa.me/9353367220' } },
     ]
   },
@@ -81,7 +81,7 @@ const teamsData = [
     members: [
       { name: 'Amogh M Gadad', role: 'Secretary', phone: '+91 8951295339', img: 'https://i.postimg.cc/L5JKWVrm/Amogh_Gadad.jpg', socials: { instagram: 'https://www.instagram.com/amogh_1107/', linkedin: null, whatsapp: 'https://wa.me/8951295339' } },
       { name: 'Sumeet Vernekar', role: 'Secretary', phone: '+91 7349736783', img: 'https://i.postimg.cc/vZRCq214/Sumit.jpg', socials: { instagram: 'https://www.instagram.com/sumeet__vernekar?igsh=ZXpobzg1Mm00MHls', linkedin: null, whatsapp: 'https://wa.me/7349736783' } },
-      { name: 'Pruthviraj B.', role: 'Secretary', phone: '+91 70228 80385', img: 'https://i.postimg.cc/N0LG8f59/Prutviraj.jpg', socials: { instagram: 'https://www.instagram.com/pruthvi_raj_banoshi?igsh=bmN4cHNsbm9xbGJq', linkedin: null, whatsapp: 'https://wa.me/7022880385' } },
+      { name: 'Pruthviraj Banoshi', role: 'Secretary', phone: '+91 70228 80385', img: 'https://i.postimg.cc/N0LG8f59/Prutviraj.jpg', socials: { instagram: 'https://www.instagram.com/pruthvi_raj_banoshi?igsh=bmN4cHNsbm9xbGJq', linkedin: null, whatsapp: 'https://wa.me/7022880385' } },
       { name: 'Esha Yalagi', role: 'Secretary', phone: '+91 72045 79523', img: 'https://i.postimg.cc/bwmN22YM/Esha.jpg', socials: { instagram: 'https://www.instagram.com/esha_yalagi?igsh=c3QzMWU5ZDAzN3M2', linkedin: null, whatsapp: 'https://wa.me/7204579523' } },
     ]
   },
@@ -359,7 +359,7 @@ const Contact = () => {
                             {/* Text Details */}
                             <div className="text-center px-1 pb-2 flex-1 flex flex-col justify-between">
                               <div>
-                                <h3 className="font-black text-xl md:text-2xl text-black uppercase leading-none font-serif tracking-tight mb-2">
+                                <h3 className="font-black text-xl md:text-xl text-black uppercase leading-none font-serif tracking-tight mb-2">
                                   {member.name}
                                 </h3>
                                 <p className="text-red-700 font-mono text-xs uppercase tracking-[0.2em] mb-4 border-b border-gray-300 pb-3 inline-block">

@@ -125,11 +125,134 @@ const Register = () => {
   }, [navigate]);
 
   const colleges = [
-    'KLE Dr. MS Sheshgiri College of Engineering and Technology',
-    'KLS Gogte Institute of Technology',
-    'Jain Engineering College',
+    'AJEENKYA DY PATIL',
+    'ANGADI INSTITUTE OF TECHNOLOGY AND MANAGEMENT',
+    'BEYNON SMITH COLLEGE OF FINE ART, BELAGAVI',
+    'BHARATESH INSTITUTE OF TECHNOLOGY',
+    'BHARATESH POLYTECHNIC COLLEGE',
+    'BMS COLLEGE',
+    'GOMATESH POLYTECHNIC COLLEGE',
+    'GOVINDRAM SEKSERIA SCIENCE COLLEGE',
+    'J. S. S. SHRI MANJUNATHESHWARA INSTITUTE OF UG. AND PG. STUDIES, DHARWAD',
+    'JAIN COLLEGE OF BCOM BBA AND BCA',
+    'JAWAHARLAL NEHRU MEDICAL COLLEGE (JNMC)',
+    'JCER',
+    'KLE CBA, HUBBALI',
+    'KLE CBALC',
+    'KLE DR. MS SHESHGIRI COLLEGE OF ENGINEERING AND TECHNOLOGY, BELAGAVI',
+    'KLE INDEPENDENT PU COLLEGE',
+    'KLE SOCIETY\'S COLLEGE OF BUSINESS ADMINISTRATION- BBA',
+    'KLE SOCIETY\'S LINGARAJ COLLEGE, BELAGAVI',
+    'KLE TECHNOLOGICAL UNIVERSITY\'S BVB CAMPUS HUBLI',
+    'KLS GOGTE COLLEGE OF COMMERCE',
+    'KLS GOGTE INSTITUTE OF TECHNOLOGY',
+    'KLS\'S SHRI VASANTRAO POTDAR POLYTECHNIC, BELGAUM',
+    'MARATHA MANDAL DENTAL COLLEGE',
+    'MARATHA MANDAL ENGINEERING COLLEGE',
+    'PRAMOD RAVINDRA DHURI B.ED. COLLEGE',
+    'RANI PARVATI DEVI COLLEGE OF ARTS AND COMMERCE',
+    'RL LAW COLLEGE',
+    'RLS BCA COLLEGE',
+    'S. G. BALEKUNDRI INSTITUTE OF TECHNOLOGY',
+    'SANGOLLI RAYANNA FIRST GRADE CONSTITUENT COLLEGE',
+    'SBG AYURVEDIC MEDICAL COLLEGE AND HOSPITAL',
+    'SDM COLLEGE OF DENTAL SCIENCE, DHARWAD',
+    'SGBIT',
+    'SHARAD INSTITUTE OF ENGINEERING',
+    'SHREE SHIV BASAV JYOTI HOMOEOPATHIC MEDICAL COLLEGE, BELGAUM',
     'Other'
   ]
+
+  // Autocomplete states
+  const [collegeSearch, setCollegeSearch] = useState('')
+  const [showCollegeSuggestions, setShowCollegeSuggestions] = useState(false)
+  const [filteredColleges, setFilteredColleges] = useState([])
+  const [highlightedIndex, setHighlightedIndex] = useState(-1)
+  const collegeInputRef = useRef(null)
+  const suggestionsRef = useRef(null)
+
+  // Filter colleges based on search input
+  useEffect(() => {
+    if (collegeSearch.trim()) {
+      const searchTerms = collegeSearch.toLowerCase().split(' ').filter(Boolean)
+      const filtered = colleges.filter(college => {
+        const collegeLower = college.toLowerCase()
+        return searchTerms.every(term => collegeLower.includes(term))
+      })
+      setFilteredColleges(filtered)
+      setHighlightedIndex(-1)
+    } else {
+      setFilteredColleges(colleges)
+      setHighlightedIndex(-1)
+    }
+  }, [collegeSearch])
+
+  // Handle click outside to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        collegeInputRef.current && 
+        !collegeInputRef.current.contains(event.target) &&
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target)
+      ) {
+        setShowCollegeSuggestions(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('touchstart', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+    }
+  }, [])
+
+  // Handle keyboard navigation for autocomplete
+  const handleCollegeKeyDown = (e) => {
+    if (!showCollegeSuggestions) return
+    
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault()
+        setHighlightedIndex(prev => 
+          prev < filteredColleges.length - 1 ? prev + 1 : prev
+        )
+        break
+      case 'ArrowUp':
+        e.preventDefault()
+        setHighlightedIndex(prev => prev > 0 ? prev - 1 : -1)
+        break
+      case 'Enter':
+        e.preventDefault()
+        if (highlightedIndex >= 0 && filteredColleges[highlightedIndex]) {
+          selectCollege(filteredColleges[highlightedIndex])
+        }
+        break
+      case 'Escape':
+        setShowCollegeSuggestions(false)
+        setHighlightedIndex(-1)
+        break
+      default:
+        break
+    }
+  }
+
+  // Scroll highlighted item into view
+  useEffect(() => {
+    if (highlightedIndex >= 0 && suggestionsRef.current) {
+      const highlightedElement = suggestionsRef.current.children[highlightedIndex]
+      if (highlightedElement) {
+        highlightedElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      }
+    }
+  }, [highlightedIndex])
+
+  const selectCollege = (college) => {
+    setFormData(prev => ({ ...prev, clgName: college, otherCollege: '' }))
+    setCollegeSearch(college === 'Other' ? '' : college)
+    setShowCollegeSuggestions(false)
+    setHighlightedIndex(-1)
+  }
 
   const [formData, setFormData] = useState({
     name: '',
@@ -190,24 +313,38 @@ const Register = () => {
   }
 
   const handleImageUpload = (e) => {
-    const file = e.target.files[0]
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setError('Image size should be less than 5MB')
-        return
-      }
-      if (!file.type.startsWith('image/')) {
-        setError('Please upload an image file')
-        return
-      }
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setTempImage(reader.result)
-        setIsCropping(true)
-        setError('')
-      }
-      reader.readAsDataURL(file)
+    const file = e.target.files?.[0]
+    console.log('Image upload triggered, file:', file)
+    
+    if (!file) {
+      console.log('No file selected')
+      return
     }
+    
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image size should be less than 5MB')
+      return
+    }
+    if (!file.type.startsWith('image/')) {
+      setError('Please upload an image file')
+      return
+    }
+    
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      console.log('File read complete, opening cropper')
+      setTempImage(reader.result)
+      setIsCropping(true)
+      setError('')
+    }
+    reader.onerror = (err) => {
+      console.error('File read error:', err)
+      setError('Failed to read image file')
+    }
+    reader.readAsDataURL(file)
+    
+    // Reset the input so the same file can be selected again
+    e.target.value = ''
   }
 
   const onCropComplete = useCallback((croppedArea, croppedAreaPixels) => {
@@ -217,34 +354,33 @@ const Register = () => {
   const handleDoneCropping = async () => {
     try {
       setError('')
+      
       const croppedImage = await getCroppedImg(
         tempImage,
         croppedAreaPixels,
         rotation
       )
       
-      // Simple image validation - just check it's a valid image
+      // Validate image loads correctly
       const img = new Image()
       img.src = croppedImage
-      await new Promise((resolve) => {
+      await new Promise((resolve, reject) => {
         img.onload = resolve
-        img.onerror = () => {
-          setError("Image upload failed. Please try another image.")
-          resolve()
-        }
+        img.onerror = reject
       })
 
       if (!img.complete || img.naturalWidth === 0) {
-        setError("Please select a valid image file.")
+        setError('Invalid image. Please try another photo.')
         return
       }
 
       setPreviewImage(croppedImage)
       setImageFile(croppedImage)
       setIsCropping(false)
+      
     } catch (e) {
       console.error(e)
-      setError('Failed to crop image')
+      setError('Failed to process image. Please try again.')
     }
   }
 
@@ -452,7 +588,11 @@ const Register = () => {
                         <div className="relative">
                           <motion.div
                             whileHover={{ scale: 1.02 }}
-                            onClick={() => fileInputRef.current?.click()}
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              fileInputRef.current?.click()
+                            }}
                             className="cursor-pointer group"
                           >
                             <div className="relative w-full aspect-3/4 max-w-[240px] sm:max-w-xs mx-auto border-2 border-gray-400 bg-linear-to-br from-gray-100 to-gray-300 flex flex-col items-center justify-center overflow-hidden hover:border-red-600 transition-colors shadow-[8px_8px_0px_rgba(0,0,0,0.2)]">
@@ -471,7 +611,7 @@ const Register = () => {
                                     UPLOAD IDENTIFICATION PHOTO
                                   </p>
                                   <p className="text-gray-500 text-[8px] uppercase tracking-wider font-mono mt-2">
-                                    5MB MAX • Face Must be clearly visible
+                                    5MB MAX
                                   </p>
                                 </div>
                               )}
@@ -486,8 +626,10 @@ const Register = () => {
                             ref={fileInputRef}
                             type="file"
                             accept="image/*"
+                            capture="environment"
                             onChange={handleImageUpload}
                             className="hidden"
+                            onClick={(e) => e.stopPropagation()}
                           />
                           
                           {/* Spy Device Illustration */}
@@ -606,25 +748,132 @@ const Register = () => {
                           </div>
                         </div>
 
-                        {/* Institution Field */}
+                        {/* Institution Field - Autocomplete */}
                         <div className="space-y-2">
                           <label className="text-[10px] font-mono font-black text-gray-700 uppercase tracking-[0.3em] flex items-center gap-2">
                             <Icons.Briefcase />
                             AFFILIATED INSTITUTION
                           </label>
-                          <select
-                            name="clgName"
-                            value={formData.clgName}
-                            onChange={handleInputChange}
-                            className="w-full px-4 py-3 bg-white/60 border-2 border-gray-300 text-gray-900 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 font-mono text-sm cursor-pointer appearance-none"
-                          >
-                            <option value="">Select institution</option>
-                            {colleges.map((college, idx) => (
-                              <option key={idx} value={college}>
-                                {college}
-                              </option>
-                            ))}
-                          </select>
+                          <div className="relative">
+                            <input
+                              ref={collegeInputRef}
+                              type="text"
+                              value={formData.clgName === 'Other' ? collegeSearch : (collegeSearch || formData.clgName)}
+                              onChange={(e) => {
+                                setCollegeSearch(e.target.value)
+                                setShowCollegeSuggestions(true)
+                                if (formData.clgName && formData.clgName !== 'Other') {
+                                  setFormData(prev => ({ ...prev, clgName: '', otherCollege: '' }))
+                                }
+                              }}
+                              onFocus={() => {
+                                setShowCollegeSuggestions(true)
+                                if (!collegeSearch && formData.clgName && formData.clgName !== 'Other') {
+                                  setCollegeSearch(formData.clgName)
+                                }
+                              }}
+                              onKeyDown={handleCollegeKeyDown}
+                              placeholder="Type to search institution..."
+                              className="w-full px-4 py-3 bg-white/60 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 font-mono text-sm transition-all"
+                              autoComplete="off"
+                            />
+                            {/* Clear button */}
+                            {(collegeSearch || formData.clgName) && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setCollegeSearch('')
+                                  setFormData(prev => ({ ...prev, clgName: '', otherCollege: '' }))
+                                  collegeInputRef.current?.focus()
+                                }}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1 touch-manipulation"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                            )}
+                            
+                            {/* Suggestions dropdown */}
+                            <AnimatePresence>
+                              {showCollegeSuggestions && filteredColleges.length > 0 && (
+                                <motion.div
+                                  ref={suggestionsRef}
+                                  initial={{ opacity: 0, y: -10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: -10 }}
+                                  transition={{ duration: 0.15 }}
+                                  className="absolute z-50 w-full mt-1 bg-white border-2 border-gray-300 shadow-lg max-h-60 overflow-y-auto overscroll-contain"
+                                  style={{ WebkitOverflowScrolling: 'touch' }}
+                                >
+                                  {filteredColleges.map((college, idx) => (
+                                    <button
+                                      key={idx}
+                                      type="button"
+                                      onClick={() => selectCollege(college)}
+                                      onTouchEnd={(e) => {
+                                        e.preventDefault()
+                                        selectCollege(college)
+                                      }}
+                                      className={`w-full px-4 py-3 text-left font-mono text-xs sm:text-sm transition-colors touch-manipulation ${
+                                        highlightedIndex === idx
+                                          ? 'bg-red-600 text-white'
+                                          : formData.clgName === college
+                                          ? 'bg-gray-100 text-gray-900'
+                                          : 'text-gray-700 hover:bg-gray-100 active:bg-gray-200'
+                                      }`}
+                                    >
+                                      {college === 'Other' ? (
+                                        <span className="flex items-center gap-2">
+                                          <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                          </svg>
+                                          Other (Not listed)
+                                        </span>
+                                      ) : (
+                                        <span className="block truncate">{college}</span>
+                                      )}
+                                    </button>
+                                  ))}
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+
+                            {/* No results message */}
+                            <AnimatePresence>
+                              {showCollegeSuggestions && collegeSearch && filteredColleges.length === 0 && (
+                                <motion.div
+                                  initial={{ opacity: 0, y: -10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: -10 }}
+                                  className="absolute z-50 w-full mt-1 bg-white border-2 border-gray-300 shadow-lg p-4"
+                                >
+                                  <p className="text-gray-500 font-mono text-xs text-center">No matching institution found</p>
+                                  <button
+                                    type="button"
+                                    onClick={() => selectCollege('Other')}
+                                    className="w-full mt-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-mono text-xs transition-colors touch-manipulation"
+                                  >
+                                    + Add as "Other"
+                                  </button>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+
+                          {/* Selected indicator */}
+                          {formData.clgName && formData.clgName !== 'Other' && (
+                            <motion.div
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              className="flex items-center gap-2 text-green-700"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                              <span className="font-mono text-[10px] uppercase tracking-wider">Selected: {formData.clgName}</span>
+                            </motion.div>
+                          )}
 
                           {formData.clgName === 'Other' && (
                             <motion.div
@@ -632,12 +881,15 @@ const Register = () => {
                               animate={{ opacity: 1, y: 0 }}
                               className="mt-4"
                             >
+                              <label className="text-[9px] font-mono font-bold text-gray-600 uppercase tracking-widest mb-2 block">
+                                Specify your institution name
+                              </label>
                               <input
                                 type="text"
                                 name="otherCollege"
                                 value={formData.otherCollege}
                                 onChange={handleInputChange}
-                                placeholder="Specify institution name"
+                                placeholder="Enter institution name"
                                 className="w-full px-4 py-3 bg-white/60 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-red-600 focus:ring-2 focus:ring-red-600/20 font-mono text-sm transition-all"
                                 autoFocus
                               />
@@ -710,7 +962,7 @@ const Register = () => {
             </div>
           </div>
 
-          {/* Image Cropper Modal (WhatsApp Style) */}
+          {/* Image Cropper Modal - WhatsApp Style */}
           <AnimatePresence>
             {isCropping && (
               <motion.div
@@ -719,119 +971,74 @@ const Register = () => {
                 exit={{ opacity: 0 }}
                 className="fixed inset-0 z-[100] flex flex-col bg-black"
               >
-                {/* Header bar */}
-                <div className="flex justify-between items-center py-4 sm:py-6 px-4 sm:px-8 bg-black/80 border-b border-white/10 backdrop-blur-md z-20">
+                {/* Minimal Header */}
+                <div className="flex justify-between items-center h-14 px-4 bg-black z-20 safe-area-inset-top">
                   <button 
                     type="button"
                     onClick={() => {
                       setIsCropping(false)
-                      setError('')
                     }}
-                    className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-all flex items-center gap-2"
+                    className="p-2 -ml-2 text-white/70 hover:text-white active:bg-white/10 rounded-full transition-colors"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
-                    <span className="font-mono text-[9px] uppercase tracking-[0.2em] hidden sm:inline">Abort Mission</span>
                   </button>
-
-                  <h3 className="text-white text-[10px] font-black uppercase tracking-[0.4em] font-mono">
-                    Upload Your Photo
-                  </h3>
 
                   <button
                     type="button"
                     onClick={handleDoneCropping}
-                    className="px-6 sm:px-8 py-2 bg-red-600 text-white text-[10px] font-black uppercase tracking-[0.2em] hover:bg-red-700 transition-all rounded-sm shadow-[0_0_15px_rgba(220,38,38,0.3)]"
+                    className="px-5 py-2 bg-[#a80e00] text-white text-sm font-semibold rounded-full hover:bg-[#a80000] active:bg-[#7a0000] transition-colors"
                   >
-                    CONFIRM
+                    Done
                   </button>
                 </div>
 
-                {/* Cropper area */}
-                <div className="relative flex-1 bg-neutral-900 overflow-hidden">
+                {/* Cropper area - Full screen */}
+                <div className="relative flex-1 bg-black overflow-hidden">
                   <Cropper
                     image={tempImage}
                     crop={crop}
                     zoom={zoom}
                     rotation={rotation}
                     aspect={3/4}
-                    onCropChange={(c) => { setCrop(c); if (error) setError(''); }}
-                    onRotationChange={(r) => { setRotation(r); if (error) setError(''); }}
+                    onCropChange={setCrop}
+                    onRotationChange={setRotation}
                     onCropComplete={onCropComplete}
-                    onZoomChange={(z) => { setZoom(z); if (error) setError(''); }}
-                    showGrid={true}
+                    onZoomChange={setZoom}
+                    minZoom={1}
+                    maxZoom={3}
+                    showGrid={false}
+                    cropShape="rect"
                     style={{
-                      containerStyle: { background: '#0a0a0a' },
-                      cropAreaStyle: { border: '1px solid rgba(255,255,255,0.2)' }
+                      containerStyle: { 
+                        background: '#000',
+                      },
+                      cropAreaStyle: { 
+                        border: '2px solid rgba(255,255,255,0.5)',
+                        borderRadius: '0px'
+                      },
+                      mediaStyle: {
+                        transition: 'none'
+                      }
                     }}
                   />
+                  
+                  {/* Overlay hint text */}
+                  <div className="absolute bottom-4 left-0 right-0 text-center pointer-events-none">
+                    <p className="text-white/50 text-xs font-medium">
+                      Pinch to zoom • Drag to move
+                    </p>
+                  </div>
                 </div>
 
-                {/* Controls area */}
-                <div className="p-6 sm:p-12 bg-black/90 backdrop-blur-md z-20 flex flex-col items-center gap-6 border-t border-white/5">
-                  <div className="w-full max-w-md">
-                    <AnimatePresence mode="wait">
-                      {error ? (
-                        <motion.div
-                          key="error"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0 }}
-                          className="px-4 py-3 bg-red-950/20 border border-red-500/30 rounded-sm text-center"
-                        >
-                          <div className="flex items-center justify-center gap-2 mb-1">
-                            <div className="w-1 h-1 bg-red-500 animate-pulse rounded-full" />
-                            <p className="text-red-500 text-[8px] font-black uppercase tracking-[0.2em] font-mono">
-                              SYSTEM ERROR
-                            </p>
-                          </div>
-                          <p className="text-white text-[9px] font-bold uppercase tracking-widest font-mono leading-tight px-4">
-                            {error}
-                          </p>
-                        </motion.div>
-                      ) : (
-                          <motion.div
-                            key="status"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="px-4 py-2 border rounded-sm text-center"
-                          >
-                            <div className="flex items-center justify-center gap-2">
-                              <p className="text-green-500 text-[8px] font-black uppercase tracking-[0.4em] font-mono whitespace-nowrap">
-                                IMAGE READY
-                              </p>
-                            </div>
-                          </motion.div>
-                      )}
-                    </AnimatePresence>
+                {/* Bottom status bar - Minimal */}
+                <div className="bg-black px-4 py-3 safe-area-inset-bottom">
+                  <div className="text-center py-2">
+                    <p className="text-white/40 text-xs">
+                      Position your face within the frame
+                    </p>
                   </div>
-
-                  {/* Zoom Slider */}
-                  <div className="w-full max-w-md space-y-3">
-                    <div className="flex justify-between items-center px-1">
-                      <span className="text-[9px] text-gray-400 font-mono tracking-widest">ZOOM: {zoom.toFixed(1)}x</span>
-                      <div className="flex gap-4">
-                        <button type="button" onClick={() => setZoom(Math.max(1, zoom - 0.1))} className="text-white hover:text-red-500">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" /></svg>
-                        </button>
-                        <button type="button" onClick={() => setZoom(Math.min(3, zoom + 0.1))} className="text-white hover:text-red-500">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                        </button>
-                      </div>
-                    </div>
-                    <input
-                      type="range"
-                      value={zoom}
-                      min={1}
-                      max={3}
-                      step={0.1}
-                      onChange={(e) => setZoom(parseFloat(e.target.value))}
-                      className="w-full h-1 bg-gray-800 rounded-lg appearance-none cursor-pointer accent-red-600"
-                    />
-                  </div>
-
-                  
                 </div>
               </motion.div>
             )}
