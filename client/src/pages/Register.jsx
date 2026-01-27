@@ -604,7 +604,7 @@ const Register = () => {
                                 />
                               ) : (
                                 <div className="text-center p-6">
-                                  <div className="mb-4">
+                                  <div className="mb-4 flex justify-center">
                                     <Icons.Camera />
                                   </div>
                                   <p className="text-gray-400 text-[10px] uppercase tracking-widest font-mono font-bold">
@@ -626,7 +626,6 @@ const Register = () => {
                             ref={fileInputRef}
                             type="file"
                             accept="image/*"
-                            capture="environment"
                             onChange={handleImageUpload}
                             className="hidden"
                             onClick={(e) => e.stopPropagation()}
