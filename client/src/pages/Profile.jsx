@@ -208,7 +208,7 @@ const Profile = () => {
                 <img 
                   src={logo} 
                   alt="Invento Logo" 
-                  className="hidden md:block w-64 lg:w-78 opacity-70 pointer-events-none select-none transform"
+                  className="hidden md:block w-64 lg:w-72 opacity-20 grayscale-0 pointer-events-none select-none transform"
                 />
             </div>
           </div>
@@ -222,7 +222,7 @@ const Profile = () => {
               <div className="md:col-span-5 lg:col-span-4">
                 <div className="relative w-full aspect-[4/5] bg-white p-4 shadow-2xl border border-gray-300 transform -rotate-2">
                   {/* Paperclip */}
-                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-10 h-16 border-2 border-gray-400 rounded-full bg-gray-200/50 z-20"></div>
+                  <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-25 h-8  bg-gray-200/50 z-20"></div>
                   <img
                     src={
                       user.profilePhoto?.startsWith('data:') || user.profilePhoto?.startsWith('http')
