@@ -253,10 +253,10 @@ const EventDetails = ({
                                         i !== 0 ? 'md:border-l md:border-stone-200 md:pl-10' : ''
                                     }`}
                                 >
-                                    <p className="font-mono text-[12px] text-stone-400 uppercase tracking-widest mb-3">
+                                    <p className="font-mono text-[10px] md:text-[12px] text-stone-400 uppercase tracking-widest mb-3">
                                         {stat.label}
                                     </p>
-                                    <p className="font-bold text-xl md:text-2xl text-stone-900 leading-none"> 
+                                    <p className="font-bold text-sm md:text-xl text-stone-900 leading-none"> 
                                         {stat.value}
                                     </p>
                                 </div>
@@ -363,7 +363,7 @@ const EventDetails = ({
             {/* --- CLOSE BUTTON --- */}
             <button
                 onClick={handleBackToEvents}
-                className="fixed top-6 right-6 md:top-8 md:right-8 w-12 h-12 bg-stone-900 border border-stone-800 text-white flex items-center justify-center hover:bg-red-600 transition-all z-110 group"
+                className="fixed top-6 right-6 md:top-8 md:right-8 w-12 h-12 bg-transparent md:bg-stone-900 text-white flex items-center justify-center hover:bg-red-600 transition-all z-110 group"
                 title="ESC to exit"
             >
                 <span className="text-xl font-mono group-hover:rotate-90 transition-transform">✕</span>
@@ -402,7 +402,7 @@ const EventDetails = ({
                             <div className="relative z-10 flex-1 overflow-y-auto no-scrollbar p-6 md:p-10">
                                 <h2 className="text-2xl md:text-3xl font-serif font-black uppercase text-stone-900 mb-8 border-b-4 border-stone-900 pb-4 flex justify-between items-end">
                                     <span>{currentEvent.type?.toLowerCase() === 'solo' ? 'Registration' : 'Team Registration'}</span>
-                                    <span className="text-[10px] font-mono text-red-600 animate-pulse">Confirmation Required</span>
+                                    <span className="text-[10px] hidden md:block font-mono text-red-600 animate-pulse">Confirmation Required</span>
                                 </h2>
 
                                 <div className="space-y-8">
