@@ -1,5 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import devBg from '../../assets/UI/dev-bg.jpg'; 
 import jaydeepImg from '../../assets/UI/Members/Jaydeep.png';
 import sandeshImg from '../../assets/UI/Members/Sandesh.png';
@@ -7,25 +9,7 @@ import harshitImg from '../../assets/UI/Members/Harshit.png';
 
 const MemberSection = ({ name, lastName, post, image, isLeft }) => {
     return (
-        <div className="relative w-full h-screen bg-[#0a0a0a] overflow-hidden z-30 flex items-center justify-center font-sans">
-            {/* 1. Evidence Board Background Section */}             
-            <div 
-                className="absolute inset-0 z-0 opacity-40 grayscale contrast-125 transition-all duration-700"
-                style={{
-                    backgroundImage: `url(${devBg})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                }}
-            />
-
-
-            {/* Halftone Overlay */}
-            <div className="absolute inset-0 z-1 opacity-20"
-                style={{
-                    backgroundImage: 'radial-gradient(#ff3131 1.5px, transparent 1.5px)',
-                    backgroundSize: '15px 15px',
-                }}
-            />
+        <div className="relative w-full h-screen overflow-hidden z-30 flex items-center justify-center font-sans">
             
             {/* 2. Massive Background Text (Behind Character) */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-5 overflow-hidden">
@@ -97,7 +81,42 @@ const MemberSection = ({ name, lastName, post, image, isLeft }) => {
     );
 };
 
+const IntroSection = ({ teamMembers }) => {
+    return (
+        <div className="relative w-full h-screen overflow-hidden flex flex-col items-center justify-center">
+
+
+            {/* Main Content */}
+            <div className="relative z-10 text-center w-full top-1/4 -translate-y-1/2 px-6">
+
+                <motion.div
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    className="relative"
+                >
+                    <h1 
+                        className="text-6xl md:text-9xl font-black italic uppercase leading-none text-white mb-6 drop-shadow-[0_0_15px_rgba(255,0,0,0.5)]"
+                        style={{ fontFamily: '"Bebas Neue", sans-serif' }}
+                    >
+                        Meet the <span className="text-red-600">Developers</span>
+                    </h1>
+                </motion.div>
+                <div>
+                    <p className="text-zinc-400 uppercase font-mono text-sm md:text-lg max-w-2xl mx-auto">
+                        Scroll Down <>&#x2193;</>
+                    </p>
+                </div>
+            </div>
+
+            {/* Vignette */}
+            <div className="absolute inset-0 pointer-events-none z-20 bg-[radial-gradient(circle,transparent_40%,rgba(0,0,0,0.8)_100%)]" />
+        </div>
+    );
+};
+
 const TeamReveal = () => {
+    const navigate = useNavigate();
     const teamMembers = [
         {
             name: "Jaydeep",
@@ -123,8 +142,37 @@ const TeamReveal = () => {
     ];
 
     return (
-        <div className="bg-black relative">
-            <div className="-mt-[120px]"> {/* Offset the sticky header height */}
+        <div className="bg-black relative min-h-screen">
+            {/* Back Button */}
+            <button 
+                onClick={() => navigate('/')}
+                className="fixed top-6 left-6 z-50 flex items-center gap-2 px-4 py-2 backdrop-blur-md text-white rounded-full hover:bg-white/20 transition-all group"
+            >
+                <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
+                <span className="font-medium">Home</span>
+            </button> 
+
+            {/* Global Fixed Background */}
+            <div className="fixed inset-0 z-0">
+                <div 
+                    className="absolute inset-0 opacity-40 grayscale contrast-125"
+                    style={{
+                        backgroundImage: `url(${devBg})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center', 
+                    }}
+                />
+                {/* Halftone Overlay */}
+                <div className="absolute inset-0 opacity-20"
+                    style={{
+                        backgroundImage: 'radial-gradient(#ff3131 1.5px, transparent 1.5px)',
+                        backgroundSize: '15px 15px',
+                    }}
+                />
+            </div>
+
+            <div className="-mt-[120px] relative z-10"> {/* Offset the sticky header height */}
+                <IntroSection teamMembers={teamMembers} />
                 {teamMembers.map((member, index) => (
                     <MemberSection key={index} {...member} />
                 ))}
