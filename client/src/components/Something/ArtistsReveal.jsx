@@ -2,7 +2,7 @@ import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import focusLights from '../../assets/UI/focus lights.png';
 import curtainLeft from '../../assets/UI/curtain-left.png';
-import curtainRight from '../../assets/UI/curtain-right.png';
+import curtainRight from '../../assets/UI/curtain-left.png';
 
 const ArtistsReveal = () => {
     const containerRef = useRef(null);
