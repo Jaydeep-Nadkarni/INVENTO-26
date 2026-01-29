@@ -18,7 +18,7 @@ const teamsData = [
     name: 'Registration',
     members: [
       { name: 'Akhilesh Joshi', role: 'Registartion Lead', phone: '+91 88618 14369', img: 'https://i.postimg.cc/7hxjHFnj/Akhilesh-joshi.jpg', socials: { instagram: 'https://www.instagram.com/akhileshjoshi_04?igsh=OXB5cTY1dWh6a2xr', linkedin: "https://www.linkedin.com/in/akhilesh-joshi-aj2004?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app", whatsapp: "https://wa.me/8861814369" } },
-      { name: 'Aastha Mishra', role: 'Registration Lead', phone: '+91 84738 70310', img: 'https://i.postimg.cc/BnmQ11Zm/Aastha.jpg', socials: { linkedin: '#', whatsapp: 'https://wa.me/8473870310' } },
+      { name: 'Rutu Deshanur ', role: 'Registration Lead', phone: '+91 80733 67828', img: 'https://i.postimg.cc/cLQ2V7YH/Rutu.jpg', socials: { instagram: 'https://www.instagram.com/rutudeshanur?igsh=Ymh0OGR0bXIwM2Fj', linkedin: null, whatsapp: 'https://wa.me/8073367828' } },
     ]
   },
   {
@@ -160,43 +160,6 @@ const Contact = () => {
   const toggleQuestion = (questionIdx) => {
     setOpenQuestion(openQuestion === questionIdx ? null : questionIdx)
   }
-
-  // FAQ Data
-  const faqData = [
-    {
-      question: 'What is INVENTO 2026?',
-      answer: 'INVENTO 2026 is the annual technical and cultural fest organized by KLE Technological University. It features a wide range of events including technical competitions, cultural performances, workshops, and guest lectures.'
-    },
-    {
-      question: 'When and where will INVENTO 2026 be held?',
-      answer: 'INVENTO 2026 will be held at KLE Technological University campus. Check the Schedule page for detailed dates and timings of all events.'
-    },
-    {
-      question: 'How do I register for INVENTO 2026?',
-      answer: 'Click on the "REGISTER NOW" button in the navigation bar or on any event page. Fill in your details and select the events you wish to participate in.'
-    },
-    {
-      question: 'Is there a registration fee?',
-      answer: 'Registration fees vary by event. Some events are free while others may have a nominal fee. Check individual event details for specific information.'
-    },
-    {
-      question: 'Can I register for multiple events?',
-      answer: 'Yes! You can register for as many events as you like, provided there are no time conflicts between them. Check the schedule to plan your participation.'
-    },
-    {
-      question: 'What types of events are conducted?',
-      answer: 'INVENTO features technical events (coding, robotics, paper presentations), cultural events (dance, music, drama), sports competitions, workshops, and guest lectures.'
-    },
-    {
-      question: 'Will certificates be provided?',
-      answer: 'Yes, participation certificates will be provided to all participants. Winners will receive special certificates along with prizes.'
-    },
-    {
-      question: 'Is accommodation provided for outstation participants?',
-      answer: 'Limited accommodation may be available for outstation participants. Contact the organizing committee in advance to make arrangements.'
-    }
-  ]
-
 
   return (
     <motion.div
