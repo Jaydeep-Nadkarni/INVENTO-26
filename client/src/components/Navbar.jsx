@@ -81,8 +81,8 @@ const Navbar = ({ onEventsClick, isMobile, position = 'fixed', light = false }) 
     <nav className={`${position} top-0 left-0 w-full z-50 px-4 h-16 md:px-6 py-3 md:py-4 flex items-center justify-between transition-colors duration-300 ${
       mobileMenuOpen 
         ? 'bg-black' 
-        : (scrolled && location.pathname !== '/' 
-            ? 'bg-black/10 backdrop-blur-0 shadow-2xl' 
+        : (scrolled 
+            ? (light ? 'bg-white/40 backdrop-blur-md shadow-sm' : 'bg-black/10 backdrop-blur-0 shadow-2xl')
             : 'bg-transparent')
     }`}>
       {/* Logo/Brand */}
@@ -96,14 +96,18 @@ const Navbar = ({ onEventsClick, isMobile, position = 'fixed', light = false }) 
           <Link
             key={item.label}
             to={item.path}
-            style={{
+            style={!light ? {
               backgroundImage: `url(${textures[index % textures.length]})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               imageRendering: 'pixelated',
               WebkitImageRendering: 'pixelated'
-            }}
-            className="px-5 py-2 text-gray-900 font-bold text-[10px] uppercase tracking-wider hover:brightness-110 active:border-t-black/60 active:border-l-black/60 active:border-b-white/50 active:border-r-white/50 active:translate-y-[1px] transition-all duration-75 relative overflow-hidden"
+            } : {}}
+            className={`px-5 py-2 font-bold text-[10px] uppercase tracking-wider transition-all duration-75 relative overflow-hidden ${
+              light 
+                ? 'text-stone-900 hover:text-red-600 active:translate-y-[1px]' 
+                : 'text-gray-900 hover:brightness-110 active:border-t-black/60 active:border-l-black/60 active:border-b-white/50 active:border-r-white/50 active:translate-y-[1px]'
+            }`}
           >
             <span className="relative z-10">{item.label}</span>
           </Link>
@@ -116,7 +120,7 @@ const Navbar = ({ onEventsClick, isMobile, position = 'fixed', light = false }) 
         {isMobile && (
       <button
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        className={`md:hidden flex flex-col gap-1.5 transition-colors ${light ? 'text-stone-900' : 'text-white'} hover:text-yellow-500`}
+        className={`md:hidden flex flex-col gap-1.5 transition-colors ${mobileMenuOpen ? 'text-white' : (light ? 'text-stone-900' : 'text-white')} hover:text-yellow-500`}
         aria-label="Toggle menu"
       >
         <motion.span 
