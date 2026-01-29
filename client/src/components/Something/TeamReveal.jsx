@@ -8,7 +8,7 @@ import harshitImg from '../../assets/UI/Members/Harshit.png';
 const MemberSection = ({ name, lastName, post, image, isLeft }) => {
     return (
         <div className="relative w-full h-screen bg-[#0a0a0a] overflow-hidden z-30 flex items-center justify-center font-sans">
-            {/* 1. Evidence Board Background Section */}
+            {/* 1. Evidence Board Background Section */}             
             <div 
                 className="absolute inset-0 z-0 opacity-40 grayscale contrast-125 transition-all duration-700"
                 style={{
@@ -17,6 +17,7 @@ const MemberSection = ({ name, lastName, post, image, isLeft }) => {
                     backgroundPosition: 'center',
                 }}
             />
+
 
             {/* Halftone Overlay */}
             <div className="absolute inset-0 z-1 opacity-20"
@@ -122,10 +123,12 @@ const TeamReveal = () => {
     ];
 
     return (
-        <div className="bg-black">
-            {teamMembers.map((member, index) => (
-                <MemberSection key={index} {...member} />
-            ))}
+        <div className="bg-black relative">
+            <div className="-mt-[120px]"> {/* Offset the sticky header height */}
+                {teamMembers.map((member, index) => (
+                    <MemberSection key={index} {...member} />
+                ))}
+            </div>
         </div>
     );
 };

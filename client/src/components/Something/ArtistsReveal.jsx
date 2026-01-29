@@ -1,10 +1,35 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useRef } from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import focusLights from '../../assets/UI/focus lights.png';
+import curtainLeft from '../../assets/UI/curtain-left.png';
+import curtainRight from '../../assets/UI/curtain-right.png';
 
 const ArtistsReveal = () => {
+    const containerRef = useRef(null);
+    const { scrollYProgress } = useScroll({
+        target: containerRef,
+        offset: ["center center", "end start"]
+    });
+
+    const leftX = useTransform(scrollYProgress, [0, 1], ["0%", "-100%"]);
+    const rightX = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
+
     return (
-        <div className="relative w-full min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center overflow-hidden py-20 px-4 z-20 shadow-[0_-50px_100px_rgba(0,0,0,1)]">
+        <div ref={containerRef} className="relative w-full min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center overflow-hidden py-20 px-4 z-20 shadow-[0_-50px_100px_rgba(0,0,0,1)]">
+            
+            {/* Curtains */}
+            <motion.div 
+                style={{ x: leftX }}
+                className="absolute inset-y-0 left-0 w-[51%] z-50 pointer-events-none"
+            >
+                <img src={curtainLeft} alt="" className="w-full h-full object-cover" />
+            </motion.div>
+            <motion.div 
+                style={{ x: rightX }}
+                className="absolute inset-y-0 right-0 w-[51%] z-50 pointer-events-none"
+            >
+                <img src={curtainRight} alt="" className="w-full h-full object-cover" />
+            </motion.div>
             
             {/* Dark Red Ambient Background */}
             <div className="absolute inset-0 bg-[#450a0a] opacity-40 pointer-events-none" />

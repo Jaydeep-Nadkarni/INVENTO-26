@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import JamesBondEasterEgg from '../components/Something/JamesBondEasterEgg';
 import ArtistsReveal from '../components/Something/ArtistsReveal';
-import TeamReveal from '../components/Something/TeamReveal';
 
 const Something = () => {
     const navigate = useNavigate();
@@ -31,7 +30,6 @@ const Something = () => {
             {!isMobile ? (
                 <>
                     <ArtistsReveal />
-                    <TeamReveal />
                 </>
             ) : (
                 <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-[#0a0a0a]">
