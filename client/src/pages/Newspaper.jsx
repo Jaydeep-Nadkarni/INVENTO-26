@@ -82,7 +82,8 @@ const Newspaper = () => {
                 className="relative w-full max-w-5xl overflow-hidden flex flex-col"
                 style={{
                     backgroundImage: `url(${paperTexture})`,
-                    backgroundRepeat: 'repeat',
+                    coverage: 'no-repeat',
+                    backgroundSize: 'cover',
                     minHeight: '250vh'
                 }}
             >

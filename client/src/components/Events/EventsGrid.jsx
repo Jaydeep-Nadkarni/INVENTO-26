@@ -5,7 +5,7 @@ import logoLoader from '../../assets/UI/KLE-logo-small.png'
 import pageTurnSound from '../../assets/audios/page-turn.mp3'
 import closeSound from '../../assets/audios/briefcase-open.mp3'
 import { clubsData, mapEventFromDb } from './clubsData'
-import { CustomAlert } from './EventUIComponents'
+import { CustomAlert, VerifyingOverlay } from './EventUIComponents'
 import ClubsGrid from './ClubsGrid'
 import EventCardGrid from './EventCardGrid'
 import EventDetails from './EventDetails'
@@ -145,6 +145,7 @@ const EventsGrid = () => {
 
     // Registration States
     const [regLoading, setRegLoading] = useState(false)
+    const [verifying, setVerifying] = useState(false)
     const [showRegModal, setShowRegModal] = useState(false)
     const [isOfficial, setIsOfficial] = useState(false)
     const [contingentKey, setContingentKey] = useState('')
@@ -278,6 +279,7 @@ const EventsGrid = () => {
 
             // Handle Free Events
             if (data.free) {
+                setVerifying(true)
                 const regData = await apiPost(`/api/events/register/${currentEvent.id}`, regPayload, navigate).then(res => res.data);
 
                 setConfirmation({
@@ -286,6 +288,7 @@ const EventsGrid = () => {
                     whatsappLink: regData.whatsappLink
                 })
                 setShowRegModal(false)
+                setVerifying(false)
                 return
             }
 
@@ -298,6 +301,7 @@ const EventsGrid = () => {
                 description: `Payment for ${currentEvent.realName || currentEvent.themeName}`,
                 order_id: data.id,
                 handler: async (paymentResponse) => {
+                    setVerifying(true)
                     try {
                         const regData = await apiPost(`/api/events/register/${currentEvent.id}`, {
                             ...regPayload,
@@ -314,6 +318,8 @@ const EventsGrid = () => {
                         setShowRegModal(false)
                     } catch (err) {
                         showAlert('CRITICAL ERROR', err.message, 'error')
+                    } finally {
+                        setVerifying(false)
                     }
                 },
                 prefill: {
@@ -405,6 +411,7 @@ const EventsGrid = () => {
     return (
         <>
             {renderContent()}
+            <VerifyingOverlay show={verifying} />
             <CustomAlert
                 show={alert.show}
                 title={alert.title}

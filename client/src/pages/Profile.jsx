@@ -203,14 +203,6 @@ const Profile = () => {
               <div className="h-1.5 w-24 bg-red-900 mb-2"></div>
               <p className="font-mono text-sm text-red-800 font-bold uppercase tracking-[0.3em]">PARTICIPANT ID: INV{user?._id?.slice(-4) || '0000'}</p>
             </div>
-            
-            <div className="mt-6 md:mt-0 flex justify-end">
-                <img 
-                  src={logo} 
-                  alt="Invento Logo" 
-                  className="hidden md:block w-64 lg:w-72 opacity-20 grayscale-0 pointer-events-none select-none transform"
-                />
-            </div>
           </div>
 
           {loading ? (
@@ -291,7 +283,7 @@ const Profile = () => {
               <div className="flex flex-col items-center group">
                 <button 
                   onClick={() => setShowLinksModal(true)} 
-                  className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center bg-white border-2 border-black shadow-[4px_4px_0px_#000] rounded-full hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all text-green-600"
+                  className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center bg-white border-2 border-black shadow-[4px_4px_0px_#000] rounded-lg hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all text-green-600"
                   title="WhatsApp Links"
                 >
                   <MessageSquare className="h-6 w-6 md:h-8 md:w-8" />
@@ -304,7 +296,7 @@ const Profile = () => {
                   href="/assets/events-schedule.pdf" 
                   target="_blank" 
                   rel="noopener noreferrer" 
-                  className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center bg-white border-2 border-black shadow-[4px_4px_0px_#000] rounded-full hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all text-red-600"
+                  className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center bg-white border-2 border-black shadow-[4px_4px_0px_#000] rounded-lg hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all text-red-600"
                   title="Download Schedule"
                 >
                   <DownloadCloud className="h-6 w-6 md:h-8 md:w-8" />
@@ -316,7 +308,7 @@ const Profile = () => {
                 <button 
                   type="button" 
                   onClick={() => window.open("https://www.instagram.com/invento_2k25/", "_blank", "noopener,noreferrer")} 
-                  className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center bg-white border-2 border-black shadow-[4px_4px_0px_#000] rounded-full hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all text-pink-600"
+                  className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center bg-white border-2 border-black shadow-[4px_4px_0px_#000] rounded-lg hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all text-pink-600"
                   title="Instagram"
                 >
                   <Instagram className="h-6 w-6 md:h-8 md:w-8" />
@@ -326,10 +318,10 @@ const Profile = () => {
             </div>
 
             {/* Separator Dash Line */}
-            <div className="w-full border-t border-dashed border-gray-400 py-4"></div>
+            <div className="w-full border-t border-dashed border-gray-400"></div>
 
             {/* Bottom Actions */}
-            <div className="flex flex-wrap justify-center gap-6 pt-4">
+            <div className="flex flex-wrap justify-center gap-6 pt-0">
               <button onClick={() => navigate('/')} className="px-12 py-5 bg-[#0a111b] text-white border-2 border-[#0a111b] shadow-[6px_6px_0px_#991b1b] font-bold uppercase tracking-[0.2em] text-sm hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
                 RETURN TO BASE
               </button>
@@ -337,11 +329,6 @@ const Profile = () => {
                 LOG OUT
               </button>
             </div>
-          </div>
-
-          <div className="absolute bottom-4 right-8 font-mono text-[8px] text-gray-400 uppercase pointer-events-none">
-            DOSSIER_CREATED_OUT_7E/3<br/>
-            SECURITY CLEARANCE LEVEL 4+
           </div>
         </div>
       </div>

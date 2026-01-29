@@ -84,7 +84,7 @@ export const sendMail = async (options) => {
 
 
 /* ================= HTML MAIL ================= */
-export const spaceMail = (title, message, eventName, userName, id) => `
+export const spaceMail = (title, message, eventName, userName, id, paymentId, whatsappLink) => `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -233,9 +233,15 @@ export const spaceMail = (title, message, eventName, userName, id) => `
                   </td>
                 </tr>
                 <tr>
+                  <td width="40%" align="left" style="padding: 10px 0; font-size: 14px; color: #94a3b8; border-bottom: 1px solid #1f2937;">Payment ID</td>
+                  <td width="60%" align="right" style="padding: 10px 0; font-size: 14px; color: #ffffff; font-weight: 600; border-bottom: 1px solid #1f2937;">
+                    ${paymentId || "N/A (Official/Free)"}
+                  </td>
+                </tr>
+                <tr>
                   <td width="40%" align="left" style="padding: 15px 0 10px 0; font-size: 14px; color: #94a3b8;">Invento ID</td>
                   <td width="60%" align="right" style="padding: 15px 0 10px 0;">
-                    <span id="invento-id" style="font-family: 'Courier New', Courier, monospace; background-color: #111827; padding: 6px 12px; border-radius: 6px; color: #38bdf8; border: 1px solid #1e293b;uppercase;">
+                    <span id="invento-id" style="font-family: 'Courier New', Courier, monospace; background-color: #111827; padding: 6px 12px; border-radius: 6px; color: #38bdf8; border: 1px solid #1e293b; text-transform: uppercase;">
                       ${id}
                     </span>
                   </td>
@@ -244,6 +250,20 @@ export const spaceMail = (title, message, eventName, userName, id) => `
             </td>
           </tr>
 
+          <!-- WhatsApp Section (Conditional) -->
+          ${whatsappLink ? `
+          <tr>
+            <td align="center" style="padding-bottom: 30px;">
+              <p style="margin: 0 0 15px 0; font-size: 14px; color: #cbd5e1;">
+                Join the official event WhatsApp group for updates:
+              </p>
+              <a href="${whatsappLink}" target="_blank" style="display: inline-block; padding: 12px 24px; background-color: #25d366; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px; border: 1px solid #128c7e;">
+                Join WhatsApp Group
+              </a>
+            </td>
+          </tr>
+          ` : ''}
+
           <!-- Status Badge -->
           <tr>
             <td align="center" style="padding-bottom: 40px;">
@@ -251,7 +271,7 @@ export const spaceMail = (title, message, eventName, userName, id) => `
                 <tr>
                   <td align="center" style="padding: 12px 24px; border: 1px solid #16a34a; border-radius: 50px; background-color: rgba(22, 163, 74, 0.05);">
                     <span style="font-size: 13px; letter-spacing: 1.5px; color: #22c55e; font-weight: 700;">
-                      ✔ PAYMENT VERIFIED
+                      ✔ REGISTRATION SUCCESSFUL
                     </span>
                   </td>
                 </tr>
@@ -629,7 +649,7 @@ export const registerForEvent = async (req, res) => {
         await Payment.create([{ paymentId: razorpay_payment_id, orderId: razorpay_order_id, eventId: event._id }], { session });
       }
 
-      return { type: eventType, user, eventName: event.name, whatsappLink, teamName, userList };
+      return { type: eventType, user, eventName: event.name, whatsappLink, teamName, userList, paymentId: razorpay_payment_id };
     });
 
     // Send Mail to all participants
@@ -643,7 +663,7 @@ export const registerForEvent = async (req, res) => {
           html: spaceMail(
             result.type === "SOLO" ? "REGISTRATION CONFIRMED" : "TEAM REGISTRATION CONFIRMED",
             result.type === "SOLO" ? "You are successfully registered!" : `Team ${result.teamName} is successfully registered!`,
-            result.eventName, recipient.name, recipient._id
+            result.eventName, recipient.name, recipient._id, result.paymentId, result.whatsappLink
           )
         }).catch(err => console.error(`[Registration] Mail Error for ${recipient.email}:`, err.message));
       });
