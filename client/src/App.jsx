@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { BrowserRouter as Router, Routes, Route, Navigate} from 'react-router-dom'
 import Home from './pages/Home.jsx'
 import Events from './pages/Events.jsx'
 import Schedule from './pages/Schedule.jsx'
@@ -14,6 +13,7 @@ import Something from './pages/Something.jsx'
 import Newspaper from './pages/Newspaper.jsx'
 import Concert from './pages/Concert.jsx'
 import Developers from './pages/Developers.jsx'
+import Sponsors from './pages/Sponsors.jsx'
 import NotFound from './pages/NotFound.jsx'
 import ScrollToTop from './components/ScrollToTop.jsx'
 import { useAdminAuth } from './admin/context/AuthContext'
@@ -86,6 +86,7 @@ function App() {
         <Route path="/newspaper" element={<Newspaper />} />
         <Route path="/concert" element={<Concert />} />
         <Route path="/developers" element={<Developers />} />
+        <Route path="/sponsors" element={<Sponsors />} />
 
         {/* Admin and Master Auth */}
         <Route path="/admin/login" element={<AdminLogin />} />
