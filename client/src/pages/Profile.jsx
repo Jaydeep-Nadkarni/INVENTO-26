@@ -271,7 +271,7 @@ const Profile = () => {
                       <div className="flex flex-wrap gap-2 uppercase font-mono text-sm font-bold text-[#5c5446]">
                         {user.registeredEvents.map((event, index) => (
                           <div key={index} className="px-3 py-1 mb-2">
-                            {isMobile ? `${index + 1}. ${event}` : event}
+                            {isMobile ? ` ${event}` : event}
                           </div>
                         ))}
                       </div>
@@ -286,29 +286,43 @@ const Profile = () => {
 
           {/* Footer Interactive Section */}
           <div className="mt-0 pt-12 space-y-10 border-t-2 border-black border-dotted">
-            {/* Quick Links Row */}
-            <div className="flex flex-wrap gap-4 align-middle justify-center font-sans">
-              <button onClick={() => setShowLinksModal(true)} className="flex items-center gap-3 bg-[#fffefd] p-3 border-2 border-black shadow-[4px_4px_0px_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
-                <MessageSquare className="h-5 w-5 mr-2 text-green-600" />
-                <div className="text-left leading-none uppercase">
-                   <p className="text-[8px] font-bold text-gray-500">LINKS</p>
-                   <p className="text-xs font-bold">WHATSAPP LINKS</p>
-                </div>
-              </button>
-              <a href="/assets/events-schedule.pdf" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 bg-[#fffefd] p-3 border-2 border-black shadow-[4px_4px_0px_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
-                <DownloadCloud className="h-5 w-5 mr-2 text-red-600" />
-                <div className="text-left leading-none uppercase">
-                   <p className="text-[8px] font-bold text-gray-500">DOWNLOAD</p>
-                   <p className="text-xs font-bold">EVENTS SCHEDULE</p>
-                </div>
-              </a>
-              <button type="button" onClick={() => window.open("https://www.instagram.com/invento_2k25/", "_blank", "noopener,noreferrer")} className="flex items-center gap-3 bg-[#fffefd] p-3 border-2 border-black shadow-[4px_4px_0px_#000] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
-                <Instagram className="h-5 w-5 mr-2 text-pink-600" />
-                <div className="text-left leading-none uppercase">
-                   <p className="text-[8px] font-bold text-gray-500">Connect Us</p>
-                   <p className="text-xs font-bold">INSTAGRAM</p>
-                </div>
-              </button>
+            {/* Quick Links Row - Simplified to Icons */}
+            <div className="flex justify-center gap-8 md:gap-12 transition-all">
+              <div className="flex flex-col items-center group">
+                <button 
+                  onClick={() => setShowLinksModal(true)} 
+                  className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center bg-white border-2 border-black shadow-[4px_4px_0px_#000] rounded-full hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all text-green-600"
+                  title="WhatsApp Links"
+                >
+                  <MessageSquare className="h-6 w-6 md:h-8 md:w-8" />
+                </button>
+                <span className="text-[10px] font-bold uppercase mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Links</span>
+              </div>
+
+              <div className="flex flex-col items-center group">
+                <a 
+                  href="/assets/events-schedule.pdf" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center bg-white border-2 border-black shadow-[4px_4px_0px_#000] rounded-full hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all text-red-600"
+                  title="Download Schedule"
+                >
+                  <DownloadCloud className="h-6 w-6 md:h-8 md:w-8" />
+                </a>
+                <span className="text-[10px] font-bold uppercase mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Schedule</span>
+              </div>
+
+              <div className="flex flex-col items-center group">
+                <button 
+                  type="button" 
+                  onClick={() => window.open("https://www.instagram.com/invento_2k25/", "_blank", "noopener,noreferrer")} 
+                  className="w-14 h-14 md:w-16 md:h-16 flex items-center justify-center bg-white border-2 border-black shadow-[4px_4px_0px_#000] rounded-full hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all text-pink-600"
+                  title="Instagram"
+                >
+                  <Instagram className="h-6 w-6 md:h-8 md:w-8" />
+                </button>
+                <span className="text-[10px] font-bold uppercase mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Social</span>
+              </div>
             </div>
 
             {/* Separator Dash Line */}

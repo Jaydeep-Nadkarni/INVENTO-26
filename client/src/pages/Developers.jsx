@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import devBg from '../assets/UI/dev-bg.jpg';
 import Navbar from '../components/Navbar';
+import TeamReveal from '../components/Something/TeamReveal';
 
 import jaydeepImg from '../assets/UI/Members/Jaydeep.png';
 import sandeshImg from '../assets/UI/Members/Sandesh.png';
@@ -28,11 +29,11 @@ const members = [
   }
 ];
 
-const MobileTeamSinglePage = () => {
+const MobileTeamView = () => {
   return (
     <>
       <Navbar isMobile={true} />
-      <section className="relative w-full min-h-screen bg-[#0a0a0a] md:hidden overflow-hidden">
+      <section className="relative w-full min-h-screen bg-[#0a0a0a] overflow-hidden">
 
       {/* Background */}
       <div
@@ -113,4 +114,20 @@ const MobileTeamSinglePage = () => {
   );
 };
 
-export default MobileTeamSinglePage;
+const Developers = () => {
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    return (
+        <>
+            {isMobile ? <MobileTeamView /> : <TeamReveal />}
+        </>
+    );
+};
+
+export default Developers;

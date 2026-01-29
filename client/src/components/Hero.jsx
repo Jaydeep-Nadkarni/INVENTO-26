@@ -178,6 +178,10 @@ const Hero = () => {
   const handleNewspaper = () => {
     navigate('/newspaper');
   };
+  
+  const handleDevelopers = () => {
+    navigate('/developers');
+  }
 
   return (
     <div className="relative w-full max-w-[90%] h-screen mx-auto flex items-center justify-center overflow-hidden pt-20 md:pt-24">
@@ -220,7 +224,7 @@ const Hero = () => {
         <div className="relative transform flex items-start gap-2">
           {/* Handprint on the left */}
           <motion.div
-            onClick={handleEasterEgg}
+            onClick={handleDevelopers}
             className="relative rotate-0 cursor-pointer"
           >
             <img src={pin} alt="pin" className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-6 z-20" />
