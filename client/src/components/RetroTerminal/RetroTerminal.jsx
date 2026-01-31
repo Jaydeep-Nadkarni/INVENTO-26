@@ -8,6 +8,7 @@ import Radio from './Radio'
 import Browser from './Browser'
 import VideoPlayer from './VideoPlayer'
 import SnakeGame from './SnakeGame'
+import PasswordGame from './PasswordGame'
 import Shutdown from './shutdown'
 import shutdownAudio from '../../assets/audios/shutdown.mp3'
 import fahhhhhAudio from '../../assets/audios/fahhhhh.mp3'
@@ -54,12 +55,13 @@ const RetroTerminal = ({ isOpen, onClose, initialBootProgress = 0 }) => {
         { id: 'mail', name: 'SpyMail', icon: mailIcon, type: 'mail', isImg: true },
         { id: 'radio', name: 'Intercept', icon: radioIcon, type: 'radio', isImg: true },
         { id: 'snake', name: 'Snake Game', icon: snakegame, type: 'snake', isImg: true },
+        { id: 'passwordgame', name: 'The Password Game', icon: '🔐', type: 'passwordgame', isImg: false },
     ]
 
     const launchApp = (app) => {
         if (!openApps.find(a => a.id === app.id)) {
             setOpenApps([...openApps, { ...app, icon: app.icon, isImg: app.isImg }])
-            
+
             // Play sound if opening ACP confidential image
             if (app.isACP) {
                 const audio = new Audio(fahhhhhAudio)
@@ -113,8 +115,8 @@ const RetroTerminal = ({ isOpen, onClose, initialBootProgress = 0 }) => {
         switch (app.type) {
             case 'cmd': return <CMD />
             case 'filemanager': return (
-                <FileManager 
-                    onOpenFile={(file) => launchApp({ ...file, id: file.id, title: file.name.toUpperCase(), type: (file.type === 'video' || file.type === 'image') ? 'video' : 'notes' })} 
+                <FileManager
+                    onOpenFile={(file) => launchApp({ ...file, id: file.id, title: file.name.toUpperCase(), type: (file.type === 'video' || file.type === 'image') ? 'video' : 'notes' })}
                     onFolderOpen={(folderId) => {
                         if (folderId === 'invento_files') setHasOpenedInventoFiles(true)
                     }}
@@ -126,6 +128,7 @@ const RetroTerminal = ({ isOpen, onClose, initialBootProgress = 0 }) => {
             case 'radio': return <Radio />
             case 'browser': return <Browser />
             case 'snake': return <SnakeGame />
+            case 'passwordgame': return <PasswordGame />
             default: return null
         }
     }
@@ -200,8 +203,8 @@ const RetroTerminal = ({ isOpen, onClose, initialBootProgress = 0 }) => {
                                         isMinimized={minimizedApps.includes(app.id)}
                                         onClose={() => closeApp(app.id)}
                                         onMinimize={() => toggleMinimize(app.id)}
-                                        width={app.type === 'browser' ? '700px' : '500px'}
-                                        height={app.type === 'browser' ? '500px' : '400px'}
+                                        width={(app.type === 'browser' || app.type === 'passwordgame') ? '700px' : '500px'}
+                                        height={(app.type === 'browser' || app.type === 'passwordgame') ? '500px' : '400px'}
                                         onFocus={() => {
                                             setSelectedDesktopIcon(null);
                                             setActiveApp(app.id);
@@ -216,14 +219,14 @@ const RetroTerminal = ({ isOpen, onClose, initialBootProgress = 0 }) => {
 
                         {/* Invento 2026 Popup */}
                         {showInventoPopup && (
-                            <div 
+                            <div
                                 className="absolute inset-0 z-[300] flex items-center justify-center bg-black/20"
                                 onClick={() => {
                                     const audio = new Audio(errorAudio)
                                     audio.play().catch(e => console.log("Error sound failed:", e))
                                 }}
                             >
-                                <div 
+                                <div
                                     className="w-[300px] bg-[#c0c0c0] win95-border-raised p-1 shadow-2xl"
                                     onClick={(e) => e.stopPropagation()}
                                 >
@@ -232,22 +235,22 @@ const RetroTerminal = ({ isOpen, onClose, initialBootProgress = 0 }) => {
                                     </div>
                                     <div className="px-4 py-2 flex flex-col items-center gap-4">
                                         <div className="flex items-center gap-3">
-                                            <img 
-                                                src="https://win98icons.alexmeub.com/icons/png/msg_warning-0.png" 
-                                                alt="warning" 
-                                                className="w-10 h-10 object-contain" 
+                                            <img
+                                                src="https://win98icons.alexmeub.com/icons/png/msg_warning-0.png"
+                                                alt="warning"
+                                                className="w-10 h-10 object-contain"
                                             />
                                             <p className="text-[11px] font-bold text-black text-center">Are you coming to INVENTO?</p>
                                         </div>
                                         <div className="flex gap-6 pb-2">
-                                            <button 
-                                                onClick={() => setShowInventoPopup(false)} 
+                                            <button
+                                                onClick={() => setShowInventoPopup(false)}
                                                 className="win95-button px-6 py-1 text-[11px] font-bold min-w-[85px] bg-[#c0c0c0]"
                                             >
                                                 YES
                                             </button>
-                                            <button 
-                                                onClick={() => setShowInventoPopup(false)} 
+                                            <button
+                                                onClick={() => setShowInventoPopup(false)}
                                                 className="win95-button px-6 py-1 text-[11px] font-bold min-w-[85px] bg-[#c0c0c0]"
                                             >
                                                 YES

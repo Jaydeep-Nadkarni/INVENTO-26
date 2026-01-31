@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { shouldSkipAnimations } from '../utils/performanceOptimization'
 import tex1 from '../assets/UI/button-texture-1.webp'
-import tex2 from '../assets/UI/button-texture-2.webp'
+import tex2 from '../assets/UI/button-texture-3.webp'
 import tex3 from '../assets/UI/button-texture-3.webp'
 import registerBtn from '../assets/UI/register.png'
 import inventoLogo from '../assets/UI/Invento-logo.png'
@@ -82,7 +82,7 @@ const Navbar = ({ onEventsClick, isMobile, position = 'fixed', light = false }) 
       mobileMenuOpen 
         ? 'bg-black' 
         : (scrolled 
-            ? (light ? 'bg-white/40 backdrop-blur-md shadow-sm' : 'bg-black/10 backdrop-blur-0 shadow-2xl')
+            ? (light ? 'bg-white/10 shadow-sm' : '')
             : 'bg-transparent')
     }`}>
       {/* Logo/Brand */}
