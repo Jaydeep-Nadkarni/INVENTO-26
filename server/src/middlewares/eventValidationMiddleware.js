@@ -50,9 +50,11 @@ export const validateRegistrationLogic = async (req, res, next) => {
 
         // 3. Check slots availability (General check for non-gender events)
         if (!isGenderSpecific) {
-            const availableSlots = event.slots?.[category]?.available || 0;
-            if (availableSlots <= 0) {
-                throw new SlotFullError(`No ${category} slots available for this event`);
+            if (event.slots[category].available <= 0) {
+                return res.status(409).json({
+                    error: "SlotFullError",
+                    message: `No ${category} slots available for this event`
+                });
             }
         }
 
@@ -87,11 +89,11 @@ export const validateRegistrationLogic = async (req, res, next) => {
                     throw new InvalidGenderError("Gender must be Male or Female for this event");
                 }
 
-                // NEW SCHEMA: slots.open.gender.male or slots.official.gender.male
-                const availableGenderSlots = event.slots?.[category]?.gender?.[slotKey] || 0;
-
-                if (availableGenderSlots <= 0) {
-                    throw new SlotFullError(`No ${category} slots available for ${user.gender} participants`);
+                if (event.slots[category].gender[slotKey] <= 0) {
+                    return res.status(409).json({
+                        error: "SlotFullError",
+                        message: `No ${category} ${gender} slots available`
+                    });
                 }
             }
         }

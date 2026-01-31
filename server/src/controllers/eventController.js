@@ -2,6 +2,8 @@ import "dotenv/config";
 import mongoose from "mongoose";
 import Event from "../models/eventModel.js";
 import User from "../models/userModel.js";
+import fs from "fs";
+import path from "path";
 import Payment from "../models/paymentModel.js";
 import ContingentKey from "../models/contingentKeyModel.js";
 import GlobalSettings from "../models/globalSettingsModel.js";
@@ -408,19 +410,44 @@ const validateHelper = async (event, inventoId, members, teamName, isOfficial, c
     const isGenderSpecific = event.isGenderSpecific || staticEvent?.isGenderSpecific;
     const category = isOfficial ? "official" : "open";
 
-    if (isGenderSpecific) {
-      const gender = user.gender?.toLowerCase();
-      const slotKey = (gender === "male") ? "availableMale" : (gender === "female" ? "availableFemale" : null);
-      if (!slotKey) throw new InvalidGenderError("Gender required for this event (Male/Female).");
+    // [LOG] Step 1: Inspect Slot Values (Senior Backend Engineer requirement)
+    const valLog = `[${new Date().toISOString()}] [validateHelper] START - Event: ${event.name} (${event._id}), isOfficial: ${isOfficial}, category: ${category}, isGenderSpecific: ${isGenderSpecific}\n`;
+    fs.appendFileSync("validation_debug.log", valLog);
 
-      const currentGenderSlots = event.slots[category][slotKey];
-      if (currentGenderSlots <= 0) {
-        throw new SlotFullError(`No more ${category} slots for ${user.gender} participants.`);
-      }
-    } else {
-      if (event.slots[category].available <= 0) throw new SlotFullError(`No ${category} slots available.`);
+    console.log(`[validateHelper] START VALIDATION - Event: ${event.name} (${event._id})`);
+    console.log(`[validateHelper] isOfficial: ${isOfficial} -> category: ${category}`);
+    console.log(`[validateHelper] isGenderSpecific: ${isGenderSpecific}`);
+
+    // Safety check for category object
+    if (!event.slots[category]) {
+      throw new Error(`Slot configuration for category '${category}' is missing in database`);
     }
 
+    // Step 3 & 4: Correct Slot Check Logic (Conditional Gender Check)
+    // First, check general category availability (unless it's gender specific, some systems might not sync aggregate available)
+    // But per user instruction: If isGenderSpecific check gender slots, else check available.
+    if (isGenderSpecific) {
+      const gender = user.gender?.toLowerCase();
+      const slotKey = (gender === "male") ? "male" : (gender === "female" ? "female" : null);
+      if (!slotKey) throw new InvalidGenderError("Gender must be Male or Female for this event.");
+
+      const genderAvailable = event.slots[category]?.gender?.[slotKey] || 0;
+      console.log(`[validateHelper] Gender Check -> gender: ${gender}, available: ${genderAvailable}`);
+
+      if (genderAvailable <= 0) {
+        throw new SlotFullError(`[SF-G] No ${gender} slots left for ${event.name} (${category})`);
+      }
+    } else {
+      const available = event.slots[category].available || 0;
+      console.log(`[validateHelper] General Check -> available: ${available}`);
+
+      if (available <= 0) {
+        throw new SlotFullError(`[SF-A] No general slots left for ${event.name} (${category})`);
+      }
+    }
+
+    // [SAFETY] Step 5: create-order MUST NOT mutate slots. 
+    // We only return success here.
     return { user, staticEvent, eventType, minTeamSize, maxTeamSize, members: [user._id] };
   }
   // TEAM Logic
@@ -488,10 +515,19 @@ const validateHelper = async (event, inventoId, members, teamName, isOfficial, c
     }
 
     // Check available slots
-    // Check available slots
     const category = isOfficial ? "official" : "open";
-    if (event.slots[category].available <= 0) {
-      throw new SlotFullError(`No ${category} slots available for team registration.`);
+    const available = event.slots[category]?.available || 0;
+
+    console.log(`[validateHelper] Team check - category: ${category}, available: ${available}`);
+
+    if (available <= 0) {
+      const error = new SlotFullError(`No ${category} slots available for team registration.`);
+      error.debug = {
+        category,
+        available: available,
+        genderAvailable: "N/A"
+      };
+      throw error;
     }
 
     return {
@@ -518,6 +554,15 @@ export const createOrder = async (req, res) => {
     const event = await Event.findOne({ $or: [{ _id: eventId }, { id: eventId }] });
     if (!event) throw new EventNotFoundError();
 
+    // [DEBUG] Step 1: Log Slot Values inside createOrder
+    const category = isOfficial ? "official" : "open";
+    const orderLog = `[${new Date().toISOString()}] [createOrder] Event: ${event.name}, isOfficial: ${isOfficial}, category: ${category}, slots: ${JSON.stringify(event.slots[category])}\n`;
+    fs.appendFileSync("validation_debug.log", orderLog);
+
+    console.log(`[createOrder] DEBUG - Event: ${event.name}, category: ${category}`);
+    console.log(`[createOrder] DEBUG - isGenderSpecific: ${event.isGenderSpecific}`);
+    console.log(`[createOrder] DEBUG - Slots:`, JSON.stringify(event.slots[category]));
+
     // Perform validation BEFORE creating order (pass null for session)
     let validatedMembers = [];
     let eventType = "SOLO";
@@ -526,7 +571,12 @@ export const createOrder = async (req, res) => {
       validatedMembers = valResult.members;
       eventType = valResult.eventType;
     } catch (valErr) {
-      return res.status(valErr.statusCode || 400).json({ error: valErr.name, message: valErr.message });
+      // Step 8: Add TEMP DEBUG RESPONSE
+      return res.status(valErr.statusCode || 400).json({
+        error: valErr.name,
+        message: valErr.message,
+        debug: valErr.debug || "N/A"
+      });
     }
 
     if (event.price === 0) {
@@ -619,6 +669,11 @@ export const registerForEvent = async (req, res) => {
             throw new SlotFullError(`No more ${category} slots for ${user.gender} participants.`);
           }
           event.slots[category].gender[slotKey] -= 1;
+
+          // Keep aggregate available in sync
+          if (event.slots[category].available > 0) {
+            event.slots[category].available -= 1;
+          }
         } else {
           event.slots[category].available -= 1;
         }
@@ -648,7 +703,9 @@ export const registerForEvent = async (req, res) => {
           contingentKey,
           paymentId: finalPaymentId,
           paid: (event.price > 0 && !isOfficial),
-          amountPaid: (event.price > 0 && !isOfficial) ? event.price : 0,
+          amountPaid: (event.price > 0 && !isOfficial)
+            ? (event.isPricePerPerson ? event.price * validatedMembers.length : event.price)
+            : 0,
           members: memberData.map(u => ({
             inventoId: u._id,
             name: u.name,
@@ -670,8 +727,16 @@ export const registerForEvent = async (req, res) => {
         await u.save({ session });
       }
 
-      if (event.price > 0 && !isOfficial) {
-        await Payment.create([{ paymentId: razorpay_payment_id, orderId: razorpay_order_id, eventId: event._id }], { session });
+      if (event.price > 0 && !isOfficial && razorpay_payment_id) {
+        const quantity = event.isPricePerPerson ? (validatedMembers ? validatedMembers.length : 1) : 1;
+        await Payment.create([{
+          paymentId: razorpay_payment_id,
+          orderId: razorpay_order_id,
+          eventId: event._id,
+          userId: inventoId,
+          amount: event.price * quantity,
+          status: 'captured'
+        }], { session });
       }
 
       return { type: eventType, user, eventName: event.name, whatsappLink, teamName, userList, paymentId: finalPaymentId };
@@ -806,7 +871,6 @@ export const updateParticipantStatus = async (req, res) => {
       participant.status = status;
       // Mark modified to ensure updatedAt is bumped even if only subdocs changed
       event.markModified('registrations.participants');
-      event.markModified('specificSlots');
       await event.save({ session });
     });
 
