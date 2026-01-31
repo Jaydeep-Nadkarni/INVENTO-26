@@ -392,7 +392,7 @@ const PasswordGame = ({ onComplete }) => {
                             <span className="text-[#33ff33] font-bold animate-pulse">&gt;</span>
                             <input
                                 type="text"
-                                className="w-full bg-transparent border-none outline-none text-[#33ff33] text-lg font-mono placeholder-[#33ff33]/30 uppercase"
+                                className="w-full bg-transparent border-none outline-none text-[#33ff33] text-lg font-mono placeholder-[#33ff33]/30"
                                 placeholder="ENTER_PASSWORD..."
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
@@ -416,24 +416,24 @@ const PasswordGame = ({ onComplete }) => {
                                 <div
                                     key={rule.id}
                                     className={`border-l-4 p-3 transition-all duration-300 ${isPassed
-                                            ? 'border-[#33ff33] bg-[#002200]/50 opacity-60 hover:opacity-100'
-                                            : isCurrent
-                                                ? 'border-yellow-500 bg-[#332200]/30'
-                                                : 'border-red-600 bg-[#220000]/30'
+                                        ? 'border-[#33ff33] bg-[#002200]/50 opacity-60 hover:opacity-100'
+                                        : isCurrent
+                                            ? 'border-yellow-500 bg-[#332200]/30'
+                                            : 'border-red-600 bg-[#220000]/30'
                                         }`}
                                 >
                                     <div className="flex items-start gap-3">
                                         <div className={`px-2 py-0.5 text-xs font-bold border ${isPassed ? 'border-[#33ff33] text-[#33ff33]' :
-                                                isCurrent ? 'border-yellow-500 text-yellow-500' :
-                                                    'border-red-600 text-red-600'
+                                            isCurrent ? 'border-yellow-500 text-yellow-500' :
+                                                'border-red-600 text-red-600'
                                             }`}>
                                             RULE_{String(rule.id).padStart(2, '0')}
                                         </div>
 
                                         <div className="flex-1">
                                             <p className={`text-sm ${isPassed ? 'text-[#33ff33] line-through decoration-1 opacity-70' :
-                                                    isCurrent ? 'text-yellow-500 font-bold' :
-                                                        'text-red-500'
+                                                isCurrent ? 'text-yellow-500 font-bold' :
+                                                    'text-red-500'
                                                 }`}>
                                                 {rule.description}
                                             </p>
@@ -524,18 +524,16 @@ const PasswordGame = ({ onComplete }) => {
                         })}
 
 
-                        {/* Submit Button */}
-                        <button
-                            onClick={handleSubmit}
-                            disabled={!rules.every(r => r.status === 'passed')}
-                            className={`w-full py-4 mt-8 border-2 text-lg font-bold tracking-[0.2em] transition-all duration-200 uppercase
-                        ${rules.every(r => r.status === 'passed')
-                                    ? 'border-[#33ff33] bg-[#33ff33] text-black hover:bg-white hover:border-white cursor-pointer shadow-[0_0_20px_rgba(51,255,51,0.5)]'
-                                    : 'border-gray-800 text-gray-800 cursor-not-allowed bg-transparent'
-                                }`}
-                        >
-                            {rules.every(r => r.status === 'passed') ? '>> EXECUTE SEQUENCE <<' : 'Awaiting_Valid_Input...'}
-                        </button>
+                        {/* Submit Button - Only visible when all rules are passed */}
+                        {rules.every(r => r.status === 'passed') && (
+                            <button
+                                onClick={handleSubmit}
+                                className={`w-full py-4 mt-8 border-2 text-lg font-bold tracking-[0.2em] transition-all duration-200 uppercase
+                            border-[#33ff33] bg-[#33ff33] text-black hover:bg-white hover:border-white cursor-pointer shadow-[0_0_20px_rgba(51,255,51,0.5)] animate-pulse`}
+                            >
+                                &gt;&gt; EXECUTE SEQUENCE &lt;&lt;
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>

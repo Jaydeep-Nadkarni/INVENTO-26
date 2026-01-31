@@ -314,7 +314,6 @@ const RetroTerminal = ({ isOpen, onClose, initialBootProgress = 0 }) => {
 
 const Window = ({ app, children, isActive, isMinimized, onClose, onMinimize, onFocus, width = "500px", height = "400px", defaultX = 40, defaultY = 80 }) => {
     const [openMenu, setOpenMenu] = useState(null);
-    const [isMaximized, setIsMaximized] = useState(false);
     const menuRef = useRef(null);
 
     useEffect(() => {
@@ -335,27 +334,16 @@ const Window = ({ app, children, isActive, isMinimized, onClose, onMinimize, onF
         Help: ["View Help", "About System", "Privacy Policy"]
     };
 
-    const toggleMaximize = () => {
-        setIsMaximized(!isMaximized);
-    };
-
     return (
         <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
-            animate={{
-                scale: 1,
-                opacity: 1,
-                zIndex: isActive ? 40 : 10,
-                width: isMaximized ? "100%" : width,
-                height: isMaximized ? "100%" : height,
-                top: isMaximized ? 0 : defaultY,
-                left: isMaximized ? 0 : defaultX
-            }}
+            animate={{ scale: 1, opacity: 1, zIndex: isActive ? 40 : 10 }}
             exit={{ scale: 0.95, opacity: 0 }}
-            drag={!isMaximized}
+            drag
             dragMomentum={false}
             onPointerDown={onFocus}
-            className={`absolute bg-[#c0c0c0] win95-border-raised flex flex-col shadow-xl overflow-visible ${isMaximized ? 'rounded-none' : ''}`}
+            style={{ width, height, top: defaultY, left: defaultX }}
+            className={`absolute bg-[#c0c0c0] win95-border-raised flex flex-col shadow-xl overflow-visible`}
         >
             {/* Title Bar */}
             <div
@@ -373,12 +361,6 @@ const Window = ({ app, children, isActive, isMinimized, onClose, onMinimize, onF
                         className="win95-button w-4 h-4 flex items-center justify-center text-[10px] pb-1 hover:bg-gray-300"
                     >
                         _
-                    </button>
-                    <button
-                        onClick={(e) => { e.stopPropagation(); toggleMaximize(); }}
-                        className="win95-button w-4 h-4 flex items-center justify-center text-[10px] hover:bg-gray-300"
-                    >
-                        {isMaximized ? '❐' : '□'}
                     </button>
                     <button
                         onClick={(e) => { e.stopPropagation(); onClose(); }}
