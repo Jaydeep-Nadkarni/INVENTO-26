@@ -1,5 +1,17 @@
 import mongoose from "mongoose";
 
+const slotCategorySchema = new mongoose.Schema({
+  // General
+  total: { type: Number, default: 0 },
+  available: { type: Number, default: 0 },
+
+  // Gender Specific Nested
+  gender: {
+    male: { type: Number, default: 0 },
+    female: { type: Number, default: 0 }
+  }
+}, { _id: false });
+
 const eventSchema = new mongoose.Schema({
   _id: {
     type: String, // slugs like 'raga-solo-singing-eastern'
@@ -10,14 +22,16 @@ const eventSchema = new mongoose.Schema({
   eventType: { type: String }, // SOLO, TEAM, etc.
   whatsapplink: { type: String },
   isGenderSpecific: { type: Boolean, default: false },
+  isPricePerPerson: { type: Boolean, default: false },
 
   // Dynamic fields
   price: { type: Number, required: true }, // maps to registrationfee
   slots: {
-    totalSlots: { type: Number, default: 0 },
-    availableSlots: { type: Number, default: 0 }
+    open: { type: slotCategorySchema, default: () => ({}) },
+    official: { type: slotCategorySchema, default: () => ({}) }
   },
-  specificSlots: { type: Map, of: Number, default: {} },
+  // specificSlots: { type: Map, of: Number, default: {} }, // Deprecated/Removed in favor of nested slots
+
   registration: {
     isOpen: { type: Boolean, default: true },
     deadline: { type: Date },
@@ -34,6 +48,7 @@ const eventSchema = new mongoose.Schema({
         phone: String,
         clgName: String,
         paid: { type: Boolean, default: false },
+        paymentId: { type: String },
         status: {
           type: String,
           enum: ["PENDING", "CONFIRMED", "WAITLIST", "CANCELLED", "DISQUALIFIED"],
@@ -56,6 +71,7 @@ const eventSchema = new mongoose.Schema({
         },
         isOfficial: { type: Boolean, default: false },
         contingentKey: { type: String },
+        paymentId: { type: String },
         members: [
           {
             inventoId: { type: String, required: true },

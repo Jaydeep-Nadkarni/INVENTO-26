@@ -70,7 +70,7 @@ export const sendMail = async (options) => {
       ...options,
       to: options.to.trim()
     };
-    
+
     console.log(`Attempting to send email to: ${mailOptions.to}...`);
     const info = await transporter.sendMail(mailOptions);
     console.log(`Email sent successfully to ${mailOptions.to}: ${info.messageId} ✅`);
@@ -233,7 +233,7 @@ export const spaceMail = (title, message, eventName, userName, id, paymentId, wh
                   </td>
                 </tr>
                 <tr>
-                  <td width="40%" align="left" style="padding: 10px 0; font-size: 14px; color: #94a3b8; border-bottom: 1px solid #1f2937;">Payment ID</td>
+                  <td width="40%" align="left" style="padding: 10px 0; font-size: 14px; color: #94a3b8; border-bottom: 1px solid #1f2937;">Payment ID / UTR</td>
                   <td width="60%" align="right" style="padding: 10px 0; font-size: 14px; color: #ffffff; font-weight: 600; border-bottom: 1px solid #1f2937;">
                     ${paymentId || "N/A (Official/Free)"}
                   </td>
@@ -406,17 +406,19 @@ const validateHelper = async (event, inventoId, members, teamName, isOfficial, c
     }
 
     const isGenderSpecific = event.isGenderSpecific || staticEvent?.isGenderSpecific;
+    const category = isOfficial ? "official" : "open";
+
     if (isGenderSpecific) {
       const gender = user.gender?.toLowerCase();
-      let slotKey = (gender === "male") ? "male" : (gender === "female" ? "female" : null);
+      const slotKey = (gender === "male") ? "availableMale" : (gender === "female" ? "availableFemale" : null);
       if (!slotKey) throw new InvalidGenderError("Gender required for this event (Male/Female).");
 
-      const currentGenderSlots = (typeof event.specificSlots?.get === "function" ? event.specificSlots.get(slotKey) : event.specificSlots?.[slotKey]);
-      if (currentGenderSlots === undefined || currentGenderSlots <= 0) {
-        throw new SlotFullError(`No more slots for ${user.gender} participants.`);
+      const currentGenderSlots = event.slots[category][slotKey];
+      if (currentGenderSlots <= 0) {
+        throw new SlotFullError(`No more ${category} slots for ${user.gender} participants.`);
       }
     } else {
-      if (event.slots.availableSlots <= 0) throw new SlotFullError();
+      if (event.slots[category].available <= 0) throw new SlotFullError(`No ${category} slots available.`);
     }
 
     return { user, staticEvent, eventType, minTeamSize, maxTeamSize, members: [user._id] };
@@ -462,10 +464,10 @@ const validateHelper = async (event, inventoId, members, teamName, isOfficial, c
     }
 
     // Verify all members exist in Database
-    const memberDocs = session 
+    const memberDocs = session
       ? await User.find({ _id: { $in: uniqueMembers } }).session(session)
       : await User.find({ _id: { $in: uniqueMembers } });
-    
+
     if (memberDocs.length !== uniqueMembers.length) {
       const foundIds = memberDocs.map(d => d._id.toString());
       const missingIds = uniqueMembers.filter(id => !foundIds.includes(id));
@@ -486,8 +488,10 @@ const validateHelper = async (event, inventoId, members, teamName, isOfficial, c
     }
 
     // Check available slots
-    if (event.slots.availableSlots <= 0) {
-      throw new SlotFullError("No slots available for team registration.");
+    // Check available slots
+    const category = isOfficial ? "official" : "open";
+    if (event.slots[category].available <= 0) {
+      throw new SlotFullError(`No ${category} slots available for team registration.`);
     }
 
     return {
@@ -515,8 +519,12 @@ export const createOrder = async (req, res) => {
     if (!event) throw new EventNotFoundError();
 
     // Perform validation BEFORE creating order (pass null for session)
+    let validatedMembers = [];
+    let eventType = "SOLO";
     try {
-      await validateEventRegistration(event, { inventoId, members, teamName, isOfficial, contingentKey }, null);
+      const valResult = await validateEventRegistration(event, { inventoId, members, teamName, isOfficial, contingentKey }, null);
+      validatedMembers = valResult.members;
+      eventType = valResult.eventType;
     } catch (valErr) {
       return res.status(valErr.statusCode || 400).json({ error: valErr.name, message: valErr.message });
     }
@@ -533,8 +541,9 @@ export const createOrder = async (req, res) => {
     }
 
     const razorpay = new Razorpay({ key_id, key_secret });
+    const quantity = event.isPricePerPerson ? (validatedMembers ? validatedMembers.length : 1) : 1;
     const options = {
-      amount: Math.round(event.price * 100),
+      amount: Math.round(event.price * quantity * 100),
       currency: "INR",
       receipt: `rcpt_${Date.now().toString().slice(-8)}_${eventId.slice(0, 20)}`,
     };
@@ -560,7 +569,7 @@ export const registerForEvent = async (req, res) => {
 
       const {
         inventoId, teamName, members, razorpay_order_id, razorpay_payment_id, razorpay_signature,
-        isOfficial, contingentKey
+        isOfficial, contingentKey, paymentId
       } = req.body;
 
       const eventIdParam = req.params.id.trim();
@@ -573,6 +582,7 @@ export const registerForEvent = async (req, res) => {
       );
 
       const whatsappLink = event.whatsapplink || staticEvent?.whatsapplink || "";
+      const finalPaymentId = razorpay_payment_id || paymentId;
 
       // Payment Verification
       if (!isOfficial && event.price > 0) {
@@ -585,21 +595,20 @@ export const registerForEvent = async (req, res) => {
 
       const status = (event.price > 0 && !isOfficial) ? "CONFIRMED" : "PENDING";
       const isGenderSpecific = event.isGenderSpecific || staticEvent?.isGenderSpecific;
+      const category = isOfficial ? "official" : "open";
 
       if (eventType === "SOLO") {
-        let slotKey = null;
         if (isGenderSpecific) {
           const gender = user.gender?.toLowerCase();
-          slotKey = (gender === "male") ? "male" : (gender === "female") ? "female" : null;
+          const slotKey = (gender === "male") ? "male" : (gender === "female") ? "female" : null;
           if (!slotKey) throw new InvalidGenderError("Gender required for this event (Male/Female).");
-        }
 
-        if (slotKey) {
-          const currentGenderSlots = event.specificSlots.get(slotKey);
-          event.specificSlots.set(slotKey, currentGenderSlots - 1);
-          event.markModified('specificSlots');
+          if (event.slots[category].gender[slotKey] <= 0) {
+            throw new SlotFullError(`No more ${category} slots for ${user.gender} participants.`);
+          }
+          event.slots[category].gender[slotKey] -= 1;
         } else {
-          event.slots.availableSlots -= 1;
+          event.slots[category].available -= 1;
         }
 
         event.registrations.participants.push({
@@ -609,6 +618,7 @@ export const registerForEvent = async (req, res) => {
           phone: user.phone,
           clgName: user.clgName,
           paid: (event.price > 0 && !isOfficial),
+          paymentId: finalPaymentId,
           status,
           isOfficial: !!isOfficial,
           contingentKey
@@ -623,7 +633,7 @@ export const registerForEvent = async (req, res) => {
           status,
           isOfficial: !!isOfficial,
           contingentKey,
-          paid: (event.price > 0 && !isOfficial),
+          paymentId: finalPaymentId,
           members: memberData.map(u => ({
             inventoId: u._id,
             name: u.name,
@@ -632,7 +642,7 @@ export const registerForEvent = async (req, res) => {
             clgName: u.clgName
           }))
         });
-        event.slots.availableSlots -= 1;
+        event.slots[category].available -= 1;
       }
 
       await event.save({ session });
@@ -649,7 +659,7 @@ export const registerForEvent = async (req, res) => {
         await Payment.create([{ paymentId: razorpay_payment_id, orderId: razorpay_order_id, eventId: event._id }], { session });
       }
 
-      return { type: eventType, user, eventName: event.name, whatsappLink, teamName, userList, paymentId: razorpay_payment_id };
+      return { type: eventType, user, eventName: event.name, whatsappLink, teamName, userList, paymentId: finalPaymentId };
     });
 
     // Send Mail to all participants
@@ -667,7 +677,7 @@ export const registerForEvent = async (req, res) => {
           )
         }).catch(err => console.error(`[Registration] Mail Error for ${recipient.email}:`, err.message));
       });
-      
+
       // We don't necessarily need to await all mails before responding to the user, 
       // but we do it to maintain current behavior of ensuring mail attempt.
       await Promise.all(mailPromises);
@@ -749,40 +759,29 @@ export const updateParticipantStatus = async (req, res) => {
       const nowActive = isActive(status);
 
       // Handle slot logic (Exclusive: Gender vs General)
+      // Handle slot logic (Exclusive: Gender vs General)
+      // Determine category (default open if not specified, but we should check participant.isOfficial)
+      const isOfficial = participant.isOfficial;
+      const category = isOfficial ? "official" : "open";
+
       if (nowActive && !wasActive) {
         if (slotKey) {
-          const currentGenderSlots = (typeof event.specificSlots?.get === "function"
-            ? event.specificSlots.get(slotKey)
-            : event.specificSlots?.[slotKey]) || 0;
-
-          if (currentGenderSlots <= 0) {
-            throw new Error(`No ${slotKey} slots available in ${event.name}`);
+          // New Structure: slots[category].gender[slotKey]
+          if (event.slots[category].gender[slotKey] <= 0) {
+            throw new Error(`No ${category} ${slotKey} slots available in ${event.name}`);
           }
-
-          if (typeof event.specificSlots?.set === "function") {
-            event.specificSlots.set(slotKey, currentGenderSlots - 1);
-          } else {
-            event.specificSlots[slotKey] = currentGenderSlots - 1;
-          }
+          event.slots[category].gender[slotKey] -= 1;
         } else {
-          if (event.slots.availableSlots <= 0) {
-            throw new Error("No slots available to activate this participant");
+          if (event.slots[category].available <= 0) {
+            throw new Error(`No ${category} slots available to activate this participant`);
           }
-          event.slots.availableSlots -= 1;
+          event.slots[category].available -= 1;
         }
       } else if (!nowActive && wasActive) {
         if (slotKey) {
-          const currentGenderSlots = (typeof event.specificSlots?.get === "function"
-            ? event.specificSlots.get(slotKey)
-            : event.specificSlots?.[slotKey]) || 0;
-
-          if (typeof event.specificSlots?.set === "function") {
-            event.specificSlots.set(slotKey, currentGenderSlots + 1);
-          } else {
-            event.specificSlots[slotKey] = currentGenderSlots + 1;
-          }
+          event.slots[category].gender[slotKey] += 1;
         } else {
-          event.slots.availableSlots += 1;
+          event.slots[category].available += 1;
         }
       }
 
@@ -855,13 +854,17 @@ export const updateTeamStatus = async (req, res) => {
       const nowActive = isActive(status);
 
       // Handle slot logic
+      const isOfficial = team.isOfficial;
+      const category = isOfficial ? "official" : "open";
+
+      // Handle slot logic
       if (nowActive && !wasActive) {
-        if (event.slots.availableSlots <= 0) {
-          throw new Error("No slots available to activate this team");
+        if (event.slots[category].available <= 0) {
+          throw new Error(`No ${category} slots available to activate this team`);
         }
-        event.slots.availableSlots -= 1;
+        event.slots[category].available -= 1;
       } else if (!nowActive && wasActive) {
-        event.slots.availableSlots += 1;
+        event.slots[category].available += 1;
       }
 
       team.status = status;
@@ -966,16 +969,58 @@ export const getEventStats = async (req, res) => {
       return acc;
     }, {});
 
-    res.json({
+    // Helper to calculate used slots
+    const calcUsed = (total, available) => Math.max(0, (total || 0) - (available || 0));
+
+    // Construct detailed slot stats
+    const openSlots = eventDoc.slots.open || {};
+    const officialSlots = eventDoc.slots.official || {};
+
+    const stats = {
       name: eventDoc.name,
-      totalSlots: eventDoc.slots.totalSlots,
-      availableSlots: eventDoc.slots.availableSlots,
-      usedSlots: eventDoc.slots.totalSlots - eventDoc.slots.availableSlots,
+      // Aggregates
+      totalSlots: (openSlots.total || 0) + (officialSlots.total || 0),
+      availableSlots: (openSlots.available || 0) + (officialSlots.available || 0),
+      usedSlots: calcUsed((openSlots.total || 0), (openSlots.available || 0)) + calcUsed((officialSlots.total || 0), (officialSlots.available || 0)),
+
+      // Registration Counts
       totalRegistrations: participation.total,
       officialCount: participation.official,
       nonOfficialCount: participation.nonOfficial,
+
+      // Detailed Breakdown
+      slots: {
+        open: {
+          total: openSlots.total || 0,
+          available: openSlots.available || 0,
+          used: calcUsed(openSlots.total, openSlots.available),
+          male: {
+            available: (openSlots.gender?.male || 0),
+            // Since we only maintain one number for gender specific (available/total combined semantically as 'remaining'), 
+            // let's just show that value as 'available'. Total logic might need more fields if tracking is required.
+            // For now, mirroring user's structure.
+          },
+          female: {
+            available: (openSlots.gender?.female || 0),
+          }
+        },
+        official: {
+          total: officialSlots.total || 0,
+          available: officialSlots.available || 0,
+          used: calcUsed(officialSlots.total, officialSlots.available),
+          male: {
+            available: (officialSlots.gender?.male || 0)
+          },
+          female: {
+            available: (officialSlots.gender?.female || 0)
+          }
+        }
+      },
+
       collegeWise: collegeCounts
-    });
+    };
+
+    res.json(stats);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -1209,7 +1254,7 @@ export const getFestRegistrations = async (req, res) => {
       const objectIdAccess = req.user.access
         .filter(id => mongoose.isValidObjectId(id))
         .map(id => new mongoose.Types.ObjectId(id));
-        
+
       query.$or = [
         { _id: { $in: objectIdAccess } },
         { id: { $in: req.user.access } }
@@ -1252,7 +1297,18 @@ export const getFestRegistrations = async (req, res) => {
 // Update event details (Admin)
 export const updateEventDetails = async (req, res) => {
   const { eventId } = req.params;
-  const { price, slotsChange, isOpen, officialOnly, specificSlotsUpdate, club, eventType } = req.body;
+  const {
+    price,
+    slotsChange, // Legacy: assumed to be for 'open' category if not specific
+    totalSlots,  // Legacy: assumed to be for 'open' category
+    officialTotalSlots,
+    officialSlotsChange,
+    isOpen,
+    officialOnly,
+    specificSlotsUpdate,
+    club,
+    eventType
+  } = req.body;
 
   try {
     const event = await Event.findOne({ $or: [{ _id: eventId }, { id: eventId }] });
@@ -1270,29 +1326,45 @@ export const updateEventDetails = async (req, res) => {
       event.price = price;
     }
 
-    // Update Slots
-    // Update Slots
-    let delta = 0;
-    if (slotsChange !== undefined) delta = Number(slotsChange);
+    // --- Slot Update Logic ---
 
-    // Allow setting absolute totalSlots (overrides slotsChange if both present, or calculates delta)
-    if (req.body.totalSlots !== undefined) {
-      const targetTotal = Number(req.body.totalSlots);
-      if (Number.isNaN(targetTotal) || !Number.isFinite(targetTotal) || targetTotal < 0) {
-        return res.status(400).json({ message: "Total slots must be a non-negative number" });
+    // Helper to update a specific slot category
+    const updateSlotCategory = (category, change, absoluteTotal) => {
+      const currentTotal = event.slots[category].total;
+      const currentAvailable = event.slots[category].available;
+
+      let delta = 0;
+      if (absoluteTotal !== undefined) {
+        const targetTotal = Number(absoluteTotal);
+        if (Number.isNaN(targetTotal) || !Number.isFinite(targetTotal) || targetTotal < 0) {
+          throw new Error(`Total slots for ${category} must be a non-negative number`);
+        }
+        delta = targetTotal - currentTotal;
+      } else if (change !== undefined) {
+        delta = Number(change);
+        if (Number.isNaN(delta)) throw new Error(`Invalid change value for ${category}`);
       }
-      delta = targetTotal - event.slots.totalSlots;
+
+      if (delta !== 0) {
+        const newTotal = currentTotal + delta;
+        const newAvailable = currentAvailable + delta;
+
+        if (newTotal < 0) throw new Error(`${category} total slots cannot be negative`);
+        if (newAvailable < 0) throw new Error(`Cannot reduce ${category} capacity below occupied slots (Negative availability).`);
+
+        event.slots[category].total = newTotal;
+        event.slots[category].available = newAvailable;
+      }
+    };
+
+    // 1. Update Open Slots (using specific or legacy fields)
+    if (totalSlots !== undefined || slotsChange !== undefined) {
+      updateSlotCategory('open', slotsChange, totalSlots);
     }
 
-    if (delta !== 0) {
-      const newTotal = event.slots.totalSlots + delta;
-      const newAvailable = event.slots.availableSlots + delta;
-
-      if (newTotal < 0) return res.status(400).json({ message: "Total slots cannot be negative" });
-      if (newAvailable < 0) return res.status(400).json({ message: "Cannot reduce capacity below the number of currently occupied slots." });
-
-      event.slots.totalSlots = newTotal;
-      event.slots.availableSlots = newAvailable;
+    // 2. Update Official Slots
+    if (officialTotalSlots !== undefined || officialSlotsChange !== undefined) {
+      updateSlotCategory('official', officialSlotsChange, officialTotalSlots);
     }
 
     // Update Registration Status
@@ -1300,41 +1372,57 @@ export const updateEventDetails = async (req, res) => {
     if (officialOnly !== undefined) event.registration.officialOnly = officialOnly;
 
     // Update Specific Slots (Gender Based)
+    // Note: This logic assumes these specific slots belong to 'open', unless we want to support 'official' specific slots too.
+    // For now, keeping it simpler or inferring based on structure updates if needed.
+    // The previous implementation used event.specificSlots (Map) which is deprecated. 
+    // We should now update event.slots.open.totalMale/availableMale etc.
+
     if (specificSlotsUpdate) {
+      // TODO: Refactor this to support new schema if specificSlotsUpdate is used for gender counts
+      // Currently, mapped to root-level specificSlots in previous code, checking if we need to migrate or redirect.
+      // The new schema has slots.open.male/female etc.
+
       const ALLOWED_SLOT_KEYS = ["male", "female"];
+
+      // Let's assume updates are for 'open' category unless specified in key? 
+      // Or usually gender specific events are just one pool split by gender.
+      // If isGenderSpecific is true, we might need to update open.male/female.
+
       for (const [key, value] of Object.entries(specificSlotsUpdate)) {
-        if (!ALLOWED_SLOT_KEYS.includes(key)) {
-          console.warn(`[updateEventDetails] Skipping unknown slot key: ${key}`);
-          continue;
-        }
+        if (!ALLOWED_SLOT_KEYS.includes(key)) continue;
 
-        const numValue = Number(value);
-        if (isNaN(numValue) || !Number.isFinite(numValue) || numValue < 0) {
-          console.warn(`[updateEventDetails] Skipping invalid slot value for ${key}: ${value}`);
-          continue;
-        }
+        const numValue = Number(value); // This is absolute value usually? Or change?
+        // Looking at previous code, it set the value directly: event.specificSlots[key] = numValue.
 
-        if (event.specificSlots) {
-          // If Map
-          if (typeof event.specificSlots.set === 'function') {
-            event.specificSlots.set(key, numValue);
-          } else {
-            event.specificSlots[key] = numValue;
-          }
-        }
+        // Let's treat it as setting the TOTAL for that gender in OPEN category for now
+        // and adjusting available accordingly.
+
+        const category = 'open'; // Defaulting to open
+        const fieldTotal = key; // 'male' or 'female'
+        const fieldAvailable = key === 'male' ? 'availableMale' : 'availableFemale';
+
+        const oldTotal = event.slots[category][fieldTotal];
+        const oldAvailable = event.slots[category][fieldAvailable];
+
+        const diff = numValue - oldTotal;
+
+        event.slots[category][fieldTotal] = numValue;
+        event.slots[category][fieldAvailable] = oldAvailable + diff;
       }
     }
 
+    // Ensure we mark modified
+    event.markModified('slots');
     event.markModified('registration');
-    event.markModified('specificSlots');
     event.markModified('club');
     event.markModified('eventType');
+
     await event.save();
 
     res.json({ success: true, message: "Event updated successfully", event });
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 
@@ -1343,8 +1431,8 @@ export const getPublicGlobalSettings = async (req, res) => {
   try {
     const settings = await GlobalSettings.getSettings();
     res.json({
-        registrationsOpen: settings.registrationsOpen,
-        passControl: settings.passControl
+      registrationsOpen: settings.registrationsOpen,
+      passControl: settings.passControl
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -1439,11 +1527,28 @@ export const getDetailedAnalytics = async (req, res) => {
                 name: 1,
                 club: 1,
                 totalRegistrations: { $add: [{ $size: "$registrations.participants" }, { $size: "$registrations.teams" }] },
-                capacity: "$slots.totalSlots",
+                // Calculate capacity as sum of open and official totals
+                capacity: { $add: [{ $ifNull: ["$slots.open.total", 0] }, { $ifNull: ["$slots.official.total", 0] }] },
+                // Calculate occupancy based on available slots in both categories
                 occupancy: {
                   $cond: [
-                    { $gt: ["$slots.totalSlots", 0] },
-                    { $multiply: [{ $divide: [{ $subtract: ["$slots.totalSlots", "$slots.availableSlots"] }, "$slots.totalSlots"] }, 100] },
+                    { $gt: [{ $add: [{ $ifNull: ["$slots.open.total", 0] }, { $ifNull: ["$slots.official.total", 0] }] }, 0] },
+                    {
+                      $multiply: [
+                        {
+                          $divide: [
+                            {
+                              $subtract: [
+                                { $add: [{ $ifNull: ["$slots.open.total", 0] }, { $ifNull: ["$slots.official.total", 0] }] },
+                                { $add: [{ $ifNull: ["$slots.open.available", 0] }, { $ifNull: ["$slots.official.available", 0] }] }
+                              ]
+                            },
+                            { $add: [{ $ifNull: ["$slots.open.total", 0] }, { $ifNull: ["$slots.official.total", 0] }] }
+                          ]
+                        },
+                        100
+                      ]
+                    },
                     0
                   ]
                 },
@@ -1488,7 +1593,7 @@ export const getDetailedAnalytics = async (req, res) => {
         $facet: {
           genderDist: [
             // Only global admins see full demographics
-            ...(isMaster || isRegistration ? [] : [{ $match: { _id: { $exists: false } } }]), 
+            ...(isMaster || isRegistration ? [] : [{ $match: { _id: { $exists: false } } }]),
             { $group: { _id: "$gender", count: { $sum: 1 } } }
           ],
           onboarding: [
