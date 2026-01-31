@@ -15,9 +15,16 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: null,
-            available: null
+            open: {
+                total: null,
+                available: null
+            },
+            official: {
+                total: null,
+                available: null
+            }
         },
+        isPricePerPerson: false,
         rounds: 2,
         rounddetails: [
             {
@@ -70,9 +77,16 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: null,
-            available: null
+            open: {
+                total: null,
+                available: null
+            },
+            official: {
+                total: null,
+                available: null
+            }
         },
+        isPricePerPerson: false,
         rounds: 2,
         rounddetails: [
             {
@@ -125,9 +139,16 @@ const eventsData = [
         },
         teampercollege: 2,
         slots: {
-            total: null,
-            available: null
+            open: {
+                total: null,
+                available: null
+            },
+            official: {
+                total: null,
+                available: null
+            }
         },
+        isPricePerPerson: false,
         rounds: 1,
         rounddetails: [
             {
@@ -176,9 +197,16 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: null,
-            available: null
+            open: {
+                total: null,
+                available: null
+            },
+            official: {
+                total: null,
+                available: null
+            }
         },
+        isPricePerPerson: false,
         rounds: 1,
         rounddetails: [
             {
@@ -225,9 +253,16 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: null,
-            available: null
+            open: {
+                total: null,
+                available: null
+            },
+            official: {
+                total: null,
+                available: null
+            }
         },
+        isPricePerPerson: false,
         rounds: 1,
         rounddetails: [
             {
@@ -274,9 +309,16 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: 80,
-            available: 80
+            open: {
+                total: 80,
+                available: 80
+            },
+            official: {
+                total: null,
+                available: null
+            }
         },
+        isPricePerPerson: false,
         rounds: 3,
         rounddetails: [
             {
@@ -352,9 +394,16 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: null,
-            available: null
+            open: {
+                total: null,
+                available: null
+            },
+            official: {
+                total: null,
+                available: null
+            }
         },
+        isPricePerPerson: true,
         rounds: 1,
         rounddetails: [
             {
@@ -407,9 +456,16 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: null,
-            available: null
+            open: {
+                total: null,
+                available: null
+            },
+            official: {
+                total: null,
+                available: null
+            }
         },
+        isPricePerPerson: false,
         rounds: 1,
         rounddetails: [
             {
@@ -462,9 +518,16 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: null,
-            available: null
+            open: {
+                total: null,
+                available: null
+            },
+            official: {
+                total: null,
+                available: null
+            }
         },
+        isPricePerPerson: false,
         rounds: 2,
         rounddetails: [
             {
@@ -517,9 +580,16 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: null,
-            available: null
+            open: {
+                total: null,
+                available: null
+            },
+            official: {
+                total: null,
+                available: null
+            }
         },
+        isPricePerPerson: false,
         rounds: 2,
         rounddetails: [
             {
@@ -573,9 +643,16 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: null,
-            available: null
+            open: {
+                total: null,
+                available: null
+            },
+            official: {
+                total: null,
+                available: null
+            }
         },
+        isPricePerPerson: false,
         rounds: 1,
         rounddetails: [
             {
@@ -624,9 +701,16 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: null,
-            available: null
+            open: {
+                total: null,
+                available: null
+            },
+            official: {
+                total: null,
+                available: null
+            }
         },
+        isPricePerPerson: false,
         rounds: 1,
         rounddetails: [
             {
@@ -677,9 +761,16 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: 10,
-            available: 10
+            open: {
+                total: 10,
+                available: 10
+            },
+            official: {
+                total: null,
+                available: null
+            }
         },
+        isPricePerPerson: false,
         rounds: 2,
         rounddetails: [
             {
@@ -739,9 +830,16 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: 20,
-            available: 20
+            open: {
+                total: 20,
+                available: 20
+            },
+            official: {
+                total: null,
+                available: null
+            }
         },
+        isPricePerPerson: false,
         rounds: 2,
         rounddetails: [
             {
@@ -805,9 +903,16 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: 40,
-            available: 40
+            open: {
+                total: 40,
+                available: 40
+            },
+            official: {
+                total: null,
+                available: null
+            }
         },
+        isPricePerPerson: false,
         rounds: 3,
         rounddetails: [
             {
@@ -870,9 +975,16 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: 40,
-            available: 40
+            open: {
+                total: 40,
+                available: 40
+            },
+            official: {
+                total: null,
+                available: null
+            }
         },
+        isPricePerPerson: false,
         rounds: 2,
         rounddetails: [
             {
@@ -931,9 +1043,16 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: null,
-            available: null
+            open: {
+                total: null,
+                available: null
+            },
+            official: {
+                total: null,
+                available: null
+            }
         },
+        isPricePerPerson: false,
         rounds: 1,
         rounddetails: [
             {
@@ -989,9 +1108,16 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: null,
-            available: null
+            open: {
+                total: null,
+                available: null
+            },
+            official: {
+                total: null,
+                available: null
+            }
         },
+        isPricePerPerson: false,
         rounds: 1,
         rounddetails: [
             {
@@ -1045,9 +1171,16 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: null,
-            available: null
+            open: {
+                total: null,
+                available: null
+            },
+            official: {
+                total: null,
+                available: null
+            }
         },
+        isPricePerPerson: false,
         rounds: 1,
         rounddetails: [
             {
@@ -1096,9 +1229,16 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: 15,
-            available: 15
+            open: {
+                total: 15,
+                available: 15
+            },
+            official: {
+                total: null,
+                available: null
+            }
         },
+        isPricePerPerson: false,
         rounds: 2,
         rounddetails: [
             {
@@ -1152,9 +1292,16 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: null,
-            available: null
+            open: {
+                total: null,
+                available: null
+            },
+            official: {
+                total: null,
+                available: null
+            }
         },
+        isPricePerPerson: false,
         rounds: 2,
         rounddetails: [
             {
@@ -1207,9 +1354,28 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: 30,
-            available: 30
+            open: {
+                male: {
+                    total: 15,
+                    available: 15
+                },
+                female: {
+                    total: 15,
+                    available: 15
+                }
+            },
+            official: {
+                male: {
+                    total: null,
+                    available: null
+                },
+                female: {
+                    total: null,
+                    available: null
+                }
+            }
         },
+        isPricePerPerson: false,
         rounds: 3,
         rounddetails: [
             {
@@ -1272,9 +1438,28 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: null,
-            available: null
+            open: {
+                male: {
+                    total: null,
+                    available: null
+                },
+                female: {
+                    total: null,
+                    available: null
+                }
+            },
+            official: {
+                male: {
+                    total: null,
+                    available: null
+                },
+                female: {
+                    total: null,
+                    available: null
+                }
+            }
         },
+        isPricePerPerson: false,
         rounds: 3,
         rounddetails: [
             {
@@ -1345,9 +1530,16 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: null,
-            available: null
+            open: {
+                total: null,
+                available: null
+            },
+            official: {
+                total: null,
+                available: null
+            }
         },
+        isPricePerPerson: false,
         rounds: 1,
         rounddetails: [
             {
@@ -1398,9 +1590,16 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: null,
-            available: null
+            open: {
+                total: null,
+                available: null
+            },
+            official: {
+                total: null,
+                available: null
+            }
         },
+        isPricePerPerson: false,
         rounds: 1,
         rounddetails: [
             {
@@ -1457,9 +1656,16 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: null,
-            available: null
+            open: {
+                total: null,
+                available: null
+            },
+            official: {
+                total: null,
+                available: null
+            }
         },
+        isPricePerPerson: false,
         rounds: 2,
         rounddetails: [
             {
@@ -1529,9 +1735,16 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: 80,
-            available: 80
+            open: {
+                total: 80,
+                available: 80
+            },
+            official: {
+                total: null,
+                available: null
+            }
         },
+        isPricePerPerson: false,
         rounds: 1,
         rounddetails: [
             {
@@ -1596,9 +1809,16 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: 80,
-            available: 80
+            open: {
+                total: 80,
+                available: 80
+            },
+            official: {
+                total: null,
+                available: null
+            }
         },
+        isPricePerPerson: false,
         rounds: 3,
         rounddetails: [
             {
@@ -1654,76 +1874,83 @@ const eventsData = [
         whatsapplink: ""
     },
     {
-    id: 29,
-    slug: "photography-silver",
-    title: "PHOTOGRAPHY",
-    subtitle: "On-the-Spot Theme",
-    description: "A solo photography competition where participants capture compelling images based on an on-the-spot theme, judged on creativity, composition, and overall impact.",
-    club: "Media",
-    tier: "Silver",
-    type: "Solo",
-    registartionfee: null,
-    team: {
-        min: 1,
-        max: 1
-    },
-    teampercollege: null,
-    slots: {
-        total: null,
-        available: null
-    },
-    rounds: 1,
-    rounddetails: [
-        {
-            round: 1,
-            description: "Final Round — Participants submit two best photographs based on the on-the-spot theme."
-        }
-    ],
-    venue: null,
-    date: null,
-    time: null,
-    rules: [
-        "The theme will be disclosed on the day of the event",
-        "Photographs must be clicked strictly based on the given theme",
-        "Photos must be in JPG or JPEG format only",
-        "Minimal photo editing is permissible; altering the photograph is not allowed",
-        "Participants must submit their best two photographs only",
-        "In case of multiple submissions, only the first two photos submitted will be considered",
-        "Any suspected altered photograph will be rejected",
-        "The submitted photograph must be original work of the participant",
-        "Photographs must not have been previously published in any media",
-        "Submission must be done via Google Drive link shared on the WhatsApp group before deadline",
-        "Judging criteria includes theme interpretation, composition, creativity, and overall impact",
-        "Organizing Committee’s decision will be final"
-    ],
-    contact: [
-        {
-        name: "Goureesh Hiremath",
-        contact: "9902434746"
+        id: 29,
+        slug: "photography-silver",
+        title: "PHOTOGRAPHY",
+        subtitle: "On-the-Spot Theme",
+        description: "A solo photography competition where participants capture compelling images based on an on-the-spot theme, judged on creativity, composition, and overall impact.",
+        club: "Media",
+        tier: "Silver",
+        type: "Solo",
+        registartionfee: null,
+        team: {
+            min: 1,
+            max: 1
         },
-        {
-        name: "Vedant Kangralkar",
-        contact: "6363816784"
+        teampercollege: null,
+        slots: {
+            open: {
+                total: null,
+                available: null
+            },
+            official: {
+                total: null,
+                available: null
+            }
         },
-        {
-        name: "Akash Patil",
-        contact: "7619482051"
-        },
-        {
-        name: "Ganesh Tudvekar",
-        contact: "9886811751"
-        }
-   ],
-    resgitartions: [
-        {
-            pearticpants: [],
-            teams: []
-        }
-    ],
-    status: "Open",
-    createdAt: "2024-06-15T10:00:00Z",
-    updatedAt: "2024-06-15T10:00:00Z",
-    whatsapplink: ""
+        isPricePerPerson: false,
+        rounds: 1,
+        rounddetails: [
+            {
+                round: 1,
+                description: "Final Round — Participants submit two best photographs based on the on-the-spot theme."
+            }
+        ],
+        venue: null,
+        date: null,
+        time: null,
+        rules: [
+            "The theme will be disclosed on the day of the event",
+            "Photographs must be clicked strictly based on the given theme",
+            "Photos must be in JPG or JPEG format only",
+            "Minimal photo editing is permissible; altering the photograph is not allowed",
+            "Participants must submit their best two photographs only",
+            "In case of multiple submissions, only the first two photos submitted will be considered",
+            "Any suspected altered photograph will be rejected",
+            "The submitted photograph must be original work of the participant",
+            "Photographs must not have been previously published in any media",
+            "Submission must be done via Google Drive link shared on the WhatsApp group before deadline",
+            "Judging criteria includes theme interpretation, composition, creativity, and overall impact",
+            "Organizing Committee’s decision will be final"
+        ],
+        contact: [
+            {
+                name: "Goureesh Hiremath",
+                contact: "9902434746"
+            },
+            {
+                name: "Vedant Kangralkar",
+                contact: "6363816784"
+            },
+            {
+                name: "Akash Patil",
+                contact: "7619482051"
+            },
+            {
+                name: "Ganesh Tudvekar",
+                contact: "9886811751"
+            }
+        ],
+        resgitartions: [
+            {
+                pearticpants: [],
+                teams: []
+            }
+        ],
+        status: "Open",
+        createdAt: "2024-06-15T10:00:00Z",
+        updatedAt: "2024-06-15T10:00:00Z",
+        whatsapplink: ""
     },
     {
         id: 30,
@@ -1741,9 +1968,16 @@ const eventsData = [
         },
         teampercollege: 1,
         slots: {
-            total: null,
-            available: null
+            open: {
+                total: null,
+                available: null
+            },
+            official: {
+                total: null,
+                available: null
+            }
         },
+        isPricePerPerson: false,
         rounds: 1,
         rounddetails: [
             {
@@ -1767,22 +2001,22 @@ const eventsData = [
         ],
         contact: [
             {
-            name: "Goureesh Hiremath",
-            contact: "9902434746"
+                name: "Goureesh Hiremath",
+                contact: "9902434746"
             },
             {
-            name: "Vedant Kangralkar",
-            contact: "6363816784"
+                name: "Vedant Kangralkar",
+                contact: "6363816784"
             },
             {
-            name: "Akash Patil",
-            contact: "7619482051"
+                name: "Akash Patil",
+                contact: "7619482051"
             },
             {
-            name: "Ganesh Tudvekar",
-            contact: "9886811751"
+                name: "Ganesh Tudvekar",
+                contact: "9886811751"
             }
-    ],
+        ],
         resgitartions: [
             {
                 pearticpants: [],
@@ -1810,9 +2044,16 @@ const eventsData = [
         },
         teampercollege: null,
         slots: {
-            total: null,
-            available: null
+            open: {
+                total: null,
+                available: null
+            },
+            official: {
+                total: null,
+                available: null
+            }
         },
+        isPricePerPerson: false,
         rounds: 1,
         rounddetails: [
             {
@@ -1835,20 +2076,20 @@ const eventsData = [
         ],
         contact: [
             {
-            name: "Goureesh Hiremath",
-            contact: "9902434746"
+                name: "Goureesh Hiremath",
+                contact: "9902434746"
             },
             {
-            name: "Vedant Kangralkar",
-            contact: "6363816784"
+                name: "Vedant Kangralkar",
+                contact: "6363816784"
             },
             {
-            name: "Akash Patil",
-            contact: "7619482051"
+                name: "Akash Patil",
+                contact: "7619482051"
             },
             {
-            name: "Ganesh Tudvekar",
-            contact: "9886811751"
+                name: "Ganesh Tudvekar",
+                contact: "9886811751"
             }
         ],
         resgitartions: [
