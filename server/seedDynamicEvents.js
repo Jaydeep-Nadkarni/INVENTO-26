@@ -45,7 +45,7 @@ const mapSlots = (event) => {
         official: { total: 0, available: 0, gender: { male: 0, female: 0 } }
     };
 
-    // Helper to safely get number or null
+    // Help to safely get number or use specialized default
     const getNum = (val, defaultVal = 0) => (val !== null && val !== undefined ? val : defaultVal);
 
     // Process 'open' and 'official' categories
@@ -66,24 +66,26 @@ const mapSlots = (event) => {
 
         if (isGenderSpecific) {
             // Gender Specific Logic
-            // Source might be { open: { gender: { male: X, female: Y } } } or flat
-            // The user requested structure: open: { total, available, gender: { male, female } }
-            // Let's assume input source follows the same or we adapt it.
-            // If source has sourceCat.gender.male -> use it.
-            // If source has sourceCat.male -> use it (old structure compatibility).
+            // Default gendered platinum events to 15 if null
+            const defaultGenderVal = 15;
+            const maleTotal = getNum(sourceCat.gender?.male, getNum(sourceCat.male?.total, defaultGenderVal));
+            const femaleTotal = getNum(sourceCat.gender?.female, getNum(sourceCat.female?.total, defaultGenderVal));
 
-            const maleVal = getNum(sourceCat.gender?.male) || getNum(sourceCat.male?.available) || 0;
-            const femaleVal = getNum(sourceCat.gender?.female) || getNum(sourceCat.female?.available) || 0;
+            // Set Available = Total initially
+            dbSlots[category].gender.male = maleTotal;
+            dbSlots[category].gender.female = femaleTotal;
 
-            dbSlots[category].gender.male = maleVal;
-            dbSlots[category].gender.female = femaleVal;
+            // For categories like 'open', we might still want an aggregate total
+            dbSlots[category].total = maleTotal + femaleTotal;
+            dbSlots[category].available = maleTotal + femaleTotal;
         } else {
             // Non-Gender Specific Logic
             // Apply default of 40 ONLY for 'open' category if values are missing/null
             const defaultTotal = category === 'open' ? 40 : 0;
 
-            dbSlots[category].total = getNum(sourceCat.total, defaultTotal);
-            dbSlots[category].available = getNum(sourceCat.available, defaultTotal);
+            const total = getNum(sourceCat.total, defaultTotal);
+            dbSlots[category].total = total;
+            dbSlots[category].available = total; // Set Available = Total initially
         }
     });
 
@@ -111,30 +113,39 @@ const seed = async () => {
             const isGenderSpecific = event.isGenderSpecific || false;
             const slots = mapSlots(event);
 
+            // SAFE UPDATE: Only update static metadata, NEVER overwrite:
+            // - registrations (participants/teams)
+            // - slots.available (dynamic field)
+            // - paymentId references
+
             const updateDoc = {
-                id: (event.id || "").toString(),
                 name: event.title,
+                subtitle: event.subtitle,
+                description: event.description,
                 club: event.club,
+                tier: event.tier,
                 eventType: event.type,
-                whatsapplink: event.whatsapplink,
+                minTeamSize: event.team?.min || 1,
+                maxTeamSize: event.team?.max || 1,
+                rules: event.rules || [],
+                rounddetails: event.roundDetails || [],
+                contact: event.contact || [],
+                logistics: {
+                    venue: event.venue || "TBD",
+                    date: event.date || "TBD"
+                },
+                whatsapplink: event.whatsapplink || "",
                 isGenderSpecific,
                 isPricePerPerson: event.isPricePerPerson || false,
                 price: event.registartionfee || 0,
-                // Only set slots if it's a new document OR we want to reset them logic (usually seeding resets static config)
-                // However, preserving 'available' counts is crucial if we don't want to reset capacity.
-                // But the user's request implies restructuring, so we MUST update structure. 
-                // We'll set slots on seed. Ideally, we shouldn't overwrite if registrations exist, 
-                // but for this structure migration, we might have to. 
-                // The mapSlots function returns 'available' based on static file. 
-                // If registrations exist, 'available' should be re-calculated or preserved.
-                // For now, let's just update the structure as that is the user's immediate need to fix the bug.
-                slots: slots,
 
-                registration: {
-                    isOpen: event.status === "Open",
-                    officialTeamsPerCollege: event.teampercollege || 3,
-                    officialOnly: false
-                }
+                // Only update total slot counts, NEVER touch available
+                'slots.open.total': slots.open.total,
+                'slots.official.total': slots.official.total,
+
+                'registration.isOpen': event.status === "Open",
+                'registration.officialTeamsPerCollege': event.teampercollege || 3,
+                'registration.officialOnly': false
             };
 
             return {
@@ -142,8 +153,19 @@ const seed = async () => {
                     filter: { _id: event.slug },
                     update: {
                         $set: updateDoc,
+                        // ONLY set these fields if document is NEW (insert)
                         $setOnInsert: {
-                            registrations: { participants: [], teams: [] } // Initialize only if new
+                            registrations: { participants: [], teams: [] },
+                            'slots.open.available': slots.open.available,
+                            'slots.official.available': slots.official.available,
+                            // Initialize gender counts ONLY on insert to prevent overwriting reg counts
+                            ...(isGenderSpecific && {
+                                'slots.open.gender.male': slots.open.gender.male,
+                                'slots.open.gender.female': slots.open.gender.female,
+                                'slots.official.gender.male': slots.official.gender.male,
+                                'slots.official.gender.female': slots.official.gender.female
+                            }),
+                            createdAt: new Date()
                         }
                     },
                     upsert: true
