@@ -23,6 +23,7 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
       lowercase: true,
+      index: true
     },
     emailVerified: {
       type: Boolean,
@@ -47,35 +48,42 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    // Fest-related fields
+    passType: {
+      type: String,
+      enum: ["AAA", "A", "G", "VIP"],
+      default: "G",
+      description: "Fest pass category"
+    },
     isOfficial: {
       type: Boolean,
       default: false,
+      description: "Whether user is part of official college contingent"
     },
+    isPresent: {
+      type: Boolean,
+      default: false,
+      index: true,
+      description: "Automatically set to true when marked present in ANY event"
+    },
+
+    // Registration tracking
     registeredEvents: {
       type: [String],
       default: [],
+      description: "Array of event IDs user has registered for"
     },
     pendingDues: {
       type: Number,
       default: 0,
     },
-    // Payment flag
     payment: {
       type: Boolean,
       default: false,
     },
-    // Pass type (AAA, A, G, VIP)
-    passType: {
-      type: String,
-      enum: ["AAA", "A", "G", "VIP"],
-      default: "G",
-    },
-    // Attendance flag
-    present: {
-      type: Boolean,
-      default: false,
-    },
-    // Role for authorization
+
+    // Authorization
     role: {
       type: String,
       enum: ["USER", "ADMIN", "COORDINATOR"],

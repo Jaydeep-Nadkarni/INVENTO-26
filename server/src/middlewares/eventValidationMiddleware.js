@@ -15,8 +15,7 @@ export const registrationSchema = [
     param("id").notEmpty().withMessage("Event ID is required"),
     body("isOfficial").optional().isBoolean(),
     body("contingentKey").optional().isString(),
-
-    // Conditional validation based on eventType (we'll check it in the logic middleware)
+    body("inventoId").optional().matches(/^inv\d{5}$/i).withMessage("Invalid Invento ID format (expected: inv00001)"),
 ];
 
 // Middleware to catch express-validator errors
@@ -45,19 +44,27 @@ export const validateRegistrationLogic = async (req, res, next) => {
             throw new RegistrationClosedError();
         }
 
-        // 5. Check Gender-based Event Type (Master/Miss/Mr/Ms)
-        const isMasterMiss = /master|miss|mr\.|ms\./i.test(event.name);
+        // Determine slot category based on registration type
+        const category = isOfficial ? "official" : "open";
+        const isGenderSpecific = event.isGenderSpecific === true;
 
-        // 3. Check slots availability (Soft check)
-        // For gender-based events, we skip this and check specific slots later
-        if (!isMasterMiss && event.slots.availableSlots <= 0) {
-            throw new SlotFullError();
+        // 3. Check slots availability (General check for non-gender events)
+        if (!isGenderSpecific) {
+            const availableSlots = event.slots?.[category]?.available || 0;
+            if (availableSlots <= 0) {
+                throw new SlotFullError(`No ${category} slots available for this event`);
+            }
         }
 
         // SOLO Event Logic
         if (event.eventType === "SOLO") {
             if (!inventoId) {
                 return res.status(400).json({ message: "Invento ID is required for SOLO events" });
+            }
+
+            // Validate inventoId format
+            if (!/^inv\d{5}$/i.test(inventoId)) {
+                return res.status(400).json({ message: "Invalid Invento ID format (expected: inv00001)" });
             }
 
             const user = await User.findById(inventoId);
@@ -71,31 +78,36 @@ export const validateRegistrationLogic = async (req, res, next) => {
                 throw new DuplicateRegistrationError();
             }
 
-            // 5b. Gender Check (Master/Miss)
-            if (isMasterMiss) {
-                let slotKey = null;
+            // 5. Gender-Specific Slot Check
+            if (isGenderSpecific) {
                 const gender = user.gender?.toLowerCase();
-                if (gender === "male") slotKey = "male";
-                else if (gender === "female") slotKey = "female";
+                const slotKey = (gender === "male") ? "male" : (gender === "female") ? "female" : null;
 
                 if (!slotKey) {
                     throw new InvalidGenderError("Gender must be Male or Female for this event");
                 }
 
-                const availableGenderSlots = (typeof event.specificSlots?.get === "function" 
-                    ? event.specificSlots.get(slotKey) 
-                    : event.specificSlots?.[slotKey]) || 0;
+                // NEW SCHEMA: slots.open.gender.male or slots.official.gender.male
+                const availableGenderSlots = event.slots?.[category]?.gender?.[slotKey] || 0;
 
                 if (availableGenderSlots <= 0) {
-                    throw new SlotFullError(`No slots available for ${user.gender} participants`);
+                    throw new SlotFullError(`No ${category} slots available for ${user.gender} participants`);
                 }
             }
         }
 
         // TEAM Event Logic
         else if (event.eventType === "TEAM") {
-            if (!teamName) {
+            if (!teamName || !teamName.trim()) {
                 return res.status(400).json({ message: "Team name is required for TEAM events" });
+            }
+
+            // Check team name uniqueness within this event
+            const teamExists = event.registrations.teams.some(t =>
+                t.teamName.toLowerCase() === teamName.trim().toLowerCase()
+            );
+            if (teamExists) {
+                return res.status(400).json({ message: "Team name already exists for this event" });
             }
 
             let memberList = members;
@@ -109,9 +121,21 @@ export const validateRegistrationLogic = async (req, res, next) => {
                 return res.status(400).json({ message: "Members must be an array" });
             }
 
+            // Validate all member IDs format
+            for (const memberId of memberList) {
+                if (!/^inv\d{5}$/i.test(memberId)) {
+                    return res.status(400).json({
+                        message: `Invalid Invento ID format for member: ${memberId} (expected: inv00001)`
+                    });
+                }
+            }
+
             // 6. Team Size Check
-            if (memberList.length < (event.minTeamSize || 1) || memberList.length > (event.maxTeamSize || 10)) {
-                throw new TeamSizeError(`Team size must be between ${event.minTeamSize || 1} and ${event.maxTeamSize || 10}`);
+            const minSize = event.minTeamSize || 1;
+            const maxSize = event.maxTeamSize || 10;
+
+            if (memberList.length < minSize || memberList.length > maxSize) {
+                throw new TeamSizeError(`Team size must be between ${minSize} and ${maxSize}`);
             }
 
             // 7. Duplicate Check for Team Members

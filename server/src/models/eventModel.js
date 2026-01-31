@@ -49,6 +49,7 @@ const eventSchema = new mongoose.Schema({
         clgName: String,
         paid: { type: Boolean, default: false },
         paymentId: { type: String },
+        amountPaid: { type: Number, default: 0 }, // Immutable audit trail
         status: {
           type: String,
           enum: ["PENDING", "CONFIRMED", "WAITLIST", "CANCELLED", "DISQUALIFIED"],
@@ -56,7 +57,8 @@ const eventSchema = new mongoose.Schema({
         },
         isOfficial: { type: Boolean, default: false },
         contingentKey: { type: String },
-        isPresent: { type: Boolean, default: false }
+        isPresent: { type: Boolean, default: false },
+        registeredAt: { type: Date, default: Date.now } // Explicit timestamp
       }
     ],
     teams: [
@@ -64,6 +66,7 @@ const eventSchema = new mongoose.Schema({
         teamName: String,
         leaderId: { type: String, required: true },
         paid: { type: Boolean, default: false },
+        amountPaid: { type: Number, default: 0 }, // Immutable audit trail
         status: {
           type: String,
           enum: ["PENDING", "CONFIRMED", "WAITLIST", "CANCELLED", "DISQUALIFIED"],
@@ -72,6 +75,7 @@ const eventSchema = new mongoose.Schema({
         isOfficial: { type: Boolean, default: false },
         contingentKey: { type: String },
         paymentId: { type: String },
+        registeredAt: { type: Date, default: Date.now }, // Explicit timestamp
         members: [
           {
             inventoId: { type: String, required: true },
@@ -86,6 +90,62 @@ const eventSchema = new mongoose.Schema({
     ]
   }
 }, { timestamps: true });
+
+// ========== VALIDATION HOOKS ==========
+// Prevent available > total slot corruption
+eventSchema.pre('save', function (next) {
+  // Validate open category
+  if (this.slots?.open) {
+    if (this.slots.open.available > this.slots.open.total) {
+      return next(new Error(`Open available slots (${this.slots.open.available}) cannot exceed total (${this.slots.open.total})`));
+    }
+
+    // Validate gender slots if gender-specific
+    if (this.isGenderSpecific && this.slots.open.gender) {
+      const totalGender = (this.slots.open.gender.male || 0) + (this.slots.open.gender.female || 0);
+      if (totalGender > this.slots.open.total) {
+        return next(new Error(`Gender-specific slots (${totalGender}) cannot exceed open total (${this.slots.open.total})`));
+      }
+    }
+  }
+
+  // Validate official category
+  if (this.slots?.official) {
+    if (this.slots.official.available > this.slots.official.total) {
+      return next(new Error(`Official available slots (${this.slots.official.available}) cannot exceed total (${this.slots.official.total})`));
+    }
+
+    if (this.isGenderSpecific && this.slots.official.gender) {
+      const totalGender = (this.slots.official.gender.male || 0) + (this.slots.official.gender.female || 0);
+      if (totalGender > this.slots.official.total) {
+        return next(new Error(`Gender-specific slots (${totalGender}) cannot exceed official total (${this.slots.official.total})`));
+      }
+    }
+  }
+
+  next();
+});
+
+// ========== INDEXES FOR PERFORMANCE ==========
+// Index on club for filtering events by club
+eventSchema.index({ club: 1 });
+
+// Index on registration.isOpen for filtering open/closed events
+eventSchema.index({ 'registration.isOpen': 1 });
+
+// Compound index for participant lookups
+eventSchema.index({ 'registrations.participants.inventoId': 1 });
+eventSchema.index({ 'registrations.participants.paymentId': 1 });
+eventSchema.index({ 'registrations.participants.status': 1 });
+
+// Compound index for team member lookups
+eventSchema.index({ 'registrations.teams.members.inventoId': 1 });
+eventSchema.index({ 'registrations.teams.paymentId': 1 });
+eventSchema.index({ 'registrations.teams.status': 1 });
+
+// Index on createdAt for sorting/filtering by date
+eventSchema.index({ createdAt: 1 });
+eventSchema.index({ updatedAt: 1 });
 
 const Event = mongoose.model("Event", eventSchema);
 export default Event;

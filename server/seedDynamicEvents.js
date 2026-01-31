@@ -111,30 +111,47 @@ const seed = async () => {
             const isGenderSpecific = event.isGenderSpecific || false;
             const slots = mapSlots(event);
 
+            // SAFE UPDATE: Only update static metadata, NEVER overwrite:
+            // - registrations (participants/teams)
+            // - slots.available (dynamic field)
+            // - paymentId references
+
             const updateDoc = {
-                id: (event.id || "").toString(),
                 name: event.title,
+                subtitle: event.subtitle,
+                description: event.description,
                 club: event.club,
+                tier: event.tier,
                 eventType: event.type,
-                whatsapplink: event.whatsapplink,
+                minTeamSize: event.team?.min || 1,
+                maxTeamSize: event.team?.max || 1,
+                rules: event.rules || [],
+                rounddetails: event.roundDetails || [],
+                contact: event.contact || [],
+                logistics: {
+                    venue: event.venue || "TBD",
+                    date: event.date || "TBD"
+                },
+                whatsapplink: event.whatsapplink || "",
                 isGenderSpecific,
                 isPricePerPerson: event.isPricePerPerson || false,
                 price: event.registartionfee || 0,
-                // Only set slots if it's a new document OR we want to reset them logic (usually seeding resets static config)
-                // However, preserving 'available' counts is crucial if we don't want to reset capacity.
-                // But the user's request implies restructuring, so we MUST update structure. 
-                // We'll set slots on seed. Ideally, we shouldn't overwrite if registrations exist, 
-                // but for this structure migration, we might have to. 
-                // The mapSlots function returns 'available' based on static file. 
-                // If registrations exist, 'available' should be re-calculated or preserved.
-                // For now, let's just update the structure as that is the user's immediate need to fix the bug.
-                slots: slots,
 
-                registration: {
-                    isOpen: event.status === "Open",
-                    officialTeamsPerCollege: event.teampercollege || 3,
-                    officialOnly: false
-                }
+                // Only update total slot counts, NEVER touch available
+                'slots.open.total': slots.open.total,
+                'slots.official.total': slots.official.total,
+
+                // For gender-specific events, update gender totals only
+                ...(isGenderSpecific && {
+                    'slots.open.gender.male': slots.open.gender.male,
+                    'slots.open.gender.female': slots.open.gender.female,
+                    'slots.official.gender.male': slots.official.gender.male,
+                    'slots.official.gender.female': slots.official.gender.female
+                }),
+
+                'registration.isOpen': event.status === "Open",
+                'registration.officialTeamsPerCollege': event.teampercollege || 3,
+                'registration.officialOnly': false
             };
 
             return {
@@ -142,8 +159,12 @@ const seed = async () => {
                     filter: { _id: event.slug },
                     update: {
                         $set: updateDoc,
+                        // ONLY set these fields if document is NEW (insert)
                         $setOnInsert: {
-                            registrations: { participants: [], teams: [] } // Initialize only if new
+                            registrations: { participants: [], teams: [] },
+                            'slots.open.available': slots.open.available,
+                            'slots.official.available': slots.official.available,
+                            createdAt: new Date()
                         }
                     },
                     upsert: true

@@ -567,10 +567,22 @@ export const registerForEvent = async (req, res) => {
         throw new Error("All event registrations are currently closed by administration.");
       }
 
-      const {
+      let {
         inventoId, teamName, members, razorpay_order_id, razorpay_payment_id, razorpay_signature,
         isOfficial, contingentKey, paymentId
       } = req.body;
+
+      // SANITIZE TEAM NAME: Remove HTML tags, trim, limit length
+      if (teamName) {
+        teamName = teamName
+          .replace(/<[^>]*>/g, '') // Strip HTML tags
+          .trim()
+          .slice(0, 100); // Max 100 characters
+
+        if (!teamName) {
+          return res.status(400).json({ message: "Team name cannot be empty after sanitization" });
+        }
+      }
 
       const eventIdParam = req.params.id.trim();
       const event = await Event.findOne({ $or: [{ _id: eventIdParam }, { id: eventIdParam }] }).session(session);
@@ -619,6 +631,7 @@ export const registerForEvent = async (req, res) => {
           clgName: user.clgName,
           paid: (event.price > 0 && !isOfficial),
           paymentId: finalPaymentId,
+          amountPaid: (event.price > 0 && !isOfficial) ? event.price : 0,
           status,
           isOfficial: !!isOfficial,
           contingentKey
@@ -634,6 +647,8 @@ export const registerForEvent = async (req, res) => {
           isOfficial: !!isOfficial,
           contingentKey,
           paymentId: finalPaymentId,
+          paid: (event.price > 0 && !isOfficial),
+          amountPaid: (event.price > 0 && !isOfficial) ? event.price : 0,
           members: memberData.map(u => ({
             inventoId: u._id,
             name: u.name,
@@ -678,11 +693,14 @@ export const registerForEvent = async (req, res) => {
         }).catch(err => console.error(`[Registration] Mail Error for ${recipient.email}:`, err.message));
       });
 
-      // We don't necessarily need to await all mails before responding to the user, 
-      // but we do it to maintain current behavior of ensuring mail attempt.
-      await Promise.all(mailPromises);
+      // FIRE-AND-FORGET: Send emails asynchronously without blocking response
+      // Errors are logged but don't affect registration success
+      Promise.all(mailPromises).catch(err =>
+        console.error('[Registration] Email batch error:', err.message)
+      );
     }
 
+    // Respond immediately after DB commit, don't wait for emails
     res.json({ message: "Registration successful", whatsappLink: result.whatsappLink });
   } catch (error) {
     console.error("Registration Error:", error);
@@ -819,6 +837,12 @@ export const updateParticipantAttendance = async (req, res) => {
     event.markModified('registrations.participants');
     await event.save();
 
+    // AUTOMATIC USER FLAG: Set isPresent on User model when marked present in ANY event
+    if (isPresent === true) {
+      await User.findByIdAndUpdate(inventoId, { isPresent: true });
+      console.log(`[Attendance] User ${inventoId} marked present globally`);
+    }
+
     res.status(200).json({ message: `Participant attendance updated to ${isPresent}` });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -901,6 +925,12 @@ export const updateMemberAttendance = async (req, res) => {
     member.isPresent = isPresent;
     event.markModified('registrations.teams');
     await event.save();
+
+    // AUTOMATIC USER FLAG: Set isPresent on User model when marked present in ANY event
+    if (isPresent === true) {
+      await User.findByIdAndUpdate(inventoId, { isPresent: true });
+      console.log(`[Attendance] User ${inventoId} marked present globally`);
+    }
 
     res.status(200).json({ message: `Member attendance updated to ${isPresent}` });
   } catch (error) {
