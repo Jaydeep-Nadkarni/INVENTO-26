@@ -6,7 +6,7 @@ import {
   validateUser,
   inviteVIP
 } from "../controllers/userController.js";
-import { protect, requireOnboarding } from "../middlewares/authMiddleware.js";
+import { protect, requireOnboarding, isMaster } from "../middlewares/authMiddleware.js";
 import upload from "../middlewares/uploadMiddleware.js";
 
 const router = express.Router();
@@ -20,10 +20,10 @@ router.post("/auth/onboarding", upload.single("profilePhoto"), completeOnboardin
 // 🔐 Private Profile (Requires Auth + Onboarding)
 router.get("/profile", protect, requireOnboarding, getProfile);
 
-// 🎫 Public validation endpoint for event pass verification
-router.get("/validate/:userId", validateUser);
+// 🎫 Protected validation endpoint (Prevents PII leak)
+router.get("/validate/:userId", protect, validateUser);
 
-// 🌟 VIP Designation (Public/Internal)
-router.post("/invite-vip", inviteVIP);
+// 🌟 VIP Designation (Master Admin Only)
+router.post("/invite-vip", protect, isMaster, inviteVIP);
 
 export default router;

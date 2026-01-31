@@ -8,27 +8,28 @@ import {
     getGlobalSettings,
     updateGlobalSettings
 } from "../controllers/adminController.js";
-import { protect, isAdminOrCoordinator } from "../middlewares/authMiddleware.js";
+import { protect, isAdminOrCoordinator, isMaster } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
 router.post("/login", authAdmin);
 
-// Protected routes
+// Protected routes (General Admin Access)
 router.use(protect);
 router.use(isAdminOrCoordinator);
 
+// Master only routes
 router.route("/")
     .get(getAdmins)
-    .post(createAdmin);
+    .post(isMaster, createAdmin);
 
-// Global Settings
+// Global Settings (Master Only)
 router.route("/settings/global")
     .get(getGlobalSettings)
-    .put(updateGlobalSettings);
+    .put(isMaster, updateGlobalSettings);
 
 router.route("/:id")
-    .put(updateAdmin)
-    .delete(deleteAdmin);
+    .put(isMaster, updateAdmin)
+    .delete(isMaster, deleteAdmin);
 
 export default router;

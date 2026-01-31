@@ -124,7 +124,7 @@ const authLimiter = rateLimit({
   message: 'Too many authentication attempts from this IP. Please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
-  skipSuccessfulRequests: false, // Count all requests, not just failures
+  skipSuccessfulRequests: false,
   handler: (req, res) => {
     console.warn(`[RATE_LIMIT] Auth endpoint rate limit exceeded from IP: ${req.ip}`);
     res.status(429).json({
@@ -135,9 +135,18 @@ const authLimiter = rateLimit({
   }
 });
 
+// Strict rate limiting for Registration and Payment creation
+const registrationLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // 10 attempts per minute
+  message: 'High traffic detected. Please wait a moment before attempting another registration.',
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
 // ---------- Body Parsing Middleware ----------
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ limit: '1mb', extended: true }));
 
 // Apply general rate limiter to all routes
 app.use(generalLimiter);
@@ -166,6 +175,11 @@ app.get("/api/debug/check-uploads", (req, res) => {
 
 // Apply strict auth rate limiting to authentication endpoints
 app.use("/api/users/auth", authLimiter);
+
+// Protect sensitive event registration endpoints with strict limits
+app.use("/api/events/register", registrationLimiter);
+app.use("/api/events/create-order", registrationLimiter);
+app.use("/api/users/validate", registrationLimiter);
 
 app.use("/api/users", userRoutes);
 app.use("/api/events", eventRoutes);

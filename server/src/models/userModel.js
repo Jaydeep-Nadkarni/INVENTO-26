@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import crypto from "crypto";
 import Counter from "./counterModel.js";
 
 const userSchema = new mongoose.Schema(
@@ -88,6 +89,12 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ["USER", "ADMIN", "COORDINATOR"],
       default: "USER",
+    },
+    passSecret: {
+      type: String,
+      default: () => crypto.randomBytes(16).toString('hex'),
+      select: false, // Don't include by default
+      description: "Secret for QR individual validation"
     },
   },
   { timestamps: true }

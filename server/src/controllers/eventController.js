@@ -5,6 +5,7 @@ import User from "../models/userModel.js";
 import fs from "fs";
 import path from "path";
 import Payment from "../models/paymentModel.js";
+import OrderIntent from "../models/orderIntentModel.js";
 import ContingentKey from "../models/contingentKeyModel.js";
 import GlobalSettings from "../models/globalSettingsModel.js";
 import nodemailer from "nodemailer";
@@ -550,6 +551,11 @@ export const createOrder = async (req, res) => {
   const { eventId, inventoId, members, teamName, isOfficial, contingentKey } = req.body;
   if (!eventId) return res.status(400).json({ message: "Event ID required" });
 
+  // [PROTECTION] IDOR Check: Ensure user is creating order for themselves
+  if (inventoId !== req.user._id.toString()) {
+    return res.status(403).json({ message: "Security Violation: Unauthorized account access" });
+  }
+
   try {
     const event = await Event.findOne({ $or: [{ _id: eventId }, { id: eventId }] });
     if (!event) throw new EventNotFoundError();
@@ -592,13 +598,25 @@ export const createOrder = async (req, res) => {
 
     const razorpay = new Razorpay({ key_id, key_secret });
     const quantity = event.isPricePerPerson ? (validatedMembers ? validatedMembers.length : 1) : 1;
+    const amount = Math.round(event.price * quantity * 100);
     const options = {
-      amount: Math.round(event.price * quantity * 100),
+      amount,
       currency: "INR",
       receipt: `rcpt_${Date.now().toString().slice(-8)}_${eventId.slice(0, 20)}`,
     };
 
     const order = await razorpay.orders.create(options);
+
+    // [PROTECTION] Create Order Intent to bind this order to this user and event
+    await OrderIntent.create({
+      orderId: order.id,
+      userId: inventoId,
+      eventId: event._id,
+      amount: amount / 100, // Store in actual INR
+      isOfficial: !!isOfficial,
+      contingentKey
+    });
+
     res.json({ ...order, keyId: key_id });
   } catch (error) {
     console.error("Error in createOrder:", error);
@@ -621,6 +639,11 @@ export const registerForEvent = async (req, res) => {
         inventoId, teamName, members, razorpay_order_id, razorpay_payment_id, razorpay_signature,
         isOfficial, contingentKey, paymentId
       } = req.body;
+
+      // [PROTECTION] IDOR Check: Ensure user is registering for themselves
+      if (inventoId !== req.user._id.toString()) {
+        throw new Error("Security Violation: Unauthorized registration attempt");
+      }
 
       // SANITIZE TEAM NAME: Remove HTML tags, trim, limit length
       if (teamName) {
@@ -646,11 +669,34 @@ export const registerForEvent = async (req, res) => {
       const whatsappLink = event.whatsapplink || staticEvent?.whatsapplink || "";
       const finalPaymentId = razorpay_payment_id || paymentId;
 
-      // Payment Verification
+      // Payment Verification & Binding
       if (!isOfficial && event.price > 0) {
         if (!verifyRazorpayPayment(razorpay_order_id, razorpay_payment_id, razorpay_signature)) {
           throw new Error("Payment verification failed");
         }
+
+        // [PROTECTION] 1. Verify and consume Order Intent
+        const intent = await OrderIntent.findOne({
+          orderId: razorpay_order_id,
+          userId: inventoId,
+          eventId: event._id,
+          status: 'created'
+        }).session(session);
+
+        if (!intent) {
+          throw new Error("Invalid or unauthorized payment intent. Cross-event payment reuse is forbidden.");
+        }
+
+        // [PROTECTION] 2. Verify amount binding
+        const expectedAmount = event.isPricePerPerson ? event.price * validatedMembers.length : event.price;
+        if (intent.amount !== expectedAmount) {
+          throw new Error("Payment amount mismatch detected. Registration aborted.");
+        }
+
+        // [PROTECTION] 3. Consume intent atomically
+        intent.status = 'used';
+        await intent.save({ session });
+
         const usedPayment = await Payment.findOne({ paymentId: razorpay_payment_id, eventId: event._id }).session(session);
         if (usedPayment) throw new Error("Payment already used.");
       }

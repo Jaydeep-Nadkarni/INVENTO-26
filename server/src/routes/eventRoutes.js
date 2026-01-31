@@ -25,7 +25,7 @@ import {
     validateRequest,
     validateRegistrationLogic
 } from "../middlewares/eventValidationMiddleware.js";
-import { protect, requireOnboarding, isAdminOrCoordinator, checkEventAccess } from "../middlewares/authMiddleware.js";
+import { protect, requireOnboarding, isAdminOrCoordinator, checkEventAccess, isMaster } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
@@ -69,7 +69,7 @@ router.post("/create-order", protect, requireOnboarding, createOrder);
 
 // 🔑 Contingent Key (Public validation)
 router.post("/validate-key", validateKey);
-router.post("/add-key", addContingentKey);
+router.post("/add-key", protect, isMaster, addContingentKey);
 
 /* ================= ADMIN/COORDINATOR ACTIONS ================= */
 
