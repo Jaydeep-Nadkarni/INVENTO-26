@@ -20,6 +20,7 @@ import browserIcon from '../../assets/UI/OS/browser.png'
 import radioIcon from '../../assets/UI/OS/Radio.png'
 import mailIcon from '../../assets/UI/OS/mail.png'
 import snakegame from '../../assets/UI/OS/Snake.png'
+import passwordLockIcon from '../../assets/UI/OS/password_lock_icon.png'
 
 const RetroTerminal = ({ isOpen, onClose, initialBootProgress = 0 }) => {
     const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
@@ -55,7 +56,7 @@ const RetroTerminal = ({ isOpen, onClose, initialBootProgress = 0 }) => {
         { id: 'mail', name: 'SpyMail', icon: mailIcon, type: 'mail', isImg: true },
         { id: 'radio', name: 'Intercept', icon: radioIcon, type: 'radio', isImg: true },
         { id: 'snake', name: 'Snake Game', icon: snakegame, type: 'snake', isImg: true },
-        { id: 'passwordgame', name: 'The Password Game', icon: '🔐', type: 'passwordgame', isImg: false },
+        { id: 'passwordgame', name: 'Password Challenge', icon: passwordLockIcon, type: 'passwordgame', isImg: true },
     ]
 
     const launchApp = (app) => {
@@ -313,6 +314,7 @@ const RetroTerminal = ({ isOpen, onClose, initialBootProgress = 0 }) => {
 
 const Window = ({ app, children, isActive, isMinimized, onClose, onMinimize, onFocus, width = "500px", height = "400px", defaultX = 40, defaultY = 80 }) => {
     const [openMenu, setOpenMenu] = useState(null);
+    const [isMaximized, setIsMaximized] = useState(false);
     const menuRef = useRef(null);
 
     useEffect(() => {
@@ -333,16 +335,27 @@ const Window = ({ app, children, isActive, isMinimized, onClose, onMinimize, onF
         Help: ["View Help", "About System", "Privacy Policy"]
     };
 
+    const toggleMaximize = () => {
+        setIsMaximized(!isMaximized);
+    };
+
     return (
         <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1, zIndex: isActive ? 40 : 10 }}
+            animate={{
+                scale: 1,
+                opacity: 1,
+                zIndex: isActive ? 40 : 10,
+                width: isMaximized ? "100%" : width,
+                height: isMaximized ? "100%" : height,
+                top: isMaximized ? 0 : defaultY,
+                left: isMaximized ? 0 : defaultX
+            }}
             exit={{ scale: 0.95, opacity: 0 }}
-            drag
+            drag={!isMaximized}
             dragMomentum={false}
             onPointerDown={onFocus}
-            style={{ width, height, top: defaultY, left: defaultX }}
-            className={`absolute bg-[#c0c0c0] win95-border-raised flex flex-col shadow-xl overflow-visible`}
+            className={`absolute bg-[#c0c0c0] win95-border-raised flex flex-col shadow-xl overflow-visible ${isMaximized ? 'rounded-none' : ''}`}
         >
             {/* Title Bar */}
             <div
@@ -360,6 +373,12 @@ const Window = ({ app, children, isActive, isMinimized, onClose, onMinimize, onF
                         className="win95-button w-4 h-4 flex items-center justify-center text-[10px] pb-1 hover:bg-gray-300"
                     >
                         _
+                    </button>
+                    <button
+                        onClick={(e) => { e.stopPropagation(); toggleMaximize(); }}
+                        className="win95-button w-4 h-4 flex items-center justify-center text-[10px] hover:bg-gray-300"
+                    >
+                        {isMaximized ? '❐' : '□'}
                     </button>
                     <button
                         onClick={(e) => { e.stopPropagation(); onClose(); }}

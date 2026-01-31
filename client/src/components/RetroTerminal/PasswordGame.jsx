@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { completeRound } from '../../utils/quizApi';
 
 const PasswordGame = ({ onComplete }) => {
     const [password, setPassword] = useState('');
@@ -15,6 +14,7 @@ const PasswordGame = ({ onComplete }) => {
     const [completedWordleWord, setCompletedWordleWord] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState(null);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
 
     // Sample data
     const wordleWords = ['CRANE', 'SLATE', 'CRATE', 'INDIA', 'AUDIO'];
@@ -284,10 +284,10 @@ const PasswordGame = ({ onComplete }) => {
     }, [password, hasStartedTyping, currentLevel, completedWordleWord, wordleCompleted]);
 
     const getLetterColor = (letter, index) => {
-        if (!letter) return 'bg-gray-700';
-        if (wordleWord[index] === letter) return 'bg-green-600';
-        if (wordleWord.includes(letter)) return 'bg-yellow-600';
-        return 'bg-gray-600';
+        if (!letter) return 'bg-[#111111] border border-[#33ff33] text-[#33ff33]';
+        if (wordleWord[index] === letter) return 'bg-[#33ff33] text-black border border-[#33ff33] font-bold';
+        if (wordleWord.includes(letter)) return 'bg-yellow-600 text-black border border-yellow-600';
+        return 'bg-[#222] border border-gray-600 text-gray-400';
     };
 
     const handleWordleSubmit = (guess) => {
@@ -321,43 +321,23 @@ const PasswordGame = ({ onComplete }) => {
         } else if (currentGuess < 5) {
             setCurrentGuess(currentGuess + 1);
         } else {
-            resetGame();
+            setTimeout(() => {
+                // Reset wordle part for retry
+                setWordleGuesses(Array(6).fill(''));
+                setCurrentGuess(0);
+            }, 1500)
         }
     };
 
     const handleSubmit = async () => {
         if (rules.every(rule => rule.status === 'passed')) {
-            try {
-                setIsSubmitting(true);
-                setError(null);
-
-                const teamId = sessionStorage.getItem('authInfo')
-                    ? JSON.parse(sessionStorage.getItem('authInfo')).teamId
-                    : null;
-
-                // Use a default teamId for demo purposes if not found, or let it fail?
-                // Let's use a dummy ID to prevent crashes if user is not logged in as team
-                const effectiveTeamId = teamId || "demo-team";
-
-                // Call completeRound to mark stage 2 completion
-                await completeRound(1, effectiveTeamId, {
-                    totalTime: 0, // Time will be tracked by parent component
-                    completionType: 'manual_submit'
-                });
-
-                console.log('[Stage2] Stage completion submitted');
-                if (onComplete) onComplete();
-            } catch (err) {
-                console.error('[Stage2] Error completing stage:', err);
-                setError(err.message);
-            } finally {
-                setIsSubmitting(false);
-            }
+            setShowSuccessModal(true);
+            if (onComplete) onComplete();
         }
     };
 
     function hexToRgb(hex) {
-        hex = hex.replace(/^#/, ""); // Remove the #
+        hex = hex.replace(/^#/, "");
         let r = parseInt(hex.substring(0, 2), 16);
         let g = parseInt(hex.substring(2, 4), 16);
         let b = parseInt(hex.substring(4, 6), 16);
@@ -370,171 +350,223 @@ const PasswordGame = ({ onComplete }) => {
         .sort((a, b) => b.id - a.id);
 
     return (
-        <div className="bg-gray-900 text-white space-y-4 w-full h-full overflow-y-auto p-4">
-            <div className="max-w-2xl mx-auto">
-                <h2 className="text-2xl font-bold text-center font-mono mb-6 bg-gradient-to-r p-3 rounded-lg">
-                    Password Challenge
-                </h2>
+        <div className="bg-black text-[#33ff33] w-full h-full flex flex-col font-mono text-sm relative selection:bg-[#33ff33] selection:text-black">
+            {/* Retro CRT Scanline Effect Overlay */}
+            <div className="absolute inset-0 pointer-events-none z-50 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%] contrast-125 brightness-110 opacity-20"></div>
 
-                <div className="bg-gray-800/80 backdrop-blur-sm p-6 rounded-xl shadow-lg border border-gray-700">
-                    <div className="flex items-center mb-4">
-                        <input
-                            type="text"
-                            className="w-full p-3 rounded-lg bg-gray-900 border border-gray-600 text-white focus:border-transparent"
-                            placeholder="Start typing your password..."
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                        />
-                        <div className="ml-3 bg-gray-700 px-3 py-1 rounded-lg text-sm font-mono">
-                            {password.length}
+            {/* Header */}
+            <div className="border-b-2 border-[#33ff33] p-4 text-center flex justify-between items-center bg-[#001100]">
+                <h2 className="text-xl font-bold uppercase tracking-[0.2em] animate-pulse flex-1 text-center pl-8">
+                    &gt;&gt; ACCESS CONTROL_
+                </h2>
+                <button
+                    onClick={() => window.open('/password-game', '_blank')}
+                    className="text-xs border border-[#33ff33] px-2 py-1 hover:bg-[#33ff33] hover:text-black uppercase"
+                    title="Open in New Tab"
+                >
+                    ↗ OPEN_TAB
+                </button>
+            </div>
+
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                <style>{`
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+            background: #001100;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #33ff33;
+            border: 1px solid #000;
+          }
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: #002200;
+            border-left: 1px solid #33ff33;
+          }
+        `}</style>
+
+                <div className="max-w-3xl mx-auto space-y-6 pb-20">
+                    {/* Input Section */}
+                    <div className="border-2 border-[#33ff33] p-1 bg-[#001100]">
+                        <div className="flex items-center gap-2 p-2 relative">
+                            <span className="text-[#33ff33] font-bold animate-pulse">&gt;</span>
+                            <input
+                                type="text"
+                                className="w-full bg-transparent border-none outline-none text-[#33ff33] text-lg font-mono placeholder-[#33ff33]/30 uppercase"
+                                placeholder="ENTER_PASSWORD..."
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                autoFocus
+                            />
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 border border-[#33ff33] px-2 py-0.5 text-xs bg-black">
+                                LEN: {password.length}
+                            </div>
                         </div>
                     </div>
 
-                    <div className="space-y-3 mt-6">
-                        {visibleRules.map((rule) => (
-                            <div
-                                key={rule.id}
-                                className={`p-4 rounded-lg transition-all duration-300 ${rule.status === 'passed'
-                                    ? 'bg-green-900/30 border-l-4 border-green-500'
-                                    : rule.id === currentLevel
-                                        ? 'bg-red-800/20 border-l-4 border-red-500'
-                                        : 'bg-red-800/20 border-l-4 border-red-600'
-                                    }`}
-                            >
-                                <div className="flex items-start">
-                                    <span className="font-mono mr-3 bg-gray-600 px-2 py-1 rounded text-xs">
-                                        Rule {rule.id}
-                                    </span>
-                                    <div className="flex-1">
-                                        {rule.description}
+                    {/* Rules Feed */}
+                    <div className="space-y-3">
+                        {visibleRules.map((rule) => {
+                            // Check completion state
+                            const isPassed = rule.status === 'passed';
+                            const isCurrent = rule.id === currentLevel;
+                            const isViolated = rule.status === 'violated';
 
-                                        {/* Wordle game embedded in the rule card */}
-                                        {rule.id === 15 && showWordle && (
-                                            <div className="mt-4 flex flex-col items-center justify-center">
-                                                <div className="space-y-2 mt-6 mb-4">
-                                                    {wordleGuesses.map((guess, guessIndex) => (
-                                                        <div key={guessIndex} className="flex gap-1 justify-center">
-                                                            {Array(5).fill(0).map((_, i) => (
-                                                                <div
-                                                                    key={i}
-                                                                    className={`w-8 h-8 flex items-center justify-center font-bold rounded text-sm ${guessIndex < currentGuess ? getLetterColor(guess[i], i) : 'bg-gray-700'
-                                                                        }`}
-                                                                >
-                                                                    {guess[i] || ''}
-                                                                </div>
-                                                            ))}
+                            return (
+                                <div
+                                    key={rule.id}
+                                    className={`border-l-4 p-3 transition-all duration-300 ${isPassed
+                                            ? 'border-[#33ff33] bg-[#002200]/50 opacity-60 hover:opacity-100'
+                                            : isCurrent
+                                                ? 'border-yellow-500 bg-[#332200]/30'
+                                                : 'border-red-600 bg-[#220000]/30'
+                                        }`}
+                                >
+                                    <div className="flex items-start gap-3">
+                                        <div className={`px-2 py-0.5 text-xs font-bold border ${isPassed ? 'border-[#33ff33] text-[#33ff33]' :
+                                                isCurrent ? 'border-yellow-500 text-yellow-500' :
+                                                    'border-red-600 text-red-600'
+                                            }`}>
+                                            RULE_{String(rule.id).padStart(2, '0')}
+                                        </div>
+
+                                        <div className="flex-1">
+                                            <p className={`text-sm ${isPassed ? 'text-[#33ff33] line-through decoration-1 opacity-70' :
+                                                    isCurrent ? 'text-yellow-500 font-bold' :
+                                                        'text-red-500'
+                                                }`}>
+                                                {rule.description}
+                                            </p>
+
+                                            {/* --- SPECIAL GAME INTEGRATIONS --- */}
+
+                                            {/* WORDLE Integration */}
+                                            {rule.id === 15 && showWordle && (
+                                                <div className="mt-4 border border-[#33ff33] p-4 bg-black w-full max-w-sm mx-auto">
+                                                    <div className="text-center text-xs mb-2 text-[#33ff33]/70">-- SECURE WORD DECRYPTION --</div>
+                                                    <div className="space-y-1 mb-4 flex flex-col items-center">
+                                                        {wordleGuesses.map((guess, guessIndex) => (
+                                                            <div key={guessIndex} className="flex gap-1 justify-center">
+                                                                {Array(5).fill(0).map((_, i) => (
+                                                                    <div
+                                                                        key={i}
+                                                                        className={`w-8 h-8 flex items-center justify-center font-bold text-sm ${guessIndex < currentGuess ? getLetterColor(guess[i], i) : 'border border-[#33ff33]/30 text-[#33ff33]'
+                                                                            }`}
+                                                                    >
+                                                                        {guess[i] || ''}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+
+                                                    {currentGuess < 6 && !wordleCompleted && (
+                                                        <div className="flex gap-2 justify-center mt-2">
+                                                            <input
+                                                                type="text"
+                                                                value={wordleGuesses[currentGuess] || ''}
+                                                                onChange={(e) => {
+                                                                    const newGuesses = [...wordleGuesses];
+                                                                    newGuesses[currentGuess] = e.target.value.toUpperCase().slice(0, 5);
+                                                                    setWordleGuesses(newGuesses);
+                                                                }}
+                                                                maxLength={5}
+                                                                className="w-24 bg-black border border-[#33ff33] text-[#33ff33] text-center p-1 uppercase outline-none focus:bg-[#002200]"
+                                                                autoFocus
+                                                            />
+                                                            <button
+                                                                onClick={() => handleWordleSubmit(wordleGuesses[currentGuess])}
+                                                                disabled={wordleGuesses[currentGuess]?.length !== 5}
+                                                                className="bg-[#33ff33] text-black px-3 py-1 text-xs font-bold hover:bg-white disabled:opacity-50"
+                                                            >
+                                                                ENTER
+                                                            </button>
                                                         </div>
-                                                    ))}
+                                                    )}
                                                 </div>
+                                            )}
 
-                                                {currentGuess < 6 && !wordleCompleted && (
-                                                    <div className="flex flex-col items-center space-y-2 w-full">
-                                                        <input
-                                                            type="text"
-                                                            value={wordleGuesses[currentGuess] || ''}
-                                                            onChange={(e) => {
-                                                                const newGuesses = [...wordleGuesses];
-                                                                newGuesses[currentGuess] = e.target.value.toUpperCase().slice(0, 5);
-                                                                setWordleGuesses(newGuesses);
-                                                            }}
-                                                            maxLength={5}
-                                                            className="p-1 text-center uppercase font-mono bg-gray-900 border border-gray-600 rounded text-sm w-48"
-                                                            placeholder="5-letter word"
-                                                            autoFocus
-                                                        />
-                                                        <button
-                                                            onClick={() => handleWordleSubmit(wordleGuesses[currentGuess])}
-                                                            disabled={wordleGuesses[currentGuess]?.length !== 5}
-                                                            className="bg-blue-600 hover:bg-blue-700 py-1 rounded text-sm z-10 disabled:opacity-50 w-48"
-                                                        >
-                                                            Submit ({6 - currentGuess} left)
-                                                        </button>
-                                                    </div>
-                                                )}
-
-                                                {wordleCompleted && (
-                                                    <div className="text-center py-2 bg-green-900/30 rounded w-full">
-                                                        <p className="text-green-400 font-bold text-sm">Word found! Include "{completedWordleWord}" in your password</p>
-                                                    </div>
-                                                )}
-
-                                                {currentGuess >= 6 && !wordleCompleted && (
-                                                    <div className="text-center py-2 bg-red-900/30 rounded w-full">
-                                                        <p className="text-red-400 font-bold text-sm">Game over! Starting over...</p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {/* Show "Play Wordle" button when not showing the game and not completed */}
-                                        {rule.id === 15 && !showWordle && !wordleCompleted && (
-                                            <button
-                                                onClick={() => setShowWordle(true)}
-                                                className="mt-2 bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm"
-                                            >
-                                                Play Wordle
-                                            </button>
-                                        )}
-
-                                        {/* Show word to include when completed */}
-                                        {rule.id === 15 && wordleCompleted && !showWordle && (
-                                            <div className="mt-2 text-sm text-green-400">
-                                                Include the word: <span className="font-bold">{completedWordleWord}</span>
-                                            </div>
-                                        )}
-
-                                        {/* Color rule display */}
-                                        {rule.id === 14 && colorHex && (
-                                            <div className="mt-2 ">
-                                                <div
-                                                    className="w-full h-35 rounded-lg relative"
-                                                    style={{ backgroundColor: colorHex }}
+                                            {/* Play Button for Wordle */}
+                                            {rule.id === 15 && !showWordle && !wordleCompleted && (
+                                                <button
+                                                    onClick={() => setShowWordle(true)}
+                                                    className="mt-2 text-xs border border-yellow-500 text-yellow-500 px-3 py-1 hover:bg-yellow-500 hover:text-black uppercase animate-pulse"
                                                 >
+                                                    [ INITIALIZE DECRYPTION ]
+                                                </button>
+                                            )}
+
+                                            {/* Color Picker Integration */}
+                                            {rule.id === 14 && colorHex && (
+                                                <div className="mt-2 flex items-center gap-4 border border-[#33ff33]/30 p-2 bg-black/50">
+                                                    <div className="w-12 h-12 border-2 border-white" style={{ backgroundColor: colorHex }}></div>
+                                                    <div>
+                                                        <div className="text-xs text-[#33ff33] mb-1">TARGET_COLOR_MATCH</div>
+                                                        <div className="text-xs text-gray-400 font-mono">{hexToRgb(colorHex)}</div>
+                                                    </div>
                                                     <button
-                                                        className="absolute bottom-2 right-2 rounded-full p-2  text-gray-800 font-bold"
-                                                        type="button"
-                                                        title="Refresh Color"
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setColorHex(generateRandomColor());
-                                                        }}
+                                                        onClick={() => setColorHex(generateRandomColor())}
+                                                        className="ml-auto text-xs border border-[#33ff33] text-[#33ff33] px-2 py-1 hover:bg-[#33ff33] hover:text-black"
                                                     >
-                                                        ↻
+                                                        REROLL
                                                     </button>
                                                 </div>
-                                                <div className="mt-2 text-sm text-gray-400">
-                                                    {hexToRgb(colorHex)}
-                                                </div>
-                                            </div>
-                                        )}
+                                            )}
+
+
+                                        </div>
+                                        <div className={`text-lg font-bold ${isPassed ? 'text-[#33ff33]' : 'text-transparent'}`}>
+                                            [OK]
+                                        </div>
                                     </div>
-                                    {rule.status === 'passed' && (
-                                        <span className="text-green-400">✓</span>
-                                    )}
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
+
+
+                        {/* Submit Button */}
+                        <button
+                            onClick={handleSubmit}
+                            disabled={!rules.every(r => r.status === 'passed')}
+                            className={`w-full py-4 mt-8 border-2 text-lg font-bold tracking-[0.2em] transition-all duration-200 uppercase
+                        ${rules.every(r => r.status === 'passed')
+                                    ? 'border-[#33ff33] bg-[#33ff33] text-black hover:bg-white hover:border-white cursor-pointer shadow-[0_0_20px_rgba(51,255,51,0.5)]'
+                                    : 'border-gray-800 text-gray-800 cursor-not-allowed bg-transparent'
+                                }`}
+                        >
+                            {rules.every(r => r.status === 'passed') ? '>> EXECUTE SEQUENCE <<' : 'Awaiting_Valid_Input...'}
+                        </button>
                     </div>
-
-                    {error && (
-                        <div className="mt-4 p-3 bg-red-900/30 border border-red-600 rounded-lg text-red-300 text-sm">
-                            ⚠️ {error}
-                        </div>
-                    )}
-
-                    <button
-                        onClick={handleSubmit}
-                        className={`w-full mt-6 py-3 rounded-lg text-white font-bold transition-all ${rules.every(r => r.status === 'passed') && !isSubmitting
-                            ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-lg'
-                            : 'bg-gray-700 cursor-not-allowed opacity-70'
-                            }`}
-                        disabled={!rules.every(r => r.status === 'passed') || isSubmitting}
-                    >
-                        {isSubmitting ? '⏳ Submitting...' : rules.every(r => r.status === 'passed') ? '🚀 Submit Password' : 'Complete All Rules'}
-                    </button>
                 </div>
             </div>
-        </div >
+
+            {/* Success Modal */}
+            {showSuccessModal && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4">
+                    <div className="border-4 border-[#33ff33] bg-black p-8 max-w-md w-full text-center shadow-[0_0_50px_rgba(51,255,51,0.3)] relative overflow-hidden">
+                        {/* Scanline background inside modal */}
+                        <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(0,255,0,0.03),rgba(0,255,0,0.01))] bg-[length:100%_4px,3px_100%]"></div>
+
+                        <h3 className="text-3xl font-bold text-[#33ff33] mb-4 animate-pulse">MISSION ACCOMPLISHED</h3>
+                        <div className="w-full h-1 bg-[#33ff33] mb-6"></div>
+                        <p className="text-white font-mono text-sm mb-8 leading-relaxed">
+                            ACCESS GRANTED.<br />
+                            SYSTEM INTEGRITY VERIFIED.<br />
+                            WELCOME TO THE NETWORK, AGENT.
+                        </p>
+                        <button
+                            onClick={() => {
+                                setShowSuccessModal(false);
+                                // Reset game or close app logic/callback could go here
+                            }}
+                            className="bg-[#33ff33] text-black font-bold py-3 px-8 text-lg hover:bg-white hover:scale-105 transition-transform uppercase tracking-widest"
+                        >
+                            PROCEED
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 };
 
