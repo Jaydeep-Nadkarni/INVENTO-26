@@ -35,10 +35,15 @@ export const mapEventFromDb = (event, isDb = false) => ({
     })(),
 
     slotsAvailable: (event.isGenderSpecific)
-        ? ((event.specificSlots?.male || 0) + (event.specificSlots?.female || 0))
-        : (event.slots?.availableSlots ?? event.slots?.available ?? (isDb ? undefined : 'TBD')),
+        ? ((event.slots?.open?.gender?.male || 0) + (event.slots?.open?.gender?.female || 0))
+        : (event.slots?.open?.available ?? event.slots?.availableSlots ?? event.slots?.available ?? (isDb ? undefined : 'TBD')),
 
-    specificSlots: event.specificSlots || (isDb ? undefined : {}),
+    specificSlots: (event.slots?.open?.gender) ? {
+        male: event.slots.open.gender.male,
+        female: event.slots.open.gender.female,
+        availableBoysSlots: event.slots.open.gender.male, // legacy support
+        availableGirlsSlots: event.slots.open.gender.female // legacy support
+    } : event.specificSlots || (isDb ? undefined : {}),
 
     // Static fields from DB - should be undefined if not present
     rounds: (() => {

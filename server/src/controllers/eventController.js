@@ -1391,23 +1391,11 @@ export const updateEventDetails = async (req, res) => {
       for (const [key, value] of Object.entries(specificSlotsUpdate)) {
         if (!ALLOWED_SLOT_KEYS.includes(key)) continue;
 
-        const numValue = Number(value); // This is absolute value usually? Or change?
-        // Looking at previous code, it set the value directly: event.specificSlots[key] = numValue.
+        const numValue = Number(value);
+        const category = 'open';
 
-        // Let's treat it as setting the TOTAL for that gender in OPEN category for now
-        // and adjusting available accordingly.
-
-        const category = 'open'; // Defaulting to open
-        const fieldTotal = key; // 'male' or 'female'
-        const fieldAvailable = key === 'male' ? 'availableMale' : 'availableFemale';
-
-        const oldTotal = event.slots[category][fieldTotal];
-        const oldAvailable = event.slots[category][fieldAvailable];
-
-        const diff = numValue - oldTotal;
-
-        event.slots[category][fieldTotal] = numValue;
-        event.slots[category][fieldAvailable] = oldAvailable + diff;
+        // Structure: slots.open.gender.male / slots.open.gender.female
+        event.slots[category].gender[key] = numValue;
       }
     }
 

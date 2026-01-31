@@ -27,7 +27,7 @@ const EventsGrid = () => {
                     // Group events by club and update liveClubs
                     const updatedClubs = clubsData.map(club => {
                         const clubEvents = club.events.map(staticEvent => {
-                            const dbEvent = data.find(de => de._id === staticEvent.id || de.id === staticEvent.id);
+                            const dbEvent = data.find(de => de._id === staticEvent.slug || de.id == staticEvent.id);
                             if (dbEvent) {
                                 const mappedDbEvent = mapEventFromDb(dbEvent, true);
                                 // Merge DB data into static data, only overwriting if DB has value
