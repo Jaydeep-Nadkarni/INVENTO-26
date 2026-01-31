@@ -352,7 +352,7 @@ export const completeOnboarding = async (req, res) => {
  */
 export const getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user._id).select('+passSecret');
     if (!user) return res.status(404).json({ message: "User not found." });
 
     // Fetch details for registered events
@@ -381,6 +381,7 @@ export const getProfile = async (req, res) => {
 export const validateUser = async (req, res) => {
   try {
     let { userId } = req.params;
+    const { token } = req.query; // passSecret from QR scan
 
     // Handle ID formatting (e.g., inv00108)
     const digits = userId.match(/\d+/);
@@ -389,12 +390,20 @@ export const validateUser = async (req, res) => {
       userId = `inv${seqNum}`;
     }
 
-    const user = await User.findById(userId).select('name clgName profilePhoto passType onboardingCompleted');
+    const user = await User.findById(userId).select('name clgName profilePhoto passType onboardingCompleted +passSecret');
 
     if (!user) {
       return res.status(404).json({
         verified: false,
         message: 'Agent not found in central directory',
+      });
+    }
+
+    // Verify token if provided (QR validation)
+    if (token && user.passSecret !== token) {
+      return res.status(401).json({
+        verified: false,
+        message: 'Security Violation: Counterfeit pass detected.'
       });
     }
 

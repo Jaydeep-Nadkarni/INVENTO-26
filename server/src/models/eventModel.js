@@ -99,10 +99,18 @@ eventSchema.pre('save', function (next) {
     if (this.slots.open.available > this.slots.open.total) {
       return next(new Error(`Open available slots (${this.slots.open.available}) cannot exceed total (${this.slots.open.total})`));
     }
+    if (this.slots.open.available < 0) {
+      return next(new Error(`Open available slots cannot be negative`));
+    }
 
     // Validate gender slots if gender-specific
     if (this.isGenderSpecific && this.slots.open.gender) {
-      const totalGender = (this.slots.open.gender.male || 0) + (this.slots.open.gender.female || 0);
+      const male = this.slots.open.gender.male || 0;
+      const female = this.slots.open.gender.female || 0;
+      if (male < 0 || female < 0) {
+        return next(new Error(`Gender-specific slots cannot be negative`));
+      }
+      const totalGender = male + female;
       if (totalGender > this.slots.open.total) {
         return next(new Error(`Gender-specific slots (${totalGender}) cannot exceed open total (${this.slots.open.total})`));
       }
@@ -114,9 +122,17 @@ eventSchema.pre('save', function (next) {
     if (this.slots.official.available > this.slots.official.total) {
       return next(new Error(`Official available slots (${this.slots.official.available}) cannot exceed total (${this.slots.official.total})`));
     }
+    if (this.slots.official.available < 0) {
+      return next(new Error(`Official available slots cannot be negative`));
+    }
 
     if (this.isGenderSpecific && this.slots.official.gender) {
-      const totalGender = (this.slots.official.gender.male || 0) + (this.slots.official.gender.female || 0);
+      const male = this.slots.official.gender.male || 0;
+      const female = this.slots.official.gender.female || 0;
+      if (male < 0 || female < 0) {
+        return next(new Error(`Gender-specific slots cannot be negative`));
+      }
+      const totalGender = male + female;
       if (totalGender > this.slots.official.total) {
         return next(new Error(`Gender-specific slots (${totalGender}) cannot exceed official total (${this.slots.official.total})`));
       }

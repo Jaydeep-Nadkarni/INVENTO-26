@@ -99,7 +99,7 @@ const Pass = () => {
           <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.3em] leading-relaxed font-sans">
             Passes will be available soon. The system is currently undergoing synchronization.
           </p>
-          <button 
+          <button
             onClick={() => navigate('/profile')}
             className="mt-8 px-8 py-3 bg-white text-black text-[10px] font-black uppercase tracking-widest hover:bg-zinc-200 transition-colors font-sans"
           >
@@ -197,7 +197,7 @@ const Pass = () => {
         {/* QR Container - White for contrast */}
         <div className="bg-white p-3 shadow-2xl shadow-zinc-900/50">
           <QRCodeSVG
-            value={`INVENTO:${user._id}:${user.email}`}
+            value={`INVENTO:${user._id}:${user.passSecret || 'no-secret'}`}
             size={200}
             level="M"
             bgColor="#FFFFFF"
