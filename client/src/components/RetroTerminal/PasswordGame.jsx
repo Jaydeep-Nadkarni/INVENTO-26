@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const PasswordGame = ({ onComplete }) => {
+const PasswordGame = ({ onComplete, isFullPage = false }) => {
     const [password, setPassword] = useState('');
     const [rules, setRules] = useState([]);
     const [currentLevel, setCurrentLevel] = useState(0);
@@ -12,8 +12,6 @@ const PasswordGame = ({ onComplete }) => {
     const [showWordle, setShowWordle] = useState(false);
     const [wordleCompleted, setWordleCompleted] = useState(false);
     const [completedWordleWord, setCompletedWordleWord] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [error, setError] = useState(null);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
 
     // Sample data
@@ -350,9 +348,9 @@ const PasswordGame = ({ onComplete }) => {
         .sort((a, b) => b.id - a.id);
 
     return (
-        <div className="bg-black text-[#33ff33] w-full h-full flex flex-col font-mono text-sm relative selection:bg-[#33ff33] selection:text-black">
+        <div className={`bg-black text-[#33ff33] w-full flex flex-col font-mono text-sm relative selection:bg-[#33ff33] selection:text-black ${isFullPage ? 'min-h-screen' : 'h-full'}`}>
             {/* Retro CRT Scanline Effect Overlay */}
-            <div className="absolute inset-0 pointer-events-none z-50 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%] contrast-125 brightness-110 opacity-20"></div>
+            <div className="absolute inset-0 pointer-events-none z-50 bg-black contrast-125 brightness-110 opacity-20"></div>
 
             {/* Header */}
             <div className="border-b-2 border-[#33ff33] p-4 text-center flex justify-between items-center bg-[#001100]">
@@ -385,7 +383,7 @@ const PasswordGame = ({ onComplete }) => {
           }
         `}</style>
 
-                <div className="max-w-3xl mx-auto space-y-6 pb-20">
+                <div className={`max-w-3xl mx-auto space-y-6 pb-20 ${isFullPage ? 'pt-32' : 'pt-0'}`}>
                     {/* Input Section */}
                     <div className="border-2 border-[#33ff33] p-1 bg-[#001100]">
                         <div className="flex items-center gap-2 p-2 relative">
@@ -548,9 +546,8 @@ const PasswordGame = ({ onComplete }) => {
                         <h3 className="text-3xl font-bold text-[#33ff33] mb-4 animate-pulse">MISSION ACCOMPLISHED</h3>
                         <div className="w-full h-1 bg-[#33ff33] mb-6"></div>
                         <p className="text-white font-mono text-sm mb-8 leading-relaxed">
-                            ACCESS GRANTED.<br />
-                            SYSTEM INTEGRITY VERIFIED.<br />
-                            WELCOME TO THE NETWORK, AGENT.
+                            YOU WON!<br />
+                            WELCOME, AGENT.
                         </p>
                         <button
                             onClick={() => {

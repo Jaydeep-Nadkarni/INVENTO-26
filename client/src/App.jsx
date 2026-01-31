@@ -165,7 +165,7 @@ function App() {
 
         <Route path="/:clubSlug" element={<Events />} />
         <Route path="/:clubSlug/:eventSlug" element={<Events />} />
-        <Route path="/password-game" element={<PasswordGame />} />
+        <Route path="/password-game" element={<PasswordGame isFullPage={true} />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
