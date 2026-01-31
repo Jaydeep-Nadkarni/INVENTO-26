@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate} from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import Home from './pages/Home.jsx'
 import Events from './pages/Events.jsx'
 import Schedule from './pages/Schedule.jsx'
@@ -32,6 +32,7 @@ import MasterParticipants from './admin/pages/master/Participants'
 import MasterStats from './admin/pages/master/Stats'
 import MasterAdminControls from './admin/pages/master/AdminControls'
 import MasterActivity from './admin/pages/master/Activity'
+import PasswordGame from './components/RetroTerminal/PasswordGame'
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -164,6 +165,7 @@ function App() {
 
         <Route path="/:clubSlug" element={<Events />} />
         <Route path="/:clubSlug/:eventSlug" element={<Events />} />
+        <Route path="/password-game" element={<PasswordGame isFullPage={true} />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
