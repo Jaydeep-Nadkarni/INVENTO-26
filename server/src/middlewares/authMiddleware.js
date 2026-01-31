@@ -143,3 +143,34 @@ export const checkEventAccess = (req, res, next) => {
     message: "Access Denied: You do not have permission for this event protocol."
   });
 };
+
+/**
+ * Middleware to restrict access to MASTER admins only.
+ */
+export const isMaster = (req, res, next) => {
+  if (!req.user) return res.status(401).json({ message: "Authentication required" });
+
+  const role = req.user.role?.toUpperCase();
+  if (role === "MASTER") {
+    return next();
+  }
+
+  return res.status(403).json({
+    message: "Access forbidden. Master privileges required."
+  });
+};
+
+/**
+ * Middleware to restrict access to Registration admins or Master admins.
+ */
+export const isRegistrationAdmin = (req, res, next) => {
+  if (!req.user) return res.status(401).json({ message: "Authentication required" });
+
+  if (req.user.role === 'MASTER' || req.user.isRegistration === true) {
+    return next();
+  }
+
+  return res.status(403).json({
+    message: "Access forbidden. Registration Desk privileges required."
+  });
+};
