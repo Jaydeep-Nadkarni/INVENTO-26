@@ -1,14 +1,14 @@
 const eventsData = [
     {
         id: 1,
-        slug: "raga-solo-singing-eastern",
-        title: "RAGA // INFILTRATION",
+        slug: "solo-singing-eastern",
+        title: "RAGA Undercover",
         subtitle: "Solo Singing (Eastern)",
         description: "A solo singing competition focused on Eastern music styles. Participants perform individually and are judged on vocal precision, emotional depth, and stage presence.",
         club: "Melodia",
         tier: "Silver",
         type: "Solo",
-        registartionfee: 150,
+        registartionfee: 200,
         team: {
             min: 1,
             max: 1
@@ -46,8 +46,9 @@ const eventsData = [
             "Late arrival may lead to disqualification"
         ],
         contact: [
-            { name: null, phone: null },
-            { name: null, phone: null }
+            { name: "Rutu Deshanur", phone: "8073367828" },
+            { name: "Vachan Deshnoor", phone: "9108753697" },
+            { name: "Divesh Harikant", phone: "9535953089" }
         ],
         resgitartions: [
             {
@@ -63,14 +64,14 @@ const eventsData = [
 
     {
         id: 2,
-        slug: "echo-solo-singing-western",
-        title: "ECHO // DOUBLE AGENT",
+        slug: "solo-singing-western",
+        title: "SpyTone",
         subtitle: "Solo Singing (Western)",
         description: "A western solo singing event where participants showcase versatility, clarity, and stage presence through vocal-only and karaoke-based performances.",
         club: "Melodia",
         tier: "Silver",
         type: "Solo",
-        registartionfee: 150,
+        registartionfee: 200,
         team: {
             min: 1,
             max: 1
@@ -108,8 +109,9 @@ const eventsData = [
             "Participants must strictly adhere to time limits"
         ],
         contact: [
-            { name: null, phone: null },
-            { name: null, phone: null }
+            { name: "Rutu Deshanur", phone: "8073367828" },
+            { name: "Vachan Deshnoor", phone: "9108753697" },
+            { name: "Divesh Harikant", phone: "9535953089" }
         ],
         resgitartions: [
             {
@@ -125,7 +127,7 @@ const eventsData = [
 
     {
         id: 3,
-        slug: "symphonica-group-singing-battle-of-bands",
+        slug: "group-singing-battle-of-bands",
         title: "SYMPHONICA",
         subtitle: "Group Singing / Battle of Bands",
         description: "A group singing and instrumental battle where teams perform together, focusing on harmony, coordination, and musical intelligence.",
@@ -167,8 +169,10 @@ const eventsData = [
             "The judge’s decision will be final"
         ],
         contact: [
-            { name: null, phone: null },
-            { name: null, phone: null }
+            { name: "Anish Kulkarni", phone: "7349726138" },
+            { name: "Maithili Joshi", phone: "8971619354" },
+            { name: "Divesh", phone: "9535953089" },
+            { name: "Sumedh", phone: "8217542153" }
         ],
         resgitartions: [
             {
@@ -183,8 +187,8 @@ const eventsData = [
     },
     {
         id: 4,
-        slug: "strike-rhythm-percussion",
-        title: "STRIKE // RHYTHM",
+        slug: "percussion",
+        title: "Beat Protocol",
         subtitle: "Percussion (Solo)",
         description: "A solo percussion event where participants command rhythm and tempo using percussion instruments. Performances are judged on accuracy, control, and stage discipline.",
         club: "Melodia",
@@ -222,9 +226,10 @@ const eventsData = [
             "The judge’s decision will be final",
             "Participants must maintain stage discipline"
         ],
-        contact: [
-            { name: null, phone: null },
-            { name: null, phone: null }
+        contact:[
+            { name: "Anish Kulkarni", phone: "7349726138" },
+            { name: "Maithili Joshi", phone: "8971619354" },
+            { name: "Divesh", phone: "9535953089" },
         ],
         resgitartions: [
             {
@@ -239,8 +244,8 @@ const eventsData = [
     },
     {
         id: 5,
-        slug: "silent-signals-non-percussion",
-        title: "SILENT // SIGNALS",
+        slug: "non-percussion",
+        title: "Operation Harmonics",
         subtitle: "Non-Percussion (Solo Instrumental)",
         description: "A solo instrumental event focusing on melody and expression without percussion instruments. Participants perform using strings, keys, or wind instruments.",
         club: "Melodia",
@@ -279,8 +284,9 @@ const eventsData = [
             "Participants must maintain decorum and follow coordinator instructions"
         ],
         contact: [
-            { name: null, phone: null },
-            { name: null, phone: null }
+            { name: "Anish Kulkarni", phone: "7349726138" },
+            { name: "Maithili Joshi", phone: "8971619354" },
+            { name: "Divesh", phone: "9535953089" }
         ],
         resgitartions: [
             {
@@ -425,8 +431,8 @@ const eventsData = [
             "The decision of the judges and organizing committee will be final and binding"
         ],
         contact: [
-            { name: null, phone: null },
-            { name: null, phone: null }
+            { name: "Ananya Pattar", phone: "9353367220" },
+            { name: "Prapti", phone: "7483148635" }
         ],
         resgitartions: [
             {
@@ -444,7 +450,7 @@ const eventsData = [
         id: 8,
         slug: "mission-masked",
         title: "MISSION: MASKED",
-        subtitle: "Special Effects Makeup Competition",
+        subtitle: "Special Effects Makeup",
         description: "A special effects makeup competition focused on transformation, creativity, and hidden identity. The theme is revealed on the spot, testing adaptability, originality, and visual storytelling skills.",
         club: "WEC",
         tier: "Gold",
@@ -487,8 +493,8 @@ const eventsData = [
             "The judges’ decision will be final and binding"
         ],
         contact: [
-            { name: null, phone: null },
-            { name: null, phone: null }
+            { name: "Shraddha Shahapurkar", phone: "7204955278" },
+            { name: "Roopashree Pote", phone: "8904376126" }
         ],
         resgitartions: [
             {
@@ -504,7 +510,7 @@ const eventsData = [
 
     {
         id: 9,
-        slug: "one-unknown-solo-dance-western",
+        slug: "solo-dance-western",
         title: "ONE // UNKNOWN",
         subtitle: "Solo Dance (Western)",
         description: "A western solo dance event where participants perform as undercover agents, using rhythm, precision, and expressive movement to reveal hidden identities through dance.",
@@ -549,8 +555,10 @@ const eventsData = [
             "Participants must report on time; late arrival leads to disqualification"
         ],
         contact: [
-            { name: null, phone: null },
-            { name: null, phone: null }
+            { name: "Maithili Joshi", phone: "8971619354" },
+            { name: "Anish Kulkarni", phone: "7349726138" },
+            { name: "Vachan Deshnoor", phone: "9108753697" },
+            { name: "Rutu Deshanur", phone: "8073367828" }
         ],
         resgitartions: [
             {
@@ -566,8 +574,8 @@ const eventsData = [
 
     {
         id: 10,
-        slug: "partners-in-crime-duet-dance",
-        title: "PARTNERS IN CRIME",
+        slug: "duet-dance",
+        title: "2v2 Agent Mode",
         subtitle: "Duet Dance",
         description: "A duet dance competition where two performers synchronize their movements to portray undercover chemistry through rhythm, storytelling, and coordinated execution.",
         club: "Dance",
@@ -612,8 +620,10 @@ const eventsData = [
             "Participants must report on time; late arrival leads to disqualification"
         ],
         contact: [
-            { name: null, phone: null },
-            { name: null, phone: null }
+            { name: "Maithili Joshi", phone: "8971619354" },
+            { name: "Anish Kulkarni", phone: "7349726138" },
+            { name: "Vachan Deshnoor", phone: "9108753697" },
+            { name: "Rutu Deshanur", phone: "8073367828" }
         ],
         resgitartions: [
             {
@@ -629,8 +639,8 @@ const eventsData = [
 
     {
         id: 11,
-        slug: "echoes-archive-solo-dance-classical",
-        title: "ECHOES // ARCHIVE",
+        slug: "solo-dance-classical",
+        title: "Antradhwani",
         subtitle: "Solo Dance (Classical)",
         description: "A classical solo dance competition where performers interpret hidden stories and elegance through traditional movements and classical music.",
         club: "Dance",
@@ -670,8 +680,10 @@ const eventsData = [
             "Participants must report on time; late arrival leads to disqualification"
         ],
         contact: [
-            { name: null, phone: null },
-            { name: null, phone: null }
+            { name: "Maithili Joshi", phone: "8971619354" },
+            { name: "Anish Kulkarni", phone: "7349726138" },
+            { name: "Vachan Deshnoor", phone: "9108753697" },
+            { name: "Rutu Deshanur", phone: "8073367828" }
         ],
         resgitartions: [
             {
@@ -687,7 +699,7 @@ const eventsData = [
 
     {
         id: 12,
-        slug: "the-agency-group-dance",
+        slug: "group-dance",
         title: "THE // AGENCY",
         subtitle: "Group Dance",
         description: "A high-energy group dance competition where teams execute synchronized performances showcasing coordination, strategy, and powerful stage presence.",
@@ -730,8 +742,10 @@ const eventsData = [
             "Participants must report on time; late arrival leads to disqualification"
         ],
         contact: [
-            { name: null, phone: null },
-            { name: null, phone: null }
+            { name: "Maithili Joshi", phone: "8971619354" },
+            { name: "Anish Kulkarni", phone: "7349726138" },
+            { name: "Vachan Deshnoor", phone: "9108753697" },
+            { name: "Rutu Deshanur", phone: "8073367828" }
         ],
         resgitartions: [
             {
@@ -1094,9 +1108,9 @@ const eventsData = [
     },
     {
         id: 18,
-        slug: "infiltrate-the-box-foosball",
-        title: "INFILTRATE THE BOX",
-        subtitle: "Foosball",
+        slug: "7-aside-football",
+        title: "7 aside Football ",
+        subtitle: "Football",
         description: "A life-sized foosball-style team event where players are restricted to lateral movement, demanding coordination, timing, and teamwork to score goals and outmaneuver opponents.",
         club: "Sports",
         tier: "Silver",
@@ -1141,8 +1155,8 @@ const eventsData = [
             "Event organizers reserve the right to amend rules and make final decisions"
         ],
         contact: [
-            { name: null, phone: null },
-            { name: null, phone: null }
+            { name: "Radhesh P", phone: "8431972321" },
+            { name: "Sushant Patil", phone: "7411312464" }
         ],
         resgitartions: [
             {

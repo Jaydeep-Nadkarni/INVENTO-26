@@ -24,9 +24,17 @@ export const mapEventFromDb = (event, isDb = false) => ({
     type: event.eventType || event.type || (isDb ? undefined : 'Solo'),
     description: event.description || (isDb ? undefined : ''),
     isGenderSpecific: event.isGenderSpecific || false,
+    isPricePerPerson: event.isPricePerPerson || false,
 
     // Dynamic fields - keep logic
-    fee: (event.price ?? event.registartionfee) === 0 ? 'FREE' : (event.price || event.registartionfee ? `Rs. ${event.price ?? event.registartionfee}` : (isDb ? undefined : 'FREE')),
+    fee: (() => {
+        const amount = event.price ?? event.registartionfee;
+        if (amount === 0) return 'FREE';
+        if (amount) {
+            return `Rs. ${amount}${event.isPricePerPerson ? ' / PERSON' : ''}`;
+        }
+        return isDb ? undefined : 'FREE';
+    })(),
     teamSize: (() => {
         const min = event.minTeamSize ?? event.team?.min ?? (isDb ? undefined : 1);
         const max = event.maxTeamSize ?? event.team?.max ?? (isDb ? undefined : 1);

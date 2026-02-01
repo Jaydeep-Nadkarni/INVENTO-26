@@ -17,6 +17,7 @@ const EventCard = ({ event, onUpdate }) => {
     // Initial State derived from event
     const [formData, setFormData] = useState({
         price: event.price,
+        isPricePerPerson: event.isPricePerPerson || false,
         totalSlots: event.slots?.totalSlots || event.total_slots || 0,
         isOpen: event.registration?.isOpen ?? true,
         officialOnly: event.registration?.officialOnly ?? false,
@@ -30,6 +31,7 @@ const EventCard = ({ event, onUpdate }) => {
         if (!isEditing) {
             setFormData({
                 price: event.price,
+                isPricePerPerson: event.isPricePerPerson || false,
                 totalSlots: event.slots?.totalSlots || event.total_slots || 0,
                 isOpen: event.registration?.isOpen ?? true,
                 officialOnly: event.registration?.officialOnly ?? false,
@@ -50,6 +52,7 @@ const EventCard = ({ event, onUpdate }) => {
         try {
             const payload = {
                 price: Number(formData.price),
+                isPricePerPerson: formData.isPricePerPerson,
                 totalSlots: Number(formData.totalSlots), // Backend now accepts this
                 isOpen: formData.isOpen,
                 officialOnly: formData.officialOnly,
@@ -170,8 +173,16 @@ const EventCard = ({ event, onUpdate }) => {
                 {/* Row 1: Fee and Occupancy */}
                 <div className="grid grid-cols-2 gap-4">
                     <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                        <label className="text-[10px] uppercase text-gray-500 font-bold mb-1 flex items-center gap-1">
-                            <IndianRupee size={10} /> Fee
+                        <label className="text-[10px] uppercase text-gray-500 font-bold mb-1 flex items-center justify-between gap-1">
+                             <span className="flex items-center gap-1"><IndianRupee size={10} /> Fee</span>
+                             {isEditing && (
+                                <button 
+                                    onClick={() => setFormData({...formData, isPricePerPerson: !formData.isPricePerPerson})}
+                                    className={`text-[8px] px-1.5 py-0.5 rounded border transition-colors ${formData.isPricePerPerson ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-gray-300 text-gray-500'}`}
+                                >
+                                    PER PERSON
+                                </button>
+                             )}
                         </label>
                         {isEditing ? (
                             <input
@@ -181,7 +192,7 @@ const EventCard = ({ event, onUpdate }) => {
                                 className="w-full bg-white border border-gray-200 rounded text-sm px-2 py-1 text-gray-900 focus:border-indigo-500 outline-none transition-colors"
                             />
                         ) : (
-                            <div className="text-sm font-mono text-gray-900">₹{formData.price}</div>
+                            <div className="text-sm font-mono text-gray-900">₹{formData.price}{formData.isPricePerPerson ? ' / person' : ''}</div>
                         )}
                     </div>
 

@@ -118,7 +118,7 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
     useEffect(() => {
         audioRef.current = new Audio(radioAudio)
         audioRef.current.loop = false
-        
+
         // Stop the radio and update status when audio ends
         audioRef.current.onended = () => {
             setIsRadioPlaying(false)
@@ -229,7 +229,7 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
         setMorseStep(0) // Reset animation
         setIsMorseOpen(true)
         setStatusText("Incoming Transmission: Decrypting...")
-    }, [])
+    }, [isRadioPlaying])
 
     // Dynamic morse terminal animation
     useEffect(() => {
@@ -255,10 +255,11 @@ const BriefcaseInsider = ({ isOpen, onClose, onNavigateToEvents = null }) => {
     const handleLaptopClick = useCallback((e) => {
         e.stopPropagation()
         stopRadioIfPlaying()
+        setIsMorseOpen(false) // Close morse if playing
         playEffect(laptopSound)
         setIsTerminalOpen(true)
         setStatusText("Accessing the laptop...")
-    }, [])
+    }, [isRadioPlaying, isMorseOpen])
 
     return (
         <AnimatePresence>

@@ -94,6 +94,7 @@ export const DataProvider = ({ children }) => {
                 eventType: e.eventType,
                 specificSlots: e.specificSlots,
                 price: e.price,
+                isPricePerPerson: e.isPricePerPerson,
                 registration: e.registration,
                 slots: e.slots
             }));

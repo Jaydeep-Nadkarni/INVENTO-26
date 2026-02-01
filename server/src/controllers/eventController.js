@@ -1439,6 +1439,7 @@ export const updateEventDetails = async (req, res) => {
   const { eventId } = req.params;
   const {
     price,
+    isPricePerPerson,
     slotsChange, // Legacy: assumed to be for 'open' category if not specific
     totalSlots,  // Legacy: assumed to be for 'open' category
     officialTotalSlots,
@@ -1465,6 +1466,9 @@ export const updateEventDetails = async (req, res) => {
       }
       event.price = price;
     }
+
+    // Update isPricePerPerson
+    if (isPricePerPerson !== undefined) event.isPricePerPerson = isPricePerPerson;
 
     // --- Slot Update Logic ---
 
